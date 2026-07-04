@@ -1,0 +1,189 @@
+:root {
+  --red: #E91D29;
+  --red-deep: #B4141D;
+  --black: #231F20;
+  --deep-black: #0E0D0D;
+  --white: #FFFFFF;
+  --gold: #E8C15A;
+  --gold-deep: #B8912F;
+  --font-display: "Anton", system-ui, sans-serif;
+  --font-body: "Archivo Variable", system-ui, -apple-system, sans-serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
+body {
+  background: var(--deep-black);
+  color: var(--white);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+#root { width: 100%; }
+
+::selection { background: var(--red); color: #fff; }
+
+/* ── Fixed 3D stage behind everything ───────────────────────── */
+.stage-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100svh;
+  z-index: 0;
+  background: var(--deep-black);
+}
+
+/* ── Scroll content that overlays the stage ─────────────────── */
+.scroll-root {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+}
+
+.section {
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(1.5rem, 6vw, 6rem);
+  position: relative;
+}
+
+.section__kicker {
+  font-family: var(--font-body);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.35em;
+  font-size: clamp(0.7rem, 1.2vw, 0.9rem);
+  color: var(--red);
+  margin-bottom: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.section__kicker::before {
+  content: "";
+  width: clamp(28px, 5vw, 56px);
+  height: 2px;
+  background: var(--red);
+}
+
+.section__title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: 0.92;
+  letter-spacing: 0.005em;
+  font-size: clamp(2.6rem, 9vw, 7rem);
+  text-transform: uppercase;
+  white-space: pre-line;
+  text-shadow: 0 4px 40px rgba(0, 0, 0, 0.6);
+}
+
+.section__body {
+  max-width: 46ch;
+  margin-top: 1.5rem;
+  font-size: clamp(1rem, 1.5vw, 1.25rem);
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.82);
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.8);
+}
+
+/* readability scrim so text stays crisp over bright pitch */
+.section__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+.section--left .section__scrim {
+  background: linear-gradient(90deg, rgba(8,7,10,0.82) 0%, rgba(8,7,10,0.5) 38%, rgba(8,7,10,0) 70%);
+}
+.section--center { align-items: center; text-align: center; }
+.section--center .section__scrim {
+  background: radial-gradient(ellipse at center, rgba(8,7,10,0.7) 0%, rgba(8,7,10,0.2) 60%, rgba(8,7,10,0) 100%);
+}
+.section--center .section__kicker { justify-content: center; }
+
+/* ── Top brand bar ──────────────────────────────────────────── */
+.brandbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: clamp(0.9rem, 2.5vw, 1.6rem) clamp(1.2rem, 4vw, 3rem);
+  pointer-events: none;
+  mix-blend-mode: difference;
+}
+.brandbar__logo {
+  font-family: var(--font-display);
+  font-size: clamp(1.1rem, 2.2vw, 1.5rem);
+  letter-spacing: 0.06em;
+  color: #fff;
+}
+.brandbar__logo b { color: var(--red); }
+.brandbar__nav {
+  display: flex;
+  gap: clamp(0.8rem, 2vw, 1.8rem);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  pointer-events: auto;
+}
+.brandbar__nav a { color: rgba(255,255,255,0.65); text-decoration: none; transition: color .2s; }
+.brandbar__nav a:hover, .brandbar__nav a[data-active="true"] { color: #fff; }
+@media (max-width: 640px) { .brandbar__nav { display: none; } }
+
+/* ── Scroll hint ────────────────────────────────────────────── */
+.scrollhint {
+  position: fixed;
+  bottom: clamp(1rem, 4vh, 2.5rem);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.65rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.6);
+  pointer-events: none;
+}
+.scrollhint__mouse {
+  width: 22px; height: 34px;
+  border: 2px solid rgba(255,255,255,0.5);
+  border-radius: 12px;
+  position: relative;
+}
+.scrollhint__mouse::after {
+  content: "";
+  position: absolute;
+  top: 6px; left: 50%;
+  width: 3px; height: 6px;
+  background: #fff;
+  border-radius: 2px;
+  transform: translateX(-50%);
+  animation: scrolldot 1.6s ease-in-out infinite;
+}
+@keyframes scrolldot { 0%{opacity:0;transform:translate(-50%,0)} 40%{opacity:1} 80%{opacity:0;transform:translate(-50%,10px)} }
+@media (prefers-reduced-motion: reduce) { .scrollhint__mouse::after { animation: none; } }
