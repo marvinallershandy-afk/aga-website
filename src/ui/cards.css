@@ -1,0 +1,314 @@
+/* ═══════════════════════════════════════════════════════════════
+   FIFA-UT-inspirierte SVA-Sammelkarte. Eigenständige Formsprache in
+   Rot/Schwarz/Gold, kein 1:1-Klon. Holo-Shimmer + Pointer/Gyro-Tilt.
+   ═══════════════════════════════════════════════════════════════ */
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: clamp(1rem, 2.5vw, 2rem);
+  width: 100%;
+  margin-top: clamp(2rem, 5vw, 3.5rem);
+}
+
+.holo {
+  --tiltX: 0deg;
+  --tiltY: 0deg;
+  --px: 50%;
+  --py: 50%;
+  --glow: 0;
+  position: relative;
+  aspect-ratio: 3 / 4.2;
+  border-radius: 14px;
+  cursor: pointer;
+  transform: perspective(760px) rotateX(var(--tiltX)) rotateY(var(--tiltY));
+  transform-style: preserve-3d;
+  transition: transform .12s ease-out, box-shadow .2s ease;
+  will-change: transform;
+  box-shadow: 0 12px 34px rgba(0,0,0,.55);
+  isolation: isolate;
+  contain: layout paint;
+}
+.holo:hover { box-shadow: 0 22px 60px rgba(0,0,0,.7), 0 0 40px rgba(233,29,41,.25); }
+
+/* Kartenkorpus — angularer Verlauf in SVA-Farben */
+.holo__body {
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 80% at 50% 0%, #3a2c14 0%, #231f20 40%, #14100f 100%);
+  border: 1px solid rgba(232,193,90,.5);
+}
+
+/* Gold-Rahmen-Innenlinie */
+.holo__frame {
+  position: absolute;
+  inset: 6px;
+  border-radius: 10px;
+  border: 1px solid rgba(232,193,90,.35);
+  pointer-events: none;
+  z-index: 4;
+}
+
+/* Kopfzeile: Rating + Position + Wappen */
+.holo__top {
+  position: absolute;
+  top: 12px; left: 14px;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+}
+.holo__rating {
+  font-family: var(--font-display);
+  font-size: 2.1rem;
+  color: var(--gold);
+  text-shadow: 0 2px 6px rgba(0,0,0,.6);
+}
+.holo__pos {
+  font-size: .62rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+  color: rgba(255,255,255,.85);
+  margin-top: 2px;
+}
+.holo__crest {
+  position: absolute;
+  top: 14px; right: 14px;
+  z-index: 3;
+  width: 30px; height: 34px;
+  display: grid;
+  place-items: center;
+  clip-path: polygon(0 0, 100% 0, 100% 62%, 50% 100%, 0 62%);
+  background: linear-gradient(160deg, var(--red), var(--red-deep));
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: .8rem;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.25);
+}
+
+/* Spielerbild / Silhouette */
+.holo__portrait {
+  position: absolute;
+  top: 8%; left: 0; right: 0;
+  height: 58%;
+  z-index: 2;
+  display: grid;
+  place-items: end center;
+  overflow: hidden;
+}
+.holo__portrait img { height: 100%; object-fit: contain; filter: drop-shadow(0 6px 10px rgba(0,0,0,.5)); }
+.holo__silhouette {
+  width: 70%;
+  height: 92%;
+  background:
+    radial-gradient(circle at 50% 26%, rgba(255,255,255,.14) 0 22%, transparent 23%),
+    linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.02));
+  -webkit-mask: radial-gradient(circle at 50% 22%, #000 18%, transparent 19%),
+    linear-gradient(#000,#000);
+  -webkit-mask-composite: source-over;
+  clip-path: polygon(38% 0, 62% 0, 70% 20%, 92% 42%, 92% 100%, 8% 100%, 8% 42%, 30% 20%);
+  opacity: .7;
+}
+
+/* Nummer als großes Wasserzeichen */
+.holo__watermark {
+  position: absolute;
+  right: 10px; top: 30%;
+  z-index: 1;
+  font-family: var(--font-display);
+  font-size: 6rem;
+  color: rgba(232,193,90,.08);
+  line-height: 1;
+  pointer-events: none;
+}
+
+/* Untere Info-Platte */
+.holo__plate {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  z-index: 3;
+  padding: 10px 12px 12px;
+  text-align: center;
+  background: linear-gradient(180deg, transparent, rgba(10,8,8,.75) 30%);
+}
+.holo__name {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  letter-spacing: .02em;
+  color: #fff;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.holo__rule {
+  height: 1px;
+  margin: 6px auto;
+  width: 80%;
+  background: linear-gradient(90deg, transparent, rgba(232,193,90,.6), transparent);
+}
+.holo__stats {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  font-size: .64rem;
+  letter-spacing: .04em;
+  color: rgba(255,255,255,.82);
+}
+.holo__stats b {
+  display: block;
+  font-family: var(--font-display);
+  font-size: .95rem;
+  color: var(--gold);
+  letter-spacing: .02em;
+}
+
+/* ── Holo-Shimmer-Layer ─────────────────────────────────────── */
+.holo__shine {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  border-radius: 14px;
+  pointer-events: none;
+  mix-blend-mode: color-dodge;
+  opacity: calc(.14 + var(--glow) * .6);
+  background:
+    conic-gradient(from 210deg at var(--px) var(--py),
+      #ff00c8 0deg, #00e5ff 70deg, #7cff00 140deg,
+      #ffd400 210deg, #ff005d 280deg, #ff00c8 360deg);
+  -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><g fill='white'><rect x='0' y='0' width='40' height='40' opacity='0.14'/><path d='M-10 30 L30 -10 M0 40 L40 0 M10 50 L50 10' stroke='white' stroke-width='5' opacity='0.75'/></g></svg>");
+  -webkit-mask-size: 64px 64px;
+  transition: opacity .2s ease;
+}
+/* Glanzstreifen, der der Maus folgt */
+.holo__gloss {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  border-radius: 14px;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+  opacity: var(--glow);
+  background: radial-gradient(circle at var(--px) var(--py),
+    rgba(255,255,255,.8) 0%, rgba(255,255,255,.25) 18%, transparent 45%);
+  transition: opacity .2s ease;
+}
+
+/* laufender Holo-Glanz — nur wenn sichtbar (IntersectionObserver) */
+.holo.is-live .holo__shine { animation: holoDrift 7s linear infinite; }
+@keyframes holoDrift {
+  0%   { -webkit-mask-position: 0 0; filter: hue-rotate(0deg); }
+  100% { -webkit-mask-position: 120px 120px; filter: hue-rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .holo { transition: none; transform: none !important; }
+  .holo__shine { opacity: .14; }
+  .holo__gloss { opacity: 0; }
+  .holo.is-live .holo__shine { animation: none; }
+}
+
+/* ── Detail-Modal ───────────────────────────────────────────── */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: grid;
+  place-items: center;
+  padding: 1.2rem;
+  background: rgba(6,5,8,.82);
+  backdrop-filter: blur(6px);
+}
+.modal-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(1.2rem, 4vw, 2.6rem);
+  align-items: center;
+  justify-content: center;
+  max-width: 760px;
+  width: 100%;
+}
+.modal-card { width: min(74vw, 300px); flex: 0 0 auto; }
+.modal-info { flex: 1 1 240px; min-width: 240px; }
+.modal-info h3 {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 6vw, 3.4rem);
+  line-height: .95;
+  text-transform: uppercase;
+}
+.modal-info .modal-sub { color: var(--gold); letter-spacing: .18em; text-transform: uppercase; font-size: .74rem; font-weight: 800; margin-top: .4rem; }
+.modal-statgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .6rem; margin: 1.4rem 0; }
+.modal-statgrid > div { background: rgba(255,255,255,.05); border: 1px solid rgba(232,193,90,.25); border-radius: 8px; padding: .7rem; text-align: center; }
+.modal-statgrid b { display: block; font-family: var(--font-display); font-size: 1.7rem; color: var(--gold); }
+.modal-statgrid span { font-size: .6rem; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.6); }
+
+.btn {
+  appearance: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  font-size: .78rem;
+  padding: .85rem 1.3rem;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  transition: transform .12s ease, background .2s ease;
+}
+.btn:active { transform: scale(.96); }
+.btn--primary { background: var(--red); color: #fff; }
+.btn--primary:hover { background: #ff2d3a; }
+.btn--ghost { background: rgba(255,255,255,.08); color: #fff; }
+.btn--ghost:hover { background: rgba(255,255,255,.16); }
+.modal-close {
+  position: fixed;
+  top: 1.2rem; right: 1.2rem;
+  z-index: 310;
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.1);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-size: 1.3rem;
+  line-height: 1;
+}
+.modal-actions { display: flex; gap: .7rem; flex-wrap: wrap; }
+.share-note { font-size: .68rem; color: rgba(255,255,255,.5); margin-top: .8rem; }
+
+/* ── fussball.de Widget-Rahmen ──────────────────────────────── */
+.widget-frame {
+  margin-top: clamp(2rem, 5vw, 3rem);
+  border: 1px solid rgba(232,193,90,.3);
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgba(14,13,13,.72);
+  backdrop-filter: blur(4px);
+  max-width: 640px;
+}
+.widget-frame__bar {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  padding: .7rem 1rem;
+  background: linear-gradient(90deg, rgba(233,29,41,.9), rgba(180,20,29,.7));
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+.widget-frame__dot { width: 8px; height: 8px; border-radius: 50%; background: #fff; box-shadow: 0 0 8px #fff; }
+.widget-frame__body { padding: 1rem; }
+.widget-note { font-size: .7rem; color: rgba(255,255,255,.5); padding: 0 1rem 1rem; }
+
+/* ── Kontakt ────────────────────────────────────────────────── */
+.contact-grid { display: flex; flex-wrap: wrap; gap: 1.4rem 3rem; margin-top: 2rem; }
+.contact-grid dt { font-size: .66rem; letter-spacing: .18em; text-transform: uppercase; color: var(--red); margin-bottom: .3rem; font-weight: 800; }
+.contact-grid dd { font-size: 1.05rem; color: #fff; }
