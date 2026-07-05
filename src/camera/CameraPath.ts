@@ -18,7 +18,7 @@ const STATIONS: Station[] = [
   { pos: new THREE.Vector3(3.5, 12.5, 13), look: new THREE.Vector3(0, 0.4, 0) },
   // 1 · ANSTOSS (Signature-Beat, keine eigene Sektion) — Sturzflug auf
   //     Rasenhöhe hinter den Anstoßkreis, Blick über den Ball
-  { pos: new THREE.Vector3(0.35, 0.24, 2.7), look: new THREE.Vector3(-0.3, 0.42, -3.2) },
+  { pos: new THREE.Vector3(0.35, 0.26, 2.75), look: new THREE.Vector3(-4.2, 1.15, -3.6) },
   // 2 · MANNSCHAFT — tief, dynamisch, seitlich übers Mittelfeld gleitend
   { pos: new THREE.Vector3(-7.5, 2.6, 6.5), look: new THREE.Vector3(0.5, 1.0, -0.5) },
   // 3 · TABELLE — Schwenk zum echten Vereinsheim hinter dem Ost-Tor
@@ -58,6 +58,17 @@ export function floodLevelAt(u: number, i: number): number {
 /** Ball-Roll-Fortschritt 0..1 (rollt beim Anstoß an der Kamera vorbei). */
 export function ballRollAt(u: number): number {
   return THREE.MathUtils.clamp((u - KICKOFF_U + 0.02) / 0.1, 0, 1)
+}
+
+/** Aufglüh-Surge je Mast: Glockenkurve über das Flacker-Fenster —
+ *  die Lampenfläche selbst blitzt auf (Emissive-Puls), BEVOR die
+ *  Rasen-Lache voll da ist. Pure Funktion von u → reversibel. */
+export function floodSurgeAt(u: number, i: number): number {
+  const k = kickoffPhase(u)
+  const t = 0.1 + i * 0.19
+  const s = THREE.MathUtils.clamp((k - t) / 0.16, 0, 1)
+  if (s <= 0 || s >= 1) return 0
+  return Math.sin(s * Math.PI)
 }
 
 const posCurve = new THREE.CatmullRomCurve3(

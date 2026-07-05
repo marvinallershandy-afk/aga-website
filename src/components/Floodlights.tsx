@@ -4,7 +4,7 @@ import * as THREE from 'three'
 import { PITCH } from '../utils/constants'
 import { LIGHTING } from '../theme/lighting'
 import { AOBlob } from './AOBlob'
-import { floodLevels } from '../three/floodState'
+import { floodLevels, floodSurges } from '../three/floodState'
 
 // ─────────────────────────────────────────────────────────────
 // Flutlicht mit Substanz: sichtbare Masten (Pole + schräge Streben),
@@ -103,12 +103,15 @@ function Mast({ index, x, z }: MastProps) {
 
   useFrame(() => {
     const lvl = floodLevels[index]
+    const surge = floodSurges[index]
+    // Die LAMPE glüht zuerst auf (Emissive-Blitz + Glow + Kegel-Spike),
+    // die Rasen-Lache folgt dem Level — Reihenfolge des echten Anschaltens.
     if (spotRef.current) spotRef.current.intensity = F.spotIntensity * lvl
-    if (panelMatRef.current) panelMatRef.current.emissiveIntensity = 3.4 * lvl
-    if (coneMatRef.current) coneMatRef.current.opacity = 0.16 * lvl
-    if (glowMatRef.current) glowMatRef.current.opacity = 0.9 * lvl
+    if (panelMatRef.current) panelMatRef.current.emissiveIntensity = 3.4 * lvl + 7 * surge
+    if (coneMatRef.current) coneMatRef.current.opacity = 0.16 * lvl + 0.2 * surge
+    if (glowMatRef.current) glowMatRef.current.opacity = Math.min(1, 0.9 * lvl + 0.8 * surge)
     if (poolRef.current) {
-      (poolRef.current.material as THREE.MeshBasicMaterial).opacity = 0.34 * lvl
+      (poolRef.current.material as THREE.MeshBasicMaterial).opacity = 0.34 * lvl * lvl
     }
   })
 
@@ -117,20 +120,9 @@ function Mast({ index, x, z }: MastProps) {
       <group position={[x, 0, z]} rotation-y={yaw}>
         {/* Mast */}
         <mesh position={[0, MAST_H / 2, 0]}>
-          <cylinderGeometry args={[0.055, 0.095, MAST_H, 8]} />
+          <cylinderGeometry args={[0.032, 0.055, MAST_H, 8]} />
           <meshStandardMaterial color="#26262c" metalness={0.7} roughness={0.45} />
         </mesh>
-        {/* Schräge Streben */}
-        {[-1, 1].map((s) => (
-          <mesh
-            key={s}
-            position={[0, 1.1, s * 0.42]}
-            rotation-x={s * 0.36}
-          >
-            <cylinderGeometry args={[0.022, 0.022, 2.3, 6]} />
-            <meshStandardMaterial color="#202024" metalness={0.6} roughness={0.5} />
-          </mesh>
-        ))}
         {/* Querträger + getiltetes Lampenraster (1 Mesh, Emissive-Map) */}
         <group position={[0, MAST_H, 0]}>
           <mesh position={[0, -0.05, 0]}>
