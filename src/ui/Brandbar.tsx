@@ -14,7 +14,7 @@ export function Brandbar() {
         <nav className="brandbar__nav">
           {SECTIONS.map((s, i) => (
             <a key={s.id} href={`#${s.id}`} data-active={active === i}>
-              {s.id}
+              {s.label}
             </a>
           ))}
         </nav>

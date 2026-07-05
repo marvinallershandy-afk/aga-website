@@ -384,3 +384,36 @@
 .contact-grid { display: flex; flex-wrap: wrap; gap: 1.4rem 3rem; margin-top: 2rem; }
 .contact-grid dt { font-size: .66rem; letter-spacing: .18em; text-transform: uppercase; color: var(--red); margin-bottom: .3rem; font-weight: 800; }
 .contact-grid dd { font-size: 1.05rem; color: #fff; }
+
+/* ── Mitmachen: Gesucht-Grid ────────────────────────────────── */
+.wanted-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: clamp(.8rem, 2vw, 1.2rem);
+  margin: clamp(1.6rem, 4vw, 2.4rem) 0 0;
+  max-width: 860px;
+}
+.wanted-card {
+  display: flex;
+  flex-direction: column;
+  gap: .7rem;
+  padding: clamp(1rem, 2.4vw, 1.4rem);
+  background: rgba(10, 8, 12, .68);
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 14px;
+  backdrop-filter: blur(6px);
+}
+.wanted-card h3 {
+  font-family: var(--font-display);
+  font-size: clamp(1.2rem, 2.6vw, 1.6rem);
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  color: var(--red);
+}
+.wanted-card p {
+  font-size: .92rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, .8);
+  flex: 1;
+}
+.wanted-card .btn { align-self: flex-start; text-decoration: none; }

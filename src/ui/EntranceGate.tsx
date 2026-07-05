@@ -125,16 +125,16 @@ export function EntranceGate() {
         {phase === 'choice' && (
           <div style={{ display: 'flex', gap: '.8rem', flexWrap: 'wrap', justifyContent: 'center', marginTop: '.5rem' }}>
             <button className="btn btn--primary" disabled={loading} onClick={() => open(true)}>
-              {loading ? `Lädt … ${Math.round(progress)}%` : 'Mit Ton betreten'}
+              {loading ? `Rasen wird gemäht … ${Math.round(progress)}%` : 'Mit Ton betreten'}
             </button>
             <button className="btn btn--ghost" disabled={loading} onClick={() => open(false)}>
-              Ohne Ton
+              Lieber leise
             </button>
           </div>
         )}
         {phase === 'flash' && (
           <div style={{ fontSize: '.68rem', letterSpacing: '.28em', textTransform: 'uppercase', color: 'rgba(255,255,255,.45)' }}>
-            {loading ? `Flutlicht an … ${Math.round(progress)}%` : 'Willkommen zurück'}
+            {loading ? `Flutlicht an … ${Math.round(progress)}%` : 'Willkommen zurück am Platz'}
           </div>
         )}
       </div>

@@ -43,7 +43,7 @@ export function PartyUI() {
             boxShadow: '0 8px 30px rgba(233,29,41,.4)',
           }}
         >
-          🍺 Reinkommen?
+          🍺 Auf ein Bier? Reinkommen
         </button>
       )}
       {partyOpen && (

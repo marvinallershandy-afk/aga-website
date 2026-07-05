@@ -60,11 +60,42 @@ export function Sections() {
         <FussballWidget />
       </section>
 
-      {/* 3 · KONTAKT/FINALE — linksbündig, rechts lebt der Fanblock */}
+      {/* 3 · MITMACHEN/FINALE — linksbündig, rechts lebt der Fanblock */}
       <section id={kontakt.id} className="section section--left">
         <div className="section__scrim" />
         <Header kicker={kontakt.kicker} title={kontakt.title} body={kontakt.body} />
-        <motion.dl className="contact-grid" {...reveal} style={{ maxWidth: 560 }}>
+
+        {/* Wen wir suchen — jeder Baustein mit nächstem Schritt */}
+        <motion.div className="wanted-grid" {...reveal}>
+          <div className="wanted-card">
+            <h3>Spieler</h3>
+            <p>Du kannst kicken? Oder glaubst es zumindest? Beides reicht für den Anfang.</p>
+            <a className="btn btn--primary" href={`mailto:${CONTACT.email}?subject=Probetraining`}>
+              Probetraining: einfach da sein
+            </a>
+          </div>
+          <div className="wanted-card">
+            <h3>Helfer & Fans</h3>
+            <p>Bande streichen, Grill anwerfen, laut sein — ein Verein lebt von Leuten, die einfach da sind.</p>
+            <a
+              className="btn btn--ghost"
+              href={`https://maps.apple.com/?q=${encodeURIComponent(CONTACT.address)}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Sonntag vorbeikommen
+            </a>
+          </div>
+          <div className="wanted-card">
+            <h3>Sponsoren</h3>
+            <p>Deine Bande wartet schon, wir haben sie extra freigelassen. Logo am Platz, Reichweite im Dorf, Herz inklusive.</p>
+            <a className="btn btn--ghost" href={`mailto:${CONTACT.email}?subject=Bande%20sichern`}>
+              Bande sichern
+            </a>
+          </div>
+        </motion.div>
+
+        <motion.dl className="contact-grid" {...reveal} style={{ maxWidth: 620 }}>
           <div>
             <dt>Training</dt>
             <dd>{CONTACT.training}</dd>
@@ -83,7 +114,7 @@ export function Sections() {
           </div>
         </motion.dl>
         <p style={{ marginTop: '3rem', fontSize: '0.7rem', letterSpacing: '0.1em', color: 'rgba(255,255,255,0.35)' }}>
-          © {CLUB.founded}–2026 {CLUB.name} · Platzhalter-Inhalte
+          © Seit {CLUB.founded} · {CLUB.name} e.V. · Mit Herz gebaut, Platzhalter ehrlich markiert.
         </p>
       </section>
     </main>

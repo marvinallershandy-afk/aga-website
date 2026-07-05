@@ -59,8 +59,8 @@ function ModalContent({ player }: { player: Player }) {
           </button>
           <button className="btn btn--ghost" onClick={close}>Zurück</button>
         </div>
-        {result === 'downloaded' && <p className="share-note">Bild wurde heruntergeladen — teile es in deiner Story.</p>}
-        {result === 'error' && <p className="share-note">Teilen nicht möglich. Bitte erneut versuchen.</p>}
+        {result === 'downloaded' && <p className="share-note">Bild ist im Download-Ordner — ab damit in deine Story.</p>}
+        {result === 'error' && <p className="share-note">Hat nicht geklappt — einmal noch, der Ball war im Aus.</p>}
       </div>
     </motion.div>
   )
