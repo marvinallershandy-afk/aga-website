@@ -8,6 +8,15 @@ import { sampleFlight, scrollToU, cameraState } from './CameraPath'
 // Store (DOM-Scroll). Wir dämpfen ihn zeitbasiert → cinematisches
 // Nachziehen statt 1:1-Ruckeln, Nutzer bleibt aber jederzeit Herr
 // über die Richtung (kein Scroll-Hijacking).
+// DEV: feste Kamera via ?cam=x,y,z,lx,ly,lz (für Referenz-Vergleichspaare)
+const devCam = (() => {
+  if (!import.meta.env.DEV || typeof window === 'undefined') return null
+  const raw = new URLSearchParams(window.location.search).get('cam')
+  if (!raw) return null
+  const v = raw.split(',').map(Number)
+  return v.length === 6 && v.every((n) => !isNaN(n)) ? v : null
+})()
+
 export function CameraRig() {
   const camera = useThree((s) => s.camera)
   const smoothed = useRef(0)
@@ -16,6 +25,12 @@ export function CameraRig() {
   const currentLook = useRef(new THREE.Vector3(0, 0.4, 0))
 
   useFrame((state, delta) => {
+    if (devCam) {
+      camera.position.set(devCam[0], devCam[1], devCam[2])
+      camera.lookAt(devCam[3], devCam[4], devCam[5])
+      cameraState.u = 1 // Flutlicht voll an für Vergleichsbilder
+      return
+    }
     const target = scrollToU(useStore.getState().scrollProgress)
     // zeitbasierte Dämpfung (frameratenunabhängig)
     smoothed.current = THREE.MathUtils.damp(smoothed.current, target, 4, delta)

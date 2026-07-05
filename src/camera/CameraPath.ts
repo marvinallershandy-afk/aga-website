@@ -21,8 +21,8 @@ const STATIONS: Station[] = [
   { pos: new THREE.Vector3(0.35, 0.24, 2.7), look: new THREE.Vector3(-0.3, 0.42, -3.2) },
   // 2 · MANNSCHAFT — tief, dynamisch, seitlich übers Mittelfeld gleitend
   { pos: new THREE.Vector3(-7.5, 2.6, 6.5), look: new THREE.Vector3(0.5, 1.0, -0.5) },
-  // 3 · TABELLE — Schwenk zur Vereinsheim-Seite, mittlere Höhe
-  { pos: new THREE.Vector3(8.5, 4.2, 7.5), look: new THREE.Vector3(7.6, 1.1, 0) },
+  // 3 · TABELLE — Schwenk zum echten Vereinsheim hinter dem Ost-Tor
+  { pos: new THREE.Vector3(8.6, 2.6, 6.2), look: new THREE.Vector3(7.0, 0.35, -0.6) },
   // 4 · KONTAKT — weiter Beauty-Shot in der Abenddämmerung, Rückzug
   { pos: new THREE.Vector3(0, 6.5, 15.5), look: new THREE.Vector3(0, 1.4, 0) },
 ]
@@ -47,12 +47,12 @@ export function floodLevelAt(u: number, i: number): number {
   const k = kickoffPhase(u)
   const t = 0.1 + i * 0.19          // 4 Beats, Mast für Mast
   const s = THREE.MathUtils.clamp((k - t) / 0.16, 0, 1)
-  if (s <= 0) return 0.32           // Dämmerung: Lampen glimmen
+  if (s <= 0) return 0.42           // Dämmerung: Lampen glimmen
   if (s >= 1) return 1
   // deterministisches Flackern (pure Funktion von k → rückwärts identisch)
   const n = Math.sin(s * 47 + i * 13.7) * Math.sin(s * 89 + i * 5.3)
   const on = n > -0.35 ? 1 : 0.12
-  return 0.32 + 0.68 * s * on
+  return 0.42 + 0.58 * s * on
 }
 
 /** Ball-Roll-Fortschritt 0..1 (rollt beim Anstoß an der Kamera vorbei). */

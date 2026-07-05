@@ -6,7 +6,7 @@ export const CLUB = {
   name: 'SV Agathenburg-Dollern',
   shortName: 'SVA',
   claim: 'Ein Dorf. Ein Verein. Ein Platz.',
-  founded: 1948,
+  founded: 1949,
   // fussball.de Vereins-/Team-Widget-ID — PLATZHALTER.
   // Marvin trägt die echte Team-Permanent-ID von fussball.de nach.
   fussballDeTeamId: '011MIABCDE000000VS5489B2VVCJ',
@@ -23,7 +23,7 @@ export interface Section {
 export const SECTIONS: Section[] = [
   {
     id: 'verein',
-    kicker: 'Seit 1948',
+    kicker: 'Seit 1949',
     title: 'Willkommen\nam Platz',
     body: 'Der SV Agathenburg-Dollern ist mehr als ein Fußballverein — er ist das Wohnzimmer des Dorfes. Flutlicht an, Rasen frisch, die Bande voll. Willkommen in unserer Welt.',
   },

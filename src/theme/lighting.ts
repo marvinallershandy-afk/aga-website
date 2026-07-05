@@ -18,5 +18,5 @@ export const LIGHTING = {
   },
 
   // Linearer Fog: Platz klar, Welt dahinter verschwimmt
-  fog: { color: '#14111f', near: 20, far: 52 },
+  fog: { color: '#14111f', near: 14, far: 48 },
 } as const

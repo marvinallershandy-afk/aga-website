@@ -11,6 +11,10 @@ import { CLUB } from '../data/club'
 const W = 1080
 const H = 1920
 
+// Vereinswappen einmal vorladen (fürs Story-Bild)
+const crestImage = typeof Image !== 'undefined' ? new Image() : null
+if (crestImage) crestImage.src = '/brand/wappen.png'
+
 function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
   ctx.beginPath()
   ctx.moveTo(x + r, y)
@@ -107,22 +111,12 @@ export function renderStoryCanvas(player: Player): HTMLCanvasElement {
   ctx.font = '800 34px Archivo, system-ui'
   ctx.fillText(player.position, cx + 70, cy + 200)
 
-  // Wappen-Platzhalter (Schild)
-  const crx = cx + cw - 110
-  const cryy = cy + 70
-  ctx.fillStyle = '#E91D29'
-  ctx.beginPath()
-  ctx.moveTo(crx, cryy)
-  ctx.lineTo(crx + 60, cryy)
-  ctx.lineTo(crx + 60, cryy + 42)
-  ctx.lineTo(crx + 30, cryy + 68)
-  ctx.lineTo(crx, cryy + 42)
-  ctx.closePath()
-  ctx.fill()
-  ctx.fillStyle = '#fff'
-  ctx.textAlign = 'center'
-  ctx.font = '400 40px Anton, system-ui'
-  ctx.fillText('A', crx + 30, cryy + 42)
+  // Echtes Vereinswappen (falls geladen — sonst leer lassen)
+  if (crestImage?.complete && crestImage.naturalWidth > 0) {
+    const crw = 82
+    const crh = crw * (crestImage.naturalHeight / crestImage.naturalWidth)
+    ctx.drawImage(crestImage, cx + cw - crw - 52, cy + 48, crw, crh)
+  }
 
   // Nummer-Wasserzeichen
   ctx.fillStyle = 'rgba(232,193,90,0.10)'

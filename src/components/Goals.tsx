@@ -48,7 +48,19 @@ function Goal({ side }: { side: 1 | -1 }) {
   const tex = useMemo(getNetTexture, [])
   const sideL = useMemo(() => sideGeometry(false), [])
   const sideR = useMemo(() => sideGeometry(true), [])
-  const slant = Math.hypot(NET_DEPTH, gh)
+  const backNet = useMemo(() => {
+    const g = new THREE.BufferGeometry()
+    g.setAttribute('position', new THREE.Float32BufferAttribute([
+      0, gh, -gw,          // Latte links
+      0, gh, gw,           // Latte rechts
+      NET_DEPTH, 0, gw,    // Boden hinten rechts
+      NET_DEPTH, 0, -gw,   // Boden hinten links
+    ], 3))
+    g.setAttribute('uv', new THREE.Float32BufferAttribute([0, 1, 1, 1, 1, 0, 0, 0], 2))
+    g.setIndex([0, 1, 2, 0, 2, 3])
+    g.computeVertexNormals()
+    return g
+  }, [gh, gw])
 
   return (
     <group position={[x, 0, 0]} rotation-y={side > 0 ? 0 : Math.PI}>
@@ -63,12 +75,9 @@ function Goal({ side }: { side: 1 | -1 }) {
         <cylinderGeometry args={[postR, postR, PITCH.goalWidth, 8]} />
         <meshStandardMaterial color="#e8ecf0" metalness={0.55} roughness={0.35} />
       </mesh>
-      {/* Netz: schräge Rückwand */}
-      <mesh
-        position={[NET_DEPTH / 2, gh / 2, 0]}
-        rotation={[0, Math.PI / 2, Math.atan2(NET_DEPTH, gh)]}
-      >
-        <planeGeometry args={[PITCH.goalWidth, slant]} />
+      {/* Netz: schräge Rückwand (explizite Geometrie — Latte oben,
+          Boden hinten unten; keine Rotations-Akrobatik) */}
+      <mesh geometry={backNet}>
         <meshBasicMaterial map={tex} transparent side={THREE.DoubleSide} depthWrite={false} />
       </mesh>
       {/* Netz: Seiten-Dreiecke */}

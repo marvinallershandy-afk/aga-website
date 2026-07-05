@@ -71,7 +71,7 @@ export function HoloCard({ player, onClick, large }: Props) {
         <span className="holo__rating">{player.rating}</span>
         <span className="holo__pos">{player.position}</span>
       </div>
-      <div className="holo__crest" title={CLUB.shortName}>A</div>
+      <img className="holo__crest" src="/brand/wappen.png" alt={CLUB.name} title={CLUB.shortName} />
 
       <div className="holo__portrait">
         {player.photoUrl ? (
