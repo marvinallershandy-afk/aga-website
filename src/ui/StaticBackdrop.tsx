@@ -12,21 +12,39 @@ export function StaticBackdrop() {
             'linear-gradient(180deg, #0a0c1a 0%, #141830 30%, #2c2340 58%, #5a3a3a 80%, #3a2622 92%, #181018 100%)',
         }}
       />
-      {/* Flutlicht-Glows */}
+      {/* Flutlicht-Masten (Silhouette + Kopf + Glow + Kegel) */}
       {[18, 82].map((x) => (
-        <div
-          key={x}
-          style={{
-            position: 'absolute',
-            left: `${x}%`,
-            top: '18%',
-            width: 6,
-            height: '46%',
-            background: 'linear-gradient(180deg, #ffe6b0, rgba(255,230,176,0.05))',
-            filter: 'blur(2px)',
-            opacity: 0.6,
-          }}
-        />
+        <div key={x} style={{ position: 'absolute', left: `${x}%`, top: '16%', height: '50%' }}>
+          {/* Mast */}
+          <div style={{ position: 'absolute', left: -2, top: 26, width: 4, height: '100%', background: '#191921' }} />
+          {/* Lampenkopf */}
+          <div
+            style={{
+              position: 'absolute', left: -19, top: 8, width: 38, height: 22,
+              background: '#101014', borderRadius: 2,
+              display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 2, padding: 3,
+            }}
+          >
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} style={{ background: '#ffedc4', borderRadius: 1 }} />
+            ))}
+          </div>
+          {/* Glow */}
+          <div
+            style={{
+              position: 'absolute', left: -55, top: -28, width: 110, height: 90,
+              background: 'radial-gradient(ellipse at center, rgba(255,230,176,0.5), transparent 65%)',
+            }}
+          />
+          {/* Lichtkegel */}
+          <div
+            style={{
+              position: 'absolute', left: x < 50 ? -10 : -150, top: 26, width: 160, height: 320,
+              background: `linear-gradient(${x < 50 ? 155 : 205}deg, rgba(255,230,176,0.16), transparent 62%)`,
+              clipPath: x < 50 ? 'polygon(6% 0, 14% 0, 100% 100%, 40% 100%)' : 'polygon(86% 0, 94% 0, 60% 100%, 0 100%)',
+            }}
+          />
+        </div>
       ))}
       <div
         style={{

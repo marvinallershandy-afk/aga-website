@@ -2,7 +2,7 @@ import { chromium } from 'playwright'
 const PORT = process.env.PORT || '5173'
 const b = await chromium.launch({ headless: false, args:['--window-position=50,50'] })
 const p = await (await b.newContext({ viewport:{width:1280,height:800} })).newPage()
-await p.goto(`http://localhost:${PORT}`,{waitUntil:'networkidle'}); await p.waitForTimeout(3500)
+await p.goto(`http://localhost:${PORT}`,{waitUntil:'load', timeout:60000}); await p.waitForTimeout(3500)
 const total = await p.evaluate(()=>document.documentElement.scrollHeight-window.innerHeight)
 for (const [name,frac] of [['hero',0],['team',0.5],['kontakt',1]]) {
   await p.evaluate((y)=>window.scrollTo(0,y), Math.round(total*frac)); await p.waitForTimeout(1500)
