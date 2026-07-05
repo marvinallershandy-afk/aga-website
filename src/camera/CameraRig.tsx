@@ -2,7 +2,7 @@ import { useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useStore } from '../store/useStore'
-import { sampleFlight, scrollToU } from './CameraPath'
+import { sampleFlight, scrollToU, cameraState } from './CameraPath'
 
 // Scroll-getriebene Kamerafahrt. Der Ziel-Fortschritt kommt aus dem
 // Store (DOM-Scroll). Wir dämpfen ihn zeitbasiert → cinematisches
@@ -19,6 +19,7 @@ export function CameraRig() {
     const target = scrollToU(useStore.getState().scrollProgress)
     // zeitbasierte Dämpfung (frameratenunabhängig)
     smoothed.current = THREE.MathUtils.damp(smoothed.current, target, 4, delta)
+    cameraState.u = smoothed.current // für Flutlicht/Ball/Staub (Anstoß)
 
     sampleFlight(smoothed.current, pos.current, look.current)
 

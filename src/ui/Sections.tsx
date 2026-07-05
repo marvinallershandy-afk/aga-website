@@ -42,6 +42,10 @@ export function Sections() {
         </motion.p>
       </section>
 
+      {/* ANSTOSS — leere Beat-Sektion: hier gehört die Bühne der Kamera
+          (Sturzflug, Flutlicht-Flacker, Ball) — kein Inhalt davor. */}
+      <section id="anstoss" aria-hidden="true" style={{ minHeight: '150vh', pointerEvents: 'none' }} />
+
       {/* 1 · MANNSCHAFT */}
       <section id={mannschaft.id} className="section section--left">
         <div className="section__scrim" />

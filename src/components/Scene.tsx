@@ -8,6 +8,8 @@ import { Floodlights } from './Floodlights'
 import { CornerFlags } from './CornerFlags'
 import { Stands } from './Stands'
 import { Football } from './Football'
+import { KickoffDirector } from './KickoffDirector'
+import { ConeDust } from './ConeDust'
 import { LIGHTING } from '../theme/lighting'
 
 // Die Bühne: der Platz bei Flutlicht in der Abenddämmerung.
@@ -40,6 +42,8 @@ export function Scene() {
       <Clubhouse />
       <Treeline />
       <Football />
+      <ConeDust />
+      <KickoffDirector />
     </group>
   )
 }

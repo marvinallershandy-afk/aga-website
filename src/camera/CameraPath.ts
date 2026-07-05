@@ -13,19 +13,52 @@ export interface Station {
   look: THREE.Vector3
 }
 
-// Station i wird bei Scroll-Fraction i/(n-1) erreicht.
 const STATIONS: Station[] = [
   // 0 · VEREIN — hohe, leicht gekippte Establishing-Shot über dem Anstoßkreis
   { pos: new THREE.Vector3(3.5, 12.5, 13), look: new THREE.Vector3(0, 0.4, 0) },
-  // 1 · MANNSCHAFT — tief, dynamisch, seitlich übers Mittelfeld gleitend
+  // 1 · ANSTOSS (Signature-Beat, keine eigene Sektion) — Sturzflug auf
+  //     Rasenhöhe hinter den Anstoßkreis, Blick über den Ball
+  { pos: new THREE.Vector3(0.35, 0.24, 2.7), look: new THREE.Vector3(-0.3, 0.42, -3.2) },
+  // 2 · MANNSCHAFT — tief, dynamisch, seitlich übers Mittelfeld gleitend
   { pos: new THREE.Vector3(-7.5, 2.6, 6.5), look: new THREE.Vector3(0.5, 1.0, -0.5) },
-  // 2 · TABELLE — Schwenk zur Vereinsheim-Seite, mittlere Höhe
+  // 3 · TABELLE — Schwenk zur Vereinsheim-Seite, mittlere Höhe
   { pos: new THREE.Vector3(8.5, 4.2, 7.5), look: new THREE.Vector3(7.6, 1.1, 0) },
-  // 3 · KONTAKT — weiter Beauty-Shot in der Abenddämmerung, Rückzug
+  // 4 · KONTAKT — weiter Beauty-Shot in der Abenddämmerung, Rückzug
   { pos: new THREE.Vector3(0, 6.5, 15.5), look: new THREE.Vector3(0, 1.4, 0) },
 ]
 
 export const STATION_COUNT = STATIONS.length
+
+// ─── Anstoß-Dramaturgie ──────────────────────────────────────
+// Geteilter Fahrt-Zustand (pro Frame von CameraRig geschrieben,
+// von Flutlicht/Ball/Staub gelesen — kein React-State).
+export const cameraState = { u: 0 }
+
+// Kurven-Parameter der Anstoß-Station
+const KICKOFF_U = 1 / (STATIONS.length - 1) // 0.25
+
+/** Anstoß-Phase 0..1 (rein aus u abgeleitet → scroll-reversibel). */
+export function kickoffPhase(u: number): number {
+  return THREE.MathUtils.clamp((u - 0.07) / (KICKOFF_U - 0.07), 0, 1)
+}
+
+/** Flutlicht-Level je Mast: Dämmer-Glimmen → sequenzielles Aufflackern. */
+export function floodLevelAt(u: number, i: number): number {
+  const k = kickoffPhase(u)
+  const t = 0.1 + i * 0.19          // 4 Beats, Mast für Mast
+  const s = THREE.MathUtils.clamp((k - t) / 0.16, 0, 1)
+  if (s <= 0) return 0.32           // Dämmerung: Lampen glimmen
+  if (s >= 1) return 1
+  // deterministisches Flackern (pure Funktion von k → rückwärts identisch)
+  const n = Math.sin(s * 47 + i * 13.7) * Math.sin(s * 89 + i * 5.3)
+  const on = n > -0.35 ? 1 : 0.12
+  return 0.32 + 0.68 * s * on
+}
+
+/** Ball-Roll-Fortschritt 0..1 (rollt beim Anstoß an der Kamera vorbei). */
+export function ballRollAt(u: number): number {
+  return THREE.MathUtils.clamp((u - KICKOFF_U + 0.02) / 0.1, 0, 1)
+}
 
 const posCurve = new THREE.CatmullRomCurve3(
   STATIONS.map((s) => s.pos),
@@ -40,10 +73,16 @@ const lookCurve = new THREE.CatmullRomCurve3(
   0.5,
 )
 
-// Scroll-Fraction, bei der jede Sektion mittig steht (DOM-Zentren).
-// Damit rasten die Kamera-Stationen genau dann ein, wenn die
-// zugehörige Sektion im Blick ist — statt linear daneben.
-const ANCHORS = [0.15, 0.5, 0.83, 1.0]
+// Scroll-Fraction, bei der jede Station erreicht wird. Wird zur
+// Laufzeit aus den echten DOM-Sektions-Zentren gemessen (inkl. der
+// leeren Anstoß-Beat-Sektion) — Defaults nur als Fallback.
+const ANCHORS = [0.12, 0.3, 0.5, 0.83, 1.0]
+
+/** Von useScrollProgress mit gemessenen DOM-Zentren befüllt. */
+export function setAnchors(values: number[]) {
+  if (values.length !== ANCHORS.length) return
+  for (let i = 0; i < values.length; i++) ANCHORS[i] = values[i]
+}
 
 /** Bildet den Scroll-Fortschritt auf den Kurven-Parameter u∈[0,1] ab. */
 export function scrollToU(p: number): number {
