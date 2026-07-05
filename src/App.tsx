@@ -14,6 +14,7 @@ import { PlayerModal } from './ui/PlayerModal'
 import { PerfOverlay } from './ui/PerfOverlay'
 import { EntranceGate } from './ui/EntranceGate'
 import { MusicDock } from './ui/MusicDock'
+import { AudioManager } from './audio/AudioManager'
 
 export default function App() {
   const fallback = useStore((s) => s.fallback)
@@ -39,6 +40,13 @@ export default function App() {
   }, [togglePerf])
 
   useScrollProgress(!fallback)
+
+  // Fanblock-Finale: Atmosphäre zieht leicht an (Gemurmel näher)
+  useEffect(() => {
+    return useStore.subscribe((s2) => {
+      AudioManager.setAtmoBoost(s2.scrollProgress > 0.88)
+    })
+  }, [])
 
   return (
     <>

@@ -60,11 +60,11 @@ export function Sections() {
         <FussballWidget />
       </section>
 
-      {/* 3 · KONTAKT */}
-      <section id={kontakt.id} className="section section--center">
+      {/* 3 · KONTAKT/FINALE — linksbündig, rechts lebt der Fanblock */}
+      <section id={kontakt.id} className="section section--left">
         <div className="section__scrim" />
-        <Header kicker={kontakt.kicker} title={kontakt.title} body={kontakt.body} center />
-        <motion.dl className="contact-grid" {...reveal} style={{ justifyContent: 'center' }}>
+        <Header kicker={kontakt.kicker} title={kontakt.title} body={kontakt.body} />
+        <motion.dl className="contact-grid" {...reveal} style={{ maxWidth: 560 }}>
           <div>
             <dt>Training</dt>
             <dd>{CONTACT.training}</dd>

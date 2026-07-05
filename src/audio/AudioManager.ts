@@ -14,6 +14,7 @@ import { TRACKS, trackUrl, type Track } from './tracks'
 const LEVELS = {
   master: 0.9,
   atmo: 0.16,
+  atmoBoost: 1.8, // Fanblock-Finale: näher am Gemurmel
   atmoDucked: 0.05,
   music: 0.42,
   musicParty: 0.75, // Partyraum (Etappe 6)
@@ -31,6 +32,7 @@ class AudioManagerImpl {
   private el: HTMLAudioElement | null = null
   private enabled = false
   private mode: MusicMode = 'ambient'
+  private atmoBoosted = false
 
   trackIndex = 0
   playing = false
@@ -121,8 +123,16 @@ class AudioManagerImpl {
 
   private applyDucking() {
     if (!this.ctx) return
+    const boost = this.atmoBoosted ? LEVELS.atmoBoost : 1
     this.ramp(this.music, this.mode === 'party' ? LEVELS.musicParty : LEVELS.music, 0.8)
-    this.ramp(this.atmo, this.playing ? LEVELS.atmoDucked : LEVELS.atmo, 0.8)
+    this.ramp(this.atmo, (this.playing ? LEVELS.atmoDucked : LEVELS.atmo) * boost, 0.8)
+  }
+
+  /** Fanblock-Finale: Atmosphäre zieht leicht an. */
+  setAtmoBoost(on: boolean) {
+    if (this.atmoBoosted === on) return
+    this.atmoBoosted = on
+    this.applyDucking()
   }
 
   /** Aktuelle Gain-Werte (Beleg fürs Gate). */

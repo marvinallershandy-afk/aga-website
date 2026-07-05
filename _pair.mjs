@@ -11,8 +11,10 @@ const pairs = [
 for (const [name, cam] of pairs) {
   const p = await ctx.newPage()
   await p.goto(`http://localhost:5199/?cam=${cam}`,{waitUntil:'load', timeout:60000})
-  await p.waitForFunction(() => window.useStore?.getState().ready, null, { timeout: 30000 })
+  await p.waitForFunction(() => window.useStore?.getState().ready, null, { timeout: 60000 })
+  await p.evaluate(() => { window.useStore.getState().setGateOpen(true) })
   await p.waitForTimeout(1500)
+  await p.evaluate(() => { document.querySelector('[data-testid=gate]')?.remove() })
   await p.evaluate(() => {
     for (const sel of ['.scroll-root','.brandbar','.scrollhint']) document.querySelector(sel)?.setAttribute('style','display:none')
   })

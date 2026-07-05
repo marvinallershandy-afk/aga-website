@@ -10,6 +10,7 @@ import { Barrier } from './Barrier'
 import { BallStopFence } from './BallStopFence'
 import { BrickHut } from './BrickHut'
 import { Village } from './Village'
+import { FanBlock } from './FanBlock'
 import { Football } from './Football'
 import { KickoffDirector } from './KickoffDirector'
 import { ConeDust } from './ConeDust'
@@ -41,6 +42,7 @@ export function Scene() {
       <Clubhouse />
       <BrickHut />
       <Village />
+      <FanBlock />
       <Treeline />
       <Football />
       <ConeDust />
