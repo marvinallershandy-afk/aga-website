@@ -4,7 +4,7 @@ import { SECTIONS } from '../data/club'
 import { setAnchors } from '../camera/anchors'
 
 // Kamera-Stationen in DOM-Reihenfolge (anstoss = leere Beat-Sektion).
-const STATION_IDS = ['verein', 'anstoss', 'mannschaft', 'tabelle', 'kontakt']
+const STATION_IDS = ['verein', 'anstoss', 'mannschaft', 'musik', 'tabelle', 'kontakt']
 
 // Liest den nativen Dokument-Scroll, normalisiert auf 0..1 und legt
 // ihn (rAF-gedrosselt) im Store ab. Zusätzlich werden die Kamera-

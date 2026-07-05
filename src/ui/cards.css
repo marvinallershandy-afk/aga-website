@@ -417,3 +417,84 @@
   flex: 1;
 }
 .wanted-card .btn { align-self: flex-start; text-decoration: none; }
+
+/* ── Musik-Sektion ──────────────────────────────────────────── */
+.music-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(1.4rem, 4vw, 3rem);
+  align-items: flex-start;
+  margin-top: clamp(1.6rem, 4vw, 2.6rem);
+  max-width: 900px;
+}
+.music-section__cover {
+  position: relative;
+  width: min(64vw, 300px);
+  flex: 0 0 auto;
+}
+.music-section__cover img {
+  width: 100%;
+  border-radius: 12px;
+  box-shadow: 0 18px 50px rgba(0,0,0,.6);
+  display: block;
+}
+.music-section__coverGlow {
+  position: absolute;
+  inset: -12%;
+  z-index: -1;
+  background: radial-gradient(circle, rgba(233,29,41,.28), transparent 65%);
+  filter: blur(8px);
+}
+.music-section__list {
+  flex: 1 1 300px;
+  min-width: 280px;
+  background: rgba(10, 8, 12, .68);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 14px;
+  padding: .5rem;
+  backdrop-filter: blur(6px);
+}
+.music-track {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  width: 100%;
+  padding: .5rem .65rem;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: rgba(255,255,255,.82);
+  font-family: var(--font-body);
+  font-size: .88rem;
+  cursor: pointer;
+  text-align: left;
+  transition: background .15s ease, color .15s ease;
+}
+.music-track:hover { background: rgba(255,255,255,.07); color: #fff; }
+.music-track.is-active { background: rgba(233,29,41,.18); color: #fff; }
+.music-track__no {
+  width: 1.6em;
+  font-family: var(--font-display);
+  font-size: .78rem;
+  color: rgba(255,255,255,.4);
+  letter-spacing: .06em;
+}
+.music-track.is-active .music-track__no { color: var(--red); }
+.music-track__title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.music-track__dur { font-size: .7rem; color: rgba(255,255,255,.4); font-variant-numeric: tabular-nums; }
+.music-section__links {
+  display: flex;
+  gap: .6rem;
+  padding: .6rem .65rem .35rem;
+  border-top: 1px solid rgba(255,255,255,.08);
+  margin-top: .4rem;
+}
+.music-section__soon {
+  font-size: .66rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.4);
+  border: 1px dashed rgba(255,255,255,.25);
+  border-radius: 999px;
+  padding: .32em .8em;
+}

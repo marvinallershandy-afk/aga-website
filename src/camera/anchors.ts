@@ -4,7 +4,7 @@
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v))
 
 // Defaults nur als Fallback; zur Laufzeit aus DOM-Zentren gemessen.
-const ANCHORS = [0.12, 0.3, 0.5, 0.83, 1.0]
+const ANCHORS = [0.12, 0.28, 0.46, 0.64, 0.84, 1.0]
 
 export function setAnchors(values: number[]) {
   if (values.length !== ANCHORS.length) return

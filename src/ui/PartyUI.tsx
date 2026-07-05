@@ -26,7 +26,7 @@ export function PartyUI() {
     }, 320)
   }
 
-  const showEnter = !partyOpen && activeSection === 2
+  const showEnter = !partyOpen && activeSection === 3
 
   return (
     <>

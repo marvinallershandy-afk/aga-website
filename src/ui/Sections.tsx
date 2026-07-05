@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { SECTIONS, CONTACT, CLUB } from '../data/club'
 import { PlayerCardGrid } from './PlayerCardGrid'
+import { MusicSectionPlayer } from './MusicSection'
 import { FussballWidget } from './FussballWidget'
 
 const reveal = {
@@ -23,7 +24,7 @@ function Header({ kicker, title, body, center }: { kicker: string; title: string
 }
 
 export function Sections() {
-  const [verein, mannschaft, tabelle, kontakt] = SECTIONS
+  const [verein, mannschaft, musik, tabelle, kontakt] = SECTIONS
 
   return (
     <main className="scroll-root">
@@ -53,7 +54,14 @@ export function Sections() {
         <PlayerCardGrid />
       </section>
 
-      {/* 2 · TABELLE */}
+      {/* 2 · MUSIK — AGA URKNALL, der Vereins-Soundtrack */}
+      <section id={musik.id} className="section section--left">
+        <div className="section__scrim" />
+        <Header kicker={musik.kicker} title={musik.title} body={musik.body} />
+        <MusicSectionPlayer />
+      </section>
+
+      {/* 3 · TABELLE */}
       <section id={tabelle.id} className="section section--left">
         <div className="section__scrim" />
         <Header kicker={tabelle.kicker} title={tabelle.title} body={tabelle.body} />

@@ -38,6 +38,13 @@ export const SECTIONS: Section[] = [
     body: 'Sechzehn Typen, die montags humpeln und sonntags fliegen. Jeder von ihnen als Sammelkarte — mit Holo-Glanz, echten Zahlen und genug Stolz für ein ganzes Album. Tipp eine Karte an und teil deinen Spieler in der Story.',
   },
   {
+    id: 'musik',
+    label: 'Musik',
+    kicker: 'Vereins-Soundtrack',
+    title: 'AGA\nUrknall',
+    body: 'Musik aus dem Verein, für den Verein — geschrieben von einem von uns. Zehn Songs über Anpfiff, Abpfiff und alles, was dazwischen knallt. Drück Play, dreh auf — und wenn du mitgrölen kannst, bist du schon fast Mitglied.',
+  },
+  {
     id: 'tabelle',
     label: 'Tabelle',
     kicker: 'Ergebnisse & Tabelle',
