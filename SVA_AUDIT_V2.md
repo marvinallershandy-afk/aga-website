@@ -66,6 +66,18 @@ Trade gegen das harte Mobile-Budget. Stattdessen: **drei `<Environment>` mit Lig
 Flutlicht-Näherung). Null Download, einmalige Renderkosten, und PBR-Materialien (Ball,
 Torpfosten) bekommen echte Reflexionen — visuell mehr Wirkung als das gedimmte HDRI.
 
+## Perf-Tabelle Baseline → Ende (echte GPU, headed Chromium, 1280×800)
+
+| Messung | Hero | Mannschaft | Kontakt | Scroll-Sweep vor/zurück |
+|---|---|---|---|---|
+| v1 Baseline | 33,1 ms* | 33,6 ms* | 33,1 ms* | — |
+| v2 final | **16,6 ms** | **17,6 ms** | **16,6 ms** | **16,7 / 16,6 ms** |
+
+*v1-Lauf war fenster-gedrosselt (30-Hz-Occlusion) — v2 final läuft sichtbar
+bei vollen **60 FPS (VSync-Limit)** an allen Stationen und durch die komplette
+Fahrt in beide Richtungen. Szene-Budget final: ~103 Draw-Calls, ~14,6k Dreiecke
+(v1: 100 / 24,9k). SwiftShader-Headless-Werte nur für Screenshots genutzt.
+
 ## Asset-Herkunft (laufend gepflegt)
 
 | Asset | Quelle | Lizenz |
