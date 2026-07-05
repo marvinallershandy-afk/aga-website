@@ -2,7 +2,8 @@ import { useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useStore } from '../store/useStore'
-import { sampleFlight, scrollToU, cameraState } from './CameraPath'
+import { sampleFlight, cameraState } from './CameraPath'
+import { scrollToU } from './anchors'
 
 // Scroll-getriebene Kamerafahrt. Der Ziel-Fortschritt kommt aus dem
 // Store (DOM-Scroll). Wir dämpfen ihn zeitbasiert → cinematisches

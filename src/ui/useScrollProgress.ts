@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useStore } from '../store/useStore'
 import { SECTIONS } from '../data/club'
-import { setAnchors } from '../camera/CameraPath'
+import { setAnchors } from '../camera/anchors'
 
 // Kamera-Stationen in DOM-Reihenfolge (anstoss = leere Beat-Sektion).
 const STATION_IDS = ['verein', 'anstoss', 'mannschaft', 'tabelle', 'kontakt']

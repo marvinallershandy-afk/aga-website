@@ -85,29 +85,8 @@ const lookCurve = new THREE.CatmullRomCurve3(
   0.5,
 )
 
-// Scroll-Fraction, bei der jede Station erreicht wird. Wird zur
-// Laufzeit aus den echten DOM-Sektions-Zentren gemessen (inkl. der
-// leeren Anstoß-Beat-Sektion) — Defaults nur als Fallback.
-const ANCHORS = [0.12, 0.3, 0.5, 0.83, 1.0]
-
-/** Von useScrollProgress mit gemessenen DOM-Zentren befüllt. */
-export function setAnchors(values: number[]) {
-  if (values.length !== ANCHORS.length) return
-  for (let i = 0; i < values.length; i++) ANCHORS[i] = values[i]
-}
-
-/** Bildet den Scroll-Fortschritt auf den Kurven-Parameter u∈[0,1] ab. */
-export function scrollToU(p: number): number {
-  const n = ANCHORS.length
-  if (p <= ANCHORS[0]) return 0
-  for (let i = 1; i < n; i++) {
-    if (p <= ANCHORS[i]) {
-      const seg = (p - ANCHORS[i - 1]) / (ANCHORS[i] - ANCHORS[i - 1])
-      return (i - 1 + seg) / (n - 1)
-    }
-  }
-  return 1
-}
+// Anker/Remap leben three-frei in ./anchors (Fallback-Ladepfad!)
+export { setAnchors, scrollToU } from './anchors'
 
 // Reusable scratch vectors (keine Allokation im Frame-Loop)
 const _pos = new THREE.Vector3()
