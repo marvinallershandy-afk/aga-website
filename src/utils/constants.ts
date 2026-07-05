@@ -14,5 +14,8 @@ export const PITCH = {
   goalDepth: 0.15,
 } as const
 
+// Rasen-Auslauf über die Spielfeldlinien hinaus (4 m)
+export const APRON = 0.4
+
 // Ground extends beyond pitch
 export const GROUND_SIZE = 60

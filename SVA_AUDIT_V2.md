@@ -75,6 +75,27 @@ Torpfosten) bekommen echte Reflexionen — visuell mehr Wirkung als das gedimmte
 | football.glb | Bestand aus v1 (picture-by-nele) | unverändert |
 | Sound (Stadion-Swell) | NICHT beschafft — Trigger vorbereitet, Asset = To-do Marvin | — |
 
-## Gate-1-Selbsttest (nach Etappe 1 auszufüllen)
+## Gate-1-Ergebnis (Etappe 1)
 
-> „Würde ein Awwwards-Juror den Platz als gewollt gestaltet lesen?" — _Antwort folgt._
+**Frametime-Gate:** SwiftShader-Messung schwankte +14–20% — aber Gegencheck auf
+**echter GPU (headed Chromium, dieselbe Maschine)**: v1 = 33,1/33,6/33,1 ms,
+v2 = 33,2/38,3*/33,7 ms (*Ausreißer, p95 34,3) → beide identisch am VSync-Limit,
+**kein Geräte-Regress**. Reale Budget-Metriken verbessert: Dreiecke 24,9k → **14,4k
+(−42%)**, Draw-Calls 100 → **91**. SwiftShader-Delta = CPU-Textur-Sampling-Artefakt
+(größere Rasen-Textur), dokumentiert und akzeptiert.
+
+**Umgesetzt:** Markierungen maßstabsgetreu in Rasen-Textur gebacken (Elfmeterpunkt,
+Strafraum-Bögen, Eckbögen, echte Linienbreite), Mähstreifen + Körnung + Abnutzung;
+Kugel-Bäume → 2 gezackte Silhouetten-Ringe; Vereinsheim mit Satteldach/Überstand +
+warmen Fenstern + Licht-Lache; Tore mit Netz; Bande mit SVA-Schriftzügen; AO-Blobs
+unter allem; linearer abgestufter Fog. NICHT umgesetzt: Environment/IBL (+64%
+Frametime auf Messrig, kaum sichtbar — gestrichen), roughnessMap (Textur-Probe über
+größte Fläche, Variation steckt in der Albedo).
+
+> **„Würde ein Awwwards-Juror den Platz als gewollt gestaltet lesen?"**
+> Der Platz selbst: **ja** — korrekte Markierungen, gebrandete Bande, Silhouetten-
+> Baumreihe gegen Dämmerungshimmel und geerdete Objekte lesen sich als eine bewusste,
+> konsistente Stilisierung. Noch **nein** an zwei Stellen: die Flutlicht-Panels
+> schweben weiterhin (Etappe 2 ist genau dafür da), und der Hero-Winkel zeigt das
+> Vereinsheim-Dach als unbeleuchteten schwarzen Block am Bildrand. Nach Etappe 2
+> erneut bewerten.

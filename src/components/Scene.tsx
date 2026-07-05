@@ -1,40 +1,44 @@
 import { Ground } from './Ground'
 import { Pitch } from './Pitch'
-import { PitchLines } from './PitchLines'
 import { Goals } from './Goals'
 import { Clubhouse } from './Clubhouse'
-import { Forest } from './Forest'
+import { Treeline } from './Treeline'
 import { SkyGradient } from './SkyGradient'
 import { Floodlights } from './Floodlights'
 import { CornerFlags } from './CornerFlags'
 import { Stands } from './Stands'
 import { Football } from './Football'
-import { COLORS } from '../theme/tokens'
+import { LIGHTING } from '../theme/lighting'
 
 // Die Bühne: der Platz bei Flutlicht in der Abenddämmerung.
+// Stilrichtung: veredelte Stilisierung — reduzierte Formen,
+// professionelles Licht/Material/Grading, Konsistenz vor Detail.
 export function Scene() {
+  const L = LIGHTING
   return (
     <group>
-      {/* Tiefen-Fog */}
-      <fogExp2 attach="fog" args={[COLORS.fog, 0.028]} />
+      {/* Abgestufter linearer Fog: Platz klar, Welt verschwimmt */}
+      <fog attach="fog" args={[L.fog.color, L.fog.near, L.fog.far]} />
 
-      {/* Grundstimmung: kühles Nachtlicht + warmer Fill */}
-      <ambientLight intensity={0.32} color="#6a78b0" />
-      <hemisphereLight args={['#2a3260', '#141018', 0.5]} />
-      <directionalLight position={[-6, 9, -4]} intensity={0.35} color="#8f9fd0" />
-      {/* warmer Akzent auf dem Ball / Mittelkreis */}
-      <pointLight position={[0, 2.4, 0]} intensity={8} distance={9} color={COLORS.floodWarm} />
+      <ambientLight intensity={L.ambient.intensity} color={L.ambient.color} />
+      <hemisphereLight args={[L.hemi.sky, L.hemi.ground, L.hemi.intensity]} />
+      <directionalLight position={L.moon.position} intensity={L.moon.intensity} color={L.moon.color} />
+      <pointLight position={[0, 2.4, 0]} intensity={L.ballAccent.intensity} distance={L.ballAccent.distance} color={L.ballAccent.color} />
+
+      {/* KEIN Environment/IBL: kostet pro Pixel in jedem Standard-
+          Material (Frametime-Gate riss um +64%) und bringt in der
+          Nachtszene kaum sichtbares Fülllicht. Fill übernehmen
+          Hemisphere + Ambient. Entscheidung im Audit dokumentiert. */}
 
       <SkyGradient />
       <Ground />
       <Pitch />
-      <PitchLines />
       <Goals />
       <CornerFlags />
       <Stands />
       <Floodlights />
       <Clubhouse />
-      <Forest />
+      <Treeline />
       <Football />
     </group>
   )
