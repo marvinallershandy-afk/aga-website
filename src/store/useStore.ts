@@ -34,6 +34,14 @@ interface AppState {
   fallback: boolean // true → statische Version
   setCaps: (caps: { reducedMotion: boolean; webglOK: boolean }) => void
 
+  /** Eingangstor: offen = Seite freigegeben (Vorhang gefahren). */
+  gateOpen: boolean
+  setGateOpen: (v: boolean) => void
+
+  /** Ton an/aus (Nutzer-Entscheidung am Tor bzw. Mute-Toggle). */
+  soundOn: boolean
+  setSoundOn: (v: boolean) => void
+
   /** Debug/Perf. */
   perfStats: PerfStats
   setPerfStats: (s: PerfStats) => void
@@ -62,6 +70,17 @@ export const useStore = create<AppState>((set) => ({
   fallback: false,
   setCaps: ({ reducedMotion, webglOK }) =>
     set({ reducedMotion, webglOK, fallback: reducedMotion || !webglOK }),
+
+  gateOpen: false,
+  setGateOpen: (v) => set({ gateOpen: v }),
+
+  soundOn: false,
+  setSoundOn: (v) => {
+    try {
+      localStorage.setItem('sva-sound', v ? 'on' : 'off')
+    } catch { /* private mode */ }
+    set({ soundOn: v })
+  },
 
   perfStats: { fps: 0, drawCalls: 0, triangles: 0 },
   setPerfStats: (s) => set({ perfStats: s }),

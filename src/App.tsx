@@ -10,9 +10,9 @@ const Stage = lazy(() => import('./components/Stage').then((m) => ({ default: m.
 import { Sections } from './ui/Sections'
 import { Brandbar } from './ui/Brandbar'
 import { ScrollHint } from './ui/ScrollHint'
-import { Loader } from './ui/Loader'
 import { PlayerModal } from './ui/PlayerModal'
 import { PerfOverlay } from './ui/PerfOverlay'
+import { EntranceGate } from './ui/EntranceGate'
 
 export default function App() {
   const fallback = useStore((s) => s.fallback)
@@ -42,11 +42,11 @@ export default function App() {
   return (
     <>
       {fallback ? <StaticBackdrop /> : <Suspense fallback={null}><Stage /></Suspense>}
+      <EntranceGate />
       <Brandbar />
       <Sections />
       {!fallback && <ScrollHint />}
       <PlayerModal />
-      {!fallback && <Loader />}
       <PerfOverlay />
     </>
   )
