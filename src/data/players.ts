@@ -23,6 +23,8 @@ export interface Player {
   rating: number
   /** Optional: Nationalitäts-/Herkunfts-Flag (v2). */
   since: number // Jahr im Verein seit
+  /** Team-des-Monats: hebt die Karte auf das Spezial-Level. */
+  isPlayerOfMonth?: boolean
 }
 
 export const POSITION_LABEL: Record<Position, string> = {
@@ -42,8 +44,8 @@ export const PLAYERS: Player[] = [
   { id: 'p06', name: 'Nico Wolff', number: 6, position: 'MIT', photoUrl: null, stats: { games: 25, goals: 4, assists: 7 }, rating: 83, since: 2015 },
   { id: 'p07', name: 'David Schulz', number: 7, position: 'MIT', photoUrl: null, stats: { games: 24, goals: 6, assists: 9 }, rating: 85, since: 2018 },
   { id: 'p08', name: 'Felix Braun', number: 8, position: 'MIT', photoUrl: null, stats: { games: 22, goals: 5, assists: 6 }, rating: 81, since: 2019 },
-  { id: 'p09', name: 'Ben Richter', number: 9, position: 'ANG', photoUrl: null, stats: { games: 25, goals: 18, assists: 4 }, rating: 88, since: 2016 },
-  { id: 'p10', name: 'Leon Fischer', number: 10, position: 'ANG', photoUrl: null, stats: { games: 24, goals: 14, assists: 11 }, rating: 89, since: 2014 },
+  { id: 'p09', name: 'Ben Richter', number: 9, position: 'ANG', photoUrl: '/players/demo.svg', stats: { games: 25, goals: 18, assists: 4 }, rating: 88, since: 2016 },
+  { id: 'p10', name: 'Leon Fischer', number: 10, position: 'ANG', photoUrl: '/players/demo.svg', stats: { games: 24, goals: 14, assists: 11 }, rating: 89, since: 2014, isPlayerOfMonth: true },
   { id: 'p11', name: 'Paul Neumann', number: 11, position: 'ANG', photoUrl: null, stats: { games: 23, goals: 12, assists: 5 }, rating: 84, since: 2021 },
   { id: 'p12', name: 'Jan Köhler', number: 12, position: 'TW', photoUrl: null, stats: { games: 6, goals: 0, assists: 0 }, rating: 70, since: 2022 },
   { id: 'p13', name: 'Moritz Lang', number: 13, position: 'MIT', photoUrl: null, stats: { games: 18, goals: 2, assists: 4 }, rating: 73, since: 2020 },

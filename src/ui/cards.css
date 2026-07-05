@@ -100,18 +100,57 @@
   place-items: end center;
   overflow: hidden;
 }
-.holo__portrait img { height: 100%; object-fit: contain; filter: drop-shadow(0 6px 10px rgba(0,0,0,.5)); }
+.holo__portrait img { height: 100%; object-fit: contain; }
+
+/* ── Portrait-Pipeline (Variante per cardConfig.ts) ─────────── */
+.holo__photo {
+  height: 96%;
+  width: 78%;
+  border-radius: 6px 6px 0 0;
+  overflow: hidden;
+  position: relative;
+}
+/* absolut → Prozent-Höhe löst zuverlässig auf (Grid-%-Kette tut es nicht) */
+.holo__photo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-position: bottom;
+}
+/* A · Duotone: Graustufen-Foto + Team-Farbverlauf via luminosity */
+.holo__photo--duotone {
+  background: linear-gradient(168deg, #E91D29 0%, #6e1218 45%, #231F20 82%);
+}
+.holo__photo--duotone img {
+  object-fit: cover;
+  filter: grayscale(1) contrast(1.12) brightness(.96);
+  mix-blend-mode: luminosity;
+}
+/* B · Freisteller: Farbe + Studio-Licht von oben + Grounding */
+.holo__photo--cutout img {
+  object-fit: contain;
+  filter: contrast(1.08) saturate(1.08) brightness(1.02)
+    drop-shadow(0 10px 12px rgba(0,0,0,.55));
+}
+.holo__photo--cutout::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(90% 50% at 50% -6%, rgba(255,236,190,.4), transparent 60%);
+  pointer-events: none;
+}
+
+/* Platzhalter-Silhouette mit Rim-Light-Andeutung */
 .holo__silhouette {
   width: 70%;
   height: 92%;
   background:
+    linear-gradient(180deg, rgba(255,226,170,.32), rgba(255,226,170,0) 20%),
     radial-gradient(circle at 50% 26%, rgba(255,255,255,.14) 0 22%, transparent 23%),
     linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.02));
-  -webkit-mask: radial-gradient(circle at 50% 22%, #000 18%, transparent 19%),
-    linear-gradient(#000,#000);
-  -webkit-mask-composite: source-over;
   clip-path: polygon(38% 0, 62% 0, 70% 20%, 92% 42%, 92% 100%, 8% 100%, 8% 42%, 30% 20%);
-  opacity: .7;
+  opacity: .75;
 }
 
 /* Nummer als großes Wasserzeichen */
@@ -196,6 +235,45 @@
   background: radial-gradient(circle at var(--px) var(--py),
     rgba(255,255,255,.8) 0%, rgba(255,255,255,.25) 18%, transparent 45%);
   transition: opacity .2s ease;
+}
+
+/* ── Team-des-Monats — ein Rahmen-Level über normal ─────────── */
+.holo--totm .holo__body {
+  background:
+    radial-gradient(120% 80% at 50% 0%, #52400f 0%, #2b2413 45%, #171208 100%);
+  border-color: var(--gold);
+  box-shadow: inset 0 0 24px rgba(232,193,90,.18);
+}
+.holo--totm .holo__frame {
+  border-color: rgba(232,193,90,.75);
+  box-shadow: 0 0 0 1px rgba(232,193,90,.25);
+}
+.holo--totm { box-shadow: 0 12px 34px rgba(0,0,0,.55), 0 0 26px rgba(232,193,90,.22); }
+.holo--totm:hover { box-shadow: 0 22px 60px rgba(0,0,0,.7), 0 0 46px rgba(232,193,90,.4); }
+/* goldener Holo-Verlauf statt Regenbogen */
+.holo--totm .holo__shine {
+  background:
+    conic-gradient(from 210deg at var(--px) var(--py),
+      #ffd66e 0deg, #fff3c4 80deg, #b8912f 150deg,
+      #ffe9a3 220deg, #d4a940 290deg, #ffd66e 360deg);
+}
+.holo--totm .holo__rating { color: #ffe9a3; }
+.holo__totm-banner {
+  position: absolute;
+  top: 55%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 4;
+  padding: .28em .9em;
+  font-size: .56rem;
+  font-weight: 800;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: #1a1408;
+  background: linear-gradient(90deg, #b8912f, #ffe9a3 50%, #b8912f);
+  clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 50%, calc(100% - 6px) 100%, 6px 100%, 0 50%);
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 /* laufender Holo-Glanz — nur wenn sichtbar (IntersectionObserver) */

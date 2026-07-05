@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="600" viewBox="0 0 480 600">
+  <!-- Synthetisches Demo-Portrait (kein reales Foto — Persönlichkeitsrechte).
+       Dient nur als Platzhalter, um die Portrait-Pipeline (Duotone/Freisteller)
+       zu demonstrieren. Echte Spielerfotos: Marvin. -->
+  <defs>
+    <linearGradient id="skin" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0" stop-color="#e8b890"/>
+      <stop offset="0.55" stop-color="#c98f66"/>
+      <stop offset="1" stop-color="#8f5f42"/>
+    </linearGradient>
+    <linearGradient id="skinShade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#00000000"/>
+      <stop offset="1" stop-color="#00000055"/>
+    </linearGradient>
+    <linearGradient id="jersey" x1="0" y1="0" x2="0.25" y2="1">
+      <stop offset="0" stop-color="#f23540"/>
+      <stop offset="0.5" stop-color="#c31824"/>
+      <stop offset="1" stop-color="#7d1017"/>
+    </linearGradient>
+    <linearGradient id="hair" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3d2e24"/>
+      <stop offset="1" stop-color="#1d140e"/>
+    </linearGradient>
+    <radialGradient id="toplight" cx="0.5" cy="0" r="1">
+      <stop offset="0" stop-color="#ffffff66"/>
+      <stop offset="0.5" stop-color="#ffffff00"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Schultern / Trikot -->
+  <path d="M60 600 C60 480 130 420 240 415 C350 420 420 480 420 600 Z" fill="url(#jersey)"/>
+  <path d="M60 600 C60 480 130 420 240 415 L240 600 Z" fill="#00000022"/>
+  <!-- Kragen -->
+  <path d="M200 425 L240 465 L280 425 C265 415 215 415 200 425 Z" fill="#231F20"/>
+  <!-- Hals -->
+  <path d="M205 340 L275 340 L272 432 C250 452 230 452 208 432 Z" fill="url(#skin)"/>
+  <path d="M205 340 L275 340 L273 400 C250 416 228 412 207 396 Z" fill="#00000033"/>
+  <!-- Kopf -->
+  <g>
+    <ellipse cx="240" cy="250" rx="92" ry="112" fill="url(#skin)"/>
+    <ellipse cx="240" cy="250" rx="92" ry="112" fill="url(#skinShade)"/>
+    <!-- Ohren -->
+    <ellipse cx="148" cy="258" rx="14" ry="24" fill="#c98f66"/>
+    <ellipse cx="332" cy="258" rx="14" ry="24" fill="#b57e58"/>
+    <!-- Haar -->
+    <path d="M148 240 C142 150 190 118 240 116 C292 118 340 150 332 242
+             C330 190 300 172 240 170 C180 172 152 192 148 240 Z" fill="url(#hair)"/>
+    <!-- Brauen -->
+    <path d="M180 232 C196 224 216 224 228 230 L226 240 C214 234 196 234 184 240 Z" fill="#2a1d14"/>
+    <path d="M300 232 C284 224 264 224 252 230 L254 240 C266 234 284 234 296 240 Z" fill="#2a1d14"/>
+    <!-- Augen -->
+    <ellipse cx="204" cy="256" rx="13" ry="8" fill="#f4efe8"/>
+    <ellipse cx="276" cy="256" rx="13" ry="8" fill="#f4efe8"/>
+    <circle cx="205" cy="257" r="5.5" fill="#3a2a1c"/>
+    <circle cx="275" cy="257" r="5.5" fill="#3a2a1c"/>
+    <!-- Nase -->
+    <path d="M238 260 L234 300 C238 306 246 306 250 300 L244 260 Z" fill="#00000022"/>
+    <!-- Mund -->
+    <path d="M212 330 C230 340 250 340 268 330 C252 348 228 348 212 330 Z" fill="#7d4436"/>
+    <!-- Bartschatten -->
+    <path d="M170 300 C180 356 210 372 240 372 C270 372 300 356 310 300
+             C304 344 280 366 240 366 C200 366 176 344 170 300 Z" fill="#00000030"/>
+  </g>
+  <!-- Studio-Licht von oben -->
+  <rect x="0" y="0" width="480" height="600" fill="url(#toplight)"/>
+</svg>

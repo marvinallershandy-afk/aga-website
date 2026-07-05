@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import type { Player } from '../data/players'
 import { POSITION_LABEL } from '../data/players'
 import { CLUB } from '../data/club'
+import { PORTRAIT_STYLE } from './cardConfig'
 
 interface Props {
   player: Player
@@ -53,7 +54,7 @@ export function HoloCard({ player, onClick, large }: Props) {
   return (
     <div
       ref={ref}
-      className="holo"
+      className={player.isPlayerOfMonth ? 'holo holo--totm' : 'holo'}
       style={large ? { aspectRatio: '3 / 4.2' } : undefined}
       onPointerMove={onMove}
       onPointerLeave={onLeave}
@@ -74,11 +75,17 @@ export function HoloCard({ player, onClick, large }: Props) {
 
       <div className="holo__portrait">
         {player.photoUrl ? (
-          <img src={player.photoUrl} alt={player.name} />
+          <div className={`holo__photo holo__photo--${PORTRAIT_STYLE}`}>
+            <img src={player.photoUrl} alt={player.name} loading="lazy" />
+          </div>
         ) : (
           <div className="holo__silhouette" />
         )}
       </div>
+
+      {player.isPlayerOfMonth && (
+        <div className="holo__totm-banner">Spieler des Monats</div>
+      )}
 
       <div className="holo__plate">
         <div className="holo__name">{player.name}</div>
