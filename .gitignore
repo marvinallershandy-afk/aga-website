@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Referenz-Material (lokal, zu groß fürs Repo)
+REFERENZ/
