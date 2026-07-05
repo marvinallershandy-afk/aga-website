@@ -13,6 +13,7 @@ import { ScrollHint } from './ui/ScrollHint'
 import { PlayerModal } from './ui/PlayerModal'
 import { PerfOverlay } from './ui/PerfOverlay'
 import { EntranceGate } from './ui/EntranceGate'
+import { MusicDock } from './ui/MusicDock'
 
 export default function App() {
   const fallback = useStore((s) => s.fallback)
@@ -43,6 +44,7 @@ export default function App() {
     <>
       {fallback ? <StaticBackdrop /> : <Suspense fallback={null}><Stage /></Suspense>}
       <EntranceGate />
+      <MusicDock />
       <Brandbar />
       <Sections />
       {!fallback && <ScrollHint />}
