@@ -11,11 +11,12 @@ const reveal = {
   transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] as const },
 }
 
-function Header({ kicker, title, body, center }: { kicker: string; title: string; body: string; center?: boolean }) {
+function Header({ kicker, title, body, center, h1 }: { kicker: string; title: string; body: string; center?: boolean; h1?: boolean }) {
+  const Tag = h1 ? 'h1' : 'h2'
   return (
     <motion.div {...reveal} style={center ? { maxWidth: 720 } : undefined}>
       <span className="section__kicker">{kicker}</span>
-      <h2 className="section__title">{title}</h2>
+      <Tag className="section__title">{title}</Tag>
       <p className="section__body" style={center ? { marginLeft: 'auto', marginRight: 'auto' } : undefined}>
         {body}
       </p>
@@ -33,7 +34,7 @@ export function Sections() {
       {/* 0 · VEREIN */}
       <section id={verein.id} className="section section--center">
         <div className="section__scrim" />
-        <Header kicker={verein.kicker} title={verein.title} body={verein.body} center />
+        <Header kicker={verein.kicker} title={verein.title} body={verein.body} center h1 />
         <motion.p
           {...reveal}
           transition={{ ...reveal.transition, delay: 0.15 }}
@@ -121,7 +122,7 @@ export function Sections() {
             <dd>{CONTACT.instagram}</dd>
           </div>
         </motion.dl>
-        <p style={{ marginTop: '3rem', fontSize: '0.7rem', letterSpacing: '0.1em', color: 'rgba(255,255,255,0.35)' }}>
+        <p style={{ marginTop: '3rem', fontSize: '0.7rem', letterSpacing: '0.1em', color: 'rgba(255,255,255,0.55)' }}>
           © Seit {CLUB.founded} · {CLUB.name} e.V. · Mit Herz gebaut, Platzhalter ehrlich markiert.
         </p>
       </section>

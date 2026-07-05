@@ -3,24 +3,69 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/brand/wappen.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0E0D0D" />
     <meta name="color-scheme" content="dark" />
 
-    <title>SV Agathenburg-Dollern — Die 3D-Vereinswelt</title>
-    <meta name="description" content="Willkommen am Platz: die begehbare 3D-Vereinswelt des SV Agathenburg-Dollern. Kader als Sammelkarten, Live-Tabelle, Abendspiel-Atmosphäre." />
+    <title>SV Agathenburg-Dollern — Fußball in Agathenburg seit 1949</title>
+    <meta name="description" content="Fußball in Agathenburg: Der SV Agathenburg-Dollern (seit 1949) — Probetraining Di & Do ab 19 Uhr, Kader als Sammelkarten, Vereins-Soundtrack AGA Urknall, Live-Tabelle. Komm vorbei am Sportplatz." />
 
-    <!-- Open Graph -->
+    <!-- Canonical: Domain ist PLATZHALTER — nach Deployment anpassen (Marvin) -->
+    <link rel="canonical" href="https://sv-agathenburg-dollern.de/" />
+
+    <!-- Open Graph / Twitter -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="SV Agathenburg-Dollern — Die 3D-Vereinswelt" />
-    <meta property="og:description" content="Ein Dorf. Ein Verein. Ein Platz. Scroll dich durch unsere 3D-Vereinswelt." />
-    <meta property="og:image" content="/og-image.png" />
+    <meta property="og:locale" content="de_DE" />
+    <meta property="og:site_name" content="SV Agathenburg-Dollern" />
+    <meta property="og:title" content="SV Agathenburg-Dollern — Fußball in Agathenburg seit 1949" />
+    <meta property="og:description" content="Ein Dorf. Ein Verein. Ein Platz. Scroll dich über unseren Platz — Kader-Sammelkarten, Vereins-Soundtrack, Probetraining Di & Do." />
+    <meta property="og:image" content="/og-image.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- Struktur-Daten: Verein + Vereins-Soundtrack -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "SportsTeam",
+          "name": "SV Agathenburg-Dollern",
+          "alternateName": "SVA",
+          "sport": "Fußball",
+          "foundingDate": "1949",
+          "logo": "/brand/wappen.png",
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Am Sportplatz 1",
+            "postalCode": "21684",
+            "addressLocality": "Agathenburg",
+            "addressCountry": "DE"
+          },
+          "email": "info@sv-agathenburg-dollern.de",
+          "memberOf": { "@type": "SportsOrganization", "name": "Kreisliga" }
+        },
+        {
+          "@type": "MusicGroup",
+          "name": "AGA Urknall",
+          "genre": "Stadion / Party",
+          "foundingDate": "2024",
+          "album": {
+            "@type": "MusicAlbum",
+            "name": "Heimspiel Überall",
+            "image": "/audio/cover.jpg"
+          }
+        }
+      ]
+    }
+    </script>
 
     <link rel="preconnect" href="https://www.fussball.de" crossorigin />
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><!--app-html--></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

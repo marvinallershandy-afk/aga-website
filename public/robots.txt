@@ -1,0 +1,6 @@
+# SV Agathenburg-Dollern — alle Crawler willkommen
+User-agent: *
+Allow: /
+
+# Domain ist PLATZHALTER — nach dem Deployment anpassen (Marvin)
+Sitemap: https://sv-agathenburg-dollern.de/sitemap.xml

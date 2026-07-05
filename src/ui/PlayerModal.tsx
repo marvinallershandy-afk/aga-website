@@ -42,8 +42,7 @@ function ModalContent({ player }: { player: Player }) {
     >
       <div className="modal-card">
         <div className="flip-scene" onClick={() => setFlipped(!flipped)} role="button" tabIndex={0}
-          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setFlipped(!flipped)}
-          aria-label="Karte drehen">
+          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setFlipped(!flipped)}>
           <div className={`flip-inner${flipped ? ' is-flipped' : ''}`}>
             <div className="flip-face">
               <HoloCard player={player} large />

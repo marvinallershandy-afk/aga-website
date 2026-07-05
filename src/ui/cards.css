@@ -512,12 +512,12 @@
   width: 1.6em;
   font-family: var(--font-display);
   font-size: .78rem;
-  color: rgba(255,255,255,.4);
+  color: rgba(255,255,255,.6);
   letter-spacing: .06em;
 }
 .music-track.is-active .music-track__no { color: var(--red); }
 .music-track__title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.music-track__dur { font-size: .7rem; color: rgba(255,255,255,.4); font-variant-numeric: tabular-nums; }
+.music-track__dur { font-size: .7rem; color: rgba(255,255,255,.62); font-variant-numeric: tabular-nums; }
 .music-section__links {
   display: flex;
   gap: .6rem;
@@ -529,7 +529,7 @@
   font-size: .66rem;
   letter-spacing: .14em;
   text-transform: uppercase;
-  color: rgba(255,255,255,.4);
+  color: rgba(255,255,255,.62);
   border: 1px dashed rgba(255,255,255,.25);
   border-radius: 999px;
   padding: .32em .8em;
@@ -593,7 +593,7 @@
 .flip-back__quote {
   font-size: .78rem;
   font-style: italic;
-  color: rgba(255,255,255,.55);
+  color: rgba(255,255,255,.68);
   max-width: 22ch;
   border-top: 1px solid rgba(232,193,90,.25);
   padding-top: .7rem;
@@ -603,7 +603,7 @@
   font-size: .62rem;
   letter-spacing: .2em;
   text-transform: uppercase;
-  color: rgba(255,255,255,.45);
+  color: rgba(255,255,255,.6);
   text-align: center;
   width: 100%;
 }
