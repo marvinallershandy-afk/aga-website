@@ -1,4 +1,5 @@
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
+import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { PITCH } from '../utils/constants'
 import { AOBlob } from './AOBlob'
@@ -164,13 +165,30 @@ const FANS: { x: number; z: number; jersey: string; h: number; rot: number; flag
 
 export function FanBlock() {
   const bannerTex = useMemo(makeBannerTexture, [])
+  const bannerRef = useRef<THREE.Mesh>(null)
+  const scarfRef = useRef<THREE.Group>(null)
+
+  // Dezentes Leben: Banner wogt, Schal wippt (ambient, zeitbasiert)
+  useFrame((state) => {
+    const t = state.clock.elapsedTime
+    if (bannerRef.current) {
+      bannerRef.current.rotation.z = Math.sin(t * 1.1) * 0.025
+      bannerRef.current.rotation.x = Math.sin(t * 0.7 + 1) * 0.03
+      bannerRef.current.position.y = 0.27 + Math.sin(t * 1.4) * 0.008
+    }
+    if (scarfRef.current) {
+      scarfRef.current.rotation.z = Math.sin(t * 1.8 + 2) * 0.12
+      scarfRef.current.position.y = 0.21 + Math.sin(t * 2.3) * 0.006
+    }
+  })
+
   return (
     <group>
       {/* Banner wird hochgehalten (Referenz: Team-Foto mit Fahne) —
           Vorderseite zeigt zum Platz */}
       <group position={[CX, 0, HH + 0.22]} rotation-y={Math.PI}>
-        <mesh position={[0, 0.27, 0]}>
-          <planeGeometry args={[1.45, 0.3]} />
+        <mesh ref={bannerRef} position={[0, 0.27, 0]}>
+          <planeGeometry args={[1.45, 0.3, 8, 2]} />
           <meshStandardMaterial map={bannerTex} side={THREE.DoubleSide} roughness={0.9} />
         </mesh>
         {/* Haltestangen an den Ecken */}
@@ -185,6 +203,41 @@ export function FanBlock() {
       {FANS.map((f, i) => (
         <Fan key={i} {...f} />
       ))}
+
+      {/* Zwei lehnen an der Reling (Arme auf dem Handlauf) */}
+      {[{ x: CX - 2.0, j: '#c41824' }, { x: CX + 1.9, j: '#1d1a1c' }].map(({ x, j }, i) => (
+        <group key={`lean${i}`} position={[x, 0, HH + 0.16]} rotation-y={i ? -0.2 : 0.25} rotation-x={-0.14}>
+          <Fan x={0} z={0} jersey={j} h={0.185} rot={0} />
+          {/* Arme zum Handlauf */}
+          {[-0.045, 0.045].map((ax) => (
+            <mesh key={ax} position={[ax, 0.135, -0.05]} rotation-x={0.9}>
+              <cylinderGeometry args={[0.009, 0.009, 0.09, 5]} />
+              <meshStandardMaterial color={j} roughness={0.85} />
+            </mesh>
+          ))}
+        </group>
+      ))}
+
+      {/* Schal wird hochgehalten */}
+      <group position={[CX + 1.25, 0, HH + 0.34]} rotation-y={Math.PI}>
+        <Fan x={0} z={0} jersey="#c41824" h={0.18} rot={0} />
+        {[-0.09, 0.09].map((ax) => (
+          <mesh key={ax} position={[ax, 0.15, 0]} rotation-z={ax < 0 ? 0.5 : -0.5}>
+            <cylinderGeometry args={[0.008, 0.008, 0.09, 5]} />
+            <meshStandardMaterial color="#c41824" roughness={0.85} />
+          </mesh>
+        ))}
+        <group ref={scarfRef} position={[0, 0.21, 0]}>
+          <mesh>
+            <planeGeometry args={[0.24, 0.05]} />
+            <meshStandardMaterial color="#c41824" side={THREE.DoubleSide} roughness={0.9} />
+          </mesh>
+          <mesh position={[0, 0, 0.001]}>
+            <planeGeometry args={[0.24, 0.016]} />
+            <meshStandardMaterial color="#f2eee6" side={THREE.DoubleSide} roughness={0.9} />
+          </mesh>
+        </group>
+      </group>
 
       {/* Bierkiste */}
       <mesh position={[CX + 0.3, 0.045, HH + 0.62]}>

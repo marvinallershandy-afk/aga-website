@@ -46,5 +46,13 @@ ohne runde Map). (d) Ball im Hero kaum sichtbar (Stilisierungs-Kompromiss v3).
 | Runde | Juror | Stratege | 3D | Notiz |
 |---|---|---|---|---|
 | 0 (Start) | 7,0 | 5,5 | 7,5 | Ausgangslage |
+| nach E1–E3 | — | ~7,5* | **8,0** | Copy+Musik-Sektion+3D-Fixes; *Zwischenwert, Jury-Loop folgt |
+
+**3D-Neubewertung (Etappe 3):** Fassaden-Textur (Fenster/Sockel/Putz) + Regenrinne,
+Portrait-Kamera (Mobile-Hero jetzt komponiert), runde Dust-Partikel, weichere
+Treeline, Fanblock-Bewegung (Banner wogt, Schal, Lehn-Figuren), Party-Posen
+(sitzend, Zapf-Loop, Prosten), Musik-Ecke mit Boombox-Puls. Verbleibend: Fanblock
+wird auf Desktop teils von den Mitmachen-Karten verdeckt; Übergang Musik→Tabelle
+streift dunkle Zonen.
 
 *(wird in Etappe 6 fortgeschrieben)*

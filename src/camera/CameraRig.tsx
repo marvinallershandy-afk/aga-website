@@ -46,6 +46,16 @@ export function CameraRig() {
 
     sampleFlight(smoothed.current, pos.current, look.current)
 
+    // Portrait-Anpassung (v4-Audit): die Stationen sind für 16:9
+    // komponiert — auf schmalen Viewports zieht die Kamera vom
+    // Blickpunkt zurück, damit die Komposition erhalten bleibt.
+    const aspect = state.size.width / state.size.height
+    if (aspect < 1) {
+      const k = Math.min(1.75, 1 + (1 - aspect) * 1.1)
+      pos.current.sub(look.current).multiplyScalar(k).add(look.current)
+      pos.current.y += (1 - aspect) * 0.5 // leicht höher für mehr Kontext
+    }
+
     // dezenter Idle-Sway für Lebendigkeit
     const t = state.clock.elapsedTime
     const sway = 1 - smoothed.current * 0.6 // oben mehr, unten ruhiger

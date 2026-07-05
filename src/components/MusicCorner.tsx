@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useTexture } from '@react-three/drei'
 import { AudioManager } from '../audio/AudioManager'
+import { LightPool } from './AOBlob'
 
 // ─────────────────────────────────────────────────────────────
 // Die Musik-Ecke: die Klinker-Hütte (NW) bekommt eine Rolle —
@@ -63,6 +64,9 @@ export function MusicCorner() {
           <meshStandardMaterial color="#3a3d42" roughness={0.5} />
         </mesh>
       </group>
+
+      {/* warmes Licht um die Musik-Ecke */}
+      <LightPool position={[0.3, 0.006, 0.5]} scale={[1.6, 1.4]} color="#ff9d4a" opacity={0.22} />
 
       {/* Cover-Poster an der Hüttenwand (zum Platz) */}
       <group position={[-0.24, 0.16, 0.281]}>

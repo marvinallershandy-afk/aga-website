@@ -4,6 +4,22 @@ import * as THREE from 'three'
 import { PITCH } from '../utils/constants'
 import { floodLevels } from '../three/floodState'
 
+let dotTex: THREE.CanvasTexture | null = null
+function getDotTexture() {
+  if (dotTex) return dotTex
+  const cv = document.createElement('canvas')
+  cv.width = cv.height = 32
+  const ctx = cv.getContext('2d')!
+  const g = ctx.createRadialGradient(16, 16, 1, 16, 16, 16)
+  g.addColorStop(0, 'rgba(255,255,255,1)')
+  g.addColorStop(0.6, 'rgba(255,255,255,0.4)')
+  g.addColorStop(1, 'rgba(255,255,255,0)')
+  ctx.fillStyle = g
+  ctx.fillRect(0, 0, 32, 32)
+  dotTex = new THREE.CanvasTexture(cv)
+  return dotTex
+}
+
 // Dezenter Staub in den Lichtkegeln: EIN Points-Draw (240 Punkte),
 // Opacity hängt am Flutlicht-Level, langsame Drift über die Zeit
 // (ambient, nicht Erzähl-relevant → darf zeitbasiert sein).
@@ -57,6 +73,8 @@ export function ConeDust() {
     <points geometry={geo}>
       <pointsMaterial
         ref={matRef}
+        map={getDotTexture()}
+        alphaTest={0.01}
         color="#ffe2ae"
         size={0.035}
         sizeAttenuation

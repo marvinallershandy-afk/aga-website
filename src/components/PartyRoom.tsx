@@ -1,4 +1,5 @@
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
+import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useTexture } from '@react-three/drei'
 
@@ -33,21 +34,63 @@ function svaNeonTexture(): THREE.CanvasTexture {
   return t
 }
 
-// Stilisierte Figur (wie im Fanblock — keine Gesichter)
-function Person({ pos, jersey, h = 0.19, rot = 0 }: { pos: [number, number, number]; jersey: string; h?: number; rot?: number }) {
+// Stilisierte Figur (wie im Fanblock — keine Gesichter).
+// seated: sitzt auf Hocker (Beine kurz), lean: Gewichtsverlagerung.
+function Person({ pos, jersey, h = 0.19, rot = 0, seated = false, lean = 0 }: {
+  pos: [number, number, number]; jersey: string; h?: number; rot?: number; seated?: boolean; lean?: number
+}) {
+  const legH = seated ? h * 0.2 : h * 0.54
+  const base = seated ? 0.18 : 0
   return (
-    <group position={pos} rotation-y={rot}>
-      <mesh position={[0, h * 0.27, 0]}>
-        <cylinderGeometry args={[h * 0.11, h * 0.13, h * 0.54, 6]} />
+    <group position={[pos[0], pos[1] + base, pos[2]]} rotation-y={rot} rotation-z={lean}>
+      <mesh position={[0, legH / 2, 0]}>
+        <cylinderGeometry args={[h * 0.11, h * 0.13, legH, 6]} />
         <meshStandardMaterial color="#17141a" roughness={0.95} />
       </mesh>
-      <mesh position={[0, h * 0.68, 0]}>
+      <mesh position={[0, legH + h * 0.18, 0]}>
         <cylinderGeometry args={[h * 0.16, h * 0.13, h * 0.36, 7]} />
         <meshStandardMaterial color={jersey} roughness={0.85} />
       </mesh>
-      <mesh position={[0, h * 0.97, 0]}>
+      <mesh position={[0, legH + h * 0.43, 0]}>
         <sphereGeometry args={[h * 0.115, 8, 7]} />
         <meshStandardMaterial color="#c99a75" roughness={0.9} />
+      </mesh>
+    </group>
+  )
+}
+
+// Zapf-Loop: der Arm des Barkeepers senkt sich zyklisch zum Hahn
+function ZapfArm() {
+  const ref = useRef<THREE.Mesh>(null)
+  useFrame((state) => {
+    if (!ref.current) return
+    const t = state.clock.elapsedTime
+    ref.current.rotation.x = 0.7 + Math.sin(t * 1.6) * 0.18
+  })
+  return (
+    <mesh ref={ref} position={[0.3, 0.135, -1.12]}>
+      <cylinderGeometry args={[0.011, 0.011, 0.1, 5]} />
+      <meshStandardMaterial color="#1d1a1c" roughness={0.85} />
+    </mesh>
+  )
+}
+
+// Prosten: Gast hebt periodisch das Glas
+function ProstArm() {
+  const ref = useRef<THREE.Group>(null)
+  useFrame((state) => {
+    const t = state.clock.elapsedTime
+    if (ref.current) ref.current.rotation.z = -0.5 - Math.max(0, Math.sin(t * 0.9)) * 0.5
+  })
+  return (
+    <group ref={ref} position={[0.73, 0.33, -0.48]}>
+      <mesh position={[0, 0.045, 0]}>
+        <cylinderGeometry args={[0.009, 0.009, 0.09, 5]} />
+        <meshStandardMaterial color="#d8d4c9" roughness={0.85} />
+      </mesh>
+      <mesh position={[0, 0.1, 0]}>
+        <cylinderGeometry args={[0.013, 0.011, 0.045, 6]} />
+        <meshStandardMaterial color="#e8a832" emissive="#c8871a" emissiveIntensity={0.7} roughness={0.3} />
       </mesh>
     </group>
   )
@@ -137,13 +180,16 @@ export default function PartyRoom() {
         ))}
       </group>
 
-      {/* Barkeeper + Gäste */}
-      <Person pos={[0.4, 0, -1.2]} jersey="#1d1a1c" rot={0} />
-      <Person pos={[0.05, 0, -0.62]} jersey="#c41824" rot={Math.PI} />
-      <Person pos={[0.78, 0, -0.58]} jersey="#d8d4c9" rot={Math.PI - 0.4} />
+      {/* Barkeeper (leicht vorgelehnt) + Zapf-Arm mit Loop */}
+      <Person pos={[0.35, 0, -1.18]} jersey="#1d1a1c" rot={0.1} lean={0.05} />
+      <ZapfArm />
+      {/* Gäste: sitzen wirklich auf den Hockern, einer prostet */}
+      <Person pos={[0.05, 0, -0.5]} jersey="#c41824" rot={Math.PI} seated lean={-0.04} />
+      <Person pos={[0.78, 0, -0.48]} jersey="#d8d4c9" rot={Math.PI - 0.4} seated lean={0.06} />
+      <ProstArm />
       {/* Hocker */}
       {[0.05, 0.78].map((x) => (
-        <mesh key={x} position={[x, 0.09, -0.45]}>
+        <mesh key={x} position={[x, 0.09, -0.5]}>
           <cylinderGeometry args={[0.05, 0.05, 0.18, 7]} />
           <meshStandardMaterial color="#2c2320" roughness={0.9} />
         </mesh>

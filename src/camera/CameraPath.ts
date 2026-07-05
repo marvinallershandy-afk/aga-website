@@ -24,7 +24,7 @@ const STATIONS: Station[] = [
   // 3 · MUSIK — die Klinker-Hütte NW wird zur Musik-Ecke (Boombox)
   { pos: new THREE.Vector3(-1.6, 0.9, -1.2), look: new THREE.Vector3(-4.7, 0.35, -4.5) },
   // 4 · TABELLE — Schwenk zum echten Vereinsheim hinter dem Ost-Tor
-  { pos: new THREE.Vector3(8.6, 2.6, 6.2), look: new THREE.Vector3(7.0, 0.35, -0.6) },
+  { pos: new THREE.Vector3(4.0, 0.85, 3.1), look: new THREE.Vector3(7.15, 0.32, -0.5) },
   // 4 · KONTAKT/FINALE — Schwenk in die Fanblock-Ecke SW:
   //     Banner + Figuren nah, der beleuchtete Platz im Hintergrund
   { pos: new THREE.Vector3(-5.7, 1.35, 1.35), look: new THREE.Vector3(-3.3, 0.28, 4.7) },

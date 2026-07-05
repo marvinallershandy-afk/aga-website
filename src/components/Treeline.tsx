@@ -30,7 +30,8 @@ function buildRing({ seed, radius, hMin, hMax, gapZ, gapScale }: RingOpts): THRE
   const rng = mulberry32(seed)
   const N = 200
   const raw = Array.from({ length: N }, () => hMin + rng() * (hMax - hMin))
-  const h = raw.map((_, i) => (raw[(i + N - 1) % N] + raw[i] * 2 + raw[(i + 1) % N]) / 4)
+  const s1 = raw.map((_, i) => (raw[(i + N - 1) % N] + raw[i] * 2 + raw[(i + 1) % N]) / 4)
+  const h = s1.map((_, i) => (s1[(i + N - 1) % N] + s1[i] * 2 + s1[(i + 1) % N]) / 4)
 
   const pos: number[] = []
   const idx: number[] = []

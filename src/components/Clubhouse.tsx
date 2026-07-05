@@ -3,6 +3,81 @@ import * as THREE from 'three'
 import { COLORS } from '../utils/constants'
 import { AOBlob, LightPool } from './AOBlob'
 
+// Fassaden-Textur für die Platzseite: Putz mit feiner Struktur,
+// gezeichnetes EG-Fensterband mit Rahmen, OG-Band, Klinker-Sockel —
+// Material-Tiefe statt glatter Fläche (v4-Audit).
+function makeFacadeTexture(len: number, h: number): THREE.CanvasTexture {
+  const S = 220
+  const W = Math.round(len * S)
+  const H = Math.round(h * S)
+  const cv = document.createElement('canvas')
+  cv.width = W
+  cv.height = H
+  const ctx = cv.getContext('2d')!
+
+  ctx.fillStyle = '#d8d4c8'
+  ctx.fillRect(0, 0, W, H)
+  const img = ctx.getImageData(0, 0, W, H)
+  for (let i = 0; i < img.data.length; i += 4) {
+    const n = ((Math.sin(i * 91.7) * 43758.5453) % 1) * 16 - 8
+    img.data[i] += n
+    img.data[i + 1] += n
+    img.data[i + 2] += n
+  }
+  ctx.putImageData(img, 0, 0)
+  const g = ctx.createLinearGradient(0, 0, 0, H * 0.25)
+  g.addColorStop(0, 'rgba(90,86,78,0.35)')
+  g.addColorStop(1, 'rgba(90,86,78,0)')
+  ctx.fillStyle = g
+  ctx.fillRect(0, 0, W, H * 0.25)
+
+  // Klinker-Sockel (Referenz: Boden-Foto)
+  ctx.fillStyle = '#6e4436'
+  ctx.fillRect(0, H * 0.88, W, H * 0.12)
+  ctx.strokeStyle = 'rgba(40,22,18,0.5)'
+  ctx.lineWidth = 1
+  for (let y = H * 0.88; y < H; y += 5) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke()
+  }
+
+  // EG-Fensterreihe: helle Rahmen, dunkle Scheiben, Fensterbänke
+  const winW = S * 0.42
+  const gap = S * 0.55
+  for (let x = S * 0.35; x + winW < W - S * 0.3; x += winW + gap) {
+    const y = H * 0.42
+    const wh = H * 0.34
+    ctx.fillStyle = '#e6e2d6'
+    ctx.fillRect(x - 4, y - 4, winW + 8, wh + 8)
+    ctx.fillStyle = '#1e242c'
+    ctx.fillRect(x, y, winW, wh)
+    ctx.strokeStyle = '#e6e2d6'
+    ctx.lineWidth = 3
+    ctx.beginPath(); ctx.moveTo(x + winW / 2, y); ctx.lineTo(x + winW / 2, y + wh); ctx.stroke()
+    if (Math.sin(x * 12.9898) > 0.45) {
+      const lg = ctx.createLinearGradient(x, y, x, y + wh)
+      lg.addColorStop(0, 'rgba(255,170,90,0.5)')
+      lg.addColorStop(1, 'rgba(255,140,60,0.18)')
+      ctx.fillStyle = lg
+      ctx.fillRect(x, y, winW, wh)
+    }
+    ctx.fillStyle = '#c9c5b8'
+    ctx.fillRect(x - 6, y + wh + 4, winW + 12, 5)
+  }
+  // schmales OG-Fensterband unterm Dach
+  ctx.fillStyle = '#20262e'
+  ctx.fillRect(S * 0.3, H * 0.16, W - S * 0.6, H * 0.09)
+  ctx.strokeStyle = '#b9b5a8'
+  ctx.lineWidth = 2
+  for (let x = S * 0.3; x < W - S * 0.3; x += S * 0.36) {
+    ctx.beginPath(); ctx.moveTo(x, H * 0.16); ctx.lineTo(x, H * 0.25); ctx.stroke()
+  }
+
+  const tex = new THREE.CanvasTexture(cv)
+  tex.colorSpace = THREE.SRGBColorSpace
+  tex.anisotropy = 4
+  return tex
+}
+
 // ─────────────────────────────────────────────────────────────
 // Das echte Vereinsheim (Mehrzweckhalle) nach REFERENZ_MODELL:
 // langgestreckt HINTER dem Ost-Tor, weiße Fassade, flaches dunkles
@@ -46,6 +121,7 @@ function GableEnds() {
 export function Clubhouse() {
   const slabLen = Math.hypot(DEPTH / 2 + 0.12, RISE + 0.04)
   const roofA = Math.atan2(RISE, DEPTH / 2)
+  const facade = useMemo(() => makeFacadeTexture(LEN, EAVES), [])
 
   return (
     <group position={[CLUBHOUSE_POS.x, 0, CLUBHOUSE_POS.z]}>
@@ -71,10 +147,19 @@ export function Clubhouse() {
         <boxGeometry args={[0.16, 0.28, 0.2]} />
         <meshStandardMaterial color="#7a4030" roughness={0.95} />
       </mesh>
-      {/* dunkles Fensterband auf der Platz-Fassade (Obergeschoss) */}
-      <mesh position={[-DEPTH / 2 - 0.004, 0.26, 0]} rotation-y={-Math.PI / 2}>
-        <planeGeometry args={[LEN - 0.5, 0.09]} />
-        <meshStandardMaterial color="#1c2026" roughness={0.5} metalness={0.2} />
+      {/* Fassade mit Material-Tiefe (Fenster, Sockel, Putz) — Platzseite */}
+      <mesh position={[-DEPTH / 2 - 0.004, EAVES / 2, 0]} rotation-y={-Math.PI / 2}>
+        <planeGeometry args={[LEN, EAVES]} />
+        <meshStandardMaterial map={facade} roughness={0.9} />
+      </mesh>
+      {/* Regenrinne an der Traufe + Fallrohr */}
+      <mesh position={[-DEPTH / 2 - 0.02, EAVES + 0.01, 0]} rotation-x={Math.PI / 2}>
+        <cylinderGeometry args={[0.014, 0.014, LEN + 0.2, 6]} />
+        <meshStandardMaterial color="#8a8d94" metalness={0.7} roughness={0.35} />
+      </mesh>
+      <mesh position={[-DEPTH / 2 - 0.02, EAVES / 2, -LEN / 2 + 0.12]}>
+        <cylinderGeometry args={[0.011, 0.011, EAVES, 6]} />
+        <meshStandardMaterial color="#8a8d94" metalness={0.7} roughness={0.35} />
       </mesh>
 
       {/* Flacher Anbau zur Platzseite (Westen) mit blauem Fascia-Band */}
