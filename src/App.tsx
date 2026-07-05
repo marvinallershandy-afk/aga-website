@@ -14,6 +14,7 @@ import { PlayerModal } from './ui/PlayerModal'
 import { PerfOverlay } from './ui/PerfOverlay'
 import { EntranceGate } from './ui/EntranceGate'
 import { MusicDock } from './ui/MusicDock'
+import { PartyUI } from './ui/PartyUI'
 import { AudioManager } from './audio/AudioManager'
 
 export default function App() {
@@ -53,6 +54,7 @@ export default function App() {
       {fallback ? <StaticBackdrop /> : <Suspense fallback={null}><Stage /></Suspense>}
       <EntranceGate />
       <MusicDock />
+      <PartyUI />
       <Brandbar />
       <Sections />
       {!fallback && <ScrollHint />}

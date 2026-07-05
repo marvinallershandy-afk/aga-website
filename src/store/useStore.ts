@@ -38,6 +38,10 @@ interface AppState {
   gateOpen: boolean
   setGateOpen: (v: boolean) => void
 
+  /** Partyraum im Vereinsheim (Bonus-Beat, lazy geladen). */
+  partyOpen: boolean
+  setPartyOpen: (v: boolean) => void
+
   /** Ton an/aus (Nutzer-Entscheidung am Tor bzw. Mute-Toggle). */
   soundOn: boolean
   setSoundOn: (v: boolean) => void
@@ -73,6 +77,9 @@ export const useStore = create<AppState>((set) => ({
 
   gateOpen: false,
   setGateOpen: (v) => set({ gateOpen: v }),
+
+  partyOpen: false,
+  setPartyOpen: (v) => set({ partyOpen: v }),
 
   soundOn: false,
   setSoundOn: (v) => {

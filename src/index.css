@@ -187,3 +187,10 @@ body {
 }
 @keyframes scrolldot { 0%{opacity:0;transform:translate(-50%,0)} 40%{opacity:1} 80%{opacity:0;transform:translate(-50%,10px)} }
 @media (prefers-reduced-motion: reduce) { .scrollhint__mouse::after { animation: none; } }
+
+/* ── Partyraum: Seiten-Inhalte ausblenden ───────────────────── */
+body.in-party .scroll-root,
+body.in-party .scrollhint,
+body.in-party .brandbar__nav {
+  visibility: hidden;
+}

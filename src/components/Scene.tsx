@@ -1,3 +1,5 @@
+import { lazy, Suspense, useRef } from 'react'
+import { useStore } from '../store/useStore'
 import { Ground } from './Ground'
 import { Pitch } from './Pitch'
 import { Goals } from './Goals'
@@ -16,12 +18,18 @@ import { KickoffDirector } from './KickoffDirector'
 import { ConeDust } from './ConeDust'
 import { LIGHTING } from '../theme/lighting'
 
+// Partyraum: eigener Chunk — lädt erst beim ersten 'Reinkommen?'
+const PartyRoom = lazy(() => import('./PartyRoom'))
+
 // Die Bühne: der ECHTE Platz in Agathenburg (REFERENZ_MODELL.md)
 // bei Flutlicht in der Abenddämmerung. Kompass: +x Ost, +z Süd.
 // Vereinsheim hinter dem Ost-Tor, Wald S/W/O, Dorf im Norden,
 // Klinker-Hütte NW, Fanblock-Ecke SW. Flutlicht = Stilisierung.
 export function Scene() {
   const L = LIGHTING
+  const partyOpen = useStore((s) => s.partyOpen)
+  const everOpened = useRef(false)
+  if (partyOpen) everOpened.current = true
   return (
     <group>
       <fog attach="fog" args={[L.fog.color, L.fog.near, L.fog.far]} />
@@ -47,6 +55,11 @@ export function Scene() {
       <Football />
       <ConeDust />
       <KickoffDirector />
+      {everOpened.current && (
+        <Suspense fallback={null}>
+          <PartyRoom />
+        </Suspense>
+      )}
     </group>
   )
 }

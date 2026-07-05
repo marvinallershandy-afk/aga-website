@@ -1,0 +1,26 @@
+import { chromium } from 'playwright'
+const b = await chromium.launch({ args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--autoplay-policy=no-user-gesture-required'] })
+const ctx = await b.newContext({ viewport:{width:1440,height:900}, deviceScaleFactor:2 })
+const p = await ctx.newPage()
+const chunks = []
+p.on('request', r => { if (r.url().includes('PartyRoom')) chunks.push(r.url().split('/').pop()) })
+await p.goto('http://localhost:5199',{waitUntil:'load', timeout:60000})
+await p.waitForFunction(() => !document.querySelector('[data-testid=gate] button[disabled]'), null, {timeout: 60000})
+await p.click('text=Mit Ton betreten')
+await p.waitForTimeout(1500)
+// zur Tabellen-Station scrollen
+const total = await p.evaluate(()=>document.documentElement.scrollHeight-window.innerHeight)
+await p.evaluate((y)=>window.scrollTo(0,y), Math.round(total*0.83))
+await p.waitForTimeout(1800)
+console.log('PartyRoom-Chunk vor Klick geladen?', chunks.length > 0, '(soll false)')
+await p.click('text=Reinkommen?')
+await p.waitForTimeout(2500)
+console.log('PartyRoom-Chunk nach Klick:', chunks.length > 0 ? chunks[0] : 'FEHLT')
+console.log('gains party:', JSON.stringify(await p.evaluate(() => window.AudioManager.debugGains())))
+await p.screenshot({ path:'SVA_SCREENSHOTS/v3-partyraum.png' })
+// zurück
+await p.click('text=Zurück zum Platz')
+await p.waitForTimeout(1800)
+console.log('gains zurueck:', JSON.stringify(await p.evaluate(() => window.AudioManager.debugGains())))
+await p.screenshot({ path:'SVA_SCREENSHOTS/v3-partyraum-exit.png' })
+await b.close()

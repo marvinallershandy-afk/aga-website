@@ -25,6 +25,13 @@ export function CameraRig() {
   const currentLook = useRef(new THREE.Vector3(0, 0.4, 0))
 
   useFrame((state, delta) => {
+    // Partyraum: Kamera in der Pocket-Dimension (Schnitt via Dip-to-Black)
+    if (useStore.getState().partyOpen) {
+      const t = state.clock.elapsedTime
+      camera.position.set(0.72 + Math.sin(t * 0.22) * 0.04, -39.5, 0.9)
+      camera.lookAt(-0.05, -39.65, -1.2)
+      return
+    }
     if (devCam) {
       camera.position.set(devCam[0], devCam[1], devCam[2])
       camera.lookAt(devCam[3], devCam[4], devCam[5])
