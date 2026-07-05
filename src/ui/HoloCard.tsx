@@ -88,7 +88,10 @@ export function HoloCard({ player, onClick, large }: Props) {
       )}
 
       <div className="holo__plate">
-        <div className="holo__name">{player.name}</div>
+        <div className="holo__name">
+          <small>{player.name.split(' ').slice(0, -1).join(' ')}</small>
+          <b>{player.name.split(' ').slice(-1)[0]}</b>
+        </div>
         <div className="holo__rule" />
         <div className="holo__stats">
           <span><b>{player.stats.games}</b>Spiele</span>
@@ -98,6 +101,7 @@ export function HoloCard({ player, onClick, large }: Props) {
       </div>
 
       <div className="holo__shine" />
+      <div className="holo__shine2" />
       <div className="holo__gloss" />
       <div className="holo__frame" />
     </div>

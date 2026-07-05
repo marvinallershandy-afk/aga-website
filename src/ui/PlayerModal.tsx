@@ -12,6 +12,7 @@ const close = () => useStore.getState().setSelectedPlayer(null)
 function ModalContent({ player }: { player: Player }) {
   const [sharing, setSharing] = useState(false)
   const [result, setResult] = useState<ShareResult | null>(null)
+  const [flipped, setFlipped] = useState(false)
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && close()
@@ -40,7 +41,27 @@ function ModalContent({ player }: { player: Player }) {
       onClick={(e) => e.stopPropagation()}
     >
       <div className="modal-card">
-        <HoloCard player={player} large />
+        <div className="flip-scene" onClick={() => setFlipped(!flipped)} role="button" tabIndex={0}
+          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setFlipped(!flipped)}
+          aria-label="Karte drehen">
+          <div className={`flip-inner${flipped ? ' is-flipped' : ''}`}>
+            <div className="flip-face">
+              <HoloCard player={player} large />
+            </div>
+            <div className="flip-back" aria-hidden={!flipped}>
+              <img src="/brand/wappen.png" alt="" />
+              <div className="flip-back__season">Saison-Stats · [Platzhalter]</div>
+              <div className="flip-back__row">
+                <span><b>{player.stats.games}</b>Spiele</span>
+                <span><b>{player.stats.goals}</b>Tore</span>
+                <span><b>{player.stats.assists}</b>Assists</span>
+                <span><b>{player.rating}</b>Rating</span>
+              </div>
+              <div className="flip-back__quote">„Platz für deinen Spruch." — {player.name.split(' ').slice(-1)[0]}</div>
+            </div>
+          </div>
+        </div>
+        <div className="flip-hint">{flipped ? 'Nochmal tippen: Vorderseite' : 'Karte antippen zum Drehen'}</div>
       </div>
       <div className="modal-info">
         <div className="modal-sub">#{player.number} · {POSITION_LABEL[player.position]}</div>

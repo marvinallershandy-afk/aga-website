@@ -23,7 +23,7 @@
   cursor: pointer;
   transform: perspective(760px) rotateX(var(--tiltX)) rotateY(var(--tiltY));
   transform-style: preserve-3d;
-  transition: transform .12s ease-out, box-shadow .2s ease;
+  transition: transform .45s cubic-bezier(.16,1.2,.3,1), box-shadow .3s ease;
   will-change: transform;
   box-shadow: 0 12px 34px rgba(0,0,0,.55);
   isolation: isolate;
@@ -38,8 +38,10 @@
   border-radius: 14px;
   overflow: hidden;
   background:
+    repeating-linear-gradient(115deg, rgba(255,255,255,.015) 0 2px, rgba(0,0,0,.02) 2px 4px),
     radial-gradient(120% 80% at 50% 0%, #3a2c14 0%, #231f20 40%, #14100f 100%);
-  border: 1px solid rgba(232,193,90,.5);
+  border: 1px solid rgba(232,193,90,.55);
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.08);
 }
 
 /* Gold-Rahmen-Innenlinie */
@@ -169,14 +171,26 @@
   background: linear-gradient(180deg, transparent, rgba(10,8,8,.75) 30%);
 }
 .holo__name {
-  font-family: var(--font-display);
-  font-size: 1.05rem;
-  letter-spacing: .02em;
   color: #fff;
   text-transform: uppercase;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.05;
+}
+.holo__name small {
+  display: block;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: .58rem;
+  letter-spacing: .3em;
+  color: rgba(255,255,255,.55);
+}
+.holo__name b {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 1.15rem;
+  letter-spacing: .03em;
 }
 .holo__rule {
   height: 1px;
@@ -195,9 +209,13 @@
 .holo__stats b {
   display: block;
   font-family: var(--font-display);
-  font-size: .95rem;
-  color: var(--gold);
+  font-size: .9rem;
+  color: rgba(232,193,90,.85);
   letter-spacing: .02em;
+}
+.holo__stats span:nth-child(2) b {
+  font-size: 1.2rem;
+  color: var(--gold);
 }
 
 /* ── Holo-Shimmer-Layer ─────────────────────────────────────── */
@@ -217,6 +235,24 @@
   -webkit-mask-size: 64px 64px;
   transition: opacity .2s ease;
 }
+/* zweite, gegenläufige Holo-Schicht — Punkte-Raster, winkel-abhängig */
+.holo__shine2 {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  border-radius: 14px;
+  pointer-events: none;
+  mix-blend-mode: color-dodge;
+  opacity: calc(.08 + var(--glow) * .35);
+  background:
+    linear-gradient(calc(120deg + var(--tiltY) * 6), 
+      rgba(255,60,180,.9), rgba(80,220,255,.9) 35%, 
+      rgba(255,230,120,.9) 65%, rgba(120,255,160,.9));
+  -webkit-mask-image: radial-gradient(circle at 2px 2px, white 1.1px, transparent 1.6px);
+  -webkit-mask-size: 9px 9px;
+  transition: opacity .25s ease;
+}
+
 /* Glanzstreifen, der der Maus folgt */
 .holo__gloss {
   position: absolute;
@@ -497,4 +533,77 @@
   border: 1px dashed rgba(255,255,255,.25);
   border-radius: 999px;
   padding: .32em .8em;
+}
+
+/* ── Karten-Flip im Modal ───────────────────────────────────── */
+.flip-scene {
+  perspective: 1100px;
+  width: 100%;
+}
+.flip-inner {
+  position: relative;
+  width: 100%;
+  transform-style: preserve-3d;
+  transition: transform .7s cubic-bezier(.3,.9,.25,1);
+}
+.flip-inner.is-flipped { transform: rotateY(180deg); }
+.flip-face {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.flip-back {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: rotateY(180deg);
+  border-radius: 14px;
+  overflow: hidden;
+  background:
+    repeating-linear-gradient(115deg, rgba(255,255,255,.015) 0 2px, rgba(0,0,0,.02) 2px 4px),
+    radial-gradient(120% 90% at 50% 15%, #2c2320 0%, #1a1515 55%, #100d0d 100%);
+  border: 1px solid rgba(232,193,90,.55);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .9rem;
+  padding: 1.2rem;
+  text-align: center;
+}
+.flip-back img { width: 38%; filter: drop-shadow(0 6px 14px rgba(0,0,0,.6)); }
+.flip-back__season {
+  font-size: .6rem;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  color: rgba(232,193,90,.8);
+}
+.flip-back__row {
+  display: flex;
+  gap: 1.1rem;
+  font-size: .66rem;
+  color: rgba(255,255,255,.75);
+}
+.flip-back__row b {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  color: var(--gold);
+}
+.flip-back__quote {
+  font-size: .78rem;
+  font-style: italic;
+  color: rgba(255,255,255,.55);
+  max-width: 22ch;
+  border-top: 1px solid rgba(232,193,90,.25);
+  padding-top: .7rem;
+}
+.flip-hint {
+  margin-top: .6rem;
+  font-size: .62rem;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.45);
+  text-align: center;
+  width: 100%;
 }
