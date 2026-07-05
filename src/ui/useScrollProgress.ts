@@ -63,14 +63,21 @@ export function useScrollProgress(enabled: boolean) {
       onScroll()
     }
 
-    // Messen, sobald Layout steht (Fonts/Bilder können Höhen ändern)
+    // Messen, sobald Layout steht — und bei JEDER Höhenänderung neu
+    // (Fonts, Widget, Karten-Grid): ResizeObserver auf dem Body.
     measure()
     update()
     const t = setTimeout(measure, 600)
+    const ro = new ResizeObserver(() => {
+      measure()
+      onScroll()
+    })
+    ro.observe(document.body)
     window.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('resize', onResize, { passive: true })
     return () => {
       clearTimeout(t)
+      ro.disconnect()
       window.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', onResize)
       if (raf) cancelAnimationFrame(raf)
