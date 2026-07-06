@@ -30,11 +30,13 @@ const STATIONS: Station[] = [
   { pos: new THREE.Vector3(4.6, 0.9, 1.5), look: new THREE.Vector3(7.1, 0.5, -0.35) },
   // 4 · TABELLE — Schwenk zum echten Vereinsheim hinter dem Ost-Tor
   { pos: new THREE.Vector3(4.0, 0.95, 3.1), look: new THREE.Vector3(7.15, 0.32, -0.5) },
-  // 5 · KONTAKT/FINALE — Schwenk in die Fanblock-Ecke SO (v5-Review:
-  //     richtige Seite, aber Tor-Ende am Vereinsheim): das AGA-URKNALL-
-  //     Banner lesbar in der rechten Bildhälfte (DOM lebt links),
-  //     dahinter Ost-Tor und Ballfangzaun
-  { pos: new THREE.Vector3(2.2, 0.95, 0.9), look: new THREE.Vector3(4.5, 0.4, 3.2) },
+  // 5 · KONTAKT/FINALE — RAUSZOOM in die Vogelperspektive (v8-E4): die
+  //     Kamera steigt aus der Platznähe auf und macht die ganze Welt zur
+  //     Standort-Karte. Blick von oben-Süd auf Platz + Vereinsheim (+x),
+  //     der LocationMarker („Hier sind wir") blendet über dem Vereinsheim
+  //     ein, der Route-Button lebt im DOM (PlatzFinden). Höhe s.
+  //     maxFlightYAt() — die globale Y-Decke wird zum Finale angehoben.
+  { pos: new THREE.Vector3(2.4, 13.5, 6.2), look: new THREE.Vector3(1.4, 0, -0.5) },
 ]
 
 export const STATION_COUNT = STATIONS.length
@@ -158,6 +160,16 @@ const DIVE_HALF_WIDTH = 0.14
 // v6-E1: Maximalhöhe fängt Catmull-Durchhänger/Überschwinger nach oben
 // (der Establishing-Shot sitzt bei y=7.0 → Marge bis 7.6).
 const MAX_FLIGHT_Y = 7.6
+// v8-E4: Zum FINALE (u→1) steigt die Decke, damit der Rauszoom in die
+// Vogelperspektive (Station 5, y=13.5) möglich ist — der Rest der Fahrt
+// bleibt bei 7.6 gedeckelt.
+const FINALE_U = 0.86
+const FINALE_MAX_Y = 15
+function maxFlightYAt(u: number): number {
+  if (u <= FINALE_U) return MAX_FLIGHT_Y
+  const k = THREE.MathUtils.clamp((u - FINALE_U) / (1 - FINALE_U), 0, 1)
+  return THREE.MathUtils.lerp(MAX_FLIGHT_Y, FINALE_MAX_Y, k * k * (3 - 2 * k))
+}
 // v8-E1: Boden ZONENWEISE. Über dem offenen Feld (Hero→Mannschaft→
 // Anflug) höher, damit die Fahrt nicht „im Rasen skimmt" (Marvin);
 // am Vereinsheim (u≳0.55, Musik/Tabelle/Kontakt, Tür-Anflug) tief.
@@ -191,8 +203,8 @@ export function sampleFlight(t: number, outPos: THREE.Vector3, outLook: THREE.Ve
   const uc = arcLengthU(c)
   posCurve.getPoint(uc, _pos)
   lookCurve.getPoint(uc, _look)
-  // Höhen-Klammer: Boden (nie in den Rasen) + Deckel (kein Überschwinger)
-  _pos.y = THREE.MathUtils.clamp(_pos.y, flightFloorAt(c), MAX_FLIGHT_Y)
+  // Höhen-Klammer: Boden (nie in den Rasen) + Deckel (Finale hebt ihn)
+  _pos.y = THREE.MathUtils.clamp(_pos.y, flightFloorAt(c), maxFlightYAt(c))
   outPos.copy(_pos)
   outLook.copy(_look)
 }

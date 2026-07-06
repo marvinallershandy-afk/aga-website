@@ -4,6 +4,7 @@ import { Ground } from './Ground'
 import { Pitch } from './Pitch'
 import { Goals } from './Goals'
 import { Clubhouse } from './Clubhouse'
+import { LocationMarker } from './LocationMarker'
 import { Treeline } from './Treeline'
 import { ForestTrees } from './ForestTrees'
 import { SkyGradient } from './SkyGradient'
@@ -49,6 +50,7 @@ export function Scene() {
       <BallStopFence />
       <Floodlights />
       <Clubhouse />
+      <LocationMarker />
       <BrickHut />
       <Village />
       <FanBlock />
