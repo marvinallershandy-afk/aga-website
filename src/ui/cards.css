@@ -309,9 +309,12 @@
 
 /* laufender Holo-Glanz — nur wenn sichtbar (IntersectionObserver) */
 .holo.is-live .holo__shine { animation: holoDrift 7s linear infinite; }
+/* v5-Perf: hue-rotate aus den Keyframes entfernt — animierter filter
+   re-rastert jede Karte pro Frame (Compositor-Kosten kollidierten mit
+   der Kino-Kette). Die Masken-Drift trägt den Holo-Effekt allein. */
 @keyframes holoDrift {
-  0%   { -webkit-mask-position: 0 0; filter: hue-rotate(0deg); }
-  100% { -webkit-mask-position: 120px 120px; filter: hue-rotate(360deg); }
+  0%   { -webkit-mask-position: 0 0; }
+  100% { -webkit-mask-position: 120px 120px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

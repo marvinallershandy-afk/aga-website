@@ -105,10 +105,33 @@ function ProstArm() {
 
 const WALL_MAT = { roughness: 0.95 } as const
 
+// Tresen-Platte mit Maserung (v5 Mikro-Detail — Kamera kommt nah)
+function makeWoodTexture(): THREE.CanvasTexture {
+  const cv = document.createElement('canvas')
+  cv.width = 256
+  cv.height = 64
+  const ctx = cv.getContext('2d')!
+  ctx.fillStyle = '#6a4c30'
+  ctx.fillRect(0, 0, 256, 64)
+  for (let i = 0; i < 26; i++) {
+    const y = Math.random() * 64
+    ctx.strokeStyle = `rgba(${30 + Math.random() * 30},${18 + Math.random() * 14},8,${0.12 + Math.random() * 0.18})`
+    ctx.lineWidth = 0.8 + Math.random() * 1.6
+    ctx.beginPath()
+    ctx.moveTo(0, y)
+    ctx.bezierCurveTo(80, y + Math.random() * 6 - 3, 170, y + Math.random() * 6 - 3, 256, y + Math.random() * 4 - 2)
+    ctx.stroke()
+  }
+  const t = new THREE.CanvasTexture(cv)
+  t.colorSpace = THREE.SRGBColorSpace
+  return t
+}
+
 export default function PartyRoom() {
   const cover = useTexture('/audio/cover.jpg')
   cover.colorSpace = THREE.SRGBColorSpace
   const neon = useMemo(svaNeonTexture, [])
+  const wood = useMemo(makeWoodTexture, [])
 
   // Lichterkette: zwei durchhängende Bögen — Süd-Wand + Ost-Wand
   const bulbs = useMemo(() => {
@@ -197,7 +220,7 @@ export default function PartyRoom() {
           Hop (rein wie raus) und erzählt „draußen ist der Platz" */}
       <mesh position={[ROOM.innerDoorX - 0.015, hall.height / 2 - 0.06, hall.z]} rotation-y={Math.PI / 2}>
         <planeGeometry args={[hall.zMax - hall.zMin + 0.1, hall.height + 0.12]} />
-        <meshBasicMaterial color="#ffb26a" toneMapped={false} />
+        <meshBasicMaterial color={[2.3, 1.5, 0.85]} toneMapped={false} />
       </mesh>
       {/* Garderoben-Detail im Flur: Haken + Schal */}
       <mesh position={[-1.6, 0.62, hall.zMin + 0.012]}>
@@ -218,7 +241,7 @@ export default function PartyRoom() {
         </mesh>
         <mesh position={[0, 0.29, 0]}>
           <boxGeometry args={[1.58, 0.03, 0.42]} />
-          <meshStandardMaterial color="#6a4c30" roughness={0.5} metalness={0.1} />
+          <meshStandardMaterial map={wood} roughness={0.5} metalness={0.1} />
         </mesh>
         {/* Zapfhahn */}
         <mesh position={[0.25, 0.37, 0]}>
@@ -315,7 +338,8 @@ export default function PartyRoom() {
       {/* SVA-Neon über dem Tresen (Ost-Wand) */}
       <mesh position={[H - 0.04, 1.05, 0.68]} rotation-y={-Math.PI / 2}>
         <planeGeometry args={[0.66, 0.25]} />
-        <meshBasicMaterial map={neon} transparent toneMapped={false} />
+        {/* Farb-Boost > 1: Neon glüht im selektiven Bloom */}
+        <meshBasicMaterial map={neon} transparent toneMapped={false} color={[1.7, 1.7, 1.7]} />
       </mesh>
 
       {/* Lichterkette (SVA-Rot + warm im Wechsel) */}

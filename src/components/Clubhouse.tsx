@@ -189,7 +189,8 @@ export function Clubhouse() {
             aufgeschwungen. Maße s. camera/partyPath.ts (DOOR). */}
         <mesh position={[-ANNEX_D / 2 - 0.004, 0.13, 0.85]} rotation-y={-Math.PI / 2}>
           <planeGeometry args={[0.16, 0.26]} />
-          <meshBasicMaterial color="#ffb26a" toneMapped={false} />
+          {/* HDR-Farbe > 1 → wird vom selektiven Bloom erfasst */}
+          <meshBasicMaterial color={[2.3, 1.5, 0.85]} toneMapped={false} />
         </mesh>
         {/* dunkler Laibungs-Rahmen um die Öffnung */}
         <mesh position={[-ANNEX_D / 2 - 0.002, 0.13, 0.85]} rotation-y={-Math.PI / 2}>

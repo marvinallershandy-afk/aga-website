@@ -5,8 +5,9 @@ import * as THREE from 'three'
 import { Scene } from './Scene'
 import { CameraRig } from '../camera/CameraRig'
 import { PerfMonitor } from '../perf/PerfMonitor'
+import { CinemaEffects } from '../cinema/CinemaEffects'
 import { useStore } from '../store/useStore'
-import { getClampedPixelRatio } from '../utils/device'
+import { getClampedPixelRatio, detectCinemaTier } from '../utils/device'
 import { HERO_FRAME } from '../camera/CameraPath'
 
 // Signalisiert "3D fertig geladen", sobald die Suspense-Grenze auflöst.
@@ -30,6 +31,10 @@ function ProgressReporter() {
 }
 
 export function Stage() {
+  const setCinemaTier = useStore((s) => s.setCinemaTier)
+  useEffect(() => {
+    setCinemaTier(detectCinemaTier())
+  }, [setCinemaTier])
   return (
     <div className="stage-canvas">
       <Canvas
@@ -55,6 +60,7 @@ export function Stage() {
           <ReadyFlag />
         </Suspense>
         <CameraRig />
+        <CinemaEffects />
         <PerfMonitor />
       </Canvas>
     </div>

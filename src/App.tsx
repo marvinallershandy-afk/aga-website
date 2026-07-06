@@ -14,6 +14,8 @@ import { PlayerModal } from './ui/PlayerModal'
 import { PerfOverlay } from './ui/PerfOverlay'
 import { EntranceGate } from './ui/EntranceGate'
 import { PartyDirector } from './ui/PartyDirector'
+import { Letterbox } from './ui/Letterbox'
+import { FxPanel } from './ui/FxPanel'
 import { AudioManager } from './audio/AudioManager'
 
 export default function App() {
@@ -21,6 +23,7 @@ export default function App() {
   const setCaps = useStore((s) => s.setCaps)
   const setReady = useStore((s) => s.setReady)
   const togglePerf = useStore((s) => s.togglePerf)
+  const toggleFxPanel = useStore((s) => s.toggleFxPanel)
   const gateOpen = useStore((s) => s.gateOpen)
   const soundOn = useStore((s) => s.soundOn)
 
@@ -38,14 +41,15 @@ export default function App() {
     if (reducedMotion || !webglOK) setReady(true) // kein 3D-Ladevorgang
   }, [setCaps, setReady])
 
-  // Perf-Overlay toggeln
+  // Debug: „p" = Perf-Overlay, „e" = Kino-Effekt-Panel
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key.toLowerCase() === 'p') togglePerf()
+      if (e.key.toLowerCase() === 'e') toggleFxPanel()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [togglePerf])
+  }, [togglePerf, toggleFxPanel])
 
   useScrollProgress(!fallback)
 
@@ -64,8 +68,10 @@ export default function App() {
       <Brandbar />
       <Sections />
       {!fallback && <ScrollHint />}
+      <Letterbox />
       <PlayerModal />
       <PerfOverlay />
+      <FxPanel />
     </>
   )
 }

@@ -16,6 +16,7 @@ import { FanBlock } from './FanBlock'
 import { Football } from './Football'
 import { KickoffDirector } from './KickoffDirector'
 import { ConeDust } from './ConeDust'
+import { GroundMist } from './GroundMist'
 import { LIGHTING } from '../theme/lighting'
 
 // Partyraum: eigener Chunk — lädt erst, wenn die Musik-Sektion
@@ -53,6 +54,7 @@ export function Scene() {
       <Treeline />
       <Football />
       <ConeDust />
+      <GroundMist />
       <KickoffDirector />
       {partyNear && (
         <Suspense fallback={null}>

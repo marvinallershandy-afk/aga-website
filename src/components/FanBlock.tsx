@@ -33,6 +33,18 @@ function makeBannerTexture(): THREE.CanvasTexture {
     ctx.arc(x, y, 20 + Math.random() * 50, 0, Math.PI * 2)
     ctx.fill()
   }
+  // Stoffgefühl (v5 Mikro-Detail): weiche vertikale Falten —
+  // Schattenflanke + Lichtkante, wie hochgehaltenes Tuch
+  for (let i = 0; i < 6; i++) {
+    const x = 55 + i * 98 + Math.sin(i * 2.7) * 22
+    const g = ctx.createLinearGradient(x - 20, 0, x + 20, 0)
+    g.addColorStop(0, 'rgba(0,0,0,0)')
+    g.addColorStop(0.45, 'rgba(40,0,6,0.22)')
+    g.addColorStop(0.7, 'rgba(255,235,220,0.07)')
+    g.addColorStop(1, 'rgba(0,0,0,0)')
+    ctx.fillStyle = g
+    ctx.fillRect(x - 20, 0, 40, 220)
+  }
 
   // Schwarzes Diagonalband
   ctx.save()

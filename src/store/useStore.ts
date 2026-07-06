@@ -59,6 +59,33 @@ interface AppState {
   setPerfStats: (s: PerfStats) => void
   showPerf: boolean
   togglePerf: () => void
+
+  /** Kino-Ebene (v5): Qualitätsstufe + Einzel-Schalter je Effekt.
+   *  'full' = Desktop-Kette, 'reduced' = Mobile-sicher
+   *  (Grading + Vignette + Korn; teure Effekte aus). */
+  cinemaTier: CinemaTier
+  setCinemaTier: (t: CinemaTier) => void
+  cinemaFx: CinemaFx
+  setFx: (k: keyof CinemaFx, v: boolean) => void
+  showFxPanel: boolean
+  toggleFxPanel: () => void
+}
+
+export type CinemaTier = 'full' | 'reduced'
+
+export interface CinemaFx {
+  bloom: boolean
+  grade: boolean
+  vignette: boolean
+  grain: boolean
+  ca: boolean
+  mist: boolean
+  letterbox: boolean
+}
+
+export const FX_BY_TIER: Record<CinemaTier, CinemaFx> = {
+  full: { bloom: true, grade: true, vignette: true, grain: true, ca: true, mist: true, letterbox: true },
+  reduced: { bloom: false, grade: true, vignette: true, grain: true, ca: false, mist: false, letterbox: true },
 }
 
 export const useStore = create<AppState>((set) => ({
@@ -105,4 +132,11 @@ export const useStore = create<AppState>((set) => ({
   setPerfStats: (s) => set({ perfStats: s }),
   showPerf: false,
   togglePerf: () => set((s) => ({ showPerf: !s.showPerf })),
+
+  cinemaTier: 'full',
+  setCinemaTier: (t) => set({ cinemaTier: t, cinemaFx: { ...FX_BY_TIER[t] } }),
+  cinemaFx: { ...FX_BY_TIER.full },
+  setFx: (k, v) => set((s) => ({ cinemaFx: { ...s.cinemaFx, [k]: v } })),
+  showFxPanel: false,
+  toggleFxPanel: () => set((s) => ({ showFxPanel: !s.showFxPanel })),
 }))
