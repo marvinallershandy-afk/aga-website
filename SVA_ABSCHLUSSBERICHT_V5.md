@@ -91,22 +91,30 @@ die restlichen elf.
 erreicht. Messlatte: Higgsfield-Kino-Referenzframe (s. unten) — an dem sich
 konkret Bloom-Halo, Nebel und Vignette kalibriert haben.
 
-## 3 · Performance (Apple M3, AM NETZTEIL)
+## 3 · Performance (Apple M3, AM NETZTEIL, ruhige Phase)
 
-Messung in ruhiger Phase (kein Zoom/Fremdlast), 1440×900 @DPR2, echte GPU
-(`node _v5gpu.mjs` / `node _v5fx.mjs` — jederzeit reproduzierbar):
+1440×900 @DPR2, echte GPU, volle Kino-Kette (`node _v5gpu.mjs` /
+`node _v5fx.mjs` — jederzeit reproduzierbar). Finale Messung nach dem
+Karten-Compositing-Fix²:
 
-| Messpunkt | ohne Kette | volle Kette | reduced |
-|---|---|---|---|
-| Hero / Beat / Tabelle / Finale | 16,6 ms | **16,6–16,7 ms (60 FPS)** | 16,6 ms |
-| Durchfahrt (alle Punkte p=0.2…1.0) | 16,6 ms | **16,6 ms** | 16,6 ms |
-| Partyraum-Totale | 16,6 ms | **16,6 ms** | 16,6 ms |
-| Karten-Wand (schwerster Punkt) | 16,8 ms | ~20 ms avg / p50 16,7² | 16,6 ms |
+| Messpunkt | volle Kette | Detail |
+|---|---|---|
+| Hero / Beat / Tabelle / Finale | **16,6 ms = 60 FPS** | p95 ≤ 17,7 ms |
+| Durchfahrt p=0.2 / 0.35 / 0.44 | **16,6 ms** | p95 17,6 ms |
+| Hop-Moment p=0.5 | 17,4 ms avg | p50 16,7 (einzelne Hop-Frames) |
+| Partyraum-Totale | **16,6 ms** | p95 17,6 ms |
+| Karten-Wand (vorher schwerster Punkt) | **16,65 ms** | vorher 26 ms / 30 FPS² |
 
-² Vor dem hue-rotate-Fix gemessen; danach war die Maschine unter Fremdlast
-(Zoom-Call), eine saubere Nachmessung steht aus — Kommando oben, dauert 2 Min.
-Kosten der Kette: ~3 ms/Frame. Frametime-Tabelle pro Effekt (solo, Team-Punkt):
-Bloom +1,5–3 ms, Grading +0,5 ms, Vignette/Korn/CA/Nebel je ≈0 ms.
+² Der eigentliche v5-Perf-Fund lag NICHT im 3D: Die Karten-Holo-Animation
+lief über `mask-position` (+ ursprünglich `hue-rotate`) — beides repaintet
+jede Karte pro Frame und zwang die Foto-Blends zur Dauerverrechnung. Fix in
+zwei Stufen: hue-rotate raus, Drift auf compositor-only `transform`
+umgestellt, Graustufen in die Foto-WebPs gebaked. Ergebnis: Karten-Wand von
+30 FPS auf glatte 60 FPS — mit voller Kette.
+Ketten-Kosten: ~3 ms/Frame (Solo-Messung: Bloom +1,5–3 ms, Grading +0,5 ms,
+Vignette/Korn/CA/Nebel je ≈0 ms; MSAA aus, DPR-Clamp 1,75 bei Voll-Kette).
+v4-Vergleich: v4 hielt 60 FPS ohne Post-Processing — v5 hält 60 FPS MIT
+kompletter Kino-Ebene und hat den Karten-Hotspot behoben.
 
 ## 4 · Higgsfield-Mandat (3 von max. 8 Generierungen)
 

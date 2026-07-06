@@ -52,14 +52,14 @@ So kommen die restlichen Fotos in die Karten:
 2. **Verkleinern** auf 800 px Höhe und als WebP ablegen:
    `public/players/<vorname-klein>.webp` — Einzeiler dafür:
    ```sh
-   node -e "require('sharp')('FOTO.jpg').resize({height:800}).webp({quality:82}).toFile('public/players/vorname.webp')"
+   node -e "require('sharp')('FOTO.jpg').resize({height:800}).grayscale().linear(1.12,-15.4).webp({quality:82}).toFile('public/players/vorname.webp')"
    ```
 3. **Eintragen** in `src/data/players.ts`: beim Spieler
    `photoUrl: '/players/vorname.webp'` setzen (und `name` echt machen).
    Kein Foto → `photoUrl: null` = gestaltete Silhouetten-Karte.
 
-Beschnitt/Einfärbung passieren automatisch (CSS: Focal oben,
-Graustufen + Team-Duotone). Eingebaut sind bereits: Tino (1, TW),
+Beschnitt/Einfärbung: Focal oben + Team-Duotone macht das CSS; die
+Graustufen sind aus Performance-Gründen in der Datei gebaked (s. Einzeiler). Eingebaut sind bereits: Tino (1, TW),
 Lennard (4), Julio (7), Carsten (9), Eli (10).
 
 ## Marvins To-dos (v1 → echt)
@@ -67,6 +67,5 @@ Lennard (4), Julio (7), Carsten (9), Eli (10).
 - Restliche Spielerfotos + echte Kadernamen (Pipeline oben; Nachnamen
   der 5 Beispiel-Spieler fehlen bewusst noch).
 - Echte fussball.de-Vereins-/Team-ID in `src/data/club.ts` (`fussballDeTeamId`).
-- `public/og-image.png` (Social-Preview) ergänzen.
 
 Details im Abschlussbericht: `SVA_ABSCHLUSSBERICHT.md`. Plan: `SVA_PLAN.md`.

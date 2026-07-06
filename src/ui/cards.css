@@ -123,7 +123,9 @@
   /* Focal oben: Kopf sitzt im oberen Drittel der Fotos (v5-Pipeline) —
      bei jedem Seitenverhältnis bleibt das Gesicht im Ausschnitt */
   object-position: 50% 14%;
-  filter: grayscale(1) contrast(1.12) brightness(.96);
+  /* v5-Perf: Graustufen+Kontrast sind in die WebP-Dateien GEBAKED
+     (Pipeline s. README) — der CSS-filter entfällt, nur der
+     luminosity-Blend färbt gegen den Team-Verlauf ein */
   mix-blend-mode: luminosity;
 }
 /* B · Freisteller: Farbe + Studio-Licht von oben + Grounding */
@@ -311,13 +313,20 @@
 }
 
 /* laufender Holo-Glanz — nur wenn sichtbar (IntersectionObserver) */
-.holo.is-live .holo__shine { animation: holoDrift 7s linear infinite; }
-/* v5-Perf: hue-rotate aus den Keyframes entfernt — animierter filter
-   re-rastert jede Karte pro Frame (Compositor-Kosten kollidierten mit
-   der Kino-Kette). Die Masken-Drift trägt den Holo-Effekt allein. */
+/* v5-Perf (2. Ausbaustufe): Drift über TRANSFORM statt mask-position —
+   mask-position repaintet die Karte jeden Frame und zwang damit auch
+   Foto-Blend (luminosity) und Shine-Gradienten zur Neuverrechnung
+   (Karten-Wand fiel auf 30 FPS). Der Shine-Layer ist dafür nach
+   oben-links vergrößert und wandert compositor-only unter der
+   contain:paint-Klippung der Karte durch. hue-rotate war vorher schon
+   raus (animierter filter = Re-Rasterung). */
+.holo.is-live .holo__shine {
+  inset: -130px 0 0 -130px;
+  animation: holoDrift 7s linear infinite;
+}
 @keyframes holoDrift {
-  0%   { -webkit-mask-position: 0 0; }
-  100% { -webkit-mask-position: 120px 120px; }
+  0%   { transform: translate(0, 0); }
+  100% { transform: translate(130px, 130px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
