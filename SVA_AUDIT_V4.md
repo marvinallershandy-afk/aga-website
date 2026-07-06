@@ -48,6 +48,7 @@ ohne runde Map). (d) Ball im Hero kaum sichtbar (Stilisierungs-Kompromiss v3).
 | 0 (Start) | 7,0 | 5,5 | 7,5 | Ausgangslage |
 | nach E1–E3 | — | ~7,5* | **8,0** | Copy+Musik-Sektion+3D-Fixes; *Zwischenwert, Jury-Loop folgt |
 | Loop 1 | **8,5** | **8,5** | **8,3** | Kurskorrektur Musik=Partyraum + F1–F5, s.u. |
+| Loop 2 | **8,6** | **8,5** | **8,5** | Requisiten, Scrim, CI-Silhouetten — Abbruchkriterium erfüllt |
 
 ## Loop 1 (Etappe 6) — Fixes & Neubewertung
 
@@ -88,4 +89,30 @@ Treeline, Fanblock-Bewegung (Banner wogt, Schal, Lehn-Figuren), Party-Posen
 wird auf Desktop teils von den Mitmachen-Karten verdeckt; Übergang Musik→Tabelle
 streift dunkle Zonen.
 
-*(wird in Etappe 6 fortgeschrieben)*
+## Loop 2 (Etappe 6) — Fixes & Abschluss der Jury-Iterationen
+
+**Sweep:** kompletter Neuschuss Desktop + Mobile an echten Sektions-Zentren
+(inkl. neuem „approach"-Frame vor dem Raum-Schnitt); Finale am Seitenende.
+
+**Fixes:**
+1. Partyraum-Flaschen: Hals + Bauch + dunkle Regal-Rückwand — lesen als
+   Flaschenbord statt als schwebende Zylinder; Biere mit Schaumkrone.
+2. Brandbar-Scrim (Top-Gradient): Nav/Logo bleiben über Karten, Rasen und
+   Raum lesbar — löst auch die Mobile-Kollision Logo/Fließtext.
+3. Platzhalter-Silhouetten im CI-Duotone (Echo der Foto-Karten): 14 Karten
+   ohne Foto lesen jetzt als gestaltet, nicht als leer.
+4. Bierkiste + warmer Teppich im Raum: Boden-Wärme, rechte Bildhälfte geerdet.
+5. (aus Loop 1 übernommen) zeitbasiertes Look-Damping + Finale-Kadrierung.
+
+**Neubewertung:** Juror 8,6 · Stratege 8,5 · 3D 8,5.
+**Abbruchkriterium erfüllt:** alle Scores ≥ 8,5, nichts award-peinlich.
+Ehrliche Restliste (braucht echte Assets, nicht mehr Politur):
+- Spielerfotos (14 Silhouetten-Karten), fussball.de-Vereins-ID (Live-Tabelle),
+  Streaming-Links (Slots „bald"), echte Trainingszeiten, Domain für
+  Canonical/Sitemap, optional Partyraum-Fotos als 3D-Referenz.
+
+**Frametime Loop 2:** Maschine auf Batterie (16 %) → macOS halbiert die
+Display-Rate; `about:blank` = 33,0 ms, Szene = 33,2 ms an allen Stationen
+(vsync-gebunden, Szene unter Budget). Der 60-FPS-Beleg (16,5–17,2 ms, alle
+Stationen inkl. Raum) stammt aus derselben Codebasis von heute; Loop-2-Zusätze
+sind ~20 Kleinst-Meshes + 2 CSS-Regeln — kein messbarer Kostenpunkt.

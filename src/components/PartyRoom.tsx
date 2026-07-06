@@ -152,32 +152,65 @@ export default function PartyRoom() {
           <cylinderGeometry args={[0.012, 0.016, 0.13, 6]} />
           <meshStandardMaterial color="#c9ccd4" metalness={0.8} roughness={0.25} />
         </mesh>
-        {/* zwei gezapfte Biere */}
+        {/* zwei gezapfte Biere — mit Schaumkrone */}
         {[-0.15, 0.02].map((x) => (
-          <mesh key={x} position={[x, 0.335, 0.08]}>
-            <cylinderGeometry args={[0.014, 0.012, 0.05, 6]} />
-            <meshStandardMaterial color="#e8a832" emissive="#c8871a" emissiveIntensity={0.6} roughness={0.3} />
-          </mesh>
+          <group key={x}>
+            <mesh position={[x, 0.335, 0.08]}>
+              <cylinderGeometry args={[0.014, 0.012, 0.05, 6]} />
+              <meshStandardMaterial color="#e8a832" emissive="#c8871a" emissiveIntensity={0.6} roughness={0.3} />
+            </mesh>
+            <mesh position={[x, 0.363, 0.08]}>
+              <cylinderGeometry args={[0.0135, 0.014, 0.012, 6]} />
+              <meshStandardMaterial color="#f3ead6" roughness={0.9} />
+            </mesh>
+          </group>
         ))}
       </group>
 
-      {/* Regal mit Flaschen */}
+      {/* Bierkiste neben dem Tresen + warmer Teppich vor der Theke */}
+      <group position={[1.28, 0, -1.05]} rotation-y={-0.3}>
+        <mesh position={[0, 0.05, 0]}>
+          <boxGeometry args={[0.24, 0.1, 0.17]} />
+          <meshStandardMaterial color="#8a1d1d" roughness={0.85} />
+        </mesh>
+        {[-0.07, 0, 0.07].map((x) => (
+          <mesh key={x} position={[x, 0.115, 0]}>
+            <cylinderGeometry args={[0.006, 0.012, 0.035, 5]} />
+            <meshStandardMaterial color="#5a3418" roughness={0.4} />
+          </mesh>
+        ))}
+      </group>
+      <mesh rotation-x={-Math.PI / 2} position={[0.42, 0.004, -0.45]}>
+        <planeGeometry args={[1.5, 0.85]} />
+        <meshStandardMaterial color="#4a1d1a" roughness={1} />
+      </mesh>
+
+      {/* Regal mit Flaschen (Hals + Bauch, dunkle Rückwand — liest
+          als Flaschenbord statt als schwebende Zylinder) */}
       <group position={[0.4, 0.62, -1.36]}>
+        <mesh position={[0, 0.1, -0.075]}>
+          <planeGeometry args={[1.44, 0.3]} />
+          <meshStandardMaterial color="#1e1512" roughness={0.95} />
+        </mesh>
         <mesh>
           <boxGeometry args={[1.4, 0.03, 0.16]} />
           <meshStandardMaterial color="#3c2c1e" roughness={0.9} />
         </mesh>
-        {[-0.55, -0.35, -0.12, 0.1, 0.32, 0.55].map((x, i) => (
-          <mesh key={x} position={[x, 0.07, 0]}>
-            <cylinderGeometry args={[0.016, 0.02, 0.12, 6]} />
-            <meshStandardMaterial
-              color={['#3a6b35', '#7a3020', '#c8a038', '#3a5a7a', '#6a3a5a', '#4a4a30'][i]}
-              roughness={0.3}
-              emissive="#181008"
-              emissiveIntensity={0.4}
-            />
-          </mesh>
-        ))}
+        {[-0.55, -0.35, -0.12, 0.1, 0.32, 0.55].map((x, i) => {
+          const c = ['#3a6b35', '#7a3020', '#c8a038', '#3a5a7a', '#6a3a5a', '#4a4a30'][i]
+          return (
+            <group key={x}>
+              <mesh position={[x, 0.055, 0]}>
+                <cylinderGeometry args={[0.017, 0.019, 0.08, 6]} />
+                <meshStandardMaterial color={c} roughness={0.3} emissive="#181008" emissiveIntensity={0.4} />
+              </mesh>
+              <mesh position={[x, 0.115, 0]}>
+                <cylinderGeometry args={[0.006, 0.014, 0.045, 5]} />
+                <meshStandardMaterial color={c} roughness={0.3} emissive="#181008" emissiveIntensity={0.4} />
+              </mesh>
+            </group>
+          )
+        })}
       </group>
 
       {/* Barkeeper (leicht vorgelehnt) + Zapf-Arm mit Loop */}

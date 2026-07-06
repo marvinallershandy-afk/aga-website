@@ -121,6 +121,18 @@ body {
 .section--center .section__kicker { justify-content: center; }
 
 /* ── Top brand bar ──────────────────────────────────────────── */
+/* Scrim hinter der Brandbar: Nav/Logo bleiben über hellem
+   Content (Karten, Rasen, Raum) lesbar — v4 Loop 2 */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: clamp(64px, 10vh, 110px);
+  z-index: 29;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(6,5,8,.62), rgba(6,5,8,.28) 55%, transparent);
+}
+
 .brandbar {
   position: fixed;
   top: 0; left: 0; right: 0;

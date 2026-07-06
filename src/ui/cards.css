@@ -137,16 +137,17 @@
   pointer-events: none;
 }
 
-/* Platzhalter-Silhouette mit Rim-Light-Andeutung */
+/* Platzhalter-Silhouette im CI-Duotone (echo der Foto-Karten) —
+   Platzhalter-Karten lesen als gestaltet, nicht als leer */
 .holo__silhouette {
   width: 70%;
   height: 92%;
   background:
-    linear-gradient(180deg, rgba(255,226,170,.32), rgba(255,226,170,0) 20%),
-    radial-gradient(circle at 50% 26%, rgba(255,255,255,.14) 0 22%, transparent 23%),
-    linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.02));
+    linear-gradient(180deg, rgba(255,226,170,.34), rgba(255,226,170,0) 18%),
+    radial-gradient(circle at 50% 26%, rgba(255,214,216,.20) 0 22%, transparent 23%),
+    linear-gradient(168deg, rgba(233,29,41,.34) 0%, rgba(110,18,24,.30) 45%, rgba(35,31,32,.28) 82%);
   clip-path: polygon(38% 0, 62% 0, 70% 20%, 92% 42%, 92% 100%, 8% 100%, 8% 42%, 30% 20%);
-  opacity: .75;
+  opacity: .9;
 }
 
 /* Nummer als großes Wasserzeichen */
