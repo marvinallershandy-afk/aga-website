@@ -37,7 +37,7 @@ const SHEETS: { pos: [number, number, number]; scale: [number, number]; opacity:
 
 export function GroundMist() {
   const on = useStore((s) => s.cinemaFx.mist)
-  const tex = useMemo(makeMistTexture, [])
+  const tex = useMemo(() => makeMistTexture(), [])
   if (!on) return null
   return (
     <group>

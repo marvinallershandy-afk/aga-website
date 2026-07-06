@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import {
   EffectComposer,
@@ -28,11 +28,12 @@ import { GradeEffect } from './GradeEffect'
 // ─────────────────────────────────────────────────────────────
 
 function Grade() {
+  const ref = useRef<GradeEffect>(null)
   const effect = useMemo(() => new GradeEffect(), [])
   useFrame(() => {
-    effect.warmth = useStore.getState().partyProgress
+    if (ref.current) ref.current.warmth = useStore.getState().partyProgress
   })
-  return <primitive object={effect} />
+  return <primitive ref={ref} object={effect} />
 }
 
 export function CinemaEffects() {
