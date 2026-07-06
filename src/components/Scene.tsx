@@ -5,6 +5,7 @@ import { Pitch } from './Pitch'
 import { Goals } from './Goals'
 import { Clubhouse } from './Clubhouse'
 import { Treeline } from './Treeline'
+import { ForestTrees } from './ForestTrees'
 import { SkyGradient } from './SkyGradient'
 import { Floodlights } from './Floodlights'
 import { CornerFlags } from './CornerFlags'
@@ -52,6 +53,9 @@ export function Scene() {
       <Village />
       <FanBlock />
       <Treeline />
+      <Suspense fallback={null}>
+        <ForestTrees />
+      </Suspense>
       <Football />
       <ConeDust />
       <GroundMist />
