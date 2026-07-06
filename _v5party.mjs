@@ -16,7 +16,7 @@ await p.waitForTimeout(2000)
 const gotoP = (target) => p.evaluate((tp) => {
   const el = document.getElementById('musik')
   const vh = window.innerHeight
-  const top = vh * 1.05 - tp * (vh * 0.8) // rect.top für p
+  const top = vh * 1.9 - tp * (vh * 1.6) // rect.top für p
   window.scrollTo({ top: el.offsetTop - top, behavior: 'instant' })
 }, target)
 

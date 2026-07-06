@@ -24,8 +24,8 @@ function makeBoardsTexture(): THREE.CanvasTexture {
   const boards = [
     { text: 'HIER KÖNNTE DEIN LOGO STEHEN', bg: '#f2efe8', fg: '#8a2530' },
     { text: 'SVA', bg: COLORS.red, fg: '#ffffff' },
-    { text: 'EIN DORF. EIN VEREIN. EIN PLATZ.', bg: '#f2efe8', fg: '#1d3a5f' },
-    { text: 'DEIN VEREIN. DEINE BANDE.', bg: '#e8e4da', fg: '#2a6033' },
+    { text: 'EIN DORF. EIN VEREIN. EIN PLATZ.', bg: '#f2efe8', fg: '#1a1718' },
+    { text: 'DEIN VEREIN. DEINE BANDE.', bg: '#e8e4da', fg: '#8f1620' },
     { text: 'SV AGATHENBURG-DOLLERN 1949', bg: '#1a1718', fg: '#e8e4da' },
     { text: 'WERDE SPONSOR', bg: '#f2efe8', fg: '#b8912F' },
   ]

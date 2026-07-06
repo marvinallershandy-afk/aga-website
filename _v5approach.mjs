@@ -11,7 +11,7 @@ for (const tp of [0.2, 0.3, 0.38, 0.44]) {
   await p.evaluate((t) => {
     const el = document.getElementById('musik')
     const vh = window.innerHeight
-    window.scrollTo({ top: el.offsetTop - (vh * 1.05 - t * vh * 0.8), behavior: 'instant' })
+    window.scrollTo({ top: el.offsetTop - (vh * 1.9 - t * vh * 1.6), behavior: 'instant' })
   }, tp)
   await p.waitForTimeout(1600)
   await p.screenshot({ path: `SVA_SCREENSHOTS/v5-anflug-${String(tp).replace('.', '')}.png` })

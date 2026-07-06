@@ -21,7 +21,7 @@ async function run(tag, vp, mobile) {
     }
     const musik = document.getElementById('musik')
     const vh = innerHeight
-    const pAt = (tp) => Math.max(0, (musik.offsetTop - (vh * 1.05 - tp * vh * 0.8)) / max)
+    const pAt = (tp) => Math.max(0, (musik.offsetTop - (vh * 1.9 - tp * vh * 1.6)) / max)
     return {
       beat: at('anstoss') * 0.82,
       kickoff: at('anstoss'),

@@ -163,18 +163,18 @@ export function Clubhouse() {
         <meshStandardMaterial color="#8a8d94" metalness={0.7} roughness={0.35} />
       </mesh>
 
-      {/* Flacher Anbau zur Platzseite (Westen) mit blauem Fascia-Band */}
+      {/* Flacher Anbau zur Platzseite (Westen) mit Fascia-Band in Vereinsrot (v5.5 CI-Pass) */}
       <group position={[-DEPTH / 2 - ANNEX_D / 2, 0, 0.4]}>
         <mesh position={[0, ANNEX_H / 2, 0]}>
           <boxGeometry args={[ANNEX_D, ANNEX_H, LEN * 0.55]} />
           <meshStandardMaterial color="#ccc8bd" roughness={0.92} />
         </mesh>
-        {/* blaues Fascia-Band (Dachkante des Anbaus) */}
+        {/* Fascia-Band in SVA-Rot (Dachkante des Anbaus) */}
         <mesh position={[0, ANNEX_H + 0.015, 0]}>
           <boxGeometry args={[ANNEX_D + 0.03, 0.035, LEN * 0.55 + 0.03]} />
-          <meshStandardMaterial color="#3d6e9e" roughness={0.6} />
+          <meshStandardMaterial color="#8f1620" roughness={0.6} />
         </mesh>
-        {/* warme Fenster + blaue Tür (zum Platz) */}
+        {/* warme Fenster + Tür in Vereinsrot (zum Platz) */}
         {[-0.75, -0.25, 0.35].map((z) => (
           <mesh key={z} position={[-ANNEX_D / 2 - 0.004, 0.13, z]} rotation-y={-Math.PI / 2}>
             <planeGeometry args={[0.22, 0.12]} />
@@ -186,7 +186,7 @@ export function Clubhouse() {
         ))}
         {/* Tür zum Platz — steht einladend OFFEN (v5-Durchfahrt):
             warm glühende Öffnung (füllt beim Anflug das Bild und
-            deckt den Welt-Hop), blaues Türblatt nach außen
+            deckt den Welt-Hop), rotes Türblatt nach außen
             aufgeschwungen. Maße s. camera/partyPath.ts (DOOR). */}
         <mesh position={[-ANNEX_D / 2 - 0.004, 0.13, 0.85]} rotation-y={-Math.PI / 2}>
           <planeGeometry args={[0.16, 0.26]} />
@@ -203,7 +203,7 @@ export function Clubhouse() {
         <group position={[-ANNEX_D / 2 - 0.01, 0, 0.93]} rotation-y={-1.83}>
           <mesh position={[0.08, 0.13, 0]}>
             <boxGeometry args={[0.16, 0.26, 0.014]} />
-            <meshStandardMaterial color="#2f5d8a" roughness={0.75} />
+            <meshStandardMaterial color="#7d141d" roughness={0.75} />
           </mesh>
         </group>
       </group>

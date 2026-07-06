@@ -41,12 +41,12 @@ export function CinemaEffects() {
   const tier = useStore((s) => s.cinemaTier)
   const setDpr = useThree((s) => s.setDpr)
 
-  // Voll-Kette: DPR 2 → 1.75. Die Composer-Passes sind bandbreiten-
-  // limitiert; 23% weniger Pixel halten die 60 FPS, und Korn+Bloom
-  // decken den Schärfe-Unterschied vollständig. (Gemessen: _v5fx.mjs)
+  // Voll-Kette: DPR 2 → 1.6 (v5.5: Marge für Fremdlast am Demo-Tag).
+  // Die Composer-Passes sind bandbreiten-limitiert; Korn+Bloom decken
+  // den Schärfe-Unterschied vollständig. (Gemessen: _v5fx.mjs)
   const heavy = tier === 'full' && (fx.bloom || fx.ca)
   useEffect(() => {
-    setDpr(Math.min(window.devicePixelRatio, heavy ? 1.75 : 2))
+    setDpr(Math.min(window.devicePixelRatio, heavy ? 1.6 : 2))
   }, [heavy, setDpr])
 
   const chain: React.ReactElement[] = []

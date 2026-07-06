@@ -86,11 +86,11 @@
   filter: drop-shadow(0 2px 4px rgba(0,0,0,.6));
 }
 
-/* Spielerbild / Silhouette */
+/* Spielerbild / Silhouette — v5.5: etwas größer, Spieler dominiert */
 .holo__portrait {
   position: absolute;
-  top: 8%; left: 0; right: 0;
-  height: 58%;
+  top: 6.5%; left: 0; right: 0;
+  height: 61%;
   z-index: 2;
   display: grid;
   place-items: end center;
@@ -128,17 +128,42 @@
      luminosity-Blend färbt gegen den Team-Verlauf ein */
   mix-blend-mode: luminosity;
 }
-/* B · Freisteller: Farbe + Studio-Licht von oben + Grounding */
-.holo__photo--cutout img {
-  object-fit: contain;
-  filter: contrast(1.08) saturate(1.08) brightness(1.02)
-    drop-shadow(0 10px 12px rgba(0,0,0,.55));
+/* B · Freisteller (v5.5 „Staunen"): der Spieler steht auf einer
+   Bühne — Spotlight von oben, SVA-roter Rim-Glow, Boden-Schatten.
+   Fotos sind echte Higgsfield-Freisteller (Alpha-WebP). */
+.holo__photo--cutout {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  border-radius: 0;
+  background: none;
 }
-.holo__photo--cutout::after {
+.holo__photo--cutout::before {
   content: "";
   position: absolute;
-  inset: 0;
-  background: radial-gradient(90% 50% at 50% -6%, rgba(255,236,190,.4), transparent 60%);
+  inset: 2% 5% 0 5%;
+  background:
+    radial-gradient(75% 60% at 50% 26%, rgba(233, 29, 41, 0.32), transparent 70%),
+    radial-gradient(95% 65% at 50% 8%, rgba(255, 226, 170, 0.2), transparent 62%);
+  pointer-events: none;
+}
+.holo__photo--cutout img {
+  object-fit: contain;
+  object-position: bottom;
+  filter: contrast(1.07) saturate(1.05) brightness(1.03)
+    drop-shadow(0 0 16px rgba(233, 29, 41, 0.38))
+    drop-shadow(0 14px 16px rgba(0, 0, 0, 0.6));
+}
+.holo__photo--cutout::after {
+  /* Boden-Ellipse: erdet den Freisteller auf der Karte */
+  content: "";
+  position: absolute;
+  left: 16%;
+  right: 16%;
+  bottom: -2.5%;
+  height: 6%;
+  background: radial-gradient(50% 50% at 50% 50%, rgba(0, 0, 0, 0.6), transparent 72%);
+  filter: blur(2px);
   pointer-events: none;
 }
 

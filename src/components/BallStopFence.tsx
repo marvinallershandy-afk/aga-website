@@ -35,7 +35,7 @@ function getBannerTexture() {
   const cv = document.createElement('canvas')
   cv.width = 512; cv.height = 96
   const ctx = cv.getContext('2d')!
-  ctx.fillStyle = '#1d4e8f'
+  ctx.fillStyle = '#8f1620' // v5.5 CI-Pass: Banner-Slot in Vereinsrot
   ctx.fillRect(0, 0, 512, 96)
   ctx.fillStyle = '#fff'
   ctx.font = '800 40px Archivo, system-ui, sans-serif'

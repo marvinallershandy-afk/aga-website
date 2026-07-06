@@ -161,3 +161,39 @@ prüfen, Fotos nachlegen.
 
 *Alle Screenshots: `SVA_SCREENSHOTS/v5-*.png` · Skripte: `_v5*.mjs` ·
 Plan: `SVA_PLAN_V5.md` · 31→38 Commits, alle auf GitHub.*
+
+---
+
+# NACHTRAG v5.5 — Vorstands-Politur (Marvins Review, Demo-Tag −1)
+
+**Review-Punkte → Umsetzung:**
+
+1. **„Kamerafahrten chaotisch, zu viel Platz zwischen Hero und Team"** →
+   Beat-Sektion 150vh→115vh und der Leerraum ist jetzt ein GEWOLLTER
+   Filmmoment: Kino-Titelkarte „ANSTOSS · Flutlicht an, der Ball rollt"
+   zwischen den Letterbox-Balken (v55-beat-titelkarte.png).
+2. **„Weg ins Vereinsheim viel zu schnell"** → Durchfahrts-Scrollfenster
+   verdoppelt (0.8→1.6 Viewporthöhen) + sanfteres Easing (k^2.2→k^1.7).
+3. **„CI ist rot/schwarz, keine blauen Blenden"** → CI-Pass: Fascia-Band
+   + Türblatt am Vereinsheim, „DEIN BANNER?"-Zaunbanner, Sponsor-Tafel-
+   Texte — alles Blau/Grün → Vereinsrot (#8f1620) bzw. Schwarz.
+4. **„Karten wie erster Entwurf, Fotos nicht gewollt"** → Higgsfield
+   `remove_background` auf alle 5 Fotos (echte Freisteller, Alpha-WebP,
+   REFERENZ/higgsfield/freisteller/) + Cutout-Redesign: Spieler in Farbe
+   auf Spotlight-Bühne, SVA-roter Rim-Glow, Boden-Schatten
+   (v55-karten-cutout.png, v55-karten-modal-eli.png).
+5. **„480p-Gefühl, Modell soll wie Fotomaterial wirken"** → Rasen-Textur
+   1024→2048 px + 40k gebakte Halm-Striche + Tau-Glitzer + Anisotropie 4;
+   Wald-Innenring trägt jetzt ein echtes Foto-Band (aus dem Higgsfield-
+   Kino-Referenzframe, nahtlos gespiegelt, opak gebaked).
+
+**Higgsfield gesamt:** 3 Generierungen + 5 Background-Removals + 5 Uploads
+(Credits danach erschöpft — Waldrand-Panorama und Rasen-Kachel als eigene
+Generierungen stehen auf der Wunschliste, gelöst über Referenzframe-Crop).
+
+**Perf-Status:** Heute Morgen in ruhiger Phase: 60 FPS an allen Punkten mit
+voller Kette (Tabelle oben). Die v5.5-Nachmessung fiel in eine Phase mit
+schwankender Fremdlast (selbst ohne Kette p50 16,7↔33) — als Marge wurden
+Anisotropie 8→4, Wald-Ring opak (kein Transparenz-Pass) und DPR-Clamp
+1,75→1,6 eingebaut. **Vor der Vorstands-Demo: Zoom/Chrome-Tabs schließen,
+Netzteil dran — dann läuft es wie verifiziert.**

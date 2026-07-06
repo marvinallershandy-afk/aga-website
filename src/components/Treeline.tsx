@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import * as THREE from 'three'
+import { useTexture } from '@react-three/drei'
 
 // Baumreihen-Silhouetten nach REFERENZ_MODELL: der Wald umschließt
 // SÜD (+z), WEST (−x) und OST (+x) dicht und hoch; NORDEN (−z) ist
@@ -34,6 +35,7 @@ function buildRing({ seed, radius, hMin, hMax, gapZ, gapScale }: RingOpts): THRE
   const h = s1.map((_, i) => (s1[(i + N - 1) % N] + s1[i] * 2 + s1[(i + 1) % N]) / 4)
 
   const pos: number[] = []
+  const uv: number[] = []
   const idx: number[] = []
   for (let i = 0; i < N; i++) {
     const a = (i / N) * Math.PI * 2
@@ -45,6 +47,10 @@ function buildRing({ seed, radius, hMin, hMax, gapZ, gapScale }: RingOpts): THRE
     const hh = h[i] * (1 - northness * (1 - gapScale))
     pos.push(x, -0.3, z)
     pos.push(x, Math.max(hh, 0.05), z)
+    // UVs (v5.5): u läuft mehrfach um den Ring (nahtlose Wald-Textur),
+    // v 0 unten → 1 an der Kronen-Kante
+    const u = (i / N) * 10
+    uv.push(u, 0, u, 1)
   }
   for (let i = 0; i < N; i++) {
     const a = i * 2
@@ -53,6 +59,7 @@ function buildRing({ seed, radius, hMin, hMax, gapZ, gapScale }: RingOpts): THRE
   }
   const g = new THREE.BufferGeometry()
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3))
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2))
   g.setIndex(idx)
   return g
 }
@@ -68,10 +75,21 @@ export function Treeline() {
     () => buildRing({ seed: 23, radius: 18, hMin: 2.0, hMax: 3.4, gapZ: 0.3, gapScale: 0.35 }),
     [],
   )
+  // v5.5 („Fotomaterial"): der innere Saum trägt eine echte Wald-
+  // Textur (Band aus dem Higgsfield-Kino-Referenzframe, nahtlos
+  // gespiegelt, Alpha läuft oben aus — die Geometrie-Kante bleibt
+  // die Silhouette). Der äußere Ring bleibt tiefschwarze Kulisse.
+  const wald = useTexture('/textures/waldrand.webp')
+  wald.wrapS = THREE.RepeatWrapping
+  wald.colorSpace = THREE.SRGBColorSpace
+  wald.anisotropy = 4
+
   return (
     <group>
+      {/* opak (v5.5-Perf): Grundton ist in die Textur gebaked —
+          kein transparenter Fullring-Pass, kein Backing-Mesh */}
       <mesh geometry={inner}>
-        <meshBasicMaterial color="#121a13" side={THREE.DoubleSide} />
+        <meshBasicMaterial map={wald} color="#3a4a3c" side={THREE.DoubleSide} />
       </mesh>
       <mesh geometry={outer}>
         <meshBasicMaterial color="#0c110d" side={THREE.DoubleSide} />

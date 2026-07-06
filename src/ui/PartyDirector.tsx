@@ -41,10 +41,11 @@ export function PartyDirector() {
       // Raum-Chunk vorladen, lange bevor die Durchfahrt beginnt
       if (rect.top < vh * 3) setPartyNear(true)
 
-      // Durchfahrts-Fortschritt: Einflug- und Rückflug-Fenster
-      const win = vh * 0.8
-      const pIn = Math.min(1, Math.max(0, (vh * 1.05 - rect.top) / win))
-      const pOut = Math.min(1, Math.max(0, (rect.bottom - vh * 0.3) / win))
+      // Durchfahrts-Fortschritt: Einflug- und Rückflug-Fenster.
+      // v5.5: Einflug-Fenster verdoppelt (1.6vh statt 0.8vh Scroll-Weg)
+      // — Marvins Review: der Weg ins Vereinsheim war viel zu schnell.
+      const pIn = Math.min(1, Math.max(0, (vh * 1.9 - rect.top) / (vh * 1.6)))
+      const pOut = Math.min(1, Math.max(0, (rect.bottom - vh * 0.3) / (vh * 0.8)))
       const p = Math.min(pIn, pOut)
       setPartyProgress(p)
 

@@ -107,7 +107,9 @@ function smooth01(t: number): number {
  *  das Tür-Glow und warmer Schleier ohnehin decken. */
 export function samplePartyApproach(p: number, outPos: THREE.Vector3, outLook: THREE.Vector3) {
   const k = THREE.MathUtils.clamp(p / PARTY_HOP, 0, 1)
-  const t = Math.pow(k, 2.2)
+  // v5.5: 1.7 statt 2.2 — mit dem doppelten Scroll-Fenster darf das
+  // End-Tempo runter, die Fahrt liest sich ruhig und gewollt
+  const t = Math.pow(k, 1.7)
   approachPos.getPoint(t, _p)
   outPos.copy(_p)
   // Blick: von der Stations-Blickrichtung weich auf die Türöffnung

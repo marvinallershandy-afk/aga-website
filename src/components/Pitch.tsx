@@ -13,7 +13,9 @@ import { PITCH, APRON } from '../utils/constants'
 
 const MESH_W = PITCH.width + APRON * 2   // 11.3 (113 m inkl. Auslauf)
 const MESH_H = PITCH.height + APRON * 2  // 7.6
-const TEX_W = 1024
+// v5.5 („Fotomaterial statt nachgebaut"): 2048 statt 1024 — die Kamera
+// kommt bis auf ~5 m an den Rasen, 1024px/113m waren das 480p-Gefühl.
+const TEX_W = 2048
 const S = TEX_W / MESH_W                 // px pro Welt-Einheit
 const TEX_H = Math.round(MESH_H * S)
 
@@ -73,6 +75,33 @@ function paintGrass(ctx: CanvasRenderingContext2D, rough?: CanvasRenderingContex
   const hw = PITCH.width / 2
   wear(hw - 0.55, 0, 0.85, 0.14)
   wear(-(hw - 0.55), 0, 0.85, 0.14)
+
+  // Halm-Struktur (v5.5): kurze, leicht schräge Grashalm-Striche in
+  // zwei Tönen — bei Kamera-Nähe liest die Fläche als Rasen, nicht
+  // als Farbe. ~40k Striche, einmalig beim Baken.
+  ctx.lineWidth = 1
+  for (let i = 0; i < 40000; i++) {
+    const x = rng() * TEX_W
+    const y = rng() * TEX_H
+    const len = 2 + rng() * 4
+    const ang = -Math.PI / 2 + (rng() - 0.5) * 0.7
+    const bright = rng() > 0.5
+    ctx.strokeStyle = bright
+      ? `rgba(${90 + rng() * 40}, ${140 + rng() * 40}, ${60 + rng() * 30}, 0.16)`
+      : `rgba(${10 + rng() * 14}, ${34 + rng() * 18}, ${10 + rng() * 12}, 0.2)`
+    ctx.beginPath()
+    ctx.moveTo(x, y)
+    ctx.lineTo(x + Math.cos(ang) * len, y + Math.sin(ang) * len)
+    ctx.stroke()
+  }
+
+  // Tau-Glitzer (Referenzframe-Messlatte): vereinzelte helle Punkte
+  for (let i = 0; i < 2600; i++) {
+    const x = rng() * TEX_W
+    const y = rng() * TEX_H
+    ctx.fillStyle = `rgba(220,235,240,${0.05 + rng() * 0.12})`
+    ctx.fillRect(x, y, 1, 1)
+  }
 
   // Feine Körnung
   const img = ctx.getImageData(0, 0, TEX_W, TEX_H)
@@ -157,7 +186,9 @@ export function Pitch() {
 
     const map = new THREE.CanvasTexture(cv)
     map.colorSpace = THREE.SRGBColorSpace
-    map.anisotropy = 2
+    // v5.5: 4× Anisotropie (8 kostete die vsync-Kante mit voller Kette;
+    // 4 behebt den Tiefen-Matsch bereits sichtbar)
+    map.anisotropy = 4
     const roughnessMap = new THREE.CanvasTexture(rcv)
     return { map, roughnessMap }
   }, [])

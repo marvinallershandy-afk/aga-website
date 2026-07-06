@@ -12,7 +12,7 @@ await p.waitForTimeout(2500)
 const gotoP = (target) => p.evaluate((tp) => {
   const el = document.getElementById('musik')
   const vh = window.innerHeight
-  window.scrollTo({ top: el.offsetTop - (vh * 1.05 - tp * vh * 0.8), behavior: 'instant' })
+  window.scrollTo({ top: el.offsetTop - (vh * 1.9 - tp * vh * 1.6), behavior: 'instant' })
 }, target)
 
 async function frametime(n = 120) {

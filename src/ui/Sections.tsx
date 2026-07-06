@@ -44,9 +44,46 @@ export function Sections() {
         </motion.p>
       </section>
 
-      {/* ANSTOSS — leere Beat-Sektion: hier gehört die Bühne der Kamera
-          (Sturzflug, Flutlicht-Flacker, Ball) — kein Inhalt davor. */}
-      <section id="anstoss" aria-hidden="true" style={{ minHeight: '150vh', pointerEvents: 'none' }} />
+      {/* ANSTOSS — Beat-Sektion: die Bühne gehört der Kamera (Sturzflug,
+          Flutlicht-Flacker, Ball). v5.5: kompakter (115vh statt 150vh,
+          Marvins „zu viel Platz") + Kino-Titelkarte, damit der Beat als
+          gewollter Filmmoment liest statt als Loch. */}
+      <section
+        id="anstoss"
+        aria-hidden="true"
+        className="section section--center"
+        style={{ minHeight: '115vh', pointerEvents: 'none', justifyContent: 'center' }}
+      >
+        <motion.div
+          initial={{ opacity: 0, letterSpacing: '0.3em' }}
+          whileInView={{ opacity: 1, letterSpacing: '0.42em' }}
+          viewport={{ once: false, amount: 0.75 }}
+          transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] as const }}
+          style={{ textAlign: 'center' }}
+        >
+          <div
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 'clamp(1.4rem, 3.2vw, 2.4rem)',
+              color: 'rgba(242,238,230,0.92)',
+              textShadow: '0 2px 24px rgba(0,0,0,0.8)',
+            }}
+          >
+            ANSTOSS
+          </div>
+          <div
+            style={{
+              marginTop: '0.6rem',
+              fontSize: 'clamp(0.62rem, 1vw, 0.75rem)',
+              letterSpacing: '0.28em',
+              color: 'var(--red)',
+              fontWeight: 700,
+            }}
+          >
+            FLUTLICHT AN · DER BALL ROLLT
+          </div>
+        </motion.div>
+      </section>
 
       {/* 1 · MANNSCHAFT */}
       <section id={mannschaft.id} className="section section--left">
