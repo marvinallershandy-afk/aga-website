@@ -1,6 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
-  <rect width="48" height="48" rx="10" fill="#231F20"/>
-  <circle cx="24" cy="24" r="15" fill="#E91D29"/>
-  <text x="24" y="32" font-family="Arial Black, Arial, sans-serif" font-size="20" font-weight="900"
-        text-anchor="middle" fill="#FFFFFF">A</text>
+  <!-- SVA-Wappen-Marke (v8): Schildform mit dem echten Rot/Schwarz-
+       Diagonalsplit des Vereinswappens — bei Favicon-Größe lesbar,
+       ersetzt den generischen Platzhalter-Kreis. -->
+  <defs>
+    <clipPath id="shield">
+      <path d="M24 3 C18 6 11 6 6 5 C6 5 5 16 6 24 C7 34 14 42 24 46 C34 42 41 34 42 24 C43 16 42 5 42 5 C37 6 30 6 24 3 Z"/>
+    </clipPath>
+  </defs>
+  <g clip-path="url(#shield)">
+    <rect x="0" y="0" width="48" height="48" fill="#E91D29"/>
+    <path d="M48 0 L48 48 L0 48 Z" fill="#231F20"/>
+  </g>
+  <path d="M24 3 C18 6 11 6 6 5 C6 5 5 16 6 24 C7 34 14 42 24 46 C34 42 41 34 42 24 C43 16 42 5 42 5 C37 6 30 6 24 3 Z"
+        fill="none" stroke="#14100f" stroke-width="2.5"/>
 </svg>

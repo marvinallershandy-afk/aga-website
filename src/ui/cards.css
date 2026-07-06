@@ -79,11 +79,11 @@
 }
 .holo__crest {
   position: absolute;
-  top: 12px; right: 12px;
+  top: 11px; right: 11px;
   z-index: 3;
-  width: 34px;
+  width: 40px;
   height: auto;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,.6));
+  filter: drop-shadow(0 2px 5px rgba(0,0,0,.65));
 }
 
 /* Spielerbild / Silhouette — v5.5: etwas größer, Spieler dominiert */
