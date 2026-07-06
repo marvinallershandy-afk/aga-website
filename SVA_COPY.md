@@ -87,3 +87,23 @@ ausschließlich im Raum (rein → Musik an, raus → Musik weich aus).
 Wer: SV Agathenburg-Dollern (Logo, Titelzeile, Kicker). Wo: Agathenburg (Kicker).
 Was kann ich hier: scrollen & den Platz erleben (Scroll-Hint), mitmachen
 (Nav „Mitmachen" sichtbar). → bestanden.
+
+---
+
+## v6 · Etappe 5 — Faktenkorrekturen (verifizierte Vereinsfakten)
+
+| Feld | vorher | jetzt (korrekt) |
+|---|---|---|
+| Platz-Adresse | „Sportplatz Agathenburg, Am Sportplatz 1" (falsch) | **Waldsportplatz Agathenburg, Zur Mehrzweckhalle, 21684 Agathenburg** |
+| Karten-Copy (Mannschaft) | „Holo-Glanz" (Look existiert nicht mehr) | „Metall-Foil" (entspricht v5.6-Karten) |
+| Musik-Story | generisch | **Aga Urknall** = Truppe, die **2024 den Riesenkicker** holte (neben Dynamo Tresen, Durstige Männer) |
+| Trainingszeit | „ab 19:00 Uhr" | ⚠️ **PLATZHALTER — Marvin bestätigen** (Kandidat Di+Do 16:30–17:30 lt. Recherche); aktuell plausibler Abendslot angezeigt |
+
+**Neu E4 — „Wo wir kicken" (Route):** SVG-Mini-Map mit Marker auf dem Waldsportplatz +
+plattform-bewusster Route-Button (iOS → Apple Karten `maps.apple.com/?daddr=…&dirflg=d`,
+sonst → Google Maps `dir/?api=1&destination=…`). Beide Links mit korrektem Ziel belegt.
+
+## Offene Fakten (Marvin)
+- ⚠️ **Trainingszeit bestätigen.**
+- fussball.de Team-Permanent-ID (Platzhalter in `CLUB.fussballDeTeamId`).
+- Restliche ~10 Spielerfotos (Higgsfield-Credits leer / echte Fotos) — sonst Platzhalter-Karten.

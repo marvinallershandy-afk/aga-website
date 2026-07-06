@@ -3,6 +3,7 @@ import { SECTIONS, CONTACT, CLUB } from '../data/club'
 import { PlayerCardGrid } from './PlayerCardGrid'
 import { MusicSectionPlayer } from './MusicSection'
 import { FussballWidget } from './FussballWidget'
+import { PlatzFinden } from './PlatzFinden'
 
 const reveal = {
   initial: { opacity: 0, y: 40 },
@@ -125,7 +126,7 @@ export function Sections() {
             <p>Bande streichen, Grill anwerfen, laut sein — ein Verein lebt von Leuten, die einfach da sind.</p>
             <a
               className="btn btn--ghost"
-              href={`https://maps.apple.com/?q=${encodeURIComponent(CONTACT.address)}`}
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(CONTACT.mapsQuery)}`}
               target="_blank"
               rel="noreferrer"
             >
@@ -163,6 +164,8 @@ export function Sections() {
             </dd>
           </div>
         </motion.dl>
+
+        <PlatzFinden />
         <p style={{ marginTop: '3rem', fontSize: '0.7rem', letterSpacing: '0.1em', color: 'rgba(255,255,255,0.55)' }}>
           © Seit {CLUB.founded} · {CLUB.name} e.V. · Mit Herz gebaut, Platzhalter ehrlich markiert.
         </p>

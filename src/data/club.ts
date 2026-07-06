@@ -35,14 +35,14 @@ export const SECTIONS: Section[] = [
     label: 'Mannschaft',
     kicker: '1. Herren',
     title: 'Unsere\nMannschaft',
-    body: 'Sechzehn Typen, die montags humpeln und sonntags fliegen. Jeder von ihnen als Sammelkarte — mit Holo-Glanz, echten Zahlen und genug Stolz für ein ganzes Album. Tipp eine Karte an und teil deinen Spieler in der Story.',
+    body: 'Sechzehn Typen, die montags humpeln und sonntags fliegen. Jeder von ihnen als Sammelkarte — Metall-Foil, echte Zahlen und genug Stolz für ein ganzes Album. Tipp eine Karte an und teil deinen Spieler in der Story.',
   },
   {
     id: 'musik',
     label: 'Musik',
     kicker: 'Vereinsheim · Partyraum',
     title: 'AGA\nUrknall',
-    body: 'Willkommen im Partyraum — hier läuft unsere eigene Musik. Zehn Songs über Anpfiff, Abpfiff und alles, was dazwischen knallt, geschrieben von einem von uns. Drück Play, dreh auf — und wenn du mitgrölen kannst, bist du schon fast Mitglied.',
+    body: 'Willkommen im Partyraum — hier läuft „Aga Urknall", unsere eigene Musik, benannt nach der Truppe, die 2024 den Riesenkicker holte (Grüße an Dynamo Tresen und die Durstigen Männer). Songs über Anpfiff, Abpfiff und alles, was dazwischen knallt, geschrieben von einem von uns. Drück Play, dreh auf — wer mitgrölt, ist schon fast Mitglied.',
   },
   {
     id: 'tabelle',
@@ -61,8 +61,13 @@ export const SECTIONS: Section[] = [
 ]
 
 export const CONTACT = {
-  address: 'Sportplatz Agathenburg, Am Sportplatz 1, 21684 Agathenburg',
+  // v6-E5: echte Vereinsfakten. Platz liegt am Waldrand („Waldsportplatz").
+  address: 'Waldsportplatz Agathenburg, Zur Mehrzweckhalle, 21684 Agathenburg',
+  // Route-Ziel (Kurzform reicht Apple/Google Maps als Suchziel)
+  mapsQuery: 'Waldsportplatz Agathenburg, Zur Mehrzweckhalle, 21684 Agathenburg',
   email: 'info@sv-agathenburg-dollern.de',
+  // PLATZHALTER (Marvin bestätigen): Trainingszeit gegen die offizielle
+  // Vereinsseite prüfen. Aktuell plausibler Herren-Abendslot.
   training: 'Di & Do, ab 19:00 Uhr',
   instagram: '@sva_fussball',
   instagramUrl: 'https://instagram.com/sva_fussball',

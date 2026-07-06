@@ -464,6 +464,47 @@
 .contact-grid dt { font-size: .66rem; letter-spacing: .18em; text-transform: uppercase; color: var(--red); margin-bottom: .3rem; font-weight: 800; }
 .contact-grid dd { font-size: 1.05rem; color: #fff; }
 
+/* ── Platz finden (Route) ───────────────────────────────────── */
+.platz-finden {
+  display: flex;
+  gap: clamp(1rem, 2.5vw, 1.6rem);
+  align-items: stretch;
+  margin-top: 2.2rem;
+  max-width: 620px;
+  background: rgba(10, 8, 12, .68);
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 16px;
+  overflow: hidden;
+  backdrop-filter: blur(6px);
+}
+.platz-finden__map {
+  flex: 0 0 46%;
+  min-height: 150px;
+  line-height: 0;
+  border-right: 1px solid rgba(255, 255, 255, .1);
+}
+.platz-finden__map svg { display: block; height: 100%; width: 100%; object-fit: cover; }
+.platz-finden__body {
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+  padding: clamp(1rem, 2.4vw, 1.4rem);
+  justify-content: center;
+}
+.platz-finden__body h3 {
+  font-family: var(--font-display);
+  font-size: clamp(1.15rem, 2.6vw, 1.5rem);
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  color: var(--red);
+}
+.platz-finden__body p { font-size: .9rem; line-height: 1.5; color: rgba(255, 255, 255, .82); }
+.platz-finden__body .btn { align-self: flex-start; text-decoration: none; margin-top: .3rem; }
+@media (max-width: 560px) {
+  .platz-finden { flex-direction: column; }
+  .platz-finden__map { flex-basis: auto; min-height: 130px; border-right: none; border-bottom: 1px solid rgba(255, 255, 255, .1); }
+}
+
 /* ── Mitmachen: Gesucht-Grid ────────────────────────────────── */
 .wanted-grid {
   display: grid;
