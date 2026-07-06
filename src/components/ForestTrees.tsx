@@ -127,8 +127,49 @@ export function ForestTrees() {
     return buckets
   }, [placements])
 
+  // Kontaktschatten (v7-E2): flache AO-Scheibe unter jedem Baum, damit
+  // der Saum am Boden klebt statt zu schweben — EIN InstancedMesh, ~0 Kosten.
+  const aoTex = useMemo(() => {
+    const cv = document.createElement('canvas')
+    cv.width = cv.height = 64
+    const ctx = cv.getContext('2d')!
+    const g = ctx.createRadialGradient(32, 32, 2, 32, 32, 32)
+    g.addColorStop(0, 'rgba(0,0,0,0.7)')
+    g.addColorStop(0.6, 'rgba(0,0,0,0.3)')
+    g.addColorStop(1, 'rgba(0,0,0,0)')
+    ctx.fillStyle = g
+    ctx.fillRect(0, 0, 64, 64)
+    return new THREE.CanvasTexture(cv)
+  }, [])
+  const aoMatrices = useMemo(() => {
+    const m = new THREE.Matrix4()
+    const q = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -Math.PI / 2)
+    const s = new THREE.Vector3()
+    const p = new THREE.Vector3()
+    return placements.map((pl) => {
+      const rad = 0.7 + pl.scale * 0.7
+      s.set(rad, rad, rad)
+      p.set(pl.x, 0.02, pl.z)
+      return m.clone().compose(p, q, s)
+    })
+  }, [placements])
+
   return (
     <group>
+      {/* Kontaktschatten-Scheiben (erst, damit Bäume darüber liegen) */}
+      <instancedMesh
+        args={[undefined, undefined, aoMatrices.length]}
+        renderOrder={1}
+        ref={(inst) => {
+          if (!inst) return
+          aoMatrices.forEach((mm, i) => inst.setMatrixAt(i, mm))
+          inst.instanceMatrix.needsUpdate = true
+        }}
+      >
+        <planeGeometry args={[1, 1]} />
+        <meshBasicMaterial map={aoTex} transparent depthWrite={false} opacity={0.5} />
+      </instancedMesh>
+
       {geometries.map((geo, vi) => {
         const mats = perVariant[vi]
         if (!mats.length) return null
@@ -136,8 +177,6 @@ export function ForestTrees() {
           <instancedMesh
             key={vi}
             args={[geo, undefined, mats.length]}
-            castShadow
-            receiveShadow
             ref={(inst) => {
               if (!inst) return
               mats.forEach((mm, i) => inst.setMatrixAt(i, mm))
