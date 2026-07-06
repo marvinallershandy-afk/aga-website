@@ -45,46 +45,12 @@ export function Sections() {
         </motion.p>
       </section>
 
-      {/* ANSTOSS — Beat-Sektion: die Bühne gehört der Kamera (Sturzflug,
-          Flutlicht-Flacker, Ball). v5.5: kompakter (115vh statt 150vh,
-          Marvins „zu viel Platz") + Kino-Titelkarte, damit der Beat als
-          gewollter Filmmoment liest statt als Loch. */}
-      <section
-        id="anstoss"
-        aria-hidden="true"
-        className="section section--center"
-        style={{ minHeight: '115vh', pointerEvents: 'none', justifyContent: 'center' }}
-      >
-        <motion.div
-          initial={{ opacity: 0, letterSpacing: '0.3em' }}
-          whileInView={{ opacity: 1, letterSpacing: '0.42em' }}
-          viewport={{ once: false, amount: 0.75 }}
-          transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] as const }}
-          style={{ textAlign: 'center' }}
-        >
-          <div
-            style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: 'clamp(1.4rem, 3.2vw, 2.4rem)',
-              color: 'rgba(242,238,230,0.92)',
-              textShadow: '0 2px 24px rgba(0,0,0,0.8)',
-            }}
-          >
-            ANSTOSS
-          </div>
-          <div
-            style={{
-              marginTop: '0.6rem',
-              fontSize: 'clamp(0.62rem, 1vw, 0.75rem)',
-              letterSpacing: '0.28em',
-              color: 'var(--red)',
-              fontWeight: 700,
-            }}
-          >
-            FLUTLICHT AN · DER BALL ROLLT
-          </div>
-        </motion.div>
-      </section>
+      {/* ANSTOSS-Beat (v8): KEINE eigene Sektion/Stopp mehr. Der Moment
+          (Flutlicht flackert an, Ball rollt) lebt jetzt als NAHTLOSER
+          Kamera-Übergang Hero→Mannschaft. Ein kurzes Scroll-Polster gibt
+          dem Sturzflug Weg, ohne Text/Halt. Der Anker wird synthetisch
+          zwischen Verein und Mannschaft gesetzt (useScrollProgress.ts). */}
+      <div id="anstoss-gap" aria-hidden="true" style={{ height: '80vh', pointerEvents: 'none' }} />
 
       {/* 1 · MANNSCHAFT */}
       <section id={mannschaft.id} className="section section--left">
@@ -92,6 +58,13 @@ export function Sections() {
         <Header kicker={mannschaft.kicker} title={mannschaft.title} body={mannschaft.body} />
         <PlayerCardGrid />
       </section>
+
+      {/* Trenn-Polster (v8): klare „reiner Platz"-Beat zwischen Karten und
+          Partyraum-Anflug — die Mannschaft muss vollständig geräumt sein,
+          bevor der Vereinsheim-Anflug startet (Marvins Überlappungs-Kritik).
+          Schiebt zugleich die Musik-Sektion nach unten → Anflug (an musik.top
+          gekoppelt) startet später. */}
+      <div id="team-musik-gap" aria-hidden="true" style={{ height: '70vh', pointerEvents: 'none' }} />
 
       {/* 2 · MUSIK — AGA URKNALL, der Vereins-Soundtrack */}
       <section id={musik.id} className="section section--left">

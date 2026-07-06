@@ -158,13 +158,26 @@ const DIVE_HALF_WIDTH = 0.14
 // v6-E1: Maximalhöhe fängt Catmull-Durchhänger/Überschwinger nach oben
 // (der Establishing-Shot sitzt bei y=7.0 → Marge bis 7.6).
 const MAX_FLIGHT_Y = 7.6
+// v8-E1: Boden ZONENWEISE. Über dem offenen Feld (Hero→Mannschaft→
+// Anflug) höher, damit die Fahrt nicht „im Rasen skimmt" (Marvin);
+// am Vereinsheim (u≳0.55, Musik/Tabelle/Kontakt, Tür-Anflug) tief.
+const FIELD_FLOOR = 1.45
+const CLUB_FLOOR = 0.85
+const CLUB_U = 0.55
 
 function flightFloorAt(u: number): number {
+  // Grundboden: Feld hoch → Vereinsheim tief (weicher Übergang)
+  let base = FIELD_FLOOR
+  if (u > CLUB_U) {
+    const k = THREE.MathUtils.clamp((u - CLUB_U) / 0.12, 0, 1)
+    base = THREE.MathUtils.lerp(FIELD_FLOOR, CLUB_FLOOR, k * k * (3 - 2 * k))
+  }
+  // Anstoß-Sturzflug: einziges gewolltes Rasen-Nah-Fenster
   const d = Math.abs(u - KICKOFF_U) / DIVE_HALF_WIDTH
-  if (d >= 1) return MIN_FLIGHT_Y
+  if (d >= 1) return base
   const w = 1 - d
   const s = w * w * (3 - 2 * w)
-  return THREE.MathUtils.lerp(MIN_FLIGHT_Y, DIVE_FLOOR_Y, s)
+  return THREE.MathUtils.lerp(base, DIVE_FLOOR_Y, s)
 }
 
 // Reusable scratch vectors (keine Allokation im Frame-Loop)
