@@ -60,6 +60,37 @@ export const SECTIONS: Section[] = [
   },
 ]
 
+// ── Sponsoren (v8-E5) ────────────────────────────────────────
+// Echte lokale Sponsoren hier eintragen (logo = Pfad in public/sponsors/).
+// Solange leer, zeigt die Seite „Hier könnte dein Logo stehen"-Slots —
+// zugleich Verkaufsargument (Marvin liefert echte Logos).
+export interface Sponsor {
+  name: string
+  logo?: string
+  url?: string
+}
+export const SPONSORS: Sponsor[] = []
+export const SPONSOR_PLACEHOLDER_SLOTS = 4
+
+// ── Nächstes Heimspiel (v8-E5) ───────────────────────────────
+// PLATZHALTER bis echte Termine / fussball.de-Anbindung.
+export interface Match {
+  opponent: string
+  date: string
+  home: boolean
+  isPlaceholder?: boolean
+}
+export const NEXT_MATCH: Match = {
+  opponent: 'Gegner folgt',
+  date: 'Sonntag · Termin folgt',
+  home: true,
+  isPlaceholder: true,
+}
+
+// ── Vereins-/Mannschaftsfoto-Slot (v8-E5) ────────────────────
+// undefined → kein leerer Rahmen. Marvin liefert echtes Stimmungsbild.
+export const TEAM_PHOTO: string | undefined = undefined
+
 export const CONTACT = {
   // v6-E5: echte Vereinsfakten. Platz liegt am Waldrand („Waldsportplatz").
   address: 'Waldsportplatz Agathenburg, Zur Mehrzweckhalle, 21684 Agathenburg',

@@ -1,9 +1,10 @@
 import { motion } from 'framer-motion'
-import { SECTIONS, CONTACT, CLUB } from '../data/club'
+import { SECTIONS, CONTACT, CLUB, TEAM_PHOTO } from '../data/club'
 import { PlayerCardGrid } from './PlayerCardGrid'
 import { MusicSectionPlayer } from './MusicSection'
 import { FussballWidget } from './FussballWidget'
 import { PlatzFinden } from './PlatzFinden'
+import { SponsorsStrip, NextMatch } from './SponsorsStrip'
 
 const reveal = {
   initial: { opacity: 0, y: 40 },
@@ -43,6 +44,16 @@ export function Sections() {
         >
           {CLUB.claim}
         </motion.p>
+        {/* Mannschaftsfoto-Slot (v8-E5): rendert nur mit echtem Bild —
+            kein leerer Rahmen. Marvin liefert Stimmungsbild → TEAM_PHOTO. */}
+        {TEAM_PHOTO && (
+          <motion.img
+            {...reveal}
+            src={TEAM_PHOTO}
+            alt="Die Mannschaft des SV Agathenburg-Dollern"
+            style={{ marginTop: '2rem', maxWidth: 'min(560px, 82vw)', width: '100%', borderRadius: 12, border: '1px solid rgba(255,255,255,0.14)' }}
+          />
+        )}
       </section>
 
       {/* ANSTOSS-Beat (v8): KEINE eigene Sektion/Stopp mehr. Der Moment
@@ -114,6 +125,9 @@ export function Sections() {
             </a>
           </div>
         </motion.div>
+
+        <NextMatch />
+        <SponsorsStrip />
 
         <motion.dl className="contact-grid" {...reveal} style={{ maxWidth: 620 }}>
           <div>
