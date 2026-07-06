@@ -174,8 +174,9 @@ export function Clubhouse() {
           <boxGeometry args={[ANNEX_D + 0.03, 0.035, LEN * 0.55 + 0.03]} />
           <meshStandardMaterial color="#3d6e9e" roughness={0.6} />
         </mesh>
-        {/* warme Fenster + blaue Tür (zum Platz, Original) */}
-        {[-0.75, -0.25, 0.35].map((z) => (
+        {/* warme Fenster (zum Platz, Original) — v8-E2 nach rechts (+z)
+            gerückt, damit der echte Eingang LINKS daneben Platz hat. */}
+        {[-0.25, 0.35, 0.8].map((z) => (
           <mesh key={z} position={[-ANNEX_D / 2 - 0.004, 0.13, z]} rotation-y={-Math.PI / 2}>
             <planeGeometry args={[0.22, 0.12]} />
             <meshStandardMaterial
@@ -187,20 +188,23 @@ export function Clubhouse() {
         {/* Tür zum Platz — steht einladend OFFEN (v5-Durchfahrt):
             warm glühende Öffnung (füllt beim Anflug das Bild und
             deckt den Welt-Hop), blaues Türblatt nach außen
-            aufgeschwungen. Maße s. camera/partyPath.ts (DOOR). */}
-        <mesh position={[-ANNEX_D / 2 - 0.004, 0.13, 0.85]} rotation-y={-Math.PI / 2}>
+            aufgeschwungen. Maße s. camera/partyPath.ts (DOOR).
+            v8-E2: nach LINKS (−z) verlegt — echter Eingang zum
+            Fensterraum, nicht mehr rechts. annex-rel z=−0.65 →
+            Welt z=−0.55 (Anbau-Gruppe steht bei Welt z=0.1). */}
+        <mesh position={[-ANNEX_D / 2 - 0.004, 0.13, -0.65]} rotation-y={-Math.PI / 2}>
           <planeGeometry args={[0.16, 0.26]} />
           {/* Verlaufs-Glow (Loop 1): Textur × Farbboost — HDR nur im
               hellen Kern, Ränder bleiben warmes Amber statt Weiß */}
           <meshBasicMaterial map={getDoorGlowTexture()} color={[1.55, 1.5, 1.4]} toneMapped={false} />
         </mesh>
         {/* dunkler Laibungs-Rahmen um die Öffnung */}
-        <mesh position={[-ANNEX_D / 2 - 0.002, 0.13, 0.85]} rotation-y={-Math.PI / 2}>
+        <mesh position={[-ANNEX_D / 2 - 0.002, 0.13, -0.65]} rotation-y={-Math.PI / 2}>
           <planeGeometry args={[0.2, 0.3]} />
           <meshStandardMaterial color="#221a14" roughness={0.9} />
         </mesh>
-        {/* offenes Türblatt (Anschlag Süd, ~105° aufgeschwungen) */}
-        <group position={[-ANNEX_D / 2 - 0.01, 0, 0.93]} rotation-y={-1.83}>
+        {/* offenes Türblatt (Anschlag Nord, ~105° aufgeschwungen) */}
+        <group position={[-ANNEX_D / 2 - 0.01, 0, -0.73]} rotation-y={1.83}>
           <mesh position={[0.08, 0.13, 0]}>
             <boxGeometry args={[0.16, 0.26, 0.014]} />
             <meshStandardMaterial color="#2f5d8a" roughness={0.75} />
@@ -223,9 +227,10 @@ export function Clubhouse() {
       ))}
 
       {/* warmes Licht vor dem Anbau (gebakene Lache) + Erdung */}
-      <LightPool position={[-DEPTH / 2 - 0.55, -0.011, 0.4]} scale={[2, 2.6]} color="#ff9d4a" opacity={0.26} />
-      {/* Lichtschein aus der offenen Tür (v5-Durchfahrt) */}
-      <LightPool position={[-DEPTH / 2 - ANNEX_D - 0.35, -0.009, 1.25]} scale={[0.9, 0.5]} color="#ffb26a" opacity={0.5} />
+      <LightPool position={[-DEPTH / 2 - 0.55, -0.011, 0.1]} scale={[2, 2.8]} color="#ff9d4a" opacity={0.26} />
+      {/* Lichtschein aus der offenen Tür (v5-Durchfahrt) — v8-E2 an die
+          linke Tür (Welt z=−0.55 → clubhouse-rel z=−0.25) */}
+      <LightPool position={[-DEPTH / 2 - ANNEX_D - 0.35, -0.009, -0.25]} scale={[0.9, 0.5]} color="#ffb26a" opacity={0.5} />
       <AOBlob position={[-0.05, -0.012, 0]} scale={[DEPTH + 1.4, LEN + 1]} opacity={0.6} />
 
       {/* Fahnenmasten (SVA rot-schwarz + gedimmte zweite) */}

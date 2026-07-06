@@ -16,10 +16,14 @@ import * as THREE from 'three'
 /** Fortschritt, bei dem die Türöffnung das Bild füllt → Welt-Hop. */
 export const PARTY_HOP = 0.48
 
-/** Tür des Vereinsheim-Anbaus (Weltkoordinaten, s. Clubhouse.tsx). */
+/** Tür des Vereinsheim-Anbaus (Weltkoordinaten, s. Clubhouse.tsx).
+ *  v8-E2 (Marvins Gebäudewissen): Der echte Eingang liegt LINKS (−z),
+ *  im Fensterraum („Dodos Raum", bei den Fahnenmasten) — nicht rechts.
+ *  Die alte Tür bei z=0.95 war in Wirklichkeit keine Tür → entfernt.
+ *  Der Ost-Ballfangzaun hat dafür eine Öffnung (s. BallStopFence.tsx). */
 export const DOOR = {
   x: 6.421, // Türebene (Anbau-Westseite, zum Platz)
-  z: 0.95,
+  z: -0.55, // v8-E2: nach links in den Fensterraum verlegt (war 0.95)
   w: 0.16,
   h: 0.26,
   cy: 0.13, // Zentrum der Öffnung
@@ -47,11 +51,16 @@ const HALF = ROOM.size / 2
 // Startet in der MUSIK-Stationspose und senkt sich zur Tür.
 // (Bewusste zweite Ausnahme von MIN_FLIGHT_Y — wie der Sturzflug
 // ein komponierter Beat, dokumentiert in SVA_PLAN_V5.md.)
+// v8-E2: Der Anflug bleibt bis zur Tor-Ebene (x≈5.25) SÜDLICH (z≈1.2 —
+// klärt den Torpfosten bei z=+0.37), schwenkt erst DAHINTER nach links
+// durch die Zaun-Öffnung zur linken Tür (z=−0.55). So wird weder Tor
+// noch Zaun geschnitten, und der Bogen liest sich als bewusste Kurve
+// in den Fensterraum.
 const approachPos = new THREE.CatmullRomCurve3(
   [
     new THREE.Vector3(4.6, 0.9, 1.5),
-    new THREE.Vector3(5.35, 0.52, 1.26),
-    new THREE.Vector3(5.95, 0.26, 1.02),
+    new THREE.Vector3(5.35, 0.52, 1.2),
+    new THREE.Vector3(5.95, 0.26, -0.2),
     new THREE.Vector3(6.28, DOOR.cy + 0.01, DOOR.z),
   ],
   false,

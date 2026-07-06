@@ -47,31 +47,29 @@ function getBannerTexture() {
   return bannerTex
 }
 
-function Fence({ side }: { side: 1 | -1 }) {
-  const tex = useMemo(getMeshTexture, [])
-  const banner = useMemo(getBannerTexture, [])
-  // Ost-Zaun leicht nach Norden versetzt: der Weg zur Vereinsheim-Tür
-  // (z≈0.95, v5-Durchfahrt) bleibt frei, das Tor (z ±0.37) voll gedeckt.
-  const zOff = side > 0 ? -0.45 : 0
+// Ein Zaun-Panel beliebiger Breite an fester x-Ebene, zentriert auf zCenter.
+function FencePanel({ x, zCenter, width, banner }: { x: number; zCenter: number; width: number; banner?: boolean }) {
+  const tex = useMemo(() => getMeshTexture(), [])
+  const bannerTex2 = useMemo(() => getBannerTexture(), [])
+  // Pfosten ~0.65 m Abstand
+  const n = Math.max(2, Math.round(width / 0.65))
+  const posts = Array.from({ length: n + 1 }, (_, i) => -width / 2 + (width * i) / n)
   return (
-    <group position={[side * FENCE_X, 0, zOff]}>
-      {/* Pfosten */}
-      {[-WIDTH / 2, -WIDTH / 4, 0, WIDTH / 4, WIDTH / 2].map((z) => (
+    <group position={[x, 0, zCenter]}>
+      {posts.map((z) => (
         <mesh key={z} position={[0, HEIGHT / 2, z]}>
           <cylinderGeometry args={[0.015, 0.015, HEIGHT, 5]} />
           <meshStandardMaterial color="#2c2f34" metalness={0.5} roughness={0.5} />
         </mesh>
       ))}
-      {/* Maschendraht */}
       <mesh position={[0, HEIGHT / 2, 0]} rotation-y={Math.PI / 2}>
-        <planeGeometry args={[WIDTH, HEIGHT]} />
+        <planeGeometry args={[width, HEIGHT]} />
         <meshBasicMaterial map={tex} transparent side={THREE.DoubleSide} depthWrite={false} />
       </mesh>
-      {/* Banner-Slot nur am Ost-Zaun */}
-      {side > 0 && (
-        <mesh position={[-0.01, 0.3, -0.85]} rotation-y={-Math.PI / 2}>
+      {banner && (
+        <mesh position={[-0.01, 0.3, 0.1]} rotation-y={-Math.PI / 2}>
           <planeGeometry args={[0.7, 0.14]} />
-          <meshStandardMaterial map={banner} roughness={0.8} side={THREE.DoubleSide} />
+          <meshStandardMaterial map={bannerTex2} roughness={0.8} side={THREE.DoubleSide} />
         </mesh>
       )}
     </group>
@@ -79,10 +77,17 @@ function Fence({ side }: { side: 1 | -1 }) {
 }
 
 export function BallStopFence() {
+  // West: durchgehendes Panel hinter dem West-Tor.
+  // Ost (v8-E2): ZWEI Panels mit Öffnung dazwischen — durch diese Lücke
+  // (Welt z≈−0.55) führt der Kamera-Anflug zur nach links verlegten
+  // Vereinsheim-Tür (s. camera/partyPath.ts DOOR, Clubhouse.tsx). Das
+  // Süd-Panel deckt weiterhin das Tor (z ±0.37); die Öffnung liegt
+  // NÖRDLICH davon. Öffnung = Spalt [−0.9 … −0.2].
   return (
     <group>
-      <Fence side={1} />
-      <Fence side={-1} />
+      <FencePanel x={FENCE_X} zCenter={0.4} width={1.2} banner />
+      <FencePanel x={FENCE_X} zCenter={-1.55} width={1.3} />
+      <FencePanel x={-FENCE_X} zCenter={0} width={WIDTH} />
     </group>
   )
 }
