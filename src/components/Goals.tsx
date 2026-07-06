@@ -3,26 +3,47 @@ import * as THREE from 'three'
 import { PITCH } from '../utils/constants'
 import { AOBlob } from './AOBlob'
 
-// Tore mit echter Netz-Andeutung: prozedurale Gitter-Textur auf
+// Tore mit echter Netz-Andeutung: prozedurale Rauten-Netztextur auf
 // schräger Rück-Plane + zwei Seiten-Dreiecken. Pfosten aus v1.
+// v5.6 („Tore nicht realistisch"): Maßstab war das Problem — das alte
+// Gitter hatte 8 Zellen über die Torbreite = ~90 cm Maschen, das las
+// als Drahtmodell. Echte Netze: ~11-12 cm Rautenmaschen. Kachel wird
+// jetzt weltmaßstäblich wiederholt (TILE_WORLD), Rauten statt Quadrate.
 
 const NET_DEPTH = 0.16
+const TILE_WORLD = 0.072   // Welt-Größe einer Kachel (6 Maschen à ~1,2 cm → ~12 cm real)
 
 let netTex: THREE.CanvasTexture | null = null
 function getNetTexture() {
   if (netTex) return netTex
+  const N = 128
   const cv = document.createElement('canvas')
-  cv.width = cv.height = 64
+  cv.width = cv.height = N
   const ctx = cv.getContext('2d')!
-  ctx.clearRect(0, 0, 64, 64)
-  ctx.strokeStyle = 'rgba(225,232,240,0.75)'
-  ctx.lineWidth = 1.6
-  for (let i = 0; i <= 64; i += 8) {
-    ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 64); ctx.stroke()
-    ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(64, i); ctx.stroke()
+  ctx.clearRect(0, 0, N, N)
+  ctx.lineCap = 'round'
+  // Rauten: zwei Scharen diagonaler Fäden (±45°), dünn + weich, damit
+  // die Masche als geknüpftes Netz liest, nicht als CAD-Gitter.
+  const step = N / 6
+  const draw = (dir: 1 | -1, color: string, w: number) => {
+    ctx.strokeStyle = color
+    ctx.lineWidth = w
+    for (let k = -6; k <= 12; k++) {
+      const o = k * step
+      ctx.beginPath()
+      ctx.moveTo(o, 0)
+      ctx.lineTo(o + dir * N, N)
+      ctx.stroke()
+    }
   }
+  // leichter Doppelton: hellere Kernfäden + dunklerer Schatten-Versatz
+  draw(1, 'rgba(210,218,228,0.30)', 2.4)
+  draw(-1, 'rgba(210,218,228,0.30)', 2.4)
+  draw(1, 'rgba(238,244,250,0.82)', 1.1)
+  draw(-1, 'rgba(238,244,250,0.82)', 1.1)
   netTex = new THREE.CanvasTexture(cv)
   netTex.wrapS = netTex.wrapT = THREE.RepeatWrapping
+  netTex.anisotropy = 4
   return netTex
 }
 
@@ -30,12 +51,16 @@ function sideGeometry(mirror: boolean): THREE.BufferGeometry {
   // Dreieck: Pfosten oben → Pfosten unten → Netz-Boden hinten
   const g = new THREE.BufferGeometry()
   const z = mirror ? 1 : -1
+  const gh = PITCH.goalHeight
   g.setAttribute('position', new THREE.Float32BufferAttribute([
-    0, PITCH.goalHeight, 0,
+    0, gh, 0,
     0, 0, 0,
     NET_DEPTH, 0, 0,
   ].map((v, i) => (i % 3 === 2 ? v * z : v)), 3))
-  g.setAttribute('uv', new THREE.Float32BufferAttribute([0, 1, 0, 0, 1, 0], 2))
+  // UV weltmaßstäblich: vertikal gh, horizontal NET_DEPTH → echte Maschen
+  const rv = gh / TILE_WORLD
+  const rh = NET_DEPTH / TILE_WORLD
+  g.setAttribute('uv', new THREE.Float32BufferAttribute([0, rv, 0, 0, rh, 0], 2))
   g.computeVertexNormals()
   return g
 }
@@ -45,7 +70,7 @@ function Goal({ side }: { side: 1 | -1 }) {
   const gw = PITCH.goalWidth / 2
   const gh = PITCH.goalHeight
   const postR = 0.028
-  const tex = useMemo(getNetTexture, [])
+  const tex = useMemo(() => getNetTexture(), [])
   const sideL = useMemo(() => sideGeometry(false), [])
   const sideR = useMemo(() => sideGeometry(true), [])
   const backNet = useMemo(() => {
@@ -56,7 +81,10 @@ function Goal({ side }: { side: 1 | -1 }) {
       NET_DEPTH, 0, gw,    // Boden hinten rechts
       NET_DEPTH, 0, -gw,   // Boden hinten links
     ], 3))
-    g.setAttribute('uv', new THREE.Float32BufferAttribute([0, 1, 1, 1, 1, 0, 0, 0], 2))
+    // UV weltmaßstäblich: u über die Torbreite, v über die Netz-Schräge
+    const ru = PITCH.goalWidth / TILE_WORLD
+    const rv = Math.hypot(NET_DEPTH, gh) / TILE_WORLD
+    g.setAttribute('uv', new THREE.Float32BufferAttribute([0, rv, ru, rv, ru, 0, 0, 0], 2))
     g.setIndex([0, 1, 2, 0, 2, 3])
     g.computeVertexNormals()
     return g
@@ -67,12 +95,12 @@ function Goal({ side }: { side: 1 | -1 }) {
       {/* Pfosten + Latte */}
       {[-gw, gw].map((z) => (
         <mesh key={z} position={[0, gh / 2, z]}>
-          <cylinderGeometry args={[postR, postR, gh, 8]} />
+          <cylinderGeometry args={[postR, postR, gh, 16]} />
           <meshStandardMaterial color="#e8ecf0" metalness={0.55} roughness={0.35} />
         </mesh>
       ))}
       <mesh position={[0, gh, 0]} rotation-x={Math.PI / 2}>
-        <cylinderGeometry args={[postR, postR, PITCH.goalWidth, 8]} />
+        <cylinderGeometry args={[postR, postR, PITCH.goalWidth, 16]} />
         <meshStandardMaterial color="#e8ecf0" metalness={0.55} roughness={0.35} />
       </mesh>
       {/* Netz: schräge Rückwand (explizite Geometrie — Latte oben,

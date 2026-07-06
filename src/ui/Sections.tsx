@@ -156,7 +156,11 @@ export function Sections() {
           </div>
           <div>
             <dt>Instagram</dt>
-            <dd>{CONTACT.instagram}</dd>
+            <dd>
+              <a href={CONTACT.instagramUrl} target="_blank" rel="noreferrer" style={{ color: '#fff' }}>
+                {CONTACT.instagram}
+              </a>
+            </dd>
           </div>
         </motion.dl>
         <p style={{ marginTop: '3rem', fontSize: '0.7rem', letterSpacing: '0.1em', color: 'rgba(255,255,255,0.55)' }}>

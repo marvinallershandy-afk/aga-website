@@ -65,4 +65,5 @@ export const CONTACT = {
   email: 'info@sv-agathenburg-dollern.de',
   training: 'Di & Do, ab 19:00 Uhr',
   instagram: '@sva_fussball',
+  instagramUrl: 'https://instagram.com/sva_fussball',
 } as const

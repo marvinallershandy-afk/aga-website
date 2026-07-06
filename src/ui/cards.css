@@ -39,7 +39,7 @@
   overflow: hidden;
   background:
     repeating-linear-gradient(115deg, rgba(255,255,255,.015) 0 2px, rgba(0,0,0,.02) 2px 4px),
-    radial-gradient(120% 80% at 50% 0%, #3a2c14 0%, #231f20 40%, #14100f 100%);
+    radial-gradient(120% 80% at 50% 0%, #431418 0%, #201618 42%, #0f0c0d 100%);
   border: 1px solid rgba(232,193,90,.55);
   box-shadow: inset 0 0 0 1px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.08);
 }
@@ -257,11 +257,13 @@
   border-radius: 14px;
   pointer-events: none;
   mix-blend-mode: color-dodge;
-  opacity: calc(.14 + var(--glow) * .6);
+  opacity: calc(.09 + var(--glow) * .42);
+  /* v5.6: Metall-Foil statt Regenbogen — Messlatte „echte Premium-
+     Sammelkarte", kein Arcade-Holo */
   background:
     conic-gradient(from 210deg at var(--px) var(--py),
-      #ff00c8 0deg, #00e5ff 70deg, #7cff00 140deg,
-      #ffd400 210deg, #ff005d 280deg, #ff00c8 360deg);
+      #d9dce1 0deg, #f5f6f8 70deg, #9aa1ac 150deg,
+      #e4e7eb 220deg, #a9afb9 290deg, #d9dce1 360deg);
   -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><g fill='white'><rect x='0' y='0' width='40' height='40' opacity='0.14'/><path d='M-10 30 L30 -10 M0 40 L40 0 M10 50 L50 10' stroke='white' stroke-width='5' opacity='0.75'/></g></svg>");
   -webkit-mask-size: 64px 64px;
   transition: opacity .2s ease;
@@ -274,11 +276,11 @@
   border-radius: 14px;
   pointer-events: none;
   mix-blend-mode: color-dodge;
-  opacity: calc(.08 + var(--glow) * .35);
+  opacity: calc(.05 + var(--glow) * .22);
   background:
-    linear-gradient(calc(120deg + var(--tiltY) * 6), 
-      rgba(255,60,180,.9), rgba(80,220,255,.9) 35%, 
-      rgba(255,230,120,.9) 65%, rgba(120,255,160,.9));
+    linear-gradient(calc(120deg + var(--tiltY) * 6),
+      rgba(235,238,242,.85), rgba(150,158,170,.7) 35%,
+      rgba(250,250,252,.9) 65%, rgba(170,178,190,.7));
   -webkit-mask-image: radial-gradient(circle at 2px 2px, white 1.1px, transparent 1.6px);
   -webkit-mask-size: 9px 9px;
   transition: opacity .25s ease;
