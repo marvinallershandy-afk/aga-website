@@ -72,7 +72,12 @@ export function CameraRig() {
     pos.current.y += Math.sin(t * 0.23 + 1.3) * 0.08 * sway
 
     camera.position.copy(pos.current)
-    currentLook.current.lerp(look.current, 0.12)
+    // zeitbasiert (nicht pro Frame): konvergiert auch bei niedriger FPS
+    currentLook.current.set(
+      THREE.MathUtils.damp(currentLook.current.x, look.current.x, 7.5, delta),
+      THREE.MathUtils.damp(currentLook.current.y, look.current.y, 7.5, delta),
+      THREE.MathUtils.damp(currentLook.current.z, look.current.z, 7.5, delta),
+    )
     camera.lookAt(currentLook.current)
   })
 

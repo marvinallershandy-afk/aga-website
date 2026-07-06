@@ -26,9 +26,10 @@ const STATIONS: Station[] = [
   { pos: new THREE.Vector3(4.6, 0.6, 1.5), look: new THREE.Vector3(7.1, 0.5, -0.35) },
   // 4 · TABELLE — Schwenk zum echten Vereinsheim hinter dem Ost-Tor
   { pos: new THREE.Vector3(4.0, 0.85, 3.1), look: new THREE.Vector3(7.15, 0.32, -0.5) },
-  // 4 · KONTAKT/FINALE — Schwenk in die Fanblock-Ecke SW:
-  //     Banner + Figuren nah, der beleuchtete Platz im Hintergrund
-  { pos: new THREE.Vector3(-5.7, 1.35, 1.35), look: new THREE.Vector3(-3.3, 0.28, 4.7) },
+  // 5 · KONTAKT/FINALE — Schwenk in die Fanblock-Ecke SW: das
+  //     AGA-URKNALL-Banner lesbar in der rechten Bildhälfte (DOM
+  //     lebt links), der beleuchtete Platz + Vereinsheim dahinter
+  { pos: new THREE.Vector3(-5.6, 0.8, 1.9), look: new THREE.Vector3(-2.5, 0.45, 3.3) },
 ]
 
 export const STATION_COUNT = STATIONS.length

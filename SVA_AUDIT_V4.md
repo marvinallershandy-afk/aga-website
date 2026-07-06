@@ -47,6 +47,39 @@ ohne runde Map). (d) Ball im Hero kaum sichtbar (Stilisierungs-Kompromiss v3).
 |---|---|---|---|---|
 | 0 (Start) | 7,0 | 5,5 | 7,5 | Ausgangslage |
 | nach E1–E3 | — | ~7,5* | **8,0** | Copy+Musik-Sektion+3D-Fixes; *Zwischenwert, Jury-Loop folgt |
+| Loop 1 | **8,5** | **8,5** | **8,3** | Kurskorrektur Musik=Partyraum + F1–F5, s.u. |
+
+## Loop 1 (Etappe 6) — Fixes & Neubewertung
+
+**Kurskorrektur (Marvin):** Musik-Sektion IST der Partyraum — scroll-getriebener
+Dip-to-Black-Schnitt ins Vereinsheim, Musik lebt nur noch im Raum (draußen Atmo +
+Mute), Trackliste mit Cover-2 + Story + Streaming-Slots drinnen. MusicDock/
+Hütten-Boombox/Party-Buttons entfernt. Das löst Juror-Schwäche (c) und den
+Stratege-Punkt (e) auf einen Schlag — die Welt erzählt die Musik selbst.
+
+**Fixes:** F1 Finale-Grid schmaler; F2 Micro-Interactions (Nav-Underline, Button-
+Lift, Track-Hover); F4 Banner/Trikots; F5 Barkeeper sichtbar; NEU: Finale-Station
+neu kadriert (AGA-URKNALL-Banner lesbar rechts, DOM links — vorher Banner am
+Bildrand), Look-Damping zeitbasiert statt frame-basiert (Framing konvergiert
+jetzt auch bei niedriger FPS).
+
+- **Juror 8,5:** Der Musik-Schnitt ist jetzt ein zweiter Signature-Moment; Nav
+  „Musik" → Raum ist mutig und konsistent (ein Weg, ein Ort). Restpunkte: Raum-
+  Requisiten (Flaschen lesen als Zylinder), Übergang Musik→Tabelle springt vom
+  Raum direkt vor dieselbe Fassade.
+- **Stratege 8,5:** Sound-Dramaturgie stimmt jetzt inhaltlich (Stadion draußen,
+  Party drinnen); Story-Block mit est.-2024-Fakt; jede Sektion hat einen CTA.
+  Restpunkt: Streaming-Slots bleiben „bald" (Marvin-To-do).
+- **3D 8,3:** Finale-Kadrierung sitzt (Banner+Fahnen rechts, Platz als Tiefe);
+  Raum liest sich warm. Restpunkte: Flaschen/Requisiten-Detail, Fanblock-Figuren
+  hinterm Banner nur als Köpfe sichtbar.
+
+**Frametime Loop 1:** Direkt nach der Kurskorrektur gemessen: 16,5–17,2 ms an
+allen 5 Stationen inkl. Partyraum (60 FPS). Spätere Messung zeigte uniform
+33 ms — aber auch `about:blank` lief bei 33 ms → globale rAF-Drossel der
+Maschine (30 Hz Displayzustand), kein Szenen-Delta: Szene = Baseline an jeder
+Station. Gate gilt mit der 16,6-ms-Messung als gehalten; wird in Loop 2 erneut
+verifiziert.
 
 **3D-Neubewertung (Etappe 3):** Fassaden-Textur (Fenster/Sockel/Putz) + Regenrinne,
 Portrait-Kamera (Mobile-Hero jetzt komponiert), runde Dust-Partikel, weichere
