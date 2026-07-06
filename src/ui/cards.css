@@ -120,6 +120,9 @@
 }
 .holo__photo--duotone img {
   object-fit: cover;
+  /* Focal oben: Kopf sitzt im oberen Drittel der Fotos (v5-Pipeline) —
+     bei jedem Seitenverhältnis bleibt das Gesicht im Ausschnitt */
+  object-position: 50% 14%;
   filter: grayscale(1) contrast(1.12) brightness(.96);
   mix-blend-mode: luminosity;
 }

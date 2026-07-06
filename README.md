@@ -41,10 +41,31 @@ Tastatur: **P** blendet das Perf-Overlay (FPS / Draw-Calls / Dreiecke) ein/aus.
 Die 3D-Bühne (three/R3F/drei ≈ 258 KB gzip) liegt in einem eigenen, **lazy** geladenen
 Chunk — der Fallback-Pfad lädt sie nie.
 
+## Spielerfotos einpflegen (v5-Pipeline — „Datei nach Schema, fertig")
+
+So kommen die restlichen Fotos in die Karten:
+
+1. **Foto** im Hochformat (ideal 4:5, Kopf im oberen Drittel — wie die
+   fünf Beispiel-Fotos in `REFERENZ/Spielerfotos/`). Handy-Foto reicht:
+   die Duotone-Behandlung (Variante A, `src/ui/cardConfig.ts`) macht
+   aus gemischter Foto-Qualität einen einheitlichen Kader-Look.
+2. **Verkleinern** auf 800 px Höhe und als WebP ablegen:
+   `public/players/<vorname-klein>.webp` — Einzeiler dafür:
+   ```sh
+   node -e "require('sharp')('FOTO.jpg').resize({height:800}).webp({quality:82}).toFile('public/players/vorname.webp')"
+   ```
+3. **Eintragen** in `src/data/players.ts`: beim Spieler
+   `photoUrl: '/players/vorname.webp'` setzen (und `name` echt machen).
+   Kein Foto → `photoUrl: null` = gestaltete Silhouetten-Karte.
+
+Beschnitt/Einfärbung passieren automatisch (CSS: Focal oben,
+Graustufen + Team-Duotone). Eingebaut sind bereits: Tino (1, TW),
+Lennard (4), Julio (7), Carsten (9), Eli (10).
+
 ## Marvins To-dos (v1 → echt)
 
-- Echte Kadernamen + Spielerfotos in `src/data/players.ts` (`photoUrl`).
-- Vereinswappen statt „A"-Platzhalter (Karten + Story-Bild).
+- Restliche Spielerfotos + echte Kadernamen (Pipeline oben; Nachnamen
+  der 5 Beispiel-Spieler fehlen bewusst noch).
 - Echte fussball.de-Vereins-/Team-ID in `src/data/club.ts` (`fussballDeTeamId`).
 - `public/og-image.png` (Social-Preview) ergänzen.
 
