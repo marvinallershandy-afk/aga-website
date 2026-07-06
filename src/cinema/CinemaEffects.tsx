@@ -51,16 +51,15 @@ export function CinemaEffects() {
   const chain: React.ReactElement[] = []
   if (fx.bloom)
     chain.push(
-      // height 540: Mipmap-Kette startet auf halber Auflösung —
-      // Bloom ist niederfrequent, spart aber die teure erste Stufe
+      // Loop 1: größerer, weicherer Halo (Referenzframe-Messlatte)
       <Bloom
         key="bloom"
         mipmapBlur
-        intensity={0.85}
-        radius={0.72}
+        intensity={1.05}
+        radius={0.82}
         luminanceThreshold={1.0}
         luminanceSmoothing={0.25}
-        levels={4}
+        levels={5}
       />,
     )
   if (fx.grade) chain.push(<Grade key="grade" />)
@@ -69,12 +68,13 @@ export function CinemaEffects() {
   // Effekt verdient sein Budget nicht. Marvin-To-do, falls gewünscht.
   if (fx.ca)
     chain.push(
+      // Loop 1: feiner + weiter außen (Neon-Fringe war zu hart)
       <ChromaticAberration
         key="ca"
         blendFunction={BlendFunction.NORMAL}
-        offset={[0.0007, 0.0005]}
+        offset={[0.00045, 0.00032]}
         radialModulation
-        modulationOffset={0.65}
+        modulationOffset={0.78}
       />,
     )
   if (fx.vignette) chain.push(<Vignette key="vig" eskil={false} offset={0.3} darkness={0.55} />)

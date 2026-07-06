@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useTexture } from '@react-three/drei'
 import { ROOM_Y, ROOM } from '../camera/partyPath'
+import { getDoorGlowTexture } from './doorGlow'
 
 // ─────────────────────────────────────────────────────────────
 // Der Partyraum im Vereinsheim — v5 nach Marvins Raumbeschreibung:
@@ -130,6 +131,10 @@ function makeWoodTexture(): THREE.CanvasTexture {
 export default function PartyRoom() {
   const cover = useTexture('/audio/cover.jpg')
   cover.colorSpace = THREE.SRGBColorSpace
+  // Wand-Art (Higgsfield, REFERENZ/higgsfield/partyraum-poster-…):
+  // DIY-Siebdruck-Poster im AGA-URKNALL-Vibe, mit Tape an der Wand
+  const urknallPoster = useTexture('/audio/poster-urknall.webp')
+  urknallPoster.colorSpace = THREE.SRGBColorSpace
   const neon = useMemo(svaNeonTexture, [])
   const wood = useMemo(makeWoodTexture, [])
 
@@ -220,7 +225,7 @@ export default function PartyRoom() {
           Hop (rein wie raus) und erzählt „draußen ist der Platz" */}
       <mesh position={[ROOM.innerDoorX - 0.015, hall.height / 2 - 0.06, hall.z]} rotation-y={Math.PI / 2}>
         <planeGeometry args={[hall.zMax - hall.zMin + 0.1, hall.height + 0.12]} />
-        <meshBasicMaterial color={[2.3, 1.5, 0.85]} toneMapped={false} />
+        <meshBasicMaterial map={getDoorGlowTexture()} color={[1.55, 1.5, 1.4]} toneMapped={false} />
       </mesh>
       {/* Garderoben-Detail im Flur: Haken + Schal */}
       <mesh position={[-1.6, 0.62, hall.zMin + 0.012]}>
@@ -335,11 +340,19 @@ export default function PartyRoom() {
         </mesh>
       </group>
 
+      {/* AGA-URKNALL-Siebdruck (Wand-Art, leicht schief getaped) —
+          Süd-Wand östlich vom Cover, hinterm Tresen-Eck */}
+      <mesh position={[1.02, 0.8, H - 0.025]} rotation-y={Math.PI} rotation-z={0.03}>
+        <planeGeometry args={[0.42, 0.6]} />
+        <meshStandardMaterial map={urknallPoster} roughness={0.85} />
+      </mesh>
+
       {/* SVA-Neon über dem Tresen (Ost-Wand) */}
       <mesh position={[H - 0.04, 1.05, 0.68]} rotation-y={-Math.PI / 2}>
         <planeGeometry args={[0.66, 0.25]} />
-        {/* Farb-Boost > 1: Neon glüht im selektiven Bloom */}
-        <meshBasicMaterial map={neon} transparent toneMapped={false} color={[1.7, 1.7, 1.7]} />
+        {/* Farb-Boost > 1: Neon glüht im selektiven Bloom (Loop 1:
+            1.7→1.3 — weniger CA-Fringe an den Konturen) */}
+        <meshBasicMaterial map={neon} transparent toneMapped={false} color={[1.3, 1.3, 1.3]} />
       </mesh>
 
       {/* Lichterkette (SVA-Rot + warm im Wechsel) */}

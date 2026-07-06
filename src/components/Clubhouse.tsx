@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import * as THREE from 'three'
 import { COLORS } from '../utils/constants'
 import { AOBlob, LightPool } from './AOBlob'
+import { getDoorGlowTexture } from './doorGlow'
 
 // Fassaden-Textur für die Platzseite: Putz mit feiner Struktur,
 // gezeichnetes EG-Fensterband mit Rahmen, OG-Band, Klinker-Sockel —
@@ -189,8 +190,9 @@ export function Clubhouse() {
             aufgeschwungen. Maße s. camera/partyPath.ts (DOOR). */}
         <mesh position={[-ANNEX_D / 2 - 0.004, 0.13, 0.85]} rotation-y={-Math.PI / 2}>
           <planeGeometry args={[0.16, 0.26]} />
-          {/* HDR-Farbe > 1 → wird vom selektiven Bloom erfasst */}
-          <meshBasicMaterial color={[2.3, 1.5, 0.85]} toneMapped={false} />
+          {/* Verlaufs-Glow (Loop 1): Textur × Farbboost — HDR nur im
+              hellen Kern, Ränder bleiben warmes Amber statt Weiß */}
+          <meshBasicMaterial map={getDoorGlowTexture()} color={[1.55, 1.5, 1.4]} toneMapped={false} />
         </mesh>
         {/* dunkler Laibungs-Rahmen um die Öffnung */}
         <mesh position={[-ANNEX_D / 2 - 0.002, 0.13, 0.85]} rotation-y={-Math.PI / 2}>
