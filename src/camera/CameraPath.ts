@@ -14,8 +14,11 @@ export interface Station {
 }
 
 const STATIONS: Station[] = [
-  // 0 · VEREIN — hohe, leicht gekippte Establishing-Shot über dem Anstoßkreis
-  { pos: new THREE.Vector3(3.5, 12.5, 13), look: new THREE.Vector3(0, 0.4, 0) },
+  // 0 · VEREIN — Establishing. v6-E1: Startwinkel deutlich gesenkt
+  //     (y 12.5 → 7.0), schräger/immersiver statt Vogelperspektive —
+  //     nimmt den „Tischmodell"-Eindruck (Marvin) und verkürzt zugleich
+  //     das überlange erste Bein (Tempo-Spitze beim Swoop).
+  { pos: new THREE.Vector3(4.2, 7.0, 15.2), look: new THREE.Vector3(0, 0.5, 0.6) },
   // 1 · ANSTOSS (Signature-Beat, keine eigene Sektion) — Sturzflug hinter
   //     den Anstoßkreis, endet kontrolliert ÜBER dem Rasen (v5-Review:
   //     nicht mehr „im Gras"), Blick über den Ball
@@ -91,6 +94,55 @@ const lookCurve = new THREE.CatmullRomCurve3(
   0.5,
 )
 
+// ─── Bogenlängen-Korrektur pro Segment (v6-E1) ───────────────
+// Problem: getPoint(u) tastet die Catmull-Rom PARAMETRISCH ab —
+// die Kamera beschleunigt durch die Kontrollpunkte („zerrt"). Fix:
+// für jedes Stations-Segment eine Bogenlängen-Tabelle; gleicher
+// Scroll-Delta → gleiche Weltdistanz. Die STATIONEN bleiben exakt
+// gepinnt (Segmentgrenzen unverändert) → Beat-Timing & Content-
+// Alignment (Anstoß, Partyraum-Hop) bleiben unberührt.
+const SEG_COUNT = STATIONS.length - 1
+const SAMPLES_PER_SEG = 28
+const segArc: Float32Array[] = []
+{
+  const p = new THREE.Vector3()
+  const prev = new THREE.Vector3()
+  for (let s = 0; s < SEG_COUNT; s++) {
+    const cum = new Float32Array(SAMPLES_PER_SEG + 1)
+    posCurve.getPoint(s / SEG_COUNT, prev)
+    let total = 0
+    for (let k = 1; k <= SAMPLES_PER_SEG; k++) {
+      posCurve.getPoint((s + k / SAMPLES_PER_SEG) / SEG_COUNT, p)
+      total += p.distanceTo(prev)
+      cum[k] = total
+      prev.copy(p)
+    }
+    const inv = total || 1
+    for (let k = 0; k <= SAMPLES_PER_SEG; k++) cum[k] /= inv
+    segArc.push(cum)
+  }
+}
+
+/** Bogenanteil a∈[0,1] eines Segments → parametrischer localT. */
+function arcToParam(seg: number, a: number): number {
+  const cum = segArc[seg]
+  for (let k = 0; k < SAMPLES_PER_SEG; k++) {
+    if (a <= cum[k + 1]) {
+      const span = cum[k + 1] - cum[k] || 1
+      return (k + (a - cum[k]) / span) / SAMPLES_PER_SEG
+    }
+  }
+  return 1
+}
+
+/** u (scroll-linear, Stationen gepinnt) → bogenlängen-korrigiertes u. */
+function arcLengthU(u: number): number {
+  const c = THREE.MathUtils.clamp(u, 0, 1)
+  const seg = Math.min(SEG_COUNT - 1, Math.floor(c * SEG_COUNT))
+  const localA = c * SEG_COUNT - seg
+  return (seg + arcToParam(seg, localA)) / SEG_COUNT
+}
+
 // Anker/Remap leben three-frei in ./anchors (Fallback-Ladepfad!)
 export { setAnchors, scrollToU } from './anchors'
 
@@ -103,6 +155,9 @@ export { setAnchors, scrollToU } from './anchors'
 export const MIN_FLIGHT_Y = 0.9
 const DIVE_FLOOR_Y = 0.5
 const DIVE_HALF_WIDTH = 0.14
+// v6-E1: Maximalhöhe fängt Catmull-Durchhänger/Überschwinger nach oben
+// (der Establishing-Shot sitzt bei y=7.0 → Marge bis 7.6).
+const MAX_FLIGHT_Y = 7.6
 
 function flightFloorAt(u: number): number {
   const d = Math.abs(u - KICKOFF_U) / DIVE_HALF_WIDTH
@@ -119,9 +174,12 @@ const _look = new THREE.Vector3()
 /** Sample die Fahrt bei t∈[0,1]. Schreibt in die übergebenen Vektoren. */
 export function sampleFlight(t: number, outPos: THREE.Vector3, outLook: THREE.Vector3) {
   const c = THREE.MathUtils.clamp(t, 0, 1)
-  posCurve.getPoint(c, _pos)
-  lookCurve.getPoint(c, _look)
-  _pos.y = Math.max(_pos.y, flightFloorAt(c))
+  // Bogenlängen-korrigiert → gleichmäßiges gefühltes Tempo (v6-E1)
+  const uc = arcLengthU(c)
+  posCurve.getPoint(uc, _pos)
+  lookCurve.getPoint(uc, _look)
+  // Höhen-Klammer: Boden (nie in den Rasen) + Deckel (kein Überschwinger)
+  _pos.y = THREE.MathUtils.clamp(_pos.y, flightFloorAt(c), MAX_FLIGHT_Y)
   outPos.copy(_pos)
   outLook.copy(_look)
 }
