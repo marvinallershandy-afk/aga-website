@@ -50,8 +50,11 @@ function getBannerTexture() {
 function Fence({ side }: { side: 1 | -1 }) {
   const tex = useMemo(getMeshTexture, [])
   const banner = useMemo(getBannerTexture, [])
+  // Ost-Zaun leicht nach Norden versetzt: der Weg zur Vereinsheim-Tür
+  // (z≈0.95, v5-Durchfahrt) bleibt frei, das Tor (z ±0.37) voll gedeckt.
+  const zOff = side > 0 ? -0.45 : 0
   return (
-    <group position={[side * FENCE_X, 0, 0]}>
+    <group position={[side * FENCE_X, 0, zOff]}>
       {/* Pfosten */}
       {[-WIDTH / 2, -WIDTH / 4, 0, WIDTH / 4, WIDTH / 2].map((z) => (
         <mesh key={z} position={[0, HEIGHT / 2, z]}>

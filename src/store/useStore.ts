@@ -39,8 +39,12 @@ interface AppState {
   setGateOpen: (v: boolean) => void
 
   /** Partyraum im Vereinsheim — die Musik-Station der Fahrt.
-   *  partyOpen: Kamera ist drin (scroll-getrieben, PartyDirector).
+   *  partyProgress: 0..1 Durchfahrts-Fortschritt (0 = draußen,
+   *  1 = Raum-Totale; Hop bei PARTY_HOP) — scroll-getrieben.
+   *  partyOpen: Kamera ist drin (abgeleitet, für Audio/DOM-Klasse).
    *  partyNear: Sektion nähert sich → Raum-Chunk vorladen. */
+  partyProgress: number
+  setPartyProgress: (p: number) => void
   partyOpen: boolean
   setPartyOpen: (v: boolean) => void
   partyNear: boolean
@@ -82,6 +86,8 @@ export const useStore = create<AppState>((set) => ({
   gateOpen: false,
   setGateOpen: (v) => set({ gateOpen: v }),
 
+  partyProgress: 0,
+  setPartyProgress: (p) => set((s) => (s.partyProgress === p ? s : { partyProgress: p })),
   partyOpen: false,
   setPartyOpen: (v) => set({ partyOpen: v }),
   partyNear: false,

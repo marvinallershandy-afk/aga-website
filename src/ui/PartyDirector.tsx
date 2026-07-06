@@ -1,41 +1,60 @@
 import { useEffect, useRef } from 'react'
 import { useStore } from '../store/useStore'
 import { AudioManager } from '../audio/AudioManager'
+import { PARTY_HOP } from '../camera/partyPath'
 
 // ─────────────────────────────────────────────────────────────
-// Die Musik-Station IST der Partyraum (Kurskorrektur v4):
-// Sobald die Musik-Sektion die Viewport-Mitte deckt, schneidet
-// die Kamera ins Vereinsheim (Dip-to-Black) — rein scroll-
-// getrieben, also exakt reversibel: zurückscrollen = wieder
-// draußen. Nav „Musik" und Scroll führen denselben Weg.
-// Der schwarze Dip ist eine reine Funktion der Scroll-Position
-// (Dreieck um die Sektionskante) und deckt den Kamera-Schnitt.
+// Die Musik-Station IST der Partyraum — v5: echte DURCHFAHRT
+// statt Dip-to-Black. Dieser Director übersetzt die Scroll-
+// Position der Musik-Sektion in den Durchfahrts-Fortschritt
+// p∈[0,1] (rein scroll-getrieben → exakt reversibel):
+//   Einflug, wenn die Sektion von unten eintrifft,
+//   Rückflug, wenn sie nach oben hinausläuft — min(pIn, pOut).
+// Der Welt-Hop (Kamera-Teleport in die Pocket-Dimension) liegt
+// bei PARTY_HOP und wird 3D-seitig von der glühenden Türöffnung
+// verdeckt; als Sicherheitsnetz legt sich hier ein kurzer WARMER
+// Licht-Schleier (kein Schwarz!) über den Hop-Moment.
+// Audio-Crossfade (Atmo→Musik) folgt p — an die Fahrt gekoppelt.
+// Fallback/reduced-motion: kein 3D → Director inaktiv (statische
+// Seite mit sanftem DOM-Übergang).
 // ─────────────────────────────────────────────────────────────
 
 export function PartyDirector() {
   const gateOpen = useStore((s) => s.gateOpen)
   const fallback = useStore((s) => s.fallback)
-  const dipRef = useRef<HTMLDivElement>(null)
+  const veilRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (fallback || !gateOpen) return
-    const { setPartyOpen, setPartyNear } = useStore.getState()
+    const { setPartyOpen, setPartyNear, setPartyProgress } = useStore.getState()
     let raf = 0
     let inParty = false
 
     const update = () => {
       raf = 0
       const el = document.getElementById('musik')
-      const dip = dipRef.current
-      if (!el || !dip) return
+      const veil = veilRef.current
+      if (!el || !veil) return
       const vh = window.innerHeight
       const rect = el.getBoundingClientRect()
-      // s > 0 ⇔ Sektion deckt die Viewport-Mitte → wir sind drin
-      const s = Math.min(vh / 2 - rect.top, rect.bottom - vh / 2)
-      dip.style.opacity = String(Math.min(1, Math.max(0, 1 - Math.abs(s) / (vh * 0.22))))
-      // Raum-Chunk vorladen, lange bevor der Schnitt kommt
+
+      // Raum-Chunk vorladen, lange bevor die Durchfahrt beginnt
       if (rect.top < vh * 3) setPartyNear(true)
-      const open = s > 0
+
+      // Durchfahrts-Fortschritt: Einflug- und Rückflug-Fenster
+      const win = vh * 0.8
+      const pIn = Math.min(1, Math.max(0, (vh * 1.05 - rect.top) / win))
+      const pOut = Math.min(1, Math.max(0, (rect.bottom - vh * 0.3) / win))
+      const p = Math.min(pIn, pOut)
+      setPartyProgress(p)
+
+      // Warmer Schleier als Hop-Sicherheitsnetz (Dreieck um PARTY_HOP)
+      const d = Math.abs(p - PARTY_HOP)
+      veil.style.opacity = String(Math.max(0, 0.75 * (1 - d / 0.09)))
+
+      // Audio folgt der Fahrt; Playback-Umschaltung am Hop
+      AudioManager.setPartyBlend(p)
+      const open = p >= PARTY_HOP
       if (open !== inParty) {
         inParty = open
         setPartyOpen(open)
@@ -53,6 +72,7 @@ export function PartyDirector() {
       window.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', onScroll)
       if (raf) cancelAnimationFrame(raf)
+      setPartyProgress(0)
       if (inParty) {
         setPartyOpen(false)
         AudioManager.setMode('ambient')
@@ -65,13 +85,13 @@ export function PartyDirector() {
 
   return (
     <div
-      ref={dipRef}
+      ref={veilRef}
       aria-hidden="true"
       style={{
         position: 'fixed',
         inset: 0,
         zIndex: 380,
-        background: '#060508',
+        background: 'radial-gradient(ellipse at 50% 52%, #3a1f0c 0%, #1c0f06 70%)',
         opacity: 0,
         pointerEvents: 'none',
       }}

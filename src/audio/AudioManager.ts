@@ -151,6 +151,28 @@ class AudioManagerImpl {
     this.applyDucking()
   }
 
+  /** v5-Durchfahrt: Der Atmo→Musik-Crossfade folgt der Kamerafahrt
+   *  (Fortschritt 0..1) statt dem Schnitt. Playback-Start/-Stopp
+   *  bleibt an setMode gekoppelt; hier faden nur die Gains. */
+  setPartyBlend(p: number) {
+    if (!this.ctx || !this.enabled) return
+    const k = Math.min(1, Math.max(0, p))
+    const e = k * k * (3 - 2 * k)
+    if (this.mode === 'party' && this.playing) {
+      this.rampFast(this.music, LEVELS.musicParty * (0.25 + 0.75 * e))
+      this.rampFast(this.atmo, LEVELS.atmo * (1 - e) + LEVELS.atmoDucked * e)
+    } else {
+      // draußen/Anflug: Atmo bleibt, dimmt aber schon leicht Richtung Tür
+      this.rampFast(this.atmo, LEVELS.atmo * (1 - 0.4 * e))
+    }
+  }
+
+  private rampFast(node: GainNode, v: number) {
+    if (!this.ctx) return
+    node.gain.cancelScheduledValues(this.ctx.currentTime)
+    node.gain.setTargetAtTime(v, this.ctx.currentTime, 0.12)
+  }
+
   /** Aktuelle Gain-Werte (Beleg fürs Gate). */
   debugGains() {
     if (!this.ctx) return null

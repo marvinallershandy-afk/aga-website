@@ -183,10 +183,26 @@ export function Clubhouse() {
             />
           </mesh>
         ))}
-        <mesh position={[-ANNEX_D / 2 - 0.004, 0.1, 0.85]} rotation-y={-Math.PI / 2}>
-          <planeGeometry args={[0.12, 0.2]} />
-          <meshStandardMaterial color="#2f5d8a" roughness={0.8} />
+        {/* Tür zum Platz — steht einladend OFFEN (v5-Durchfahrt):
+            warm glühende Öffnung (füllt beim Anflug das Bild und
+            deckt den Welt-Hop), blaues Türblatt nach außen
+            aufgeschwungen. Maße s. camera/partyPath.ts (DOOR). */}
+        <mesh position={[-ANNEX_D / 2 - 0.004, 0.13, 0.85]} rotation-y={-Math.PI / 2}>
+          <planeGeometry args={[0.16, 0.26]} />
+          <meshBasicMaterial color="#ffb26a" toneMapped={false} />
         </mesh>
+        {/* dunkler Laibungs-Rahmen um die Öffnung */}
+        <mesh position={[-ANNEX_D / 2 - 0.002, 0.13, 0.85]} rotation-y={-Math.PI / 2}>
+          <planeGeometry args={[0.2, 0.3]} />
+          <meshStandardMaterial color="#221a14" roughness={0.9} />
+        </mesh>
+        {/* offenes Türblatt (Anschlag Süd, ~105° aufgeschwungen) */}
+        <group position={[-ANNEX_D / 2 - 0.01, 0, 0.93]} rotation-y={-1.83}>
+          <mesh position={[0.08, 0.13, 0]}>
+            <boxGeometry args={[0.16, 0.26, 0.014]} />
+            <meshStandardMaterial color="#2f5d8a" roughness={0.75} />
+          </mesh>
+        </group>
       </group>
 
       {/* Terrasse: zwei Biertisch-Andeutungen */}
@@ -205,6 +221,8 @@ export function Clubhouse() {
 
       {/* warmes Licht vor dem Anbau (gebakene Lache) + Erdung */}
       <LightPool position={[-DEPTH / 2 - 0.55, -0.011, 0.4]} scale={[2, 2.6]} color="#ff9d4a" opacity={0.26} />
+      {/* Lichtschein aus der offenen Tür (v5-Durchfahrt) */}
+      <LightPool position={[-DEPTH / 2 - ANNEX_D - 0.35, -0.009, 1.25]} scale={[0.9, 0.5]} color="#ffb26a" opacity={0.5} />
       <AOBlob position={[-0.05, -0.012, 0]} scale={[DEPTH + 1.4, LEN + 1]} opacity={0.6} />
 
       {/* Fahnenmasten (SVA rot-schwarz + gedimmte zweite) */}

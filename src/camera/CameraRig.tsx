@@ -4,6 +4,12 @@ import * as THREE from 'three'
 import { useStore } from '../store/useStore'
 import { sampleFlight, cameraState } from './CameraPath'
 import { scrollToU } from './anchors'
+import {
+  PARTY_HOP,
+  samplePartyApproach,
+  samplePartyInside,
+  partySettle,
+} from './partyPath'
 
 // Scroll-getriebene Kamerafahrt. Der Ziel-Fortschritt kommt aus dem
 // Store (DOM-Scroll). Wir dämpfen ihn zeitbasiert → cinematisches
@@ -21,8 +27,11 @@ const devCam = (() => {
 export function CameraRig() {
   const camera = useThree((s) => s.camera)
   const smoothed = useRef(0)
+  const smoothedParty = useRef(0)
   const pos = useRef(new THREE.Vector3())
   const look = useRef(new THREE.Vector3())
+  const flightPos = useRef(new THREE.Vector3())
+  const flightLook = useRef(new THREE.Vector3())
   const currentLook = useRef(new THREE.Vector3(0, 0.4, 0))
 
   useFrame((state, delta) => {
@@ -38,18 +47,48 @@ export function CameraRig() {
     smoothed.current = THREE.MathUtils.damp(smoothed.current, target, 4, delta)
     cameraState.u = smoothed.current // für Flutlicht/Ball/Staub (Anstoß)
 
-    // Partyraum (Musik-Station): Kamera in der Pocket-Dimension —
-    // der Schnitt liegt unter dem Dip-to-Black des PartyDirector.
-    if (useStore.getState().partyOpen) {
-      const t = state.clock.elapsedTime
+    // Partyraum-DURCHFAHRT (v5): gedämpfter Fortschritt — die Kamera
+    // fährt kontinuierlich zur Tür, der Welt-Hop passiert genau beim
+    // Durchgang durch PARTY_HOP (Türöffnung füllt das Bild).
+    const ppTarget = useStore.getState().partyProgress
+    smoothedParty.current = THREE.MathUtils.damp(smoothedParty.current, ppTarget, 5, delta)
+    const pp = smoothedParty.current
+    if (pp > 0.005) {
       const aspect = state.size.width / state.size.height
-      const back = aspect < 1 ? 1 + (1 - aspect) * 0.55 : 1 // Portrait: mehr Raum zeigen
-      camera.position.set(
-        (0.95 + Math.sin(t * 0.22) * 0.04) * back,
-        -39.42 + (aspect < 1 ? 0.08 : 0),
-        1.2 * back,
+      if (pp < PARTY_HOP) {
+        // Anflug außen: weich aus der laufenden Fahrt in die Tür-Kurve
+        sampleFlight(smoothed.current, flightPos.current, flightLook.current)
+        samplePartyApproach(pp, pos.current, look.current)
+        const w = THREE.MathUtils.clamp(pp / 0.1, 0, 1) // Einblendung
+        pos.current.lerpVectors(flightPos.current, pos.current, w)
+        look.current.lerpVectors(flightLook.current, look.current, w)
+      } else {
+        samplePartyInside(pp, pos.current, look.current)
+        // Portrait: erst in der Raum-Totale zurückziehen (nicht im Flur);
+        // Clamp hält die Kamera vor der Nordwest-Ecke (Wände bei −1.6).
+        if (aspect < 1) {
+          const k = 1 + (1 - aspect) * 0.55 * partySettle(pp)
+          pos.current.sub(look.current).multiplyScalar(k).add(look.current)
+          pos.current.y += (1 - aspect) * 0.08 * partySettle(pp)
+          pos.current.x = Math.max(pos.current.x, -1.42)
+          pos.current.z = Math.max(pos.current.z, -1.42)
+        }
+        // dezentes Atmen in der Totale
+        const t = state.clock.elapsedTime
+        pos.current.x += Math.sin(t * 0.22) * 0.04 * partySettle(pp)
+      }
+      camera.position.copy(pos.current)
+      currentLook.current.set(
+        THREE.MathUtils.damp(currentLook.current.x, look.current.x, 9, delta),
+        THREE.MathUtils.damp(currentLook.current.y, look.current.y, 9, delta),
+        THREE.MathUtils.damp(currentLook.current.z, look.current.z, 9, delta),
       )
-      camera.lookAt(-0.2, -39.66, -1.25)
+      // Beim Hop springt auch der Blick hart mit (kein Nachziehen quer
+      // durch die Welten): Distanz-Heuristik erkennt den Teleport.
+      if (currentLook.current.distanceToSquared(look.current) > 100) {
+        currentLook.current.copy(look.current)
+      }
+      camera.lookAt(currentLook.current)
       return
     }
 
