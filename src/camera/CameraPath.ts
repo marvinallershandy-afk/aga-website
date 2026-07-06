@@ -16,20 +16,22 @@ export interface Station {
 const STATIONS: Station[] = [
   // 0 · VEREIN — hohe, leicht gekippte Establishing-Shot über dem Anstoßkreis
   { pos: new THREE.Vector3(3.5, 12.5, 13), look: new THREE.Vector3(0, 0.4, 0) },
-  // 1 · ANSTOSS (Signature-Beat, keine eigene Sektion) — Sturzflug auf
-  //     Rasenhöhe hinter den Anstoßkreis, Blick über den Ball
-  { pos: new THREE.Vector3(0.35, 0.26, 2.75), look: new THREE.Vector3(-4.2, 1.15, -3.6) },
+  // 1 · ANSTOSS (Signature-Beat, keine eigene Sektion) — Sturzflug hinter
+  //     den Anstoßkreis, endet kontrolliert ÜBER dem Rasen (v5-Review:
+  //     nicht mehr „im Gras"), Blick über den Ball
+  { pos: new THREE.Vector3(0.35, 0.5, 2.75), look: new THREE.Vector3(-4.2, 1.15, -3.6) },
   // 2 · MANNSCHAFT — tief, dynamisch, seitlich übers Mittelfeld gleitend
   { pos: new THREE.Vector3(-7.5, 2.6, 6.5), look: new THREE.Vector3(0.5, 1.0, -0.5) },
   // 3 · MUSIK — Anflug aufs Vereinsheim: die Kamera schwenkt zur Tür,
   //     dann schneidet der PartyDirector in den Partyraum (Dip-to-Black)
-  { pos: new THREE.Vector3(4.6, 0.6, 1.5), look: new THREE.Vector3(7.1, 0.5, -0.35) },
+  { pos: new THREE.Vector3(4.6, 0.9, 1.5), look: new THREE.Vector3(7.1, 0.5, -0.35) },
   // 4 · TABELLE — Schwenk zum echten Vereinsheim hinter dem Ost-Tor
-  { pos: new THREE.Vector3(4.0, 0.85, 3.1), look: new THREE.Vector3(7.15, 0.32, -0.5) },
-  // 5 · KONTAKT/FINALE — Schwenk in die Fanblock-Ecke SW: das
-  //     AGA-URKNALL-Banner lesbar in der rechten Bildhälfte (DOM
-  //     lebt links), der beleuchtete Platz + Vereinsheim dahinter
-  { pos: new THREE.Vector3(-5.6, 0.8, 1.9), look: new THREE.Vector3(-2.5, 0.45, 3.3) },
+  { pos: new THREE.Vector3(4.0, 0.95, 3.1), look: new THREE.Vector3(7.15, 0.32, -0.5) },
+  // 5 · KONTAKT/FINALE — Schwenk in die Fanblock-Ecke SO (v5-Review:
+  //     richtige Seite, aber Tor-Ende am Vereinsheim): das AGA-URKNALL-
+  //     Banner lesbar in der rechten Bildhälfte (DOM lebt links),
+  //     dahinter Ost-Tor und Ballfangzaun
+  { pos: new THREE.Vector3(2.2, 0.95, 0.9), look: new THREE.Vector3(4.5, 0.4, 3.2) },
 ]
 
 export const STATION_COUNT = STATIONS.length
@@ -92,6 +94,24 @@ const lookCurve = new THREE.CatmullRomCurve3(
 // Anker/Remap leben three-frei in ./anchors (Fallback-Ladepfad!)
 export { setAnchors, scrollToU } from './anchors'
 
+// ─── Mindest-Kamerahöhe (v5-Review) ──────────────────────────
+// Die Fahrt darf nie „in den Rasen" — harte Untergrenze über der
+// ganzen Kurve (fängt auch Catmull-Rom-Durchhänger zwischen den
+// Stationen). Einzige Ausnahme: das Sturzflug-Fenster um den
+// Anstoß-Beat, dort sinkt der Boden weich auf die komponierte
+// Endhöhe des Sturzflugs ab. Pure Funktion von u → reversibel.
+export const MIN_FLIGHT_Y = 0.9
+const DIVE_FLOOR_Y = 0.5
+const DIVE_HALF_WIDTH = 0.14
+
+function flightFloorAt(u: number): number {
+  const d = Math.abs(u - KICKOFF_U) / DIVE_HALF_WIDTH
+  if (d >= 1) return MIN_FLIGHT_Y
+  const w = 1 - d
+  const s = w * w * (3 - 2 * w)
+  return THREE.MathUtils.lerp(MIN_FLIGHT_Y, DIVE_FLOOR_Y, s)
+}
+
 // Reusable scratch vectors (keine Allokation im Frame-Loop)
 const _pos = new THREE.Vector3()
 const _look = new THREE.Vector3()
@@ -101,6 +121,7 @@ export function sampleFlight(t: number, outPos: THREE.Vector3, outLook: THREE.Ve
   const c = THREE.MathUtils.clamp(t, 0, 1)
   posCurve.getPoint(c, _pos)
   lookCurve.getPoint(c, _look)
+  _pos.y = Math.max(_pos.y, flightFloorAt(c))
   outPos.copy(_pos)
   outLook.copy(_look)
 }

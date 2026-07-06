@@ -5,15 +5,16 @@ import { PITCH } from '../utils/constants'
 import { AOBlob } from './AOBlob'
 
 // ─────────────────────────────────────────────────────────────
-// Der Fanblock in der SÜDWEST-Ecke (REFERENZ: dji_…143242_0162…/
-// f001.jpg + Cover): stilisierte Low-Poly-Figuren in SVA-Farben
-// hinter der Reling, nachgebautes AGA-URKNALL-Banner, rot-schwarze
-// Fahne, Bierkiste. Bewusst abstrahiert — KEINE Gesichter.
-// Das ist der emotionale Schlusspunkt: Verein = Menschen.
+// Der Fanblock in der SÜDOST-Ecke (Marvins v5-Review: Süd-Seite
+// stimmt, aber am Tor-Ende beim Vereinsheim — REFERENZ_MODELL
+// entsprechend korrigiert): stilisierte Low-Poly-Figuren in
+// SVA-Farben hinter der Reling, nachgebautes AGA-URKNALL-Banner,
+// rot-schwarze Fahne, Bierkiste. Bewusst abstrahiert — KEINE
+// Gesichter. Der emotionale Schlusspunkt: Verein = Menschen.
 // ─────────────────────────────────────────────────────────────
 
 const HH = PITCH.height / 2 + 0.55 // Reling-Linie Süd
-const CX = -3.6                     // Block-Zentrum x (nahe SW-Ecke)
+const CX = 3.6                      // Block-Zentrum x (nahe SO-Ecke)
 
 function makeBannerTexture(): THREE.CanvasTexture {
   const cv = document.createElement('canvas')

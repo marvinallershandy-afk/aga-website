@@ -43,11 +43,13 @@ Koordinaten: 53.5605 N, 9.527 O (Google-Maps-URL im Screenshot).
 - **Sponsor-Tafeln auf der SÜD-Reling** (vor dem Wald): weiße Einzeltafeln
   („Lackiererei Schmitz", „Reiner Kintopf", „Paint Shop", bunt gemischt).
   Beleg: `dji_…143024_0160…/f001`, `dji_…171244_0185…/f001`.
-- **FANBLOCK-Ecke: SÜDWEST** — an der Süd-Reling nahe der westlichen Ecke, unter
-  den Bäumen: großes **rotes „AGA URKNALL est. 2024"-Banner** (schwarzes
-  Diagonalband, weiße Schrift, Lorbeer, Spinnennetz-Motiv, Bierkrug-Grafik),
-  **rot-schwarz geteilte Fahne**, Bierkiste. Beleg: `dji_…143242_0162…/f001.jpg`
-  (Nahaufnahme), `dji_…143024_0160…/f001` (Position an der Linie), Cover 2.
+- **FANBLOCK-Ecke: SÜDOST** — an der Süd-Reling nahe der östlichen Ecke
+  (am Tor-Ende beim Vereinsheim): großes **rotes „AGA URKNALL est. 2024"-Banner**
+  (schwarzes Diagonalband, weiße Schrift, Lorbeer, Spinnennetz-Motiv,
+  Bierkrug-Grafik), **rot-schwarz geteilte Fahne**, Bierkiste.
+  Beleg: `dji_…143242_0162…/f001.jpg` (Nahaufnahme), Cover 2.
+  *Korrektur v5: aus den Drohnen-Frames war SÜDWEST geschlossen — Marvins
+  v4-Review stellt klar: richtige Seite, falsches Tor-Ende → SÜDOST.*
 - Matchday: **Zuschauer dicht an der NORD-Reling** (Sonne im Rücken), Spieler
   lehnen an der Reling. Beleg: `IMG_6074/f001`, `dji_…140126_0047…/f003`.
 
@@ -94,8 +96,8 @@ Kabine nach Abpfiff (2:24) · Noch nicht nüchtern (1:59) · AGA fährt nach Mal
 1. **Partyraum**: keine Innenraum-Fotos in REFERENZ → Interpretation aus
    Cover-Vibe (dunkel, warm, Lichterkette, Tresen). *Default: bauen wie geplant,
    als Interpretation markiert.*
-2. **Fanblock-Ecke SW** — aus `…0160/0162` geschlossen; falls die Kurve in echt
-   woanders steht (z. B. je nach Spiel), bitte bestätigen. *Default: SW.*
+2. ~~**Fanblock-Ecke SW** — aus `…0160/0162` geschlossen~~ **Beantwortet
+   (v4-Review): die Kurve steht SÜDOST** — umgesetzt in v5.
 3. **Trainingszeiten** für den CTA im Finale sind weiter Platzhalter („Di & Do 19 Uhr").
 4. **Gründungsjahr**: Logo sagt 1949 — übernehme ich. Widerspruch zum v1-Prompt (1948).
 5. Das kleine zweite Spielfeld/Bolzplatz hinter dem Ost-Zaun (in `IMG_6082/f001`

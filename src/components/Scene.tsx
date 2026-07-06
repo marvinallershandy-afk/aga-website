@@ -25,7 +25,7 @@ const PartyRoom = lazy(() => import('./PartyRoom'))
 // Die Bühne: der ECHTE Platz in Agathenburg (REFERENZ_MODELL.md)
 // bei Flutlicht in der Abenddämmerung. Kompass: +x Ost, +z Süd.
 // Vereinsheim hinter dem Ost-Tor, Wald S/W/O, Dorf im Norden,
-// Klinker-Hütte NW, Fanblock-Ecke SW. Flutlicht = Stilisierung.
+// Klinker-Hütte NW, Fanblock-Ecke SO. Flutlicht = Stilisierung.
 export function Scene() {
   const L = LIGHTING
   const partyNear = useStore((s) => s.partyNear)
