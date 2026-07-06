@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useStore } from '../store/useStore'
 import { AudioManager } from '../audio/AudioManager'
-import { TRACKS, COVER_URL, ALBUM_TITLE } from '../audio/tracks'
+import { TRACKS, COVER2_URL, ALBUM_TITLE } from '../audio/tracks'
 
-// Die Trackliste der Musik-Sektion. Play direkt aus der Sektion —
-// ein Klick ist die Audio-Geste: Ton wird bei Bedarf eingeschaltet.
+// Die Trackliste im Partyraum (die Musik-Sektion IST der Raum):
+// Cover-2-Artwork, Play/Switch, AGA-URKNALL-Story, Streaming-Slots.
+// Ein Klick ist die Audio-Geste: Ton wird bei Bedarf eingeschaltet.
 export function MusicSectionPlayer() {
   const soundOn = useStore((s) => s.soundOn)
   const setSoundOn = useStore((s) => s.setSoundOn)
@@ -29,8 +30,15 @@ export function MusicSectionPlayer() {
   return (
     <div className="music-section">
       <div className="music-section__cover">
-        <img src={COVER_URL} alt={`Album-Cover: ${ALBUM_TITLE}`} />
+        <img src={COVER2_URL} alt={`Album-Cover: ${ALBUM_TITLE}`} />
         <div className="music-section__coverGlow" aria-hidden="true" />
+        {/* Die Story — kurz, wahr, aus dem Verein */}
+        <p className="music-section__story">
+          Angefangen hat es mit einem Banner am Zaun: <b>AGA URKNALL, est.&nbsp;2024</b>.
+          Daraus wurde ein Album — geschrieben, gesungen und abgemischt von einem
+          von uns. Für die Kabine, den Mannschaftsbus und die dritte Halbzeit
+          genau hier in diesem Raum.
+        </p>
       </div>
       <div className="music-section__list">
         {TRACKS.map((tr, i) => {

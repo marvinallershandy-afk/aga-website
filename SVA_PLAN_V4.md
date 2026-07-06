@@ -21,6 +21,7 @@ Komplette Copy neu („Dorfverein mit Herz und Selbstironie, stolz seit 1949"): 
 ## 3. Etappe 2 — Die Musik-Sektion
 AGA-URKNALL als Vereins-Soundtrack in der Fahrt verankert (Cover groß, Trackliste mit Play via AudioManager, Story, Streaming-Slots). Muss Teil der Welt sein.
 **🟢 Gate 2:** In Fahrt integriert, Track spielt, mobil sauber, Screenshots.
+**Kurskorrektur (Marvin, in Etappe 6/Loop 1):** Musik-Sektion IST der Partyraum. Die Musik-Station schneidet scroll-getrieben ins Vereinsheim (Dip-to-Black, reversibel) — derselbe Ort wie der frühere „Reinkommen?"-Moment, dessen Buttons entfallen. Trackliste (Cover-2-Artwork), Story und Streaming-Slots leben im Raum; draußen nur Mute-Toggle + Stadion-Atmo (MusicDock & Hütten-Boombox entfernt). Belegt: Gains außen atmo 0.16/keine Musik, drinnen music 0.75/atmo 0.05, raus wieder ambient; 60 FPS an allen Stationen inkl. Raum.
 
 ## 4. Etappe 3 — 3D-Level-up
 Vereinsheim-Fassaden-Tiefe, Fanblock präsenter (Posen/Bewegung), Partyraum-Posen, Licht-/Kamera-Feinschliff nach Audit. Frametime-Regel: jedes Detail verdient sein Budget.

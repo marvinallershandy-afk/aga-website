@@ -424,10 +424,10 @@
 /* ── Mitmachen: Gesucht-Grid ────────────────────────────────── */
 .wanted-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
   gap: clamp(.8rem, 2vw, 1.2rem);
   margin: clamp(1.6rem, 4vw, 2.4rem) 0 0;
-  max-width: 860px;
+  max-width: 740px;
 }
 .wanted-card {
   display: flex;
@@ -480,6 +480,16 @@
   z-index: -1;
   background: radial-gradient(circle, rgba(233,29,41,.28), transparent 65%);
   filter: blur(8px);
+}
+.music-section__story {
+  margin-top: 1rem;
+  font-size: .82rem;
+  line-height: 1.65;
+  color: rgba(255,255,255,.78);
+}
+.music-section__story b {
+  color: #fff;
+  letter-spacing: .04em;
 }
 .music-section__list {
   flex: 1 1 300px;
@@ -607,3 +617,30 @@
   text-align: center;
   width: 100%;
 }
+
+/* ── Micro-Interactions (Jury-Loop 1) ───────────────────────── */
+.brandbar__nav a {
+  position: relative;
+  padding-bottom: 2px;
+}
+.brandbar__nav a::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 100%;
+  bottom: -2px;
+  height: 2px;
+  background: var(--red);
+  transition: right .25s cubic-bezier(.7,0,.3,1);
+}
+.brandbar__nav a:hover::after,
+.brandbar__nav a[data-active="true"]::after { right: 0; }
+
+.btn { transition: transform .15s ease, box-shadow .2s ease, background .2s ease; }
+.btn:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(0,0,0,.45); }
+.btn:active { transform: translateY(0) scale(.97); }
+
+.music-track { transition: background .15s ease, color .15s ease, transform .15s ease; }
+.music-track:hover { transform: translateX(4px); }
+
+.wanted-card { transition: transform .2s ease, border-color .2s ease; }
+.wanted-card:hover { transform: translateY(-3px); border-color: rgba(233,29,41,.45); }

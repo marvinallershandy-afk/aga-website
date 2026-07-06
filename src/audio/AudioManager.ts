@@ -102,7 +102,9 @@ class AudioManagerImpl {
       this.ensureCtx()
       void this.ctx!.resume()
       this.ramp(this.master, LEVELS.master, 1.2)
-      if (!this.playing && !this.el) this.play(0) // Erst-Einwilligung: Track 1
+      // Draußen läuft NUR die Stadion-Atmo — Musik startet erst im
+      // Partyraum (setMode 'party') bzw. per Trackliste im Raum.
+      if (this.mode === 'party' && !this.playing) this.play(this.trackIndex)
     } else if (this.ctx) {
       this.ramp(this.master, 0, 0.4)
       window.setTimeout(() => {
@@ -114,11 +116,25 @@ class AudioManagerImpl {
     this.onChange?.()
   }
 
-  /** Musik-Vordergrund (Partyraum) vs. Teppich. */
+  /** Partyraum rein/raus: Musik lebt NUR im Raum. Rein → Musik an
+   *  (Party-Pegel), raus → Musik weich aus, Atmo übernimmt wieder. */
   setMode(mode: MusicMode) {
+    if (this.mode === mode) return
     this.mode = mode
     if (!this.ctx) return
-    this.applyDucking()
+    if (mode === 'party') {
+      if (this.enabled && !this.playing) this.play(this.trackIndex)
+      this.applyDucking()
+    } else {
+      this.ramp(this.music, 0, 0.6)
+      window.setTimeout(() => {
+        if (this.mode !== 'ambient') return
+        this.el?.pause()
+        this.playing = false
+        this.applyDucking() // Musik-Gain zurück auf Grundpegel, Atmo hoch
+        this.onChange?.()
+      }, 650)
+    }
   }
 
   private applyDucking() {

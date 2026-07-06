@@ -38,9 +38,13 @@ interface AppState {
   gateOpen: boolean
   setGateOpen: (v: boolean) => void
 
-  /** Partyraum im Vereinsheim (Bonus-Beat, lazy geladen). */
+  /** Partyraum im Vereinsheim — die Musik-Station der Fahrt.
+   *  partyOpen: Kamera ist drin (scroll-getrieben, PartyDirector).
+   *  partyNear: Sektion nähert sich → Raum-Chunk vorladen. */
   partyOpen: boolean
   setPartyOpen: (v: boolean) => void
+  partyNear: boolean
+  setPartyNear: (v: boolean) => void
 
   /** Ton an/aus (Nutzer-Entscheidung am Tor bzw. Mute-Toggle). */
   soundOn: boolean
@@ -80,6 +84,8 @@ export const useStore = create<AppState>((set) => ({
 
   partyOpen: false,
   setPartyOpen: (v) => set({ partyOpen: v }),
+  partyNear: false,
+  setPartyNear: (v) => set((s) => (s.partyNear === v ? s : { partyNear: v })),
 
   soundOn: false,
   setSoundOn: (v) => {

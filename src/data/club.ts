@@ -40,9 +40,9 @@ export const SECTIONS: Section[] = [
   {
     id: 'musik',
     label: 'Musik',
-    kicker: 'Vereins-Soundtrack',
+    kicker: 'Vereinsheim · Partyraum',
     title: 'AGA\nUrknall',
-    body: 'Musik aus dem Verein, für den Verein — geschrieben von einem von uns. Zehn Songs über Anpfiff, Abpfiff und alles, was dazwischen knallt. Drück Play, dreh auf — und wenn du mitgrölen kannst, bist du schon fast Mitglied.',
+    body: 'Willkommen im Partyraum — hier läuft unsere eigene Musik. Zehn Songs über Anpfiff, Abpfiff und alles, was dazwischen knallt, geschrieben von einem von uns. Drück Play, dreh auf — und wenn du mitgrölen kannst, bist du schon fast Mitglied.',
   },
   {
     id: 'tabelle',

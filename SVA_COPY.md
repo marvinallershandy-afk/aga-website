@@ -51,15 +51,22 @@ allgemein-warm.
 - **Footer:** © Seit 1949 · SV Agathenburg-Dollern e.V. · Mit Herz gebaut,
   Platzhalter ehrlich markiert.
 
-## Musik-Sektion (Etappe 2)
-- **Kicker:** `Vereins-Soundtrack`
+## Musik-Sektion = Partyraum (Etappe 2, Kurskorrektur Marvin)
+Die Musik-Station der Fahrt IST der Partyraum: Erreicht der Scroll die
+Sektion, schneidet die Kamera per Dip-to-Black ins Vereinsheim (exakt
+reversibel). Draußen gibt es nur Mute-Toggle + Stadion-Atmo — Musik lebt
+ausschließlich im Raum (rein → Musik an, raus → Musik weich aus).
+- **Kicker:** `Vereinsheim · Partyraum`
 - **Titel:** `AGA URKNALL`
-- **Body:** Musik aus dem Verein, für den Verein — geschrieben von einem von
-  uns. Zehn Songs über Anpfiff, Abpfiff und alles, was dazwischen knallt.
-  Drück Play, dreh auf, und wenn du mitgrölen kannst, bist du schon fast
-  Mitglied.
-- **Streaming-Slots:** `[Spotify]` `[Apple Music]` — Platzhalter.
-- **Nächster Schritt:** Play direkt in der Sektion; Hinweis auf Partyraum.
+- **Body:** Willkommen im Partyraum — hier läuft unsere eigene Musik. Zehn
+  Songs über Anpfiff, Abpfiff und alles, was dazwischen knallt, geschrieben
+  von einem von uns. Drück Play, dreh auf — und wenn du mitgrölen kannst,
+  bist du schon fast Mitglied.
+- **Story (unter dem Cover-2-Artwork):** Angefangen hat es mit einem Banner
+  am Zaun: AGA URKNALL, est. 2024. Daraus wurde ein Album — geschrieben,
+  gesungen und abgemischt von einem von uns. Für die Kabine, den
+  Mannschaftsbus und die dritte Halbzeit genau hier in diesem Raum.
+- **Streaming-Slots:** `[Spotify · bald]` `[Apple Music · bald]` — Platzhalter.
 
 ## Microcopy
 | Ort | Alt | Neu |
@@ -69,8 +76,7 @@ allgemein-warm.
 | Tor Laden | Lädt … % | **Rasen wird gemäht … %** |
 | Tor Wiederkehrer | Willkommen zurück | **Willkommen zurück am Platz** |
 | Scroll-Hint | Scroll | **Anstoß per Scroll** |
-| Party rein | 🍺 Reinkommen? | **🍺 Auf ein Bier? Reinkommen** |
-| Party raus | ← Zurück zum Platz | (bleibt) |
+| Party rein/raus | Buttons | **entfallen** — der Raum ist die Musik-Station, Scroll/Nav „Musik" führt rein und raus |
 | Share ok | Bild wurde heruntergeladen … | **Bild ist im Download-Ordner — ab damit in deine Story.** |
 | Share Fehler | Teilen nicht möglich … | **Hat nicht geklappt — einmal noch, der Ball war im Aus.** |
 | Modal zurück | Zurück | (bleibt) |

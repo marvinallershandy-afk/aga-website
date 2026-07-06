@@ -27,20 +27,20 @@ export function BrickHut() {
       {/* Klinker-Korpus */}
       <mesh position={[0, EAVES / 2, 0]}>
         <boxGeometry args={[W, EAVES, D]} />
-        <meshStandardMaterial color="#6e3a2c" roughness={0.95} />
+        <meshStandardMaterial color="#7a4232" roughness={0.95} emissive="#3a1c12" emissiveIntensity={0.2} />
       </mesh>
       {/* Giebel */}
       <mesh geometry={gable} position={[W / 2, EAVES, 0]} rotation-y={Math.PI / 2}>
-        <meshStandardMaterial color="#62342a" roughness={0.95} />
+        <meshStandardMaterial color="#6e3a2e" roughness={0.95} emissive="#33180f" emissiveIntensity={0.2} />
       </mesh>
       <mesh geometry={gable} position={[-W / 2, EAVES, 0]} rotation-y={-Math.PI / 2}>
-        <meshStandardMaterial color="#5a3026" roughness={0.95} />
+        <meshStandardMaterial color="#663628" roughness={0.95} emissive="#2e150d" emissiveIntensity={0.2} />
       </mesh>
       {/* Ziegeldach */}
       {[-1, 1].map((s) => (
         <mesh key={s} position={[0, EAVES + RISE / 2, s * (D / 4 + 0.015)]} rotation-x={-s * roofA}>
           <boxGeometry args={[W + 0.12, 0.035, slab]} />
-          <meshStandardMaterial color="#8a4434" roughness={0.9} />
+          <meshStandardMaterial color="#964a38" roughness={0.9} emissive="#42200f" emissiveIntensity={0.18} />
         </mesh>
       ))}
       {/* offene blaue Tür (warm erleuchtet) */}

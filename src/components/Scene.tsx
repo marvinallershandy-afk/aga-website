@@ -1,4 +1,4 @@
-import { lazy, Suspense, useRef } from 'react'
+import { lazy, Suspense } from 'react'
 import { useStore } from '../store/useStore'
 import { Ground } from './Ground'
 import { Pitch } from './Pitch'
@@ -13,13 +13,13 @@ import { BallStopFence } from './BallStopFence'
 import { BrickHut } from './BrickHut'
 import { Village } from './Village'
 import { FanBlock } from './FanBlock'
-import { MusicCorner } from './MusicCorner'
 import { Football } from './Football'
 import { KickoffDirector } from './KickoffDirector'
 import { ConeDust } from './ConeDust'
 import { LIGHTING } from '../theme/lighting'
 
-// Partyraum: eigener Chunk — lädt erst beim ersten 'Reinkommen?'
+// Partyraum: eigener Chunk — lädt erst, wenn die Musik-Sektion
+// näher rückt (partyNear, PartyDirector) → beim Schnitt schon da.
 const PartyRoom = lazy(() => import('./PartyRoom'))
 
 // Die Bühne: der ECHTE Platz in Agathenburg (REFERENZ_MODELL.md)
@@ -28,9 +28,7 @@ const PartyRoom = lazy(() => import('./PartyRoom'))
 // Klinker-Hütte NW, Fanblock-Ecke SW. Flutlicht = Stilisierung.
 export function Scene() {
   const L = LIGHTING
-  const partyOpen = useStore((s) => s.partyOpen)
-  const everOpened = useRef(false)
-  if (partyOpen) everOpened.current = true
+  const partyNear = useStore((s) => s.partyNear)
   return (
     <group>
       <fog attach="fog" args={[L.fog.color, L.fog.near, L.fog.far]} />
@@ -52,12 +50,11 @@ export function Scene() {
       <BrickHut />
       <Village />
       <FanBlock />
-      <MusicCorner />
       <Treeline />
       <Football />
       <ConeDust />
       <KickoffDirector />
-      {everOpened.current && (
+      {partyNear && (
         <Suspense fallback={null}>
           <PartyRoom />
         </Suspense>

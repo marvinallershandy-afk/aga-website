@@ -154,12 +154,12 @@ function FlagCloth({ y }: { y: number }) {
 
 const FANS: { x: number; z: number; jersey: string; h: number; rot: number; flag?: boolean }[] = [
   // die beiden Banner-Halter
-  { x: CX - 0.72, z: HH + 0.24, jersey: '#c41824', h: 0.19, rot: 0.1 },
+  { x: CX - 0.72, z: HH + 0.24, jersey: '#d02530', h: 0.19, rot: 0.1 },
   { x: CX + 0.72, z: HH + 0.24, jersey: '#1d1a1c', h: 0.185, rot: -0.1 },
   // Kurve drumherum
-  { x: CX - 1.15, z: HH + 0.34, jersey: '#c41824', h: 0.18, rot: 0.4, flag: true },
+  { x: CX - 1.15, z: HH + 0.34, jersey: '#d02530', h: 0.18, rot: 0.4, flag: true },
   { x: CX + 1.1, z: HH + 0.38, jersey: '#d8d4c9', h: 0.178, rot: -0.35 },
-  { x: CX + 1.45, z: HH + 0.3, jersey: '#c41824', h: 0.172, rot: 0.3 },
+  { x: CX + 1.45, z: HH + 0.3, jersey: '#d02530', h: 0.172, rot: 0.3 },
   { x: CX - 1.5, z: HH + 0.42, jersey: '#1d1a1c', h: 0.183, rot: 0.55 },
 ]
 
@@ -174,7 +174,7 @@ export function FanBlock() {
     if (bannerRef.current) {
       bannerRef.current.rotation.z = Math.sin(t * 1.1) * 0.025
       bannerRef.current.rotation.x = Math.sin(t * 0.7 + 1) * 0.03
-      bannerRef.current.position.y = 0.27 + Math.sin(t * 1.4) * 0.008
+      bannerRef.current.position.y = 0.3 + Math.sin(t * 1.4) * 0.008
     }
     if (scarfRef.current) {
       scarfRef.current.rotation.z = Math.sin(t * 1.8 + 2) * 0.12
@@ -187,7 +187,7 @@ export function FanBlock() {
       {/* Banner wird hochgehalten (Referenz: Team-Foto mit Fahne) —
           Vorderseite zeigt zum Platz */}
       <group position={[CX, 0, HH + 0.22]} rotation-y={Math.PI}>
-        <mesh ref={bannerRef} position={[0, 0.27, 0]}>
+        <mesh ref={bannerRef} position={[0, 0.3, 0]}>
           <planeGeometry args={[1.45, 0.3, 8, 2]} />
           <meshStandardMaterial map={bannerTex} side={THREE.DoubleSide} roughness={0.9} />
         </mesh>

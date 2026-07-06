@@ -26,13 +26,6 @@ export function CameraRig() {
   const currentLook = useRef(new THREE.Vector3(0, 0.4, 0))
 
   useFrame((state, delta) => {
-    // Partyraum: Kamera in der Pocket-Dimension (Schnitt via Dip-to-Black)
-    if (useStore.getState().partyOpen) {
-      const t = state.clock.elapsedTime
-      camera.position.set(0.72 + Math.sin(t * 0.22) * 0.04, -39.5, 0.9)
-      camera.lookAt(-0.05, -39.65, -1.2)
-      return
-    }
     if (devCam) {
       camera.position.set(devCam[0], devCam[1], devCam[2])
       camera.lookAt(devCam[3], devCam[4], devCam[5])
@@ -40,9 +33,25 @@ export function CameraRig() {
       return
     }
     const target = scrollToU(useStore.getState().scrollProgress)
-    // zeitbasierte Dämpfung (frameratenunabhängig)
+    // zeitbasierte Dämpfung (frameratenunabhängig) — läuft auch im
+    // Partyraum weiter, damit die Fahrt beim Austritt schon stimmt.
     smoothed.current = THREE.MathUtils.damp(smoothed.current, target, 4, delta)
     cameraState.u = smoothed.current // für Flutlicht/Ball/Staub (Anstoß)
+
+    // Partyraum (Musik-Station): Kamera in der Pocket-Dimension —
+    // der Schnitt liegt unter dem Dip-to-Black des PartyDirector.
+    if (useStore.getState().partyOpen) {
+      const t = state.clock.elapsedTime
+      const aspect = state.size.width / state.size.height
+      const back = aspect < 1 ? 1 + (1 - aspect) * 0.55 : 1 // Portrait: mehr Raum zeigen
+      camera.position.set(
+        (0.95 + Math.sin(t * 0.22) * 0.04) * back,
+        -39.42 + (aspect < 1 ? 0.08 : 0),
+        1.2 * back,
+      )
+      camera.lookAt(-0.2, -39.66, -1.25)
+      return
+    }
 
     sampleFlight(smoothed.current, pos.current, look.current)
 

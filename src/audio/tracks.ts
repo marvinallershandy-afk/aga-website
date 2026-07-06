@@ -21,4 +21,5 @@ export const TRACKS: Track[] = [
 
 export const trackUrl = (t: Track) => `/audio/tracks/${t.slug}.mp3`
 export const COVER_URL = '/audio/cover.jpg'
+export const COVER2_URL = '/audio/cover2.jpg' // Cover-2-Artwork (Trackliste im Partyraum)
 export const ALBUM_TITLE = 'AGA Urknall — Heimspiel Überall'

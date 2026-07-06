@@ -4,9 +4,9 @@ import * as THREE from 'three'
 import { useTexture } from '@react-three/drei'
 
 // ─────────────────────────────────────────────────────────────
-// Der Partyraum im Vereinsheim (Bonus-Beat). Lazy geladen — wer
-// nie reingeht, lädt ihn nie. Liegt als „Pocket-Dimension" bei
-// y = −40 (Übergang: Dip-to-Black in PartyUI).
+// Der Partyraum im Vereinsheim — die Musik-Station der Fahrt
+// (scroll-getrieben, Schnitt: Dip-to-Black im PartyDirector).
+// Lazy geladen (partyNear). Liegt als „Pocket-Dimension" bei y = −40.
 // KEINE Innenraum-Fotos in REFERENZ → Interpretation aus Cover-
 // Vibe: dunkel, warm, Lichterkette in SVA-Rot, Tresen, Poster.
 // ─────────────────────────────────────────────────────────────
@@ -181,7 +181,7 @@ export default function PartyRoom() {
       </group>
 
       {/* Barkeeper (leicht vorgelehnt) + Zapf-Arm mit Loop */}
-      <Person pos={[0.35, 0, -1.18]} jersey="#1d1a1c" rot={0.1} lean={0.05} />
+      <Person pos={[0.35, 0, -1.16]} jersey="#1d1a1c" h={0.215} rot={0.1} lean={0.05} />
       <ZapfArm />
       {/* Gäste: sitzen wirklich auf den Hockern, einer prostet */}
       <Person pos={[0.05, 0, -0.5]} jersey="#c41824" rot={Math.PI} seated lean={-0.04} />

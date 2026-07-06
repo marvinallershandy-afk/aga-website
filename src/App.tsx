@@ -13,8 +13,7 @@ import { ScrollHint } from './ui/ScrollHint'
 import { PlayerModal } from './ui/PlayerModal'
 import { PerfOverlay } from './ui/PerfOverlay'
 import { EntranceGate } from './ui/EntranceGate'
-import { MusicDock } from './ui/MusicDock'
-import { PartyUI } from './ui/PartyUI'
+import { PartyDirector } from './ui/PartyDirector'
 import { AudioManager } from './audio/AudioManager'
 
 export default function App() {
@@ -22,6 +21,14 @@ export default function App() {
   const setCaps = useStore((s) => s.setCaps)
   const setReady = useStore((s) => s.setReady)
   const togglePerf = useStore((s) => s.togglePerf)
+  const gateOpen = useStore((s) => s.gateOpen)
+  const soundOn = useStore((s) => s.soundOn)
+
+  // Ton-Schalter → AudioManager (global; Musik selbst lebt im Partyraum)
+  useEffect(() => {
+    if (!gateOpen) return
+    AudioManager.setEnabled(soundOn)
+  }, [gateOpen, soundOn])
 
   // Fähigkeiten einmal ermitteln
   useEffect(() => {
@@ -53,8 +60,7 @@ export default function App() {
     <>
       {fallback ? <StaticBackdrop /> : <Suspense fallback={null}><Stage /></Suspense>}
       <EntranceGate />
-      <MusicDock />
-      <PartyUI />
+      <PartyDirector />
       <Brandbar />
       <Sections />
       {!fallback && <ScrollHint />}
