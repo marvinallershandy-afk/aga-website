@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
 import type { Player } from '../data/players'
 import { POSITION_LABEL } from '../data/players'
 import { CLUB } from '../data/club'
@@ -23,8 +23,8 @@ export function HoloCard({ player, onClick, large }: Props) {
     const r = el.getBoundingClientRect()
     const px = (e.clientX - r.left) / r.width
     const py = (e.clientY - r.top) / r.height
-    el.style.setProperty('--tiltY', `${(px - 0.5) * 18}deg`)
-    el.style.setProperty('--tiltX', `${(0.5 - py) * 20}deg`)
+    el.style.setProperty('--tiltY', `${(px - 0.5) * 12}deg`)
+    el.style.setProperty('--tiltX', `${(0.5 - py) * 13}deg`)
     el.style.setProperty('--px', `${px * 100}%`)
     el.style.setProperty('--py', `${py * 100}%`)
     el.style.setProperty('--glow', '1')
@@ -38,18 +38,6 @@ export function HoloCard({ player, onClick, large }: Props) {
     el.style.setProperty('--py', '50%')
     el.style.setProperty('--glow', '0')
   }
-
-  // Shimmer nur sichtbar aktiv (Performance)
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const io = new IntersectionObserver(
-      ([entry]) => el.classList.toggle('is-live', entry.isIntersecting),
-      { threshold: 0.15 },
-    )
-    io.observe(el)
-    return () => io.disconnect()
-  }, [])
 
   return (
     <div
@@ -105,9 +93,9 @@ export function HoloCard({ player, onClick, large }: Props) {
         </div>
       </div>
 
-      <div className="holo__shine" />
-      <div className="holo__shine2" />
-      <div className="holo__gloss" />
+      {/* v11-E2: Arcade-Holo (color-dodge-Foil + Drift) entfernt. Bleibt: eine
+          ruhige, edle Sheen-Schicht, die dezent dem Zeiger folgt. */}
+      <div className="holo__sheen" />
       <div className="holo__frame" />
     </div>
   )
