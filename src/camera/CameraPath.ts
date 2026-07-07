@@ -20,9 +20,11 @@ const STATIONS: Station[] = [
   //     das überlange erste Bein (Tempo-Spitze beim Swoop).
   { pos: new THREE.Vector3(4.2, 7.0, 15.2), look: new THREE.Vector3(0, 0.5, 0.6) },
   // 1 · ANSTOSS (Signature-Beat, keine eigene Sektion) — Sturzflug hinter
-  //     den Anstoßkreis, endet kontrolliert ÜBER dem Rasen (v5-Review:
-  //     nicht mehr „im Gras"), Blick über den Ball
-  { pos: new THREE.Vector3(0.35, 0.5, 2.75), look: new THREE.Vector3(-4.2, 1.15, -3.6) },
+  //     den Anstoßkreis, endet kontrolliert ÜBER dem Rasen. v9-E1: Blick-
+  //     Ziel näher herangeholt (z −3.6 → −1.9), damit der Look-Bogen
+  //     Hero(0.6)→Anstoß→Mannschaft(−0.5) nicht mehr weit „durchwhippt" —
+  //     der Übergang wird ein Fluss statt eines sichtbaren Schwenks.
+  { pos: new THREE.Vector3(0.35, 0.62, 2.75), look: new THREE.Vector3(-2.6, 1.15, -1.9) },
   // 2 · MANNSCHAFT — tief, dynamisch, seitlich übers Mittelfeld gleitend
   { pos: new THREE.Vector3(-7.5, 2.6, 6.5), look: new THREE.Vector3(0.5, 1.0, -0.5) },
   // 3 · MUSIK — Anflug aufs Vereinsheim: die Kamera schwenkt zur Tür,
@@ -155,8 +157,11 @@ export { setAnchors, scrollToU } from './anchors'
 // Anstoß-Beat, dort sinkt der Boden weich auf die komponierte
 // Endhöhe des Sturzflugs ab. Pure Funktion von u → reversibel.
 export const MIN_FLIGHT_Y = 0.9
-const DIVE_FLOOR_Y = 0.5
-const DIVE_HALF_WIDTH = 0.14
+// v9-E1: Sturzflug weniger tief (0.5 → 0.95) und breiteres, weicheres
+// Ein-/Ausblend-Fenster (0.14 → 0.185) — „Höhe nicht zu tief", der Dive
+// wird ein sanfter Bogen statt eines scharfen V (Marvin: Übergang sichtbar).
+const DIVE_FLOOR_Y = 0.95
+const DIVE_HALF_WIDTH = 0.185
 // v6-E1: Maximalhöhe fängt Catmull-Durchhänger/Überschwinger nach oben
 // (der Establishing-Shot sitzt bei y=7.0 → Marge bis 7.6).
 const MAX_FLIGHT_Y = 7.6
