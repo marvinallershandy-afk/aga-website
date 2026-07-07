@@ -7,6 +7,7 @@ import { FussballWidget } from './FussballWidget'
 import { PlatzFinden } from './PlatzFinden'
 import { SponsorsStrip, NextMatch, SponsorPitch } from './SponsorsStrip'
 import { FanChantToggle } from './FanChantToggle'
+import { FanGallery } from './FanGallery'
 
 const reveal = {
   initial: { opacity: 0, y: 40 },
@@ -87,6 +88,8 @@ export function Sections() {
         <div className="section__scrim" />
         <Header kicker={fanblock.kicker} title={fanblock.title} body={fanblock.body} />
         <FanChantToggle />
+        {/* v11-E7: Meisterfeier-Kacheln + Lightbox */}
+        <FanGallery />
       </section>
 
       {/* Trenn-Polster (v8): klare „reiner Platz"-Beat zwischen Fanblock und

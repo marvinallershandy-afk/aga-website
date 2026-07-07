@@ -104,6 +104,79 @@ function makeBannerTexture(): THREE.CanvasTexture {
   return tex
 }
 
+// v11-E7: Sponsoren ans Geländer — schmale CI-Werbetafeln auf der Reling
+// direkt vor der Kurve (Schwarz/Rot, „DEIN LOGO HIER" / „WERDE SPONSOR").
+function makeRailSponsorTex(): THREE.CanvasTexture {
+  const cv = document.createElement('canvas')
+  cv.width = 2048
+  cv.height = 128
+  const ctx = cv.getContext('2d')!
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  const cells = ['DEIN LOGO HIER', 'WERDE SPONSOR', 'DEINE BANDE?']
+  const w = cv.width / cells.length
+  cells.forEach((t, i) => {
+    const x0 = i * w
+    ctx.fillStyle = '#0f0c0d'
+    ctx.fillRect(x0 + 6, 6, w - 12, cv.height - 12)
+    ctx.fillStyle = '#e91d29'
+    ctx.fillRect(x0 + 6, 6, 10, cv.height - 12)
+    ctx.strokeStyle = 'rgba(233,29,41,0.6)'
+    ctx.lineWidth = 3
+    ctx.setLineDash([14, 10])
+    ctx.strokeRect(x0 + 22, 22, w - 44, cv.height - 44)
+    ctx.setLineDash([])
+    ctx.fillStyle = '#ffffff'
+    ctx.font = '800 46px Archivo, system-ui, sans-serif'
+    ctx.fillText(t, x0 + w / 2 + 6, cv.height / 2)
+  })
+  const tex = new THREE.CanvasTexture(cv)
+  tex.colorSpace = THREE.SRGBColorSpace
+  tex.anisotropy = 8
+  return tex
+}
+
+// v11-E7 (optional): dezentes Feuerwerk über der Kurve — ein paar aufsteigende,
+// verblassende Funken. Bewusst günstig (eine Gruppe, ~14 Punkte, reine
+// Sinus/Modulo-Animation, kein State).
+function Fireworks() {
+  const ref = useRef<THREE.Group>(null)
+  const sparks = useMemo(
+    () => Array.from({ length: 14 }, (_, i) => ({
+      a: (i / 14) * Math.PI * 2,
+      r: 0.18 + (i % 3) * 0.12,
+      phase: (i % 5) / 5,
+      col: i % 2 ? '#ff5560' : '#ffd27a',
+    })),
+    [],
+  )
+  useFrame((state) => {
+    const g = ref.current
+    if (!g) return
+    const t = state.clock.elapsedTime
+    g.children.forEach((c, i) => {
+      const s = sparks[i]
+      const p = (t * 0.5 + s.phase) % 1 // 0..1 Lebenszyklus
+      const rise = p * 0.9
+      c.position.set(Math.cos(s.a) * s.r * p, rise, Math.sin(s.a) * s.r * p)
+      const m = (c as THREE.Mesh).material as THREE.MeshBasicMaterial
+      m.opacity = Math.max(0, 1 - p) * 0.9
+      const sc = 0.6 + p * 0.8
+      c.scale.setScalar(sc)
+    })
+  })
+  return (
+    <group ref={ref} position={[CX, 1.15, HH + 0.5]}>
+      {sparks.map((s, i) => (
+        <mesh key={i}>
+          <sphereGeometry args={[0.02, 6, 5]} />
+          <meshBasicMaterial color={s.col} transparent opacity={0.8} toneMapped={false} />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
 // Eine stilisierte Figur: Rumpf + Kopf + Arme (+ optional Fahnen-Arm).
 // v9-E6: Arme + Hals ergänzt — vorher las die Figur als kopflastiger
 // Kegel. Arme optional (arms=false), damit Lehn-/Schal-Fans mit eigenen
@@ -202,6 +275,7 @@ const FANS: { x: number; z: number; jersey: string; h: number; rot: number; flag
 
 export function FanBlock() {
   const bannerTex = useMemo(() => makeBannerTexture(), [])
+  const railTex = useMemo(() => makeRailSponsorTex(), [])
   const bannerRef = useRef<THREE.Mesh>(null)
   const bannerGeo = useRef<THREE.PlaneGeometry>(null)
   const bannerBase = useRef<Float32Array | null>(null)
@@ -304,6 +378,17 @@ export function FanBlock() {
         <boxGeometry args={[0.16, 0.09, 0.11]} />
         <meshStandardMaterial color="#7a1d14" roughness={0.9} />
       </mesh>
+
+      {/* v11-E7: Sponsoren ans Geländer — schmale CI-Tafel auf der Reling
+          direkt vor der Kurve, Vorderseite zum Platz (Kamera-Seite). Leicht
+          selbstleuchtend → nachts lesbar. */}
+      <mesh position={[CX, 0.115, HH - 0.01]}>
+        <boxGeometry args={[3.0, 0.15, 0.02]} />
+        <meshStandardMaterial map={railTex} emissiveMap={railTex} emissive="#ffffff" emissiveIntensity={0.22} roughness={0.6} />
+      </mesh>
+
+      {/* v11-E7 (optional): dezentes Feuerwerk über der Meister-Kurve */}
+      <Fireworks />
 
       <AOBlob position={[CX, 0.005, HH + 0.35]} scale={[2.6, 1.2]} opacity={0.5} />
     </group>

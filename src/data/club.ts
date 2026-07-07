@@ -152,6 +152,24 @@ export const TABLE_PREVIEW: TableRow[] = [
 // undefined → kein leerer Rahmen. Marvin liefert echtes Stimmungsbild.
 export const TEAM_PHOTO: string | undefined = undefined
 
+// ── Fanblock: Meisterfeier-Foto-Kacheln (v11-E7) ─────────────
+// Echte Fotos nach public/fanblock/<name>.webp legen und `src` setzen.
+// src leer → gestaltete „Foto folgt"-Kachel (kein leerer Rahmen), damit
+// die Galerie schon jetzt vollständig & gewollt wirkt. Caption bleibt.
+export interface FanPhoto {
+  src?: string
+  caption: string
+  tag: string // Rahmung, z. B. „Meister 2024"
+}
+export const FAN_PHOTOS: FanPhoto[] = [
+  { caption: 'Aufstieg gefeiert, Platz gestürmt', tag: 'Meister 2024' },
+  { caption: 'Der Schlusspfiff, der alles verändert hat', tag: 'Das letzte Tor' },
+  { caption: 'Dritte Halbzeit im Vereinsheim', tag: 'Nach dem Spiel' },
+  { caption: 'Die Kurve bei Flutlicht', tag: 'Südkurve' },
+  { caption: 'Pokal in der Luft', tag: 'Meister 2024' },
+  { caption: 'Schals hoch, Stimme kaputt', tag: 'Heimspiel' },
+]
+
 export const CONTACT = {
   // v6-E5: echte Vereinsfakten. Platz liegt am Waldrand („Waldsportplatz").
   address: 'Waldsportplatz Agathenburg, Zur Mehrzweckhalle, 21684 Agathenburg',
