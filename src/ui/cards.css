@@ -866,3 +866,19 @@
 .staff-card__name { font-family: var(--font-display); font-size: 1.3rem; line-height: 1; letter-spacing: .01em; margin: .1rem 0; }
 .staff-card__since { font-size: .74rem; color: rgba(255,255,255,.5); }
 .staff-card__contact { margin-top: .7rem; align-self: flex-start; font-size: .72rem; padding: .5rem .9rem; }
+
+/* ── Ton-Control (v10-E4) — dezent, fixiert unten rechts ──────── */
+.audio-toggle {
+  position: fixed; right: clamp(1rem, 3vw, 2rem); bottom: clamp(1rem, 3vw, 2rem);
+  z-index: 45; width: 46px; height: 46px; border-radius: 50%;
+  display: grid; place-items: center; cursor: pointer; pointer-events: auto;
+  color: #fff; background: rgba(18,16,18,.55);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,.16);
+  box-shadow: 0 8px 22px rgba(0,0,0,.4);
+  transition: background .2s ease, border-color .2s ease, transform .12s ease, color .2s ease;
+}
+.audio-toggle:hover { background: rgba(233,29,41,.9); border-color: var(--red); transform: translateY(-1px); }
+.audio-toggle[data-on="false"] { color: rgba(255,255,255,.55); }
+.audio-toggle:focus-visible { outline: 2px solid var(--red); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { .audio-toggle { transition: none; } }

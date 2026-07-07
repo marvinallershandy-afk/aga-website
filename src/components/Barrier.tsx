@@ -160,11 +160,20 @@ export function Barrier() {
       {/* Sponsor-Tafeln SÜD (vor dem Wald). v10-E1: VOR die Reling gerückt
           (z = HH−0.02, Platzseite), damit das Handlauf-Rohr die Werbung nicht
           mehr quert; leicht selbstleuchtend (emissiveMap) → nachts scharf
-          lesbar. Textur 8192×220 ≈ Banden-Proportion → keine gestreckte Schrift. */}
-      <mesh position={[0, RAIL_H - 0.02, HH - 0.02]}>
+          lesbar. Textur 8192×220 ≈ Banden-Proportion → keine gestreckte Schrift.
+          v10-E4: leicht angehoben + Standfüße → steht sichtbar, „Füße" werden
+          beim Runterscrollen nicht mehr abgeschnitten. */}
+      <mesh position={[0, 0.17, HH - 0.02]}>
         <boxGeometry args={[PITCH.width * 0.86, 0.24, 0.03]} />
         <meshStandardMaterial map={boardsTex} emissiveMap={boardsTex} emissive="#ffffff" emissiveIntensity={0.26} roughness={0.55} />
       </mesh>
+      {/* Standfüße der Bande */}
+      {Array.from({ length: 6 }, (_, i) => -PITCH.width * 0.4 + (i * PITCH.width * 0.8) / 5).map((x) => (
+        <mesh key={x} position={[x, 0.03, HH - 0.02]}>
+          <boxGeometry args={[0.05, 0.11, 0.05]} />
+          <meshStandardMaterial color="#3a3d42" metalness={0.5} roughness={0.5} />
+        </mesh>
+      ))}
       <AOBlob position={[0, 0.004, HH]} scale={[PITCH.width * 0.9, 0.5]} opacity={0.35} />
     </group>
   )

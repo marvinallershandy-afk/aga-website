@@ -121,13 +121,21 @@ function Fan({ x, z, jersey, h, rot, flag, arms = true }: { x: number; z: number
         <cylinderGeometry args={[h * 0.16, h * 0.13, h * 0.36, 7]} />
         <meshStandardMaterial color={jersey} roughness={0.85} />
       </mesh>
-      {/* Arme — schlanke Zylinder, leicht nach außen hängend (Schulter → Hand).
-          Bei flag hält der rechte Arm die Stange (eigene Gruppe) → nur links. */}
+      {/* Arme — v10-E4: mit Schulter-Gelenk am Rumpf angebunden (vorher
+          schwebende Zylinder). Schulterkugel überbrückt Rumpf→Arm, der Arm
+          hängt von dort natürlich nach unten. Bei flag hält der rechte Arm
+          die Stange (eigene Gruppe) → nur links. */}
       {arms && (flag ? [-1] : [-1, 1]).map((s) => (
-        <mesh key={s} position={[s * h * 0.17, h * 0.62, 0]} rotation-z={s * 0.22}>
-          <cylinderGeometry args={[h * 0.045, h * 0.05, h * 0.34, 5]} />
-          <meshStandardMaterial color={jersey} roughness={0.85} />
-        </mesh>
+        <group key={s}>
+          <mesh position={[s * h * 0.15, h * 0.79, 0]}>
+            <sphereGeometry args={[h * 0.075, 7, 6]} />
+            <meshStandardMaterial color={jersey} roughness={0.85} />
+          </mesh>
+          <mesh position={[s * h * 0.165, h * 0.62, 0]} rotation-z={s * 0.13}>
+            <cylinderGeometry args={[h * 0.045, h * 0.052, h * 0.38, 6]} />
+            <meshStandardMaterial color={jersey} roughness={0.85} />
+          </mesh>
+        </group>
       ))}
       {/* Hals-Absatz */}
       <mesh position={[0, h * 0.86, 0]}>
