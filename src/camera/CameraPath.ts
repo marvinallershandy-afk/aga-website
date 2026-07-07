@@ -49,7 +49,9 @@ const STATIONS: Station[] = [
   //     der LocationMarker („Hier sind wir") blendet über dem Vereinsheim
   //     ein, der Route-Button lebt im DOM (PlatzFinden). Höhe s.
   //     maxFlightYAt() — die globale Y-Decke wird zum Finale angehoben.
-  { pos: new THREE.Vector3(2.4, 13.5, 6.2), look: new THREE.Vector3(1.4, 0, -0.5) },
+  // v11-E8: WEITER rauszoomen — der Platz + Vereinsheim werden zum kleinen
+  //     Solitär auf der flachen 2D-Karte (y 13.5 → 19.5, etwas weiter weg).
+  { pos: new THREE.Vector3(2.2, 19.5, 8.4), look: new THREE.Vector3(1.2, 0, -0.4) },
 ]
 
 export const STATION_COUNT = STATIONS.length
@@ -180,7 +182,7 @@ const MAX_FLIGHT_Y = 7.6
 // Vogelperspektive (Station 5, y=13.5) möglich ist — der Rest der Fahrt
 // bleibt bei 7.6 gedeckelt.
 const FINALE_U = 0.86
-const FINALE_MAX_Y = 15
+const FINALE_MAX_Y = 21 // v11-E8: höhere Decke → der Finale-Rauszoom trägt weiter
 function maxFlightYAt(u: number): number {
   if (u <= FINALE_U) return MAX_FLIGHT_Y
   const k = THREE.MathUtils.clamp((u - FINALE_U) / (1 - FINALE_U), 0, 1)

@@ -15,20 +15,24 @@ import { COLORS } from '../utils/constants'
 // also nur AUSSERHALB des Platzes sichtbar. Fallback: kein 3D → egal.
 // ─────────────────────────────────────────────────────────────
 
-const SIZE = 46
+const SIZE = 62 // v11-E8: größere flache Karte → Platz wird zum Solitär
 const FADE_START = 0.84
 const FADE_SPAN = 0.12
 
 function makeMapTexture(): THREE.CanvasTexture {
-  const N = 1024
+  // v11-E8: doppelte Canvas-Auflösung (2048), Zeichnung bleibt im 1024-Logik-
+  // raum (ctx.scale) → „Waldsportplatz" & Co. gestochen scharf beim Rauszoom.
+  const L = 1024 // Logik-Raum
+  const N = 2048 // echte Pixel
   const cv = document.createElement('canvas')
   cv.width = cv.height = N
   const ctx = cv.getContext('2d')!
-  const c = N / 2
+  ctx.scale(N / L, N / L)
+  const c = L / 2
 
   // Nacht-Basis
   ctx.fillStyle = '#0d130e'
-  ctx.fillRect(0, 0, N, N)
+  ctx.fillRect(0, 0, L, L)
 
   // Waldflächen (S/W/O dicht, N offen — wie real). Weiche Blobs.
   ctx.fillStyle = '#16251a'
@@ -62,9 +66,19 @@ function makeMapTexture(): THREE.CanvasTexture {
     ctx.strokeStyle = '#54555c'; ctx.lineWidth = Math.max(1, w * 0.12)
     ctx.setLineDash([10, 12]); ctx.stroke(); ctx.setLineDash([])
   }
-  road([[40, 980], [260, 840], [430, 700], [c - 40, c + 120], [c, c + 30]], 20)
+  // v11-E8: Die Zufahrt „Zur Mehrzweckhalle" endet auf einem PARKPLATZ
+  //   SÜDÖSTLICH des Platzes — sie läuft NICHT mehr durch den Rasen.
+  //   Der Platz (x∈[390,634], y∈[433,591]) bleibt frei.
+  road([[40, 980], [220, 880], [430, 760], [610, 690], [700, 662]], 20)
+  // Ortsstraße im Norden (weit über dem Platz)
   road([[c - 360, 150], [c - 120, 175], [c + 140, 165], [c + 380, 190]], 16)
-  road([[c, c + 30], [c + 180, c - 60], [c + 360, c - 120]], 12)
+  // Stichweg Parkplatz → Vereinsheim (östlich, am Platz vorbei)
+  road([[700, 662], [760, 560], [850, 470]], 12)
+
+  // Parkplatz-Fläche am Ende der Zufahrt (SO, außerhalb des Platzes)
+  ctx.fillStyle = '#2a2b30'
+  roundRect(ctx, 660, 636, 96, 60, 6)
+  ctx.fill()
 
   // Der Platz als leichte Rasenfläche mit Umriss (der echte 3D-Platz
   // deckt das später — sorgt für sauberen Fade-in-Moment).
@@ -75,18 +89,19 @@ function makeMapTexture(): THREE.CanvasTexture {
   roundRect(ctx, c - pw / 2, c - ph / 2, pw, ph, 8)
   ctx.fill(); ctx.stroke()
 
-  // Ortslabel + Straßenname
-  ctx.fillStyle = 'rgba(226,226,224,0.82)'
+  // Ortslabel + Straßenname (v11-E8: größer & fetter → scharf beim Rauszoom)
+  ctx.fillStyle = 'rgba(230,230,228,0.9)'
   ctx.textAlign = 'center'
-  ctx.font = '700 34px Archivo, system-ui, sans-serif'
-  ctx.fillText('AGATHENBURG', c, 110)
-  ctx.fillStyle = 'rgba(200,205,210,0.6)'
-  ctx.font = '600 20px Archivo, system-ui, sans-serif'
-  ctx.fillText('Waldsportplatz', c, c + ph / 2 + 34)
+  ctx.font = '800 42px Archivo, system-ui, sans-serif'
+  ctx.fillText('AGATHENBURG', c, 104)
+  // „Waldsportplatz" als klar lesbares Label unter dem Platz, mit Pin-Punkt
+  ctx.fillStyle = 'rgba(238,240,242,0.92)'
+  ctx.font = '800 30px Archivo, system-ui, sans-serif'
+  ctx.fillText('Waldsportplatz', c, c + ph / 2 + 42)
   ctx.save()
-  ctx.translate(300, 800); ctx.rotate(-0.6)
-  ctx.fillStyle = 'rgba(180,185,190,0.55)'
-  ctx.font = '600 16px Archivo, system-ui, sans-serif'
+  ctx.translate(250, 820); ctx.rotate(-0.55)
+  ctx.fillStyle = 'rgba(190,195,200,0.7)'
+  ctx.font = '700 20px Archivo, system-ui, sans-serif'
   ctx.fillText('Zur Mehrzweckhalle', 0, 0)
   ctx.restore()
 
@@ -96,7 +111,7 @@ function makeMapTexture(): THREE.CanvasTexture {
 
   const tex = new THREE.CanvasTexture(cv)
   tex.colorSpace = THREE.SRGBColorSpace
-  tex.anisotropy = 4
+  tex.anisotropy = 16
   return tex
 }
 
