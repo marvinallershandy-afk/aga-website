@@ -431,7 +431,99 @@
 }
 .widget-frame__dot { width: 8px; height: 8px; border-radius: 50%; background: #fff; box-shadow: 0 0 8px #fff; }
 .widget-frame__body { padding: 1rem; }
-.widget-note { font-size: .7rem; color: rgba(255,255,255,.5); padding: 0 1rem 1rem; }
+.widget-note { font-size: .7rem; color: rgba(255,255,255,.5); padding: .2rem 0 0; }
+
+/* ── Saison-Cockpit (v11-E5) ────────────────────────────────── */
+.cockpit {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+  width: 100%;
+  max-width: 680px;
+  margin-top: clamp(1.6rem, 4vw, 2.6rem);
+}
+.cockpit__panel {
+  background: rgba(14, 13, 13, 0.72);
+  border: 1px solid rgba(232, 193, 90, 0.24);
+  border-radius: 14px;
+  padding: 0.9rem 1rem;
+  backdrop-filter: blur(4px);
+}
+.cockpit__form { grid-column: 1 / -1; }
+.cockpit__matches { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; }
+.cockpit__table { grid-column: 1 / -1; }
+@media (max-width: 560px) {
+  .cockpit, .cockpit__matches { grid-template-columns: 1fr; }
+  .cockpit__scorers { grid-column: 1 / -1; }
+}
+
+.cockpit__label {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--red);
+  margin-bottom: 0.6rem;
+}
+.cockpit__label--row { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; }
+.cockpit__live {
+  color: var(--gold);
+  text-decoration: none;
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+.cockpit__live:hover { text-decoration: underline; }
+
+/* Form-Punkte */
+.form-row { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.form-dot {
+  width: 1.65rem; height: 1.65rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  color: #0c0a0b;
+}
+.form-dot--win { background: #2fbf5b; }
+.form-dot--draw { background: #e8c15a; }
+.form-dot--loss { background: #e0392c; color: #fff; }
+.form-row__hint { font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.4); margin-left: auto; }
+
+/* Spiel-Karten */
+.match-card__teams { display: flex; align-items: center; justify-content: center; gap: 0.6rem; }
+.match-card__teams b { font-family: var(--font-display); font-weight: 400; font-size: 1.1rem; color: #fff; letter-spacing: 0.02em; }
+.match-card__score { font-family: var(--font-display); font-size: 1.7rem; color: var(--gold); line-height: 1; }
+.match-card__score i { font-style: normal; opacity: 0.5; margin: 0 0.1em; }
+.match-card__vs { font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.5); }
+.match-card__meta { display: block; text-align: center; margin-top: 0.5rem; font-size: 0.66rem; color: rgba(255,255,255,0.55); }
+.match-card--next { border-color: rgba(233, 29, 41, 0.4); }
+
+/* Torschützen */
+.scorer-list { list-style: none; display: flex; flex-direction: column; gap: 0.55rem; }
+.scorer { display: flex; align-items: center; gap: 0.7rem; }
+.scorer__rank { font-family: var(--font-display); font-size: 1.05rem; color: var(--gold); width: 1.1rem; }
+.scorer__face {
+  width: 2rem; height: 2rem; border-radius: 50%; overflow: hidden; flex: 0 0 auto;
+  background: linear-gradient(160deg, #E91D29, #6e1218 60%, #231f20);
+  display: grid; place-items: center;
+  border: 1px solid rgba(232,193,90,0.4);
+}
+.scorer__face img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 18%; filter: grayscale(1) contrast(1.05); mix-blend-mode: luminosity; }
+.scorer__initials { font-family: var(--font-display); font-size: 0.8rem; color: #fff; }
+.scorer__name { flex: 1 1 auto; color: rgba(255,255,255,0.9); font-size: 0.92rem; }
+.scorer__goals { font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.5); text-align: right; }
+.scorer__goals b { display: block; font-family: var(--font-display); font-size: 1.1rem; color: var(--gold); }
+
+/* Tabelle */
+.cockpit-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.cockpit-table th { text-align: left; padding: 0.35rem 0.5rem; font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.45); }
+.cockpit-table td { padding: 0.5rem 0.5rem; border-top: 1px solid rgba(255,255,255,0.08); color: rgba(255,255,255,0.85); }
+.cockpit-table__c { text-align: center; }
+.cockpit-table__pos { color: rgba(255,255,255,0.5); }
+.cockpit-table tr.is-self td { background: rgba(233,29,41,0.14); color: #fff; font-weight: 700; }
+.cockpit-table tr.is-self .cockpit-table__pos { color: var(--gold); }
 
 /* ── Kontakt ────────────────────────────────────────────────── */
 .contact-grid { display: flex; flex-wrap: wrap; gap: 1.4rem 3rem; margin-top: 2rem; }

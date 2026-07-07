@@ -36,13 +36,13 @@ const STATIONS: Station[] = [
   // 4 · MUSIK — Anflug aufs Vereinsheim: die Kamera schwenkt zur Tür,
   //     dann schneidet der PartyDirector in den Partyraum (Dip-to-Black)
   { pos: new THREE.Vector3(4.6, 0.9, 1.5), look: new THREE.Vector3(7.1, 0.5, -0.35) },
-  // 5 · SPONSOREN (v9-E4, die Geld-Station) — BANDEN-ZOOM auf die Süd-
-  //     Bande (Barrier.tsx, z≈3.99): „HIER KÖNNTE DEIN LOGO STEHEN" +
-  //     Beispiel-Logos groß und selbstbewusst. y knapp über CLUB_FLOOR
+  // 5 · TABELLE (v11-E5: Reihenfolge getauscht — Tabelle jetzt VOR Sponsoren) —
+  //     Schwenk zum echten Vereinsheim hinter dem Ost-Tor (ruhiger Ergebnis-Beat).
+  { pos: new THREE.Vector3(4.0, 0.95, 3.1), look: new THREE.Vector3(7.15, 0.32, -0.5) },
+  // 6 · SPONSOREN (die Geld-Station, jetzt direkt vor „Mitmachen") — BANDEN-
+  //     ZOOM auf die Süd-Bande (Barrier.tsx, z≈3.99). y knapp über CLUB_FLOOR
   //     (0.85), damit der Boden-Clamp die tiefe Pose nicht hebt.
   { pos: new THREE.Vector3(-0.5, 0.86, 3.05), look: new THREE.Vector3(-0.6, 0.12, 3.985) },
-  // 6 · TABELLE — Schwenk zum echten Vereinsheim hinter dem Ost-Tor
-  { pos: new THREE.Vector3(4.0, 0.95, 3.1), look: new THREE.Vector3(7.15, 0.32, -0.5) },
   // 7 · KONTAKT/FINALE — RAUSZOOM in die Vogelperspektive (v8-E4): die
   //     Kamera steigt aus der Platznähe auf und macht die ganze Welt zur
   //     Standort-Karte. Blick von oben-Süd auf Platz + Vereinsheim (+x),

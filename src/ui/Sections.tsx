@@ -29,7 +29,8 @@ function Header({ kicker, title, body, center, h1 }: { kicker: string; title: st
 }
 
 export function Sections() {
-  const [verein, mannschaft, fanblock, musik, sponsoren, tabelle, kontakt] = SECTIONS
+  // v11-E5: Reihenfolge tabelle↔sponsoren getauscht (Array in club.ts entspr.)
+  const [verein, mannschaft, fanblock, musik, tabelle, sponsoren, kontakt] = SECTIONS
   const fallback = useStore((s) => s.fallback)
 
   return (
@@ -104,19 +105,20 @@ export function Sections() {
         <MusicSectionPlayer />
       </section>
 
-      {/* 4 · SPONSOREN (v9-E4, die Geld-Station) — Banden-Zoom im 3D,
-          hier die Argumente + WhatsApp-CTA + „dein Logo"-Slots. */}
-      <section id={sponsoren.id} className="section section--left">
-        <div className="section__scrim" />
-        <Header kicker={sponsoren.kicker} title={sponsoren.title} body={sponsoren.body} />
-        <SponsorPitch />
-      </section>
-
-      {/* 5 · TABELLE */}
+      {/* 4 · TABELLE / SAISON-COCKPIT (v11-E5: jetzt VOR Sponsoren) —
+          Live-Tabelle, Form, Top-Torschützen, letztes/nächstes Spiel. */}
       <section id={tabelle.id} className="section section--left">
         <div className="section__scrim" />
         <Header kicker={tabelle.kicker} title={tabelle.title} body={tabelle.body} />
         <FussballWidget />
+      </section>
+
+      {/* 5 · SPONSOREN (die Geld-Station, jetzt direkt vor „Mitmachen") —
+          Banden-Zoom im 3D, hier die Argumente + WhatsApp-CTA + „dein Logo"-Slots. */}
+      <section id={sponsoren.id} className="section section--left">
+        <div className="section__scrim" />
+        <Header kicker={sponsoren.kicker} title={sponsoren.title} body={sponsoren.body} />
+        <SponsorPitch />
       </section>
 
       {/* 3 · MITMACHEN/FINALE — linksbündig, rechts lebt der Fanblock */}

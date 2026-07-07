@@ -7,10 +7,12 @@ export const CLUB = {
   shortName: 'SVA',
   claim: 'Ein Dorf. Ein Verein. Ein Platz.',
   founded: 1949,
-  // fussball.de Vereins-/Team-Widget-ID — PLATZHALTER.
-  // Marvin trägt die echte Team-Permanent-ID von fussball.de nach.
-  fussballDeTeamId: '011MIABCDE000000VS5489B2VVCJ',
+  // fussball.de Team-Permanent-ID (v11-E5: echte ID von Marvin eingetragen).
+  fussballDeTeamId: '00ES8GN7SS00004CVV0AG08LVUPGND5I',
 } as const
+
+// Deep-Link auf die fussball.de-Mannschaftsseite (Tabelle/Spiele/Team).
+export const fussballDeTeamUrl = `https://www.fussball.de/mannschaft/-/team-id/${CLUB.fussballDeTeamId}#!/`
 
 export interface Section {
   id: string
@@ -51,19 +53,21 @@ export const SECTIONS: Section[] = [
     title: 'AGA\nUrknall',
     body: 'Willkommen im Partyraum — hier läuft „Aga Urknall", unsere eigene Musik, benannt nach der Truppe, die 2024 den Riesenkicker holte (Grüße an Dynamo Tresen und die Durstigen Männer). Songs über Anpfiff, Abpfiff und alles, was dazwischen knallt, geschrieben von einem von uns. Drück Play, dreh auf — wer mitgrölt, ist schon fast Mitglied.',
   },
+  // v11-E5: Reihenfolge getauscht — erst die TABELLE/Saison (Ergebnis-Beat),
+  // dann die SPONSOREN (Geld-Beat direkt vor „Mitmachen").
+  {
+    id: 'tabelle',
+    label: 'Tabelle',
+    kicker: 'Saison-Cockpit',
+    title: 'Die Wahrheit\nvom Wochenende',
+    body: 'Manchmal Tabellenführer der Herzen, manchmal einfach Tabellenführer. Tabelle, Form der letzten Spiele, Top-Torschützen und das nächste Spiel — live von fussball.de, ungefiltert und gelegentlich glorreich.',
+  },
   {
     id: 'sponsoren',
     label: 'Sponsoren',
     kicker: 'Für Unternehmen',
     title: 'Deine Bande\nwartet',
     body: 'Jeden Sonntag stehen hier Leute an der Bande, im Dorf und in der Story. Dein Logo direkt am Spielfeld — plus Reichweite auf Instagram, echtes lokales Herz und ein Verein, hinter dem das ganze Dorf steht. Wir haben eine Bande extra für dich freigelassen.',
-  },
-  {
-    id: 'tabelle',
-    label: 'Tabelle',
-    kicker: 'Ergebnisse & Tabelle',
-    title: 'Die Wahrheit\nvom Wochenende',
-    body: 'Manchmal Tabellenführer der Herzen, manchmal einfach Tabellenführer. Hier steht, was am Wochenende wirklich passiert ist — live von fussball.de, ungefiltert und gelegentlich glorreich.',
   },
   {
     id: 'kontakt',
@@ -103,6 +107,46 @@ export const NEXT_MATCH: Match = {
   home: true,
   isPlaceholder: true,
 }
+
+// ── Saison-Cockpit (v11-E5) ──────────────────────────────────
+// Alles PLATZHALTER bis fussball.de-Anbindung / Marvins Pflege.
+// FORM = die letzten 5 Ergebnisse, ÄLTESTES zuerst → NEUESTES zuletzt.
+export type FormResult = 'W' | 'U' | 'N' // Win / Unentschieden / Niederlage
+export const FORM: FormResult[] = ['N', 'U', 'W', 'W', 'W']
+
+// Letztes Spiel (Ergebnis). isPlaceholder → als „zuletzt"-Karte mit Hinweis.
+export interface PlayedMatch {
+  opponent: string
+  date: string
+  home: boolean
+  goalsFor: number
+  goalsAgainst: number
+  isPlaceholder?: boolean
+}
+export const LAST_MATCH: PlayedMatch = {
+  opponent: 'SV Musterdorf',
+  date: 'So · Ergebnis folgt live',
+  home: false,
+  goalsFor: 2,
+  goalsAgainst: 1,
+  isPlaceholder: true,
+}
+
+// Tabelle (Vorschau bis Live-Anbindung). self = wir.
+export interface TableRow {
+  pos: number
+  team: string
+  sp: number
+  pkt: number
+  self?: boolean
+}
+export const TABLE_PREVIEW: TableRow[] = [
+  { pos: 1, team: 'TuS Beispielstadt', sp: 18, pkt: 44 },
+  { pos: 2, team: 'SV Musterdorf', sp: 18, pkt: 40 },
+  { pos: 3, team: 'SV Agathenburg-Dollern', sp: 18, pkt: 37, self: true },
+  { pos: 4, team: 'FC Nachbarort', sp: 18, pkt: 33 },
+  { pos: 5, team: 'SG Beispieltal', sp: 18, pkt: 29 },
+]
 
 // ── Vereins-/Mannschaftsfoto-Slot (v8-E5) ────────────────────
 // undefined → kein leerer Rahmen. Marvin liefert echtes Stimmungsbild.

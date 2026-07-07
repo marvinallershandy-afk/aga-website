@@ -5,7 +5,8 @@ import { setAnchors } from '../camera/anchors'
 
 // ECHTE DOM-Sektionen (v8: anstoss ist KEINE eigene Sektion mehr).
 // v9: fanblock (zw. mannschaft/musik) + sponsoren (zw. musik/tabelle).
-const SECTION_IDS = ['verein', 'mannschaft', 'fanblock', 'musik', 'sponsoren', 'tabelle', 'kontakt']
+// v11-E5: Reihenfolge tabelle↔sponsoren getauscht (…musik, TABELLE, SPONSOREN, kontakt).
+const SECTION_IDS = ['verein', 'mannschaft', 'fanblock', 'musik', 'tabelle', 'sponsoren', 'kontakt']
 // Anteil des Wegs Verein→Mannschaft, an dem der Anstoß-Dive (Kamera-
 // Station 1) liegt — als nahtloser Übergang, ohne eigene Sektion.
 const ANSTOSS_FRAC = 0.55

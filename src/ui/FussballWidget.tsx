@@ -1,81 +1,139 @@
-import { useEffect, useRef } from 'react'
-import { CLUB } from '../data/club'
+import { motion } from 'framer-motion'
+import { CLUB, fussballDeTeamUrl, FORM, LAST_MATCH, NEXT_MATCH, TABLE_PREVIEW, type FormResult } from '../data/club'
+import { PLAYERS } from '../data/players'
 
-// fussball.de-Vereins-Widget, gestylt gerahmt. Solange die echte
-// Team-ID Platzhalter ist, zeigen wir eine saubere Skelett-Tabelle,
-// damit die Sektion gewollt wirkt statt leer/kaputt.
-//
-// So bindet Marvin das echte Widget ein:
-//   1. Auf fussball.de → Verein → "Widget erstellen" die Tabelle wählen
-//   2. Die generierte Team-Permanent-ID in src/data/club.ts eintragen
-//   3. REAL_EMBED unten aktivieren (Script-Injection ist vorbereitet)
+// ─────────────────────────────────────────────────────────────
+// v11-E5: SAISON-COCKPIT (löst die reine Tabelle ab). Vier Panels:
+//  · Form der letzten 5 Spiele (grün/gelb/rot)
+//  · letztes & nächstes Spiel
+//  · Top-Torschützen MIT Gesichtern (aus dem Kader)
+//  · Tabelle (Vorschau) + Deep-Link zur echten fussball.de-Tabelle
+// Live-Daten kommen von fussball.de (Team-ID in club.ts). Bis zur
+// echten Anbindung sind Tabelle/Ergebnisse ehrlich als Vorschau
+// markiert; Torschützen sind ECHT (aus dem Kader abgeleitet).
+// ─────────────────────────────────────────────────────────────
 
-const IS_PLACEHOLDER = CLUB.fussballDeTeamId.startsWith('011MIABCDE')
+const reveal = {
+  initial: { opacity: 0, y: 24 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: false, amount: 0.3 },
+  transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] as const },
+}
 
-const MOCK_TABLE = [
-  { pos: 1, team: 'TuS Beispielstadt', sp: 18, pkt: 44 },
-  { pos: 2, team: 'SV Musterdorf', sp: 18, pkt: 40 },
-  { pos: 3, team: 'SV Agathenburg-Dollern', sp: 18, pkt: 37, self: true },
-  { pos: 4, team: 'FC Nachbarort', sp: 18, pkt: 33 },
-  { pos: 5, team: 'SG Beispieltal', sp: 18, pkt: 29 },
-]
+const FORM_META: Record<FormResult, { cls: string; label: string }> = {
+  W: { cls: 'form-dot--win', label: 'Sieg' },
+  U: { cls: 'form-dot--draw', label: 'Unentschieden' },
+  N: { cls: 'form-dot--loss', label: 'Niederlage' },
+}
+
+// Initialen als Gesichts-Fallback, wenn (noch) kein Foto da ist.
+function initials(name: string) {
+  const p = name.trim().split(/\s+/)
+  return ((p[0]?.[0] ?? '') + (p[p.length - 1]?.[0] ?? '')).toUpperCase()
+}
+
+function ScorerFace({ name, photoUrl }: { name: string; photoUrl: string | null }) {
+  return (
+    <span className="scorer__face">
+      {photoUrl ? (
+        <img src={photoUrl} alt={name} loading="lazy" />
+      ) : (
+        <span className="scorer__initials">{initials(name)}</span>
+      )}
+    </span>
+  )
+}
 
 export function FussballWidget() {
-  const hostRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (IS_PLACEHOLDER || !hostRef.current) return
-    // Echtes Widget: fussball.de-Script injizieren
-    const s = document.createElement('script')
-    s.src = `https://www.fussball.de/widget2/${CLUB.fussballDeTeamId}`
-    s.async = true
-    hostRef.current.appendChild(s)
-  }, [])
+  const topScorers = [...PLAYERS].sort((a, b) => b.stats.goals - a.stats.goals).slice(0, 3)
 
   return (
-    <div className="widget-frame">
-      <div className="widget-frame__bar">
-        <span className="widget-frame__dot" />
-        Tabelle · Kreisliga · fussball.de
+    <motion.div className="cockpit" {...reveal}>
+      {/* Form der letzten 5 */}
+      <div className="cockpit__panel cockpit__form">
+        <span className="cockpit__label">Form · letzte 5</span>
+        <div className="form-row">
+          {FORM.map((r, i) => (
+            <span key={i} className={`form-dot ${FORM_META[r].cls}`} title={FORM_META[r].label}>
+              {r === 'U' ? 'U' : r === 'W' ? 'S' : 'N'}
+            </span>
+          ))}
+          <span className="form-row__hint">älteste → neueste</span>
+        </div>
       </div>
-      <div className="widget-frame__body" ref={hostRef}>
-        {IS_PLACEHOLDER && (
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
-            <thead>
-              <tr style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.66rem', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
-                <th style={{ textAlign: 'left', padding: '0.4rem 0.5rem' }}>#</th>
-                <th style={{ textAlign: 'left', padding: '0.4rem 0.5rem' }}>Team</th>
-                <th style={{ textAlign: 'center', padding: '0.4rem 0.5rem' }}>Sp</th>
-                <th style={{ textAlign: 'center', padding: '0.4rem 0.5rem' }}>Pkt</th>
+
+      {/* Letztes & nächstes Spiel */}
+      <div className="cockpit__matches">
+        <div className="cockpit__panel match-card">
+          <span className="cockpit__label">Zuletzt</span>
+          <div className="match-card__teams">
+            <b>{LAST_MATCH.home ? 'SVA' : LAST_MATCH.opponent}</b>
+            <span className="match-card__score">
+              {LAST_MATCH.home ? LAST_MATCH.goalsFor : LAST_MATCH.goalsAgainst}
+              <i>:</i>
+              {LAST_MATCH.home ? LAST_MATCH.goalsAgainst : LAST_MATCH.goalsFor}
+            </span>
+            <b>{LAST_MATCH.home ? LAST_MATCH.opponent : 'SVA'}</b>
+          </div>
+          <span className="match-card__meta">{LAST_MATCH.date}{LAST_MATCH.isPlaceholder ? ' · Vorschau' : ''}</span>
+        </div>
+
+        <div className="cockpit__panel match-card match-card--next">
+          <span className="cockpit__label">Nächstes Spiel</span>
+          <div className="match-card__teams">
+            <b>{NEXT_MATCH.home ? 'SVA' : NEXT_MATCH.opponent}</b>
+            <span className="match-card__vs">vs</span>
+            <b>{NEXT_MATCH.home ? NEXT_MATCH.opponent : 'SVA'}</b>
+          </div>
+          <span className="match-card__meta">{NEXT_MATCH.date}{NEXT_MATCH.home ? ' · Heim' : ' · Auswärts'}</span>
+        </div>
+      </div>
+
+      {/* Top-Torschützen mit Gesichtern */}
+      <div className="cockpit__panel cockpit__scorers">
+        <span className="cockpit__label">Top-Torschützen</span>
+        <ul className="scorer-list">
+          {topScorers.map((p, i) => (
+            <li key={p.id} className="scorer">
+              <span className="scorer__rank">{i + 1}</span>
+              <ScorerFace name={p.name} photoUrl={p.photoUrl} />
+              <span className="scorer__name">{p.name}</span>
+              <span className="scorer__goals"><b>{p.stats.goals}</b>Tore</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/* Tabelle (Vorschau) + Live-Link */}
+      <div className="cockpit__panel cockpit__table">
+        <div className="cockpit__label cockpit__label--row">
+          <span>Tabelle · Kreisliga</span>
+          <a href={fussballDeTeamUrl} target="_blank" rel="noreferrer" className="cockpit__live">
+            Live auf fussball.de →
+          </a>
+        </div>
+        <table className="cockpit-table">
+          <thead>
+            <tr>
+              <th>#</th><th>Team</th><th>Sp</th><th>Pkt</th>
+            </tr>
+          </thead>
+          <tbody>
+            {TABLE_PREVIEW.map((r) => (
+              <tr key={r.pos} className={r.self ? 'is-self' : undefined}>
+                <td className="cockpit-table__pos">{r.pos}</td>
+                <td>{r.team}</td>
+                <td className="cockpit-table__c">{r.sp}</td>
+                <td className="cockpit-table__c">{r.pkt}</td>
               </tr>
-            </thead>
-            <tbody>
-              {MOCK_TABLE.map((r) => (
-                <tr
-                  key={r.pos}
-                  style={{
-                    borderTop: '1px solid rgba(255,255,255,0.08)',
-                    background: r.self ? 'rgba(233,29,41,0.14)' : 'transparent',
-                    color: r.self ? '#fff' : 'rgba(255,255,255,0.85)',
-                    fontWeight: r.self ? 700 : 400,
-                  }}
-                >
-                  <td style={{ padding: '0.55rem 0.5rem', color: r.self ? 'var(--gold)' : 'inherit' }}>{r.pos}</td>
-                  <td style={{ padding: '0.55rem 0.5rem' }}>{r.team}</td>
-                  <td style={{ padding: '0.55rem 0.5rem', textAlign: 'center' }}>{r.sp}</td>
-                  <td style={{ padding: '0.55rem 0.5rem', textAlign: 'center' }}>{r.pkt}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-      {IS_PLACEHOLDER && (
+            ))}
+          </tbody>
+        </table>
         <p className="widget-note">
-          Platzhalter-Tabelle. Sobald die fussball.de-Vereins-ID eingetragen ist,
-          erscheint hier die echte Live-Tabelle.
+          Vorschau — sobald fussball.de verbunden ist ({CLUB.fussballDeTeamId.slice(0, 6)}…),
+          steht hier die echte Live-Tabelle. Der Link oben führt schon jetzt zur echten Tabelle.
         </p>
-      )}
-    </div>
+      </div>
+    </motion.div>
   )
 }
