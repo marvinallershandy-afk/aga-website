@@ -25,8 +25,13 @@ const STATIONS: Station[] = [
   //     Hero(0.6)→Anstoß→Mannschaft(−0.5) nicht mehr weit „durchwhippt" —
   //     der Übergang wird ein Fluss statt eines sichtbaren Schwenks.
   { pos: new THREE.Vector3(0.35, 0.62, 2.75), look: new THREE.Vector3(-2.6, 1.15, -1.9) },
-  // 2 · MANNSCHAFT — tief, dynamisch, seitlich übers Mittelfeld gleitend
-  { pos: new THREE.Vector3(-7.5, 2.6, 6.5), look: new THREE.Vector3(0.5, 1.0, -0.5) },
+  // 2 · MANNSCHAFT — v12-E2: Blick schräg von oben, zentral von hinter dem
+  //     gegnerischen Tor (Ost, +x) über die GANZE Aufstellung. Höher & weiter
+  //     als vorher (war y=2.6, zu tief → halbe Elf abgeschnitten). Von Ost
+  //     nach West gesehen liegt der Sturm (ANG, +x) VORNE Richtung Kamera und
+  //     der Torwart (TW, −x) HINTEN — Aufstellung korrekt gestaffelt. Der
+  //     Trainerstab an der Süd-Seitenlinie (z≈4.35) bleibt mit im Bild.
+  { pos: new THREE.Vector3(5.6, 5.5, 7.2), look: new THREE.Vector3(-1.6, 0.75, 0.4) },
   // 3 · FANBLOCK (v9-E2, zurückgeholt) — Schwenk in die Süd-/SO-Kurve:
   //     Blick von der Platzmitte auf die Fans + wehendes AGA-URKNALL-
   //     Banner (FanBlock.tsx, CX=3.6 / z≈+3.95). Emotionaler Beat. y knapp

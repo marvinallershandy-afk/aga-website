@@ -1065,3 +1065,64 @@
 .audio-toggle[data-on="false"] { color: rgba(255,255,255,.55); }
 .audio-toggle:focus-visible { outline: 2px solid var(--red); outline-offset: 3px; }
 @media (prefers-reduced-motion: reduce) { .audio-toggle { transition: none; } }
+
+/* ── v12-E2: „Alle Spieler anzeigen"-Button + Galerie-Overlay ──────── */
+.card-grid__all {
+  margin-top: clamp(1rem, 2.5vw, 1.5rem);
+  text-decoration: none;
+  align-self: flex-start;
+}
+
+/* Overlay unter dem Detail-Modal (z 300) → Kartenklick öffnet Detail obendrauf */
+.pgal {
+  position: fixed; inset: 0; z-index: 290;
+  display: grid; place-items: center;
+  padding: clamp(0.6rem, 3vw, 2rem);
+  background: rgba(6,5,8,.86); backdrop-filter: blur(9px);
+}
+.pgal__panel {
+  width: min(1180px, 96vw); max-height: 92vh;
+  display: flex; flex-direction: column;
+  background: linear-gradient(180deg, #12090b 0%, #0b0708 100%);
+  border: 1px solid rgba(233,29,41,.28);
+  border-radius: 16px; overflow: hidden;
+  box-shadow: 0 30px 90px rgba(0,0,0,.6);
+}
+.pgal__head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: clamp(1rem, 2.5vw, 1.6rem) clamp(1.2rem, 3vw, 2rem);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  flex: 0 0 auto;
+}
+.pgal__kicker {
+  font-family: var(--font-body); font-weight: 700; text-transform: uppercase;
+  letter-spacing: .3em; font-size: .68rem; color: var(--red);
+}
+.pgal__title {
+  font-family: var(--font-display); font-weight: 400; text-transform: uppercase;
+  font-size: clamp(1.6rem, 4vw, 2.4rem); line-height: 1; margin-top: .2rem;
+}
+.pgal__close {
+  appearance: none; border: none; cursor: pointer;
+  width: 44px; height: 44px; border-radius: 50%;
+  background: rgba(255,255,255,.08); color: #fff; font-size: 1.6rem; line-height: 1;
+  transition: background .2s ease;
+}
+.pgal__close:hover { background: rgba(233,29,41,.35); }
+.pgal__scroll {
+  overflow-y: auto; padding: clamp(1rem, 3vw, 2rem);
+  display: flex; flex-direction: column; gap: clamp(1.4rem, 3vw, 2.4rem);
+}
+.pgal__group { display: flex; flex-direction: column; gap: .9rem; }
+.pgal__grouplabel {
+  font-family: var(--font-body); font-weight: 800; text-transform: uppercase;
+  letter-spacing: .22em; font-size: .8rem; color: rgba(255,255,255,.72);
+  display: inline-flex; align-items: center; gap: .7rem;
+}
+.pgal__grouplabel::before {
+  content: ""; width: 26px; height: 2px; background: var(--red);
+}
+.pgal__grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: clamp(.9rem, 2vw, 1.6rem);
+}
