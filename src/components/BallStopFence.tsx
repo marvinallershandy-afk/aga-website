@@ -77,16 +77,14 @@ function FencePanel({ x, zCenter, width, banner }: { x: number; zCenter: number;
 }
 
 export function BallStopFence() {
-  // West: durchgehendes Panel hinter dem West-Tor.
-  // Ost (v8-E2): ZWEI Panels mit Öffnung dazwischen — durch diese Lücke
-  // (Welt z≈−0.55) führt der Kamera-Anflug zur nach links verlegten
-  // Vereinsheim-Tür (s. camera/partyPath.ts DOOR, Clubhouse.tsx). Das
-  // Süd-Panel deckt weiterhin das Tor (z ±0.37); die Öffnung liegt
-  // NÖRDLICH davon. Öffnung = Spalt [−0.9 … −0.2].
+  // v9-E3 (Referenzfoto dji_…0181): der Ost-Ballfangzaun ist DURCHGEHEND,
+  // KEINE Öffnung (die v8-Lücke war falsch). Der Kamera-Anflug zur
+  // Vereinsheim-Tür führt jetzt NÖRDLICH um das Zaun-Ende herum („um die
+  // Ecke", s. camera/partyPath.ts) — die Tür sitzt am linken/hinteren
+  // Gebäudeteil, nördlich des Zauns. Beide Seiten wieder EIN Panel.
   return (
     <group>
-      <FencePanel x={FENCE_X} zCenter={0.4} width={1.2} banner />
-      <FencePanel x={FENCE_X} zCenter={-1.55} width={1.3} />
+      <FencePanel x={FENCE_X} zCenter={-0.45} width={WIDTH} banner />
       <FencePanel x={-FENCE_X} zCenter={0} width={WIDTH} />
     </group>
   )

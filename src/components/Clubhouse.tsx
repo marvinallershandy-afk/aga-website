@@ -96,6 +96,10 @@ const EAVES = 0.34   // Traufhöhe
 const RISE = 0.24    // Firstanhebung
 const ANNEX_H = 0.24
 const ANNEX_D = 0.3
+// v9-E3: lange überdachte Terrasse (Referenzfoto) — nach Norden gezogen,
+// zentriert bei clubhouse-lokal z=−0.15 (Welt z=−0.45), damit der echte
+// Eingang an der LINKEN/hinteren Ecke sitzt.
+const ANNEX_LEN = 3.3
 
 function GableEnds() {
   const geo = useMemo(() => {
@@ -163,20 +167,37 @@ export function Clubhouse() {
         <meshStandardMaterial color="#8a8d94" metalness={0.7} roughness={0.35} />
       </mesh>
 
-      {/* Flacher Anbau zur Platzseite (Westen) mit blauem Fascia-Band (Original-Farbe, Boden-Foto) */}
-      <group position={[-DEPTH / 2 - ANNEX_D / 2, 0, 0.4]}>
+      {/* v9-E3: Lange ÜBERDACHTE TERRASSE zur Platzseite (Referenzfoto):
+          nach Norden verlängert, echter Eingang an der LINKEN/hinteren
+          Ecke (annex-lokal z=−1.5 → Welt z≈−1.95, „um die Ecke", nördlich
+          des durchgehenden Zaun-Endes). Blaues Fascia + Vordach auf
+          Pfosten. Anbau-Gruppe steht bei Welt z=−0.45. */}
+      <group position={[-DEPTH / 2 - ANNEX_D / 2, 0, -0.15]}>
         <mesh position={[0, ANNEX_H / 2, 0]}>
-          <boxGeometry args={[ANNEX_D, ANNEX_H, LEN * 0.55]} />
+          <boxGeometry args={[ANNEX_D, ANNEX_H, ANNEX_LEN]} />
           <meshStandardMaterial color="#ccc8bd" roughness={0.92} />
         </mesh>
         {/* blaues Fascia-Band (Dachkante des Anbaus) — Realität vor CI */}
         <mesh position={[0, ANNEX_H + 0.015, 0]}>
-          <boxGeometry args={[ANNEX_D + 0.03, 0.035, LEN * 0.55 + 0.03]} />
+          <boxGeometry args={[ANNEX_D + 0.03, 0.035, ANNEX_LEN + 0.03]} />
           <meshStandardMaterial color="#3d6e9e" roughness={0.6} />
         </mesh>
-        {/* warme Fenster (zum Platz, Original) — v8-E2 nach rechts (+z)
-            gerückt, damit der echte Eingang LINKS daneben Platz hat. */}
-        {[-0.25, 0.35, 0.8].map((z) => (
+        {/* Vordach: flache, WANDNAHE Dachplatte über der Terrasse auf
+            schlanken Pfosten (Referenzfoto: Kantine mit Vordach). Bewusst
+            knapp (ragt nur wenig aus), damit sie den Tür-Anflug/Glow nicht
+            als dunkler Slab verdeckt. Hellgrau statt fast-schwarz. */}
+        <mesh position={[-0.17, ANNEX_H + 0.028, 0]}>
+          <boxGeometry args={[0.28, 0.024, ANNEX_LEN]} />
+          <meshStandardMaterial color="#6f7178" roughness={0.85} metalness={0.05} />
+        </mesh>
+        {[-1.35, -0.3, 0.75, 1.5].map((z) => (
+          <mesh key={z} position={[-0.29, (ANNEX_H + 0.03) / 2, z]}>
+            <cylinderGeometry args={[0.012, 0.012, ANNEX_H + 0.03, 6]} />
+            <meshStandardMaterial color="#4a4d52" metalness={0.5} roughness={0.5} />
+          </mesh>
+        ))}
+        {/* warme Fenster entlang der Terrasse (Original) — südlich der Tür */}
+        {[-0.7, 0.1, 0.9, 1.5].map((z) => (
           <mesh key={z} position={[-ANNEX_D / 2 - 0.004, 0.13, z]} rotation-y={-Math.PI / 2}>
             <planeGeometry args={[0.22, 0.12]} />
             <meshStandardMaterial
@@ -185,26 +206,21 @@ export function Clubhouse() {
             />
           </mesh>
         ))}
-        {/* Tür zum Platz — steht einladend OFFEN (v5-Durchfahrt):
-            warm glühende Öffnung (füllt beim Anflug das Bild und
-            deckt den Welt-Hop), blaues Türblatt nach außen
-            aufgeschwungen. Maße s. camera/partyPath.ts (DOOR).
-            v8-E2: nach LINKS (−z) verlegt — echter Eingang zum
-            Fensterraum, nicht mehr rechts. annex-rel z=−0.65 →
-            Welt z=−0.55 (Anbau-Gruppe steht bei Welt z=0.1). */}
-        <mesh position={[-ANNEX_D / 2 - 0.004, 0.13, -0.65]} rotation-y={-Math.PI / 2}>
+        {/* Tür — v9-E3 an der linken/hinteren Ecke (annex-lokal z=−1.5 →
+            Welt z≈−1.95). Warm glühende Öffnung füllt beim Anflug das Bild
+            und deckt den Welt-Hop; blaues Türblatt aufgeschwungen. Maße s.
+            camera/partyPath.ts (DOOR). */}
+        <mesh position={[-ANNEX_D / 2 - 0.004, 0.13, -1.5]} rotation-y={-Math.PI / 2}>
           <planeGeometry args={[0.16, 0.26]} />
-          {/* Verlaufs-Glow (Loop 1): Textur × Farbboost — HDR nur im
-              hellen Kern, Ränder bleiben warmes Amber statt Weiß */}
           <meshBasicMaterial map={getDoorGlowTexture()} color={[1.55, 1.5, 1.4]} toneMapped={false} />
         </mesh>
         {/* dunkler Laibungs-Rahmen um die Öffnung */}
-        <mesh position={[-ANNEX_D / 2 - 0.002, 0.13, -0.65]} rotation-y={-Math.PI / 2}>
+        <mesh position={[-ANNEX_D / 2 - 0.002, 0.13, -1.5]} rotation-y={-Math.PI / 2}>
           <planeGeometry args={[0.2, 0.3]} />
           <meshStandardMaterial color="#221a14" roughness={0.9} />
         </mesh>
-        {/* offenes Türblatt (Anschlag Nord, ~105° aufgeschwungen) */}
-        <group position={[-ANNEX_D / 2 - 0.01, 0, -0.73]} rotation-y={1.83}>
+        {/* offenes Türblatt (~105° aufgeschwungen) */}
+        <group position={[-ANNEX_D / 2 - 0.01, 0, -1.58]} rotation-y={1.83}>
           <mesh position={[0.08, 0.13, 0]}>
             <boxGeometry args={[0.16, 0.26, 0.014]} />
             <meshStandardMaterial color="#2f5d8a" roughness={0.75} />
@@ -227,14 +243,15 @@ export function Clubhouse() {
       ))}
 
       {/* warmes Licht vor dem Anbau (gebakene Lache) + Erdung */}
-      <LightPool position={[-DEPTH / 2 - 0.55, -0.011, 0.1]} scale={[2, 2.8]} color="#ff9d4a" opacity={0.26} />
-      {/* Lichtschein aus der offenen Tür (v5-Durchfahrt) — v8-E2 an die
-          linke Tür (Welt z=−0.55 → clubhouse-rel z=−0.25) */}
-      <LightPool position={[-DEPTH / 2 - ANNEX_D - 0.35, -0.009, -0.25]} scale={[0.9, 0.5]} color="#ffb26a" opacity={0.5} />
+      <LightPool position={[-DEPTH / 2 - 0.55, -0.011, -0.3]} scale={[2, 3.4]} color="#ff9d4a" opacity={0.24} />
+      {/* Lichtschein aus der offenen Tür — v9-E3 an die linke/hintere Ecke
+          (Welt z≈−1.95 → clubhouse-rel z=−1.65) */}
+      <LightPool position={[-DEPTH / 2 - ANNEX_D - 0.35, -0.009, -1.65]} scale={[0.9, 0.6]} color="#ffb26a" opacity={0.55} />
       <AOBlob position={[-0.05, -0.012, 0]} scale={[DEPTH + 1.4, LEN + 1]} opacity={0.6} />
 
-      {/* Fahnenmasten (SVA rot-schwarz + gedimmte zweite) */}
-      {[{ z: -1.6, flag: COLORS.red }, { z: -1.95, flag: '#2c2c30' }].map(({ z, flag }, i) => (
+      {/* Fahnenmasten (SVA rot-schwarz + gedimmte zweite) — v9-E3 flankieren
+          jetzt die Eingangs-Ecke (Tür bei clubhouse-rel z≈−1.65) */}
+      {[{ z: -1.35, flag: COLORS.red }, { z: -2.05, flag: '#2c2c30' }].map(({ z, flag }, i) => (
         <group key={i} position={[-DEPTH / 2 - 0.5, 0, z]}>
           <mesh position={[0, 0.42, 0]}>
             <cylinderGeometry args={[0.012, 0.016, 0.84, 6]} />

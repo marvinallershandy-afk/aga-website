@@ -1,0 +1,10 @@
+import { chromium } from 'playwright'
+const b = await chromium.launch({ args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'] })
+const p = await (await b.newContext({ viewport:{width:1440,height:900}, deviceScaleFactor:2 })).newPage()
+await p.goto('http://localhost:5199/',{waitUntil:'load',timeout:60000})
+await p.waitForFunction(()=>!document.querySelector('[data-testid=gate] button[disabled]'),null,{timeout:60000})
+await p.click('text=Lieber leise'); await p.waitForTimeout(2000)
+await p.evaluate(()=>document.getElementById('tabelle')?.scrollIntoView({block:'center',behavior:'instant'}))
+await p.waitForTimeout(2400)
+await p.screenshot({ path:'SVA_SCREENSHOTS/e3-tabelle.png' })
+console.log('tab ok'); await b.close()
