@@ -4,8 +4,8 @@ import { SECTIONS } from '../data/club'
 import { setAnchors } from '../camera/anchors'
 
 // ECHTE DOM-Sektionen (v8: anstoss ist KEINE eigene Sektion mehr).
-// v9: fanblock als eigene Station zwischen mannschaft und musik.
-const SECTION_IDS = ['verein', 'mannschaft', 'fanblock', 'musik', 'tabelle', 'kontakt']
+// v9: fanblock (zw. mannschaft/musik) + sponsoren (zw. musik/tabelle).
+const SECTION_IDS = ['verein', 'mannschaft', 'fanblock', 'musik', 'sponsoren', 'tabelle', 'kontakt']
 // Anteil des Wegs Verein→Mannschaft, an dem der Anstoß-Dive (Kamera-
 // Station 1) liegt — als nahtloser Übergang, ohne eigene Sektion.
 const ANSTOSS_FRAC = 0.55
@@ -40,7 +40,7 @@ export function useScrollProgress(enabled: boolean) {
       // Danach je ein Anker pro echter Sektion (fanblock, musik, tabelle,
       // kontakt).
       const anstoss = secP[0] + (secP[1] - secP[0]) * ANSTOSS_FRAC
-      setAnchors([secP[0], anstoss, secP[1], secP[2], secP[3], secP[4], secP[5]])
+      setAnchors([secP[0], anstoss, secP[1], secP[2], secP[3], secP[4], secP[5], secP[6]])
       // Nav-Highlight nur für echte Sektionen
       sectionAnchors = SECTION_IDS
         .map((id, i) => ({ id, p: secP[i] }))

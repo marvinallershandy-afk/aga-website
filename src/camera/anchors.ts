@@ -4,9 +4,9 @@
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v))
 
 // Defaults nur als Fallback; zur Laufzeit aus DOM-Zentren gemessen.
-// v9: 7 Anker (Stationen) — hero, anstoss(synth), mannschaft, FANBLOCK,
-// musik, tabelle, kontakt. Länge MUSS = STATIONS.length (CameraPath) sein.
-const ANCHORS = [0.10, 0.20, 0.34, 0.48, 0.62, 0.82, 1.0]
+// v9: 8 Anker (Stationen) — hero, anstoss(synth), mannschaft, FANBLOCK,
+// musik, SPONSOREN, tabelle, kontakt. Länge MUSS = STATIONS.length sein.
+const ANCHORS = [0.09, 0.18, 0.30, 0.42, 0.55, 0.68, 0.84, 1.0]
 
 export function setAnchors(values: number[]) {
   if (values.length !== ANCHORS.length) return

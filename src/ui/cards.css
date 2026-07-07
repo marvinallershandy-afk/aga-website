@@ -803,3 +803,11 @@
 }
 .fanchant__hint { font-size: .74rem; color: rgba(255,255,255,.55); max-width: 30ch; line-height: 1.4; }
 @media (prefers-reduced-motion: reduce) { .fanchant__btn.is-on .fanchant__dot { animation: none; } }
+
+/* Sponsoren-Station (v9-E4) */
+.sponsor-args { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin: 1.6rem 0 1.4rem; max-width: 720px; }
+.sponsor-arg { padding: 1.1rem 1.2rem; border-radius: 14px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.12); }
+.sponsor-arg h3 { font-family: var(--font-display, inherit); font-size: 1rem; letter-spacing: .02em; color: var(--red); margin: 0 0 .4rem; text-transform: uppercase; }
+.sponsor-arg p { font-size: .84rem; line-height: 1.45; color: rgba(255,255,255,.78); margin: 0; }
+.btn--wa { display: inline-flex; align-items: center; gap: .5rem; background: #25d366; color: #08240f; font-weight: 800; }
+.btn--wa:hover { background: #2ee574; }

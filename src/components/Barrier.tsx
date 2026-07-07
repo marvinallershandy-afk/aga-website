@@ -16,28 +16,62 @@ const RAIL_H = 0.11
 const HW = PITCH.width / 2 + OFF
 const HH = PITCH.height / 2 + OFF
 
+// Kleines Dummy-Logo (v9-E4): Icon + Wortmarke — beispielhafte lokale
+// Sponsoren als VORBILD an der Bande (macht die freien Slots begehrt).
+// Bewusst generische Muster-Betriebe, KEINE echten Marken.
+function drawDummyLogo(ctx: CanvasRenderingContext2D, cx: number, cy: number, kind: 'sonne' | 'stern', name: string, accent: string) {
+  ctx.save()
+  ctx.translate(cx, cy)
+  ctx.fillStyle = accent
+  if (kind === 'sonne') {
+    ctx.beginPath(); ctx.arc(-88, 0, 12, 0, Math.PI * 2); ctx.fill()
+    ctx.strokeStyle = accent; ctx.lineWidth = 3
+    for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
+      ctx.beginPath(); ctx.moveTo(-88 + Math.cos(a) * 16, Math.sin(a) * 16); ctx.lineTo(-88 + Math.cos(a) * 22, Math.sin(a) * 22); ctx.stroke()
+    }
+  } else {
+    ctx.beginPath()
+    for (let i = 0; i < 5; i++) {
+      const a = -Math.PI / 2 + (i * 4 * Math.PI) / 5
+      ctx[i ? 'lineTo' : 'moveTo'](-88 + Math.cos(a) * 15, Math.sin(a) * 15)
+    }
+    ctx.closePath(); ctx.fill()
+  }
+  ctx.fillStyle = '#1a1718'
+  ctx.font = '800 20px Archivo, system-ui, sans-serif'
+  ctx.textAlign = 'left'; ctx.textBaseline = 'middle'
+  ctx.fillText(name, -62, 1)
+  ctx.restore()
+}
+
 function makeBoardsTexture(): THREE.CanvasTexture {
   const cv = document.createElement('canvas')
   cv.width = 2048
   cv.height = 64
   const ctx = cv.getContext('2d')!
-  const boards = [
-    { text: 'HIER KÖNNTE DEIN LOGO STEHEN', bg: '#f2efe8', fg: '#8a2530' },
-    { text: 'SVA', bg: COLORS.red, fg: '#ffffff' },
-    { text: 'EIN DORF. EIN VEREIN. EIN PLATZ.', bg: '#f2efe8', fg: '#1a1718' },
-    { text: 'DEIN VEREIN. DEINE BANDE.', bg: '#e8e4da', fg: '#8f1620' },
+  // Reihenfolge: die begehrten Boards (Platzhalter + Beispiel-Logos)
+  // liegen MITTIG — dort zoomt die Sponsoren-Station drauf.
+  const boards: { text?: string; bg: string; fg?: string; logo?: 'sonne' | 'stern'; name?: string; accent?: string }[] = [
     { text: 'SV AGATHENBURG-DOLLERN 1949', bg: '#1a1718', fg: '#e8e4da' },
-    { text: 'WERDE SPONSOR', bg: '#f2efe8', fg: '#b8912F' },
+    { bg: '#f2efe8', logo: 'sonne', name: 'BÄCKEREI SONNE', accent: '#e0a020' },
+    { text: 'HIER KÖNNTE DEIN LOGO STEHEN', bg: '#f2efe8', fg: '#8a2530' },
+    { text: 'HIER KÖNNTE DEIN LOGO STEHEN', bg: '#e8e4da', fg: '#8a2530' },
+    { bg: '#eef1f4', logo: 'stern', name: 'AUTOHAUS NORDLICHT', accent: '#2f6e9e' },
+    { text: 'WERDE SPONSOR · WA', bg: COLORS.red, fg: '#ffffff' },
   ]
   const w = cv.width / boards.length
   boards.forEach((b, i) => {
     ctx.fillStyle = b.bg
     ctx.fillRect(i * w + 3, 4, w - 6, 56)
-    ctx.fillStyle = b.fg
-    ctx.font = '700 22px Archivo, system-ui, sans-serif'
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
-    ctx.fillText(b.text, i * w + w / 2, 34)
+    if (b.logo) {
+      drawDummyLogo(ctx, i * w + w / 2, 34, b.logo, b.name!, b.accent!)
+    } else if (b.text) {
+      ctx.fillStyle = b.fg!
+      ctx.font = '700 22px Archivo, system-ui, sans-serif'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText(b.text, i * w + w / 2, 34)
+    }
   })
   const tex = new THREE.CanvasTexture(cv)
   tex.colorSpace = THREE.SRGBColorSpace
@@ -46,7 +80,7 @@ function makeBoardsTexture(): THREE.CanvasTexture {
 }
 
 export function Barrier() {
-  const boardsTex = useMemo(makeBoardsTexture, [])
+  const boardsTex = useMemo(() => makeBoardsTexture(), [])
   const postsRef = useRef<THREE.InstancedMesh>(null)
 
   // Pfosten instanziert (1 Draw-Call)

@@ -4,7 +4,7 @@ import { PlayerCardGrid } from './PlayerCardGrid'
 import { MusicSectionPlayer } from './MusicSection'
 import { FussballWidget } from './FussballWidget'
 import { PlatzFinden } from './PlatzFinden'
-import { SponsorsStrip, NextMatch } from './SponsorsStrip'
+import { SponsorsStrip, NextMatch, SponsorPitch } from './SponsorsStrip'
 import { FanChantToggle } from './FanChantToggle'
 
 const reveal = {
@@ -28,7 +28,7 @@ function Header({ kicker, title, body, center, h1 }: { kicker: string; title: st
 }
 
 export function Sections() {
-  const [verein, mannschaft, fanblock, musik, tabelle, kontakt] = SECTIONS
+  const [verein, mannschaft, fanblock, musik, sponsoren, tabelle, kontakt] = SECTIONS
 
   return (
     <main className="scroll-root">
@@ -94,7 +94,15 @@ export function Sections() {
         <MusicSectionPlayer />
       </section>
 
-      {/* 3 · TABELLE */}
+      {/* 4 · SPONSOREN (v9-E4, die Geld-Station) — Banden-Zoom im 3D,
+          hier die Argumente + WhatsApp-CTA + „dein Logo"-Slots. */}
+      <section id={sponsoren.id} className="section section--left">
+        <div className="section__scrim" />
+        <Header kicker={sponsoren.kicker} title={sponsoren.title} body={sponsoren.body} />
+        <SponsorPitch />
+      </section>
+
+      {/* 5 · TABELLE */}
       <section id={tabelle.id} className="section section--left">
         <div className="section__scrim" />
         <Header kicker={tabelle.kicker} title={tabelle.title} body={tabelle.body} />

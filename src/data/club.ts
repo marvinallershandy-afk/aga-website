@@ -52,6 +52,13 @@ export const SECTIONS: Section[] = [
     body: 'Willkommen im Partyraum — hier läuft „Aga Urknall", unsere eigene Musik, benannt nach der Truppe, die 2024 den Riesenkicker holte (Grüße an Dynamo Tresen und die Durstigen Männer). Songs über Anpfiff, Abpfiff und alles, was dazwischen knallt, geschrieben von einem von uns. Drück Play, dreh auf — wer mitgrölt, ist schon fast Mitglied.',
   },
   {
+    id: 'sponsoren',
+    label: 'Sponsoren',
+    kicker: 'Für Unternehmen',
+    title: 'Deine Bande\nwartet',
+    body: 'Jeden Sonntag stehen hier Leute an der Bande, im Dorf und in der Story. Dein Logo direkt am Spielfeld — plus Reichweite auf Instagram, echtes lokales Herz und ein Verein, hinter dem das ganze Dorf steht. Wir haben eine Bande extra für dich freigelassen.',
+  },
+  {
     id: 'tabelle',
     label: 'Tabelle',
     kicker: 'Ergebnisse & Tabelle',
@@ -109,4 +116,12 @@ export const CONTACT = {
   training: 'Di & Do, ab 19:00 Uhr',
   instagram: '@sva_fussball',
   instagramUrl: 'https://instagram.com/sva_fussball',
+  // PLATZHALTER (Marvin trägt die echte Vereins-/Ansprechpartner-Nummer
+  // ein, internationales Format ohne + und ohne führende 0).
+  whatsapp: '491700000000',
 } as const
+
+// wa.me-Deeplink mit vorformulierter Nachricht (v9-E4, Sponsoren-CTA).
+export function whatsappUrl(text: string): string {
+  return `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(text)}`
+}

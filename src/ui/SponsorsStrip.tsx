@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { SPONSORS, SPONSOR_PLACEHOLDER_SLOTS, NEXT_MATCH } from '../data/club'
+import { SPONSORS, SPONSOR_PLACEHOLDER_SLOTS, NEXT_MATCH, whatsappUrl } from '../data/club'
 
 // ─────────────────────────────────────────────────────────────
 // Sponsoren-Strip + Nächstes Heimspiel (v8-E5). Solange keine echten
@@ -27,6 +27,40 @@ export function NextMatch() {
         {NEXT_MATCH.isPlaceholder && <span className="next-match__ph"> · Platzhalter</span>}
       </span>
     </motion.div>
+  )
+}
+
+// v9-E4: Die Sponsoren-Station (Geld-Station). Argumente knackig,
+// WhatsApp-CTA „Bande sichern", darunter die freien Logo-Slots.
+const SPONSOR_ARGS = [
+  { h: 'Reichweite', p: 'Jeden Sonntag am Platz, jede Woche in der Story. Dein Logo sieht das halbe Dorf.' },
+  { h: 'Echtes Herz', p: 'Kein anonymes Banner an der Autobahn — ein Verein, den hier alle kennen und lieben.' },
+  { h: 'Logo am Platz', p: 'Deine Bande direkt am Spielfeldrand. Wir haben extra eine für dich freigelassen.' },
+]
+const WA_TEXT = 'Hallo SV Agathenburg-Dollern! Ich interessiere mich für eine Bande / ein Sponsoring. Erzählt mir mehr?'
+
+export function SponsorPitch() {
+  return (
+    <>
+      <motion.div className="sponsor-args" {...reveal}>
+        {SPONSOR_ARGS.map((a) => (
+          <div className="sponsor-arg" key={a.h}>
+            <h3>{a.h}</h3>
+            <p>{a.p}</p>
+          </div>
+        ))}
+      </motion.div>
+      <motion.a
+        className="btn btn--wa"
+        href={whatsappUrl(WA_TEXT)}
+        target="_blank"
+        rel="noreferrer"
+        {...reveal}
+      >
+        Bande sichern · WhatsApp
+      </motion.a>
+      <SponsorsStrip />
+    </>
   )
 }
 
