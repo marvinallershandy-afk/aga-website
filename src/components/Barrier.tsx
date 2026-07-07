@@ -74,11 +74,13 @@ function makeBoardsTexture(): THREE.CanvasTexture {
       ctx.fillStyle = '#f0ece2'
       fitText(ctx, 'SV AGATHENBURG-\nDOLLERN 1949', cx + 7, H / 2, maxW, 62)
     } else if (b.kind === 'cta') {
+      // v11-E6: CTA in CI-Rot, WhatsApp UND E-Mail (kein Preis).
       ctx.fillStyle = COLORS.red; ctx.fillRect(x0 + pad, pad, w - pad * 2, H - pad * 2)
+      ctx.fillStyle = '#0c0a0b'; ctx.fillRect(x0 + pad, pad, 14, H - pad * 2)
       ctx.fillStyle = '#ffffff'
-      fitText(ctx, 'WERDE\nSPONSOR', cx, H / 2 - 18, maxW, 66)
-      ctx.fillStyle = 'rgba(255,255,255,0.85)'
-      fitText(ctx, 'per WhatsApp', cx, H / 2 + 58, maxW, 28, 700)
+      fitText(ctx, 'WERDE\nSPONSOR', cx, H / 2 - 18, maxW, 64)
+      ctx.fillStyle = 'rgba(255,255,255,0.9)'
+      fitText(ctx, 'WhatsApp · E-Mail', cx, H / 2 + 58, maxW, 28, 700)
     } else if (b.kind === 'name') {
       ctx.fillStyle = '#eef1f4'; ctx.fillRect(x0 + pad, pad, w - pad * 2, H - pad * 2)
       ctx.fillStyle = '#1a1718'
@@ -96,12 +98,18 @@ function makeBoardsTexture(): THREE.CanvasTexture {
       }
       img.src = b.sponsor!.logoUrl!
     } else {
-      // empty → begehrter Platzhalter
-      ctx.fillStyle = i % 2 ? '#f2efe8' : '#e8e4da'; ctx.fillRect(x0 + pad, pad, w - pad * 2, H - pad * 2)
-      ctx.strokeStyle = 'rgba(138,37,48,0.45)'; ctx.lineWidth = 4
-      ctx.setLineDash([16, 12]); ctx.strokeRect(x0 + pad * 3, pad * 3, w - pad * 6, H - pad * 6); ctx.setLineDash([])
-      ctx.fillStyle = '#8a2530'
-      fitText(ctx, 'HIER KÖNNTE\nDEIN LOGO STEHEN', cx, H / 2, maxW, 48)
+      // v11-E6: leerer Slot im CI-Look (Schwarz/Rot) statt weiß-cremiger Tafel.
+      // Wechselnder, einladender Claim — kein Preis, klare „du fehlst"-Ansprache.
+      const emptyIdx = i // Board-Index für Alternierung
+      ctx.fillStyle = '#0f0c0d'; ctx.fillRect(x0 + pad, pad, w - pad * 2, H - pad * 2)
+      ctx.fillStyle = COLORS.red; ctx.fillRect(x0 + pad, pad, 14, H - pad * 2)
+      ctx.strokeStyle = 'rgba(233,29,41,0.6)'; ctx.lineWidth = 4
+      ctx.setLineDash([18, 12]); ctx.strokeRect(x0 + pad * 3, pad * 3, w - pad * 6, H - pad * 6); ctx.setLineDash([])
+      ctx.fillStyle = '#ffffff'
+      const claim = emptyIdx % 2 ? 'HIER FEHLST\nNOCH DU' : 'DIESE BANDE\nSUCHT DICH'
+      fitText(ctx, claim, cx + 7, H / 2 - 8, maxW, 54)
+      ctx.fillStyle = 'rgba(233,29,41,0.9)'
+      fitText(ctx, 'WERDE SPONSOR', cx + 7, H / 2 + 62, maxW, 24, 800)
     }
   })
 

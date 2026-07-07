@@ -577,6 +577,60 @@
   letter-spacing: .02em;
 }
 
+/* ── Sponsoren-CTAs (WhatsApp + E-Mail) ─────────────────────── */
+.sponsor-ctas { display: flex; flex-wrap: wrap; gap: .7rem; margin-top: .4rem; }
+.btn--sm { padding: .5rem .9rem; font-size: .78rem; }
+
+/* ── Sponsoren-Karussell (v11-E6) ───────────────────────────── */
+.carousel { display: flex; align-items: stretch; gap: .6rem; margin-top: .7rem; }
+.carousel__arrow {
+  flex: 0 0 auto;
+  width: 2.6rem;
+  border: 1px solid rgba(232,193,90,.3);
+  border-radius: 10px;
+  background: rgba(255,255,255,.04);
+  color: #fff;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background .2s, border-color .2s;
+}
+.carousel__arrow:hover { background: rgba(233,29,41,.18); border-color: var(--red); }
+.carousel__stage { flex: 1 1 auto; min-width: 0; }
+.carousel__slot {
+  min-height: 150px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  padding: 1.2rem;
+  text-align: center;
+}
+.carousel__slot--logo { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); }
+.carousel__slot--logo img { max-width: 70%; max-height: 120px; object-fit: contain; }
+.carousel__slot--empty {
+  background: linear-gradient(135deg, rgba(233,29,41,.14), rgba(12,10,11,.4));
+  border: 1px dashed rgba(233,29,41,.55);
+  gap: .6rem;
+}
+.carousel__claim {
+  font-family: var(--font-display);
+  font-size: clamp(1.4rem, 4vw, 2rem);
+  letter-spacing: .01em;
+  text-transform: uppercase;
+  color: #fff;
+  line-height: 1;
+}
+.carousel__sub { font-size: .82rem; color: rgba(255,255,255,.66); max-width: 34ch; }
+.carousel__ctas { display: flex; gap: .6rem; margin-top: .3rem; }
+.carousel__dots { display: flex; justify-content: center; gap: .45rem; margin-top: .8rem; }
+.carousel__dot {
+  width: .55rem; height: .55rem; border-radius: 50%;
+  border: none; padding: 0; cursor: pointer;
+  background: rgba(255,255,255,.25);
+  transition: background .2s, transform .2s;
+}
+.carousel__dot.is-active { background: var(--red); transform: scale(1.25); }
+
 /* ── Platz finden (Route) ───────────────────────────────────── */
 .platz-finden {
   display: flex;
