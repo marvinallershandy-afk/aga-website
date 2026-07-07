@@ -79,7 +79,12 @@ export function HoloCard({ player, onClick, large }: Props) {
             <img src={player.photoUrl} alt={player.name} loading="lazy" />
           </div>
         ) : (
-          <div className="holo__silhouette" />
+          // v10-E3: edler Platzhalter statt „Geister-Silhouette" — großes
+          // Wappen + Rückennummer, wirkt gewollt (kein schwebender Kopf-Kreis).
+          <div className="holo__nophoto">
+            <span className="holo__nophoto-num">{player.number}</span>
+            <img className="holo__nophoto-crest" src="/brand/wappen.png" alt="" aria-hidden="true" />
+          </div>
         )}
       </div>
 

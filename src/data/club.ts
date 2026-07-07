@@ -28,14 +28,14 @@ export const SECTIONS: Section[] = [
     label: 'Verein',
     kicker: 'Seit 1949 · Agathenburg',
     title: 'Willkommen\nam Platz',
-    body: 'Ein Dorf, ein Flutlicht, elf Mann — und eine Bande, hinter der man jeden kennt. Der SV Agathenburg-Dollern ist seit 1949 das Wohnzimmer von Agathenburg. Scroll dich einmal quer über unseren Platz und schau, ob du bleibst. Spoiler: Du bleibst.',
+    body: 'Ein Dorf, Flutlicht an vier Masten, elf Mann — und eine Bande, hinter der man jeden kennt. Der SV Agathenburg-Dollern, seit 1949 mitten in Agathenburg. Scroll dich einmal quer über unseren Platz und schau, ob du bleibst. Spoiler: Du bleibst.',
   },
   {
     id: 'mannschaft',
     label: 'Mannschaft',
     kicker: '1. Herren',
     title: 'Unsere\nMannschaft',
-    body: 'Sechzehn Typen, die montags humpeln und sonntags fliegen. Jeder von ihnen als Sammelkarte — Metall-Foil, echte Zahlen und genug Stolz für ein ganzes Album. Tipp eine Karte an und teil deinen Spieler in der Story.',
+    body: 'Eine Truppe, die montags humpelt und sonntags fliegt. Jeder als Sammelkarte — Metall-Foil, echte Zahlen und genug Stolz für ein ganzes Album. Tipp eine Karte an und teil deinen Spieler in der Story. Der Trainerstab steht darunter — die, die den Laden zusammenhalten.',
   },
   {
     id: 'fanblock',

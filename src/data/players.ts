@@ -34,6 +34,42 @@ export const POSITION_LABEL: Record<Position, string> = {
   ANG: 'Angriff',
 }
 
+// ── Trainerstab (v10-E2) ─────────────────────────────────────
+// Eigene Kategorie — KEINE Spieler-Stats (Rating/Tore/Assists), sondern
+// Rolle + „seit im Verein". Carsten ist TRAINER (im Foto Trainer-Polo),
+// war fälschlich als Angreifer im Kader. Co-Trainer/Teammanager als Slots
+// vorbereitet (Marvin trägt echte Namen/Fotos nach, s. README).
+export type StaffRole = 'trainer' | 'co-trainer' | 'teammanager'
+
+export interface Staff {
+  id: string
+  name: string
+  role: StaffRole
+  since: number
+  photoUrl: string | null
+  /** Nur Teammanager: vorformulierte WhatsApp-Nachricht für „Schreib mir". */
+  contactMessage?: string
+}
+
+export const ROLE_LABEL: Record<StaffRole, string> = {
+  trainer: 'Trainer',
+  'co-trainer': 'Co-Trainer',
+  teammanager: 'Teammanager',
+}
+
+export const STAFF: Staff[] = [
+  { id: 's1', name: 'Carsten', role: 'trainer', since: 2016, photoUrl: '/players/carsten.webp' },
+  { id: 's2', name: 'Name folgt', role: 'co-trainer', since: 2020, photoUrl: null },
+  {
+    id: 's3',
+    name: 'Name folgt',
+    role: 'teammanager',
+    since: 2018,
+    photoUrl: null,
+    contactMessage: 'Hallo! Ich habe eine Frage zum SV Agathenburg-Dollern.',
+  },
+]
+
 // 16 Kader-Slots. FOTO-PIPELINE (v5): Datei nach Schema
 // public/players/<vorname-klein>.webp (Hochformat, Kopf im oberen
 // Drittel — Rest macht die Duotone-CSS-Behandlung + Focal oben).
@@ -49,7 +85,7 @@ export const PLAYERS: Player[] = [
   { id: 'p06', name: 'Nico Wolff', number: 6, position: 'MIT', photoUrl: null, stats: { games: 25, goals: 4, assists: 7 }, rating: 83, since: 2015 },
   { id: 'p07', name: 'Julio', number: 7, position: 'MIT', photoUrl: '/players/julio.webp', stats: { games: 24, goals: 6, assists: 9 }, rating: 85, since: 2018 },
   { id: 'p08', name: 'Felix Braun', number: 8, position: 'MIT', photoUrl: null, stats: { games: 22, goals: 5, assists: 6 }, rating: 81, since: 2019 },
-  { id: 'p09', name: 'Carsten', number: 9, position: 'ANG', photoUrl: '/players/carsten.webp', stats: { games: 25, goals: 18, assists: 4 }, rating: 88, since: 2016 },
+  // Carsten (ehem. #9) ist Trainer → jetzt im Trainerstab (STAFF), nicht im Kader.
   { id: 'p10', name: 'Eli', number: 10, position: 'ANG', photoUrl: '/players/eli.webp', stats: { games: 24, goals: 14, assists: 11 }, rating: 89, since: 2014, isPlayerOfMonth: true },
   { id: 'p11', name: 'Paul Neumann', number: 11, position: 'ANG', photoUrl: null, stats: { games: 23, goals: 12, assists: 5 }, rating: 84, since: 2021 },
   { id: 'p12', name: 'Jan Köhler', number: 12, position: 'TW', photoUrl: null, stats: { games: 6, goals: 0, assists: 0 }, rating: 70, since: 2022 },

@@ -56,7 +56,13 @@ So kommen die restlichen Fotos in die Karten:
    ```
 3. **Eintragen** in `src/data/players.ts`: beim Spieler
    `photoUrl: '/players/vorname.webp'` setzen (und `name` echt machen).
-   Kein Foto → `photoUrl: null` = gestaltete Silhouetten-Karte.
+   Kein Foto → `photoUrl: null` = edle Platzhalter-Karte (Wappen + Rückennummer,
+   v10-E3 — kein „Geister"-Effekt mehr).
+
+**Trainerstab-Fotos** genauso: Datei nach `public/players/<name>.webp`, dann in
+`src/data/players.ts` → `STAFF` beim Mitglied `photoUrl` setzen (und `name` echt).
+Rollen: `trainer` (Carsten, Foto vorhanden), `co-trainer`, `teammanager`. Beim
+Teammanager macht `contactMessage` den „Schreib mir"-WhatsApp-Button.
 
 Beschnitt/Einfärbung: Focal oben + Team-Duotone macht das CSS; die
 Graustufen sind aus Performance-Gründen in der Datei gebaked (s. Einzeiler). Eingebaut sind bereits: Tino (1, TW),
