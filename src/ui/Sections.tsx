@@ -6,7 +6,6 @@ import { MusicSectionPlayer } from './MusicSection'
 import { FussballWidget } from './FussballWidget'
 import { PlatzFinden } from './PlatzFinden'
 import { SponsorsStrip, NextMatch, SponsorPitch } from './SponsorsStrip'
-import { FanChantToggle } from './FanChantToggle'
 import { FanGallery } from './FanGallery'
 import { WaIcon, IgIcon } from './Icons'
 
@@ -88,8 +87,8 @@ export function Sections() {
       <section id={fanblock.id} className="section section--left">
         <div className="section__scrim" />
         <Header kicker={fanblock.kicker} title={fanblock.title} body={fanblock.body} />
-        <FanChantToggle />
-        {/* v11-E7: Meisterfeier-Kacheln + Lightbox */}
+        {/* v12-E1: „Fangesang an"-Button entfernt — Ton ist global (Mute unten rechts). */}
+        {/* v11-E7: Meisterfeier-Kacheln + Lightbox (v12-E1: nur echte Fotos) */}
         <FanGallery />
       </section>
 

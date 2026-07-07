@@ -3,10 +3,13 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { FAN_PHOTOS } from '../data/club'
 
 // ─────────────────────────────────────────────────────────────
-// v11-E7: Meisterfeier-Foto-Kacheln im Fanblock + Lightbox-Zoom.
+// v11-E7 / v12-E1: Meisterfeier-Foto-Kacheln im Fanblock + Lightbox.
 // Jede Kachel ist gerahmt („Meister 2024" / „Das letzte Tor" …).
-// Echte Fotos trägt Marvin nach (FAN_PHOTOS[].src); leer → gestaltete
-// „Foto folgt"-Kachel, damit die Galerie schon jetzt vollständig wirkt.
+// v12-E1: KEINE „Foto folgt"-Platzhalterkacheln mehr — es werden NUR
+// Kacheln mit echtem Foto (src) gerendert. Solange Marvin noch keine
+// Bilder geliefert hat, bleibt die Galerie unsichtbar (kein leerer Rahmen,
+// kein Platzhalter-Text). Sobald FAN_PHOTOS[].src gesetzt ist, erscheint
+// die Kachel automatisch — anklickbar → Lightbox-Zoom.
 // ─────────────────────────────────────────────────────────────
 
 const reveal = {
@@ -16,13 +19,15 @@ const reveal = {
   transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] as const },
 }
 
+// Nur Fotos mit echtem Bild — Reihenfolge/Rahmung bleibt erhalten.
+const PHOTOS = FAN_PHOTOS.filter((p) => !!p.src)
+
 export function FanGallery() {
   const [open, setOpen] = useState<number | null>(null)
-  const has = (i: number) => !!FAN_PHOTOS[i]?.src
 
   const close = useCallback(() => setOpen(null), [])
   const step = useCallback((d: number) => {
-    setOpen((v) => (v === null ? v : (v + d + FAN_PHOTOS.length) % FAN_PHOTOS.length))
+    setOpen((v) => (v === null ? v : (v + d + PHOTOS.length) % PHOTOS.length))
   }, [])
 
   useEffect(() => {
@@ -40,21 +45,20 @@ export function FanGallery() {
     }
   }, [open, close, step])
 
+  // Noch keine echten Fotos → Galerie bleibt komplett unsichtbar.
+  if (PHOTOS.length === 0) return null
+
   return (
     <>
       <motion.div className="fan-gallery" {...reveal}>
-        {FAN_PHOTOS.map((p, i) => (
+        {PHOTOS.map((p, i) => (
           <button
             key={i}
-            className={`fan-tile${p.src ? '' : ' fan-tile--empty'}`}
-            onClick={() => has(i) && setOpen(i)}
-            aria-label={p.src ? `${p.tag}: ${p.caption} — vergrößern` : `${p.tag} — Foto folgt`}
+            className="fan-tile"
+            onClick={() => setOpen(i)}
+            aria-label={`${p.tag}: ${p.caption} — vergrößern`}
           >
-            {p.src ? (
-              <img src={p.src} alt={p.caption} loading="lazy" />
-            ) : (
-              <span className="fan-tile__ph">Foto folgt</span>
-            )}
+            <img src={p.src} alt={p.caption} loading="lazy" />
             <span className="fan-tile__frame">
               <span className="fan-tile__tag">{p.tag}</span>
               <span className="fan-tile__cap">{p.caption}</span>
@@ -64,7 +68,7 @@ export function FanGallery() {
       </motion.div>
 
       <AnimatePresence>
-        {open !== null && FAN_PHOTOS[open]?.src && (
+        {open !== null && PHOTOS[open]?.src && (
           <motion.div
             className="lightbox"
             initial={{ opacity: 0 }}
@@ -80,9 +84,9 @@ export function FanGallery() {
               exit={{ scale: 0.94, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <img src={FAN_PHOTOS[open].src} alt={FAN_PHOTOS[open].caption} />
+              <img src={PHOTOS[open].src} alt={PHOTOS[open].caption} />
               <figcaption>
-                <b>{FAN_PHOTOS[open].tag}</b> · {FAN_PHOTOS[open].caption}
+                <b>{PHOTOS[open].tag}</b> · {PHOTOS[open].caption}
               </figcaption>
             </motion.figure>
             <button className="lightbox__nav lightbox__nav--next" onClick={(e) => { e.stopPropagation(); step(1) }} aria-label="Weiter">›</button>

@@ -117,6 +117,13 @@ body {
   inset: 0;
   z-index: -1;
   pointer-events: none;
+  /* v12-E1: harte Ober-/Unterkante der Scrim-Box weichzeichnen. Vorher
+     sprang der dunkle Lesbarkeits-Verlauf an jeder Sektions-/Gap-Grenze
+     abrupt an/aus → sichtbare schwarze Balken beim Scrollen (und der
+     „Strich" unter der Hero-Ebene). Der vertikale Mask-Fade lässt jede
+     Scrim-Box oben/unten sanft auslaufen → nahtloser Übergang. */
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 14%, #000 86%, transparent 100%);
+  mask-image: linear-gradient(180deg, transparent 0, #000 14%, #000 86%, transparent 100%);
 }
 .section--left .section__scrim {
   background: linear-gradient(90deg, rgba(8,7,10,0.82) 0%, rgba(8,7,10,0.5) 38%, rgba(8,7,10,0) 70%);
