@@ -16,6 +16,7 @@ import { BallStopFence } from './BallStopFence'
 import { BrickHut } from './BrickHut'
 import { Village } from './Village'
 import { FanBlock } from './FanBlock'
+import { PlayerCards3D } from './PlayerCards3D'
 import { Football } from './Football'
 import { KickoffDirector } from './KickoffDirector'
 import { ConeDust } from './ConeDust'
@@ -56,6 +57,7 @@ export function Scene() {
       <BrickHut />
       <Village />
       <FanBlock />
+      <PlayerCards3D />
       <Treeline />
       <Suspense fallback={null}>
         <ForestTrees />

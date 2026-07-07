@@ -49,10 +49,16 @@ body {
 }
 
 /* ── Scroll content that overlays the stage ─────────────────── */
+/* v11-E1: Der Scroll-Container selbst fängt KEINE Pointer-Events mehr —
+   sonst würde er (als voll-hoher Kasten über dem Canvas) Klicks abfangen,
+   die eigentlich die 3D-Karten treffen sollen. Die einzelnen Sektionen
+   reaktivieren die Events (Standard-Scrollytelling-Muster: Container none,
+   Inhalt auto). Scrollen bleibt unberührt (läuft übers Dokument). */
 .scroll-root {
   position: relative;
   z-index: 1;
   width: 100%;
+  pointer-events: none;
 }
 
 .section {
@@ -63,6 +69,7 @@ body {
   justify-content: center;
   padding: clamp(1.5rem, 6vw, 6rem);
   position: relative;
+  pointer-events: auto;
 }
 
 .section__kicker {
@@ -114,6 +121,13 @@ body {
 .section--left .section__scrim {
   background: linear-gradient(90deg, rgba(8,7,10,0.82) 0%, rgba(8,7,10,0.5) 38%, rgba(8,7,10,0) 70%);
 }
+/* v11-E1: Sektion für 3D-Karten-Klicks durchlässig machen. Die Sektion selbst
+   fängt keine Pointer-Events mehr → Taps erreichen die 3D-Karten im Canvas
+   darunter. Text bleibt sichtbar. Interaktive Kinder reaktivieren gezielt. */
+.section--passthrough { pointer-events: none; }
+.section--passthrough a,
+.section--passthrough button { pointer-events: auto; }
+
 .section--center { align-items: center; text-align: center; }
 .section--center .section__scrim {
   background: radial-gradient(ellipse at center, rgba(8,7,10,0.7) 0%, rgba(8,7,10,0.2) 60%, rgba(8,7,10,0) 100%);

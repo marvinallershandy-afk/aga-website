@@ -11,6 +11,17 @@
   margin-top: clamp(2rem, 5vw, 3.5rem);
 }
 
+/* v11-E1: Hinweis im 3D-Pfad — die Karten leben auf dem Platz. */
+.card-grid__hint {
+  margin-top: clamp(1.4rem, 3vw, 2.2rem);
+  max-width: 30ch;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.68);
+  border-left: 2px solid var(--sva-rot, #e91d29);
+  padding-left: 0.85rem;
+}
+
 .holo {
   --tiltX: 0deg;
   --tiltY: 0deg;

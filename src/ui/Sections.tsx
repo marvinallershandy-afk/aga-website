@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { useStore } from '../store/useStore'
 import { SECTIONS, CONTACT, CLUB, TEAM_PHOTO, whatsappUrl } from '../data/club'
 import { PlayerCardGrid } from './PlayerCardGrid'
 import { MusicSectionPlayer } from './MusicSection'
@@ -29,6 +30,7 @@ function Header({ kicker, title, body, center, h1 }: { kicker: string; title: st
 
 export function Sections() {
   const [verein, mannschaft, fanblock, musik, sponsoren, tabelle, kontakt] = SECTIONS
+  const fallback = useStore((s) => s.fallback)
 
   return (
     <main className="scroll-root">
@@ -64,8 +66,13 @@ export function Sections() {
           zwischen Verein und Mannschaft gesetzt (useScrollProgress.ts). */}
       <div id="anstoss-gap" aria-hidden="true" style={{ height: '80vh', pointerEvents: 'none' }} />
 
-      {/* 1 · MANNSCHAFT */}
-      <section id={mannschaft.id} className="section section--left">
+      {/* 1 · MANNSCHAFT — im 3D-Pfad LEBEN die Karten auf dem Platz (PlayerCards3D).
+          Die Sektion wird dann klick-durchlässig (pointer-events:none), damit Taps
+          die 3D-Karten unter der Sektion erreichen; Text bleibt sichtbar & lesbar. */}
+      <section
+        id={mannschaft.id}
+        className={`section section--left${fallback ? '' : ' section--passthrough'}`}
+      >
         <div className="section__scrim" />
         <Header kicker={mannschaft.kicker} title={mannschaft.title} body={mannschaft.body} />
         <PlayerCardGrid />
