@@ -19,9 +19,19 @@
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+  /* v12-E3: Scroll-Snap pro Station. `proximity` (nicht `mandatory`):
+     die Seite RASTET an jeder Sektion ein, wenn man dort zum Stehen kommt
+     — lässt aber die cinematischen Übergänge (Anstoß-Sturzflug im Gap,
+     langer Partyraum-Anflug in der 210vh-Musik-Sektion) frei durchscrubben.
+     Die Sektions-Zentren sind zugleich die komponierten Kamera-Posen
+     (Anker werden aus den Zentren gemessen) → am Snap steht jede Station
+     vollständig im Bild. */
+  scroll-snap-type: y proximity;
+  scroll-padding-top: 0;
 }
 @media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
+  /* reduced-motion: kein Snap, kein Smooth — ruhiges, freies Scrollen. */
+  html { scroll-behavior: auto; scroll-snap-type: none; }
 }
 
 body {
@@ -70,6 +80,8 @@ body {
   padding: clamp(1.5rem, 6vw, 6rem);
   position: relative;
   pointer-events: auto;
+  /* v12-E3: Snap-Ziel = Sektions-Mitte (= komponierte Kamera-Pose). */
+  scroll-snap-align: center;
 }
 
 .section__kicker {

@@ -32,7 +32,20 @@ export function Brandbar() {
         </a>
         <nav className="brandbar__nav">
           {SECTIONS.map((s, i) => (
-            <a key={s.id} href={`#${s.id}`} data-active={active === i}>
+            <a
+              key={s.id}
+              href={`#${s.id}`}
+              data-active={active === i}
+              // v12-E3: Reiter = Snap-Ziel. Statt an den Sektions-ANFANG zu
+              // springen (native #-Navigation), zentrieren wir die Sektion →
+              // exakt der komponierte Snap-Punkt (= Kamera-Pose der Station).
+              onClick={(e) => {
+                const el = document.getElementById(s.id)
+                if (!el) return
+                e.preventDefault()
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+              }}
+            >
               {s.label}
             </a>
           ))}
