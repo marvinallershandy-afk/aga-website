@@ -19,6 +19,7 @@ const LEVELS = {
   music: 0.42,
   musicParty: 0.75, // Partyraum (Etappe 6)
   fx: 0.6,
+  fanChant: 0.5, // Fanblock-Gesang (v9-E2), bewusst dezent
 } as const
 
 export type MusicMode = 'ambient' | 'party'
@@ -29,10 +30,13 @@ class AudioManagerImpl {
   private atmo!: GainNode
   private music!: GainNode
   private fx!: GainNode
+  private fan!: GainNode
   private el: HTMLAudioElement | null = null
   private enabled = false
   private mode: MusicMode = 'ambient'
   private atmoBoosted = false
+  private fanChantWanted = false
+  private fanBuilt = false
 
   trackIndex = 0
   playing = false
@@ -55,7 +59,68 @@ class AudioManagerImpl {
     this.fx = ctx.createGain()
     this.fx.gain.value = LEVELS.fx
     this.fx.connect(this.master)
+    this.fan = ctx.createGain()
+    this.fan.gain.value = 0 // default aus
+    this.fan.connect(this.master)
     this.buildAtmo(ctx)
+  }
+
+  /** Prozeduraler Fangesang-Teppich (v9-E2): gebändertes Rauschen mit
+   *  langsamem Tremolo (die „Woah"-Wellen der Kurve) + einem tiefen
+   *  Klopf-Puls (Trommel/Klatschen-Andeutung). Null Download; CC0-File
+   *  kann den Slot später ersetzen. Läuft leise, nur wenn getoggelt. */
+  private buildFanChant(ctx: AudioContext) {
+    if (this.fanBuilt) return
+    this.fanBuilt = true
+    // Gemurmel: weißes Rauschen → Bandpass (Stimmen-Band)
+    const len = ctx.sampleRate * 3
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate)
+    const d = buf.getChannelData(0)
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1
+    const src = ctx.createBufferSource()
+    src.buffer = buf
+    src.loop = true
+    const bp = ctx.createBiquadFilter()
+    bp.type = 'bandpass'
+    bp.frequency.value = 780
+    bp.Q.value = 0.9
+    // Tremolo: LFO moduliert eine Zwischen-Gain → Chor-Wellen
+    const trem = ctx.createGain()
+    trem.gain.value = 0.5
+    const lfo = ctx.createOscillator()
+    lfo.type = 'sine'
+    lfo.frequency.value = 0.5
+    const lfoGain = ctx.createGain()
+    lfoGain.gain.value = 0.42
+    lfo.connect(lfoGain)
+    lfoGain.connect(trem.gain)
+    src.connect(bp)
+    bp.connect(trem)
+    trem.connect(this.fan)
+    // Klopf-Puls: kurze tiefe Sinus-Bursts im Takt (~1.6 Hz)
+    const thump = ctx.createGain()
+    thump.gain.value = 0
+    const tOsc = ctx.createOscillator()
+    tOsc.type = 'sine'
+    tOsc.frequency.value = 92
+    tOsc.connect(thump)
+    thump.connect(this.fan)
+    const pOsc = ctx.createOscillator()
+    pOsc.type = 'square'
+    pOsc.frequency.value = 1.6
+    const pShape = ctx.createGain()
+    pShape.gain.value = 0.16
+    pOsc.connect(pShape)
+    pShape.connect(thump.gain)
+    src.start(); lfo.start(); tOsc.start(); pOsc.start()
+  }
+
+  /** Fangesang an/aus (v9-E2, Toggle in der Fanblock-Sektion). */
+  setFanChant(on: boolean) {
+    this.fanChantWanted = on
+    if (!this.ctx) return
+    this.buildFanChant(this.ctx)
+    this.ramp(this.fan, on && this.enabled ? LEVELS.fanChant : 0, 0.9)
   }
 
   /** Prozeduraler Stadion-Grundteppich: gefiltertes Brown-Noise (Wind)
@@ -105,6 +170,8 @@ class AudioManagerImpl {
       // Draußen läuft NUR die Stadion-Atmo — Musik startet erst im
       // Partyraum (setMode 'party') bzw. per Trackliste im Raum.
       if (this.mode === 'party' && !this.playing) this.play(this.trackIndex)
+      // Fangesang nachziehen, falls vor dem Ton-An getoggelt
+      if (this.fanChantWanted) this.setFanChant(true)
     } else if (this.ctx) {
       this.ramp(this.master, 0, 0.4)
       window.setTimeout(() => {

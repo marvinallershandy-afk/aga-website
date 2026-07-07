@@ -177,16 +177,39 @@ const FANS: { x: number; z: number; jersey: string; h: number; rot: number; flag
 ]
 
 export function FanBlock() {
-  const bannerTex = useMemo(makeBannerTexture, [])
+  const bannerTex = useMemo(() => makeBannerTexture(), [])
   const bannerRef = useRef<THREE.Mesh>(null)
+  const bannerGeo = useRef<THREE.PlaneGeometry>(null)
+  const bannerBase = useRef<Float32Array | null>(null)
   const scarfRef = useRef<THREE.Group>(null)
 
-  // Dezentes Leben: Banner wogt, Schal wippt (ambient, zeitbasiert)
+  // v9-E2: Banner weht im Wind — echte Tuch-Wellen (Vertex-Ripple auf
+  // dem Segment-Plane, günstig). Zwei wandernde Sinus über die Breite,
+  // Amplitude an den Halte-Enden (u≈0/1) gedämpft (dort halten die Fans).
+  // Dazu leichtes Gesamt-Wogen. Schal wippt weiter.
   useFrame((state) => {
     const t = state.clock.elapsedTime
+    const geo = bannerGeo.current
+    if (geo) {
+      const pos = geo.attributes.position as THREE.BufferAttribute
+      if (!bannerBase.current) bannerBase.current = (pos.array as Float32Array).slice()
+      const base = bannerBase.current
+      const halfW = 1.45 / 2
+      for (let i = 0; i < pos.count; i++) {
+        const x = base[i * 3]
+        const y = base[i * 3 + 1]
+        const u = (x + halfW) / 1.45 // 0..1 über die Breite
+        const grip = Math.sin(u * Math.PI) // 0 an den Enden, 1 in der Mitte
+        const wave =
+          Math.sin(u * 7.5 - t * 3.1) * 0.028 +
+          Math.sin(u * 4.0 - t * 2.0 + y * 3.0) * 0.02
+        pos.setZ(i, base[i * 3 + 2] + wave * (0.35 + 0.65 * grip))
+      }
+      pos.needsUpdate = true
+      geo.computeVertexNormals()
+    }
     if (bannerRef.current) {
-      bannerRef.current.rotation.z = Math.sin(t * 1.1) * 0.025
-      bannerRef.current.rotation.x = Math.sin(t * 0.7 + 1) * 0.03
+      bannerRef.current.rotation.z = Math.sin(t * 1.1) * 0.02
       bannerRef.current.position.y = 0.3 + Math.sin(t * 1.4) * 0.008
     }
     if (scarfRef.current) {
@@ -201,7 +224,7 @@ export function FanBlock() {
           Vorderseite zeigt zum Platz */}
       <group position={[CX, 0, HH + 0.22]} rotation-y={Math.PI}>
         <mesh ref={bannerRef} position={[0, 0.3, 0]}>
-          <planeGeometry args={[1.45, 0.3, 8, 2]} />
+          <planeGeometry ref={bannerGeo} args={[1.45, 0.3, 20, 4]} />
           <meshStandardMaterial map={bannerTex} side={THREE.DoubleSide} roughness={0.9} />
         </mesh>
         {/* Haltestangen an den Ecken */}

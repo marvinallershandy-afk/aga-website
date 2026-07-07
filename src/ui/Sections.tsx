@@ -5,6 +5,7 @@ import { MusicSectionPlayer } from './MusicSection'
 import { FussballWidget } from './FussballWidget'
 import { PlatzFinden } from './PlatzFinden'
 import { SponsorsStrip, NextMatch } from './SponsorsStrip'
+import { FanChantToggle } from './FanChantToggle'
 
 const reveal = {
   initial: { opacity: 0, y: 40 },
@@ -27,7 +28,7 @@ function Header({ kicker, title, body, center, h1 }: { kicker: string; title: st
 }
 
 export function Sections() {
-  const [verein, mannschaft, musik, tabelle, kontakt] = SECTIONS
+  const [verein, mannschaft, fanblock, musik, tabelle, kontakt] = SECTIONS
 
   return (
     <main className="scroll-root">
@@ -70,14 +71,23 @@ export function Sections() {
         <PlayerCardGrid />
       </section>
 
-      {/* Trenn-Polster (v8): klare „reiner Platz"-Beat zwischen Karten und
-          Partyraum-Anflug — die Mannschaft muss vollständig geräumt sein,
-          bevor der Vereinsheim-Anflug startet (Marvins Überlappungs-Kritik).
-          Schiebt zugleich die Musik-Sektion nach unten → Anflug (an musik.top
-          gekoppelt) startet später. */}
-      <div id="team-musik-gap" aria-hidden="true" style={{ height: '70vh', pointerEvents: 'none' }} />
+      {/* 2 · FANBLOCK (v9-E2, zurückgeholt) — die Südkurve, emotionaler
+          Beat. Kamera-Station 3 schwenkt in die SO-Ecke auf die Fans +
+          wehendes Banner (FanBlock.tsx). Linksbündig, rechts lebt die
+          Kurve im 3D. */}
+      <section id={fanblock.id} className="section section--left">
+        <div className="section__scrim" />
+        <Header kicker={fanblock.kicker} title={fanblock.title} body={fanblock.body} />
+        <FanChantToggle />
+      </section>
 
-      {/* 2 · MUSIK — AGA URKNALL, der Vereins-Soundtrack */}
+      {/* Trenn-Polster (v8): klare „reiner Platz"-Beat zwischen Fanblock und
+          Partyraum-Anflug — muss geräumt sein, bevor der Vereinsheim-Anflug
+          startet. Schiebt zugleich die Musik-Sektion nach unten → Anflug (an
+          musik.top gekoppelt) startet später. */}
+      <div id="team-musik-gap" aria-hidden="true" style={{ height: '60vh', pointerEvents: 'none' }} />
+
+      {/* 3 · MUSIK — AGA URKNALL, der Vereins-Soundtrack */}
       <section id={musik.id} className="section section--left">
         <div className="section__scrim" />
         <Header kicker={musik.kicker} title={musik.title} body={musik.body} />

@@ -27,12 +27,18 @@ const STATIONS: Station[] = [
   { pos: new THREE.Vector3(0.35, 0.62, 2.75), look: new THREE.Vector3(-2.6, 1.15, -1.9) },
   // 2 · MANNSCHAFT — tief, dynamisch, seitlich übers Mittelfeld gleitend
   { pos: new THREE.Vector3(-7.5, 2.6, 6.5), look: new THREE.Vector3(0.5, 1.0, -0.5) },
-  // 3 · MUSIK — Anflug aufs Vereinsheim: die Kamera schwenkt zur Tür,
+  // 3 · FANBLOCK (v9-E2, zurückgeholt) — Schwenk in die Süd-/SO-Kurve:
+  //     Blick von der Platzmitte auf die Fans + wehendes AGA-URKNALL-
+  //     Banner (FanBlock.tsx, CX=3.6 / z≈+3.95). Emotionaler Beat. y knapp
+  //     über FIELD_FLOOR (1.45), damit der Boden-Clamp die Pose nicht hebt
+  //     — robust auch wenn spätere Stationen die u-Lage verschieben.
+  { pos: new THREE.Vector3(2.9, 1.55, 2.3), look: new THREE.Vector3(3.7, 0.55, 4.0) },
+  // 4 · MUSIK — Anflug aufs Vereinsheim: die Kamera schwenkt zur Tür,
   //     dann schneidet der PartyDirector in den Partyraum (Dip-to-Black)
   { pos: new THREE.Vector3(4.6, 0.9, 1.5), look: new THREE.Vector3(7.1, 0.5, -0.35) },
-  // 4 · TABELLE — Schwenk zum echten Vereinsheim hinter dem Ost-Tor
+  // 5 · TABELLE — Schwenk zum echten Vereinsheim hinter dem Ost-Tor
   { pos: new THREE.Vector3(4.0, 0.95, 3.1), look: new THREE.Vector3(7.15, 0.32, -0.5) },
-  // 5 · KONTAKT/FINALE — RAUSZOOM in die Vogelperspektive (v8-E4): die
+  // 6 · KONTAKT/FINALE — RAUSZOOM in die Vogelperspektive (v8-E4): die
   //     Kamera steigt aus der Platznähe auf und macht die ganze Welt zur
   //     Standort-Karte. Blick von oben-Süd auf Platz + Vereinsheim (+x),
   //     der LocationMarker („Hier sind wir") blendet über dem Vereinsheim

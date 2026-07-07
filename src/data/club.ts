@@ -38,6 +38,13 @@ export const SECTIONS: Section[] = [
     body: 'Sechzehn Typen, die montags humpeln und sonntags fliegen. Jeder von ihnen als Sammelkarte — Metall-Foil, echte Zahlen und genug Stolz für ein ganzes Album. Tipp eine Karte an und teil deinen Spieler in der Story.',
   },
   {
+    id: 'fanblock',
+    label: 'Fans',
+    kicker: 'Die Südkurve',
+    title: 'Der\nFanblock',
+    body: 'Elf auf dem Platz, aber gewonnen wird an der Bande. Unsere Kurve steht bei jedem Wetter, hält die Fahne hoch und wird auch bei 0:3 nicht leiser. Banner hoch, Schal um, Stimme kaputt — hier gehörst du dazu, ab dem ersten Sonntag.',
+  },
+  {
     id: 'musik',
     label: 'Musik',
     kicker: 'Vereinsheim · Partyraum',

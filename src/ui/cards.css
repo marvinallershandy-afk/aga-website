@@ -775,3 +775,31 @@
 
 .wanted-card { transition: transform .2s ease, border-color .2s ease; }
 .wanted-card:hover { transform: translateY(-3px); border-color: rgba(233,29,41,.45); }
+
+/* Fangesang-Toggle (v9-E2, Fanblock) */
+.fanchant { display: flex; flex-direction: column; gap: .6rem; align-items: flex-start; margin-top: 1.6rem; }
+.fanchant__btn {
+  display: inline-flex; align-items: center; gap: .6rem;
+  padding: .75rem 1.3rem; border-radius: 999px;
+  background: rgba(255,255,255,.06); color: #fff;
+  border: 1px solid rgba(255,255,255,.18);
+  font-family: var(--font-display, inherit); font-weight: 800;
+  letter-spacing: .04em; font-size: .82rem; text-transform: uppercase;
+  cursor: pointer; transition: background .18s ease, border-color .18s ease, transform .18s ease;
+}
+.fanchant__btn:hover { transform: translateY(-2px); border-color: rgba(233,29,41,.5); }
+.fanchant__btn.is-on { background: var(--red); border-color: var(--red); }
+.fanchant__dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: rgba(255,255,255,.4); transition: background .2s ease, box-shadow .2s ease;
+}
+.fanchant__btn.is-on .fanchant__dot {
+  background: #fff; box-shadow: 0 0 0 0 rgba(255,255,255,.7);
+  animation: fanchant-pulse 1.4s ease-out infinite;
+}
+@keyframes fanchant-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(255,255,255,.6); }
+  100% { box-shadow: 0 0 0 9px rgba(255,255,255,0); }
+}
+.fanchant__hint { font-size: .74rem; color: rgba(255,255,255,.55); max-width: 30ch; line-height: 1.4; }
+@media (prefers-reduced-motion: reduce) { .fanchant__btn.is-on .fanchant__dot { animation: none; } }

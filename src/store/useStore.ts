@@ -54,6 +54,10 @@ interface AppState {
   soundOn: boolean
   setSoundOn: (v: boolean) => void
 
+  /** Fangesang-Ambience (v9-E2, Fanblock) — bewusst DEFAULT AUS, Toggle. */
+  fanChantOn: boolean
+  setFanChant: (v: boolean) => void
+
   /** Debug/Perf. */
   perfStats: PerfStats
   setPerfStats: (s: PerfStats) => void
@@ -126,6 +130,14 @@ export const useStore = create<AppState>((set) => ({
       localStorage.setItem('sva-sound', v ? 'on' : 'off')
     } catch { /* private mode */ }
     set({ soundOn: v })
+  },
+
+  fanChantOn: false,
+  setFanChant: (v) => {
+    try {
+      localStorage.setItem('sva-fanchant', v ? 'on' : 'off')
+    } catch { /* private mode */ }
+    set({ fanChantOn: v })
   },
 
   perfStats: { fps: 0, drawCalls: 0, triangles: 0 },
