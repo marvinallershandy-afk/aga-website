@@ -434,13 +434,20 @@
 .widget-note { font-size: .7rem; color: rgba(255,255,255,.5); padding: .2rem 0 0; }
 
 /* ── Saison-Cockpit (v11-E5) ────────────────────────────────── */
+/* v12-E5: volle Breite — Tabelle+Torschützen links, Form+Spiele rechts. */
 .cockpit {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.9rem;
+  grid-template-columns: 1.12fr 0.88fr;
+  gap: clamp(0.9rem, 2vw, 1.4rem);
   width: 100%;
-  max-width: 680px;
+  max-width: min(1180px, 100%);
   margin-top: clamp(1.6rem, 4vw, 2.6rem);
+  align-items: start;
+}
+.cockpit__main, .cockpit__side {
+  display: flex; flex-direction: column;
+  gap: clamp(0.9rem, 2vw, 1.4rem);
+  min-width: 0;
 }
 .cockpit__panel {
   background: rgba(14, 13, 13, 0.72);
@@ -448,13 +455,19 @@
   border-radius: 14px;
   padding: 0.9rem 1rem;
   backdrop-filter: blur(4px);
+  transition: border-color 0.22s ease, transform 0.22s ease, box-shadow 0.22s ease;
 }
-.cockpit__form { grid-column: 1 / -1; }
-.cockpit__matches { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; }
-.cockpit__table { grid-column: 1 / -1; }
-@media (max-width: 560px) {
-  .cockpit, .cockpit__matches { grid-template-columns: 1fr; }
-  .cockpit__scorers { grid-column: 1 / -1; }
+/* v12-E5: dezente Hover-Anhebung der Panels (Desktop). */
+@media (hover: hover) {
+  .cockpit__panel:hover {
+    transform: translateY(-2px);
+    border-color: rgba(232, 193, 90, 0.5);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+  }
+}
+.cockpit__matches { display: flex; flex-direction: column; gap: clamp(0.9rem, 2vw, 1.4rem); }
+@media (max-width: 860px) {
+  .cockpit { grid-template-columns: 1fr; }
 }
 
 .cockpit__label {
@@ -500,28 +513,55 @@
 .match-card__meta { display: block; text-align: center; margin-top: 0.5rem; font-size: 0.66rem; color: rgba(255,255,255,0.55); }
 .match-card--next { border-color: rgba(233, 29, 41, 0.4); }
 
-/* Torschützen */
-.scorer-list { list-style: none; display: flex; flex-direction: column; gap: 0.55rem; }
-.scorer { display: flex; align-items: center; gap: 0.7rem; }
-.scorer__rank { font-family: var(--font-display); font-size: 1.05rem; color: var(--gold); width: 1.1rem; }
+/* Torschützen — v12-E5 prominenter (größere Gesichter, Hover, Leader-Akzent) */
+.scorer-list { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
+.scorer {
+  display: flex; align-items: center; gap: 0.9rem;
+  padding: 0.5rem 0.6rem; border-radius: 10px;
+  border: 1px solid transparent;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+@media (hover: hover) {
+  .scorer:hover { background: rgba(255,255,255,0.05); border-color: rgba(232,193,90,0.3); transform: translateX(2px); }
+}
+.scorer--lead { background: rgba(233,29,41,0.1); border-color: rgba(233,29,41,0.3); }
+.scorer__rank { font-family: var(--font-display); font-size: 1.4rem; color: var(--gold); width: 1.4rem; text-align: center; }
 .scorer__face {
-  width: 2rem; height: 2rem; border-radius: 50%; overflow: hidden; flex: 0 0 auto;
+  width: 2.9rem; height: 2.9rem; border-radius: 50%; overflow: hidden; flex: 0 0 auto;
   background: linear-gradient(160deg, #E91D29, #6e1218 60%, #231f20);
   display: grid; place-items: center;
   border: 1px solid rgba(232,193,90,0.4);
 }
+.scorer--lead .scorer__face { width: 3.3rem; height: 3.3rem; border-color: var(--gold); }
 .scorer__face img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 18%; filter: grayscale(1) contrast(1.05); mix-blend-mode: luminosity; }
-.scorer__initials { font-family: var(--font-display); font-size: 0.8rem; color: #fff; }
-.scorer__name { flex: 1 1 auto; color: rgba(255,255,255,0.9); font-size: 0.92rem; }
+.scorer__initials { font-family: var(--font-display); font-size: 1.05rem; color: #fff; }
+.scorer__name { flex: 1 1 auto; color: #fff; font-size: 1.06rem; font-weight: 600; }
 .scorer__goals { font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.5); text-align: right; }
-.scorer__goals b { display: block; font-family: var(--font-display); font-size: 1.1rem; color: var(--gold); }
+.scorer__goals b { display: block; font-family: var(--font-display); font-size: 1.6rem; color: var(--gold); line-height: 1; }
+
+/* Countdown nächstes Heimspiel (v12-E5) */
+.countdown { display: flex; gap: 0.5rem; justify-content: center; margin-top: 0.7rem; }
+.countdown__cell {
+  display: flex; flex-direction: column; align-items: center;
+  min-width: 3rem; padding: 0.4rem 0.3rem; border-radius: 8px;
+  background: rgba(233,29,41,0.12); border: 1px solid rgba(233,29,41,0.28);
+}
+.countdown__cell b { font-family: var(--font-display); font-size: 1.5rem; color: #fff; line-height: 1; }
+.countdown__cell small { font-size: 0.54rem; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.55); margin-top: 0.25rem; }
+.match-card__cta { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; margin-top: 0.8rem; flex-wrap: wrap; }
+.match-card__cta .match-card__meta { margin-top: 0; text-align: right; }
 
 /* Tabelle */
 .cockpit-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
 .cockpit-table th { text-align: left; padding: 0.35rem 0.5rem; font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.45); }
-.cockpit-table td { padding: 0.5rem 0.5rem; border-top: 1px solid rgba(255,255,255,0.08); color: rgba(255,255,255,0.85); }
+.cockpit-table td { padding: 0.5rem 0.5rem; border-top: 1px solid rgba(255,255,255,0.08); color: rgba(255,255,255,0.85); transition: background 0.18s ease; }
 .cockpit-table__c { text-align: center; }
 .cockpit-table__pos { color: rgba(255,255,255,0.5); }
+/* v12-E5: Zeilen-Hover (Desktop) */
+@media (hover: hover) {
+  .cockpit-table tbody tr:hover td { background: rgba(255,255,255,0.06); }
+  .cockpit-table tbody tr.is-self:hover td { background: rgba(233,29,41,0.22); }
+}
 .cockpit-table tr.is-self td { background: rgba(233,29,41,0.14); color: #fff; font-weight: 700; }
 .cockpit-table tr.is-self .cockpit-table__pos { color: var(--gold); }
 
