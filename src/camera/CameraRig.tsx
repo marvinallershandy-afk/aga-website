@@ -2,8 +2,9 @@ import { useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useStore } from '../store/useStore'
-import { sampleFlight, cameraState } from './CameraPath'
+import { sampleFlight, cameraState, STATION_COUNT } from './CameraPath'
 import { scrollToU } from './anchors'
+import { PITCH } from '../utils/constants'
 import {
   PARTY_HOP,
   samplePartyApproach,
@@ -24,10 +25,26 @@ const devCam = (() => {
   return v.length === 6 && v.every((n) => !isNaN(n)) ? v : null
 })()
 
+// v12-E6: Geometrie der Süd-Bande (muss zu Barrier.tsx passen). 6 Tafeln:
+// [Verein, Slot0..3, CTA]. Das Karussell fokussiert die 4 Slot-Tafeln.
+const SP_BOARD_W = PITCH.width * 0.86
+const SP_PANELS = 6
+const SP_U = 6 / (STATION_COUNT - 1) // Scroll-Param der Sponsoren-Station
+function sponsorBoardX(focus: number): number {
+  const panelW = SP_BOARD_W / SP_PANELS
+  const boardIndex = 1 + THREE.MathUtils.clamp(focus, 0, 3) // Slot-Tafeln = Board 1..4
+  return -SP_BOARD_W / 2 + (boardIndex + 0.5) * panelW
+}
+function smoothstep(a: number, b: number, x: number) {
+  const t = THREE.MathUtils.clamp((x - a) / (b - a), 0, 1)
+  return t * t * (3 - 2 * t)
+}
+
 export function CameraRig() {
   const camera = useThree((s) => s.camera)
   const smoothed = useRef(0)
   const smoothedParty = useRef(0)
+  const smoothedSponsorX = useRef(sponsorBoardX(0))
   const pos = useRef(new THREE.Vector3())
   const look = useRef(new THREE.Vector3())
   const flightPos = useRef(new THREE.Vector3())
@@ -110,6 +127,18 @@ export function CameraRig() {
     const sway = 1 - smoothed.current * 0.6 // oben mehr, unten ruhiger
     pos.current.x += Math.sin(t * 0.18) * 0.14 * sway
     pos.current.y += Math.sin(t * 0.23 + 1.3) * 0.08 * sway
+
+    // v12-E6: Sponsoren-Karussell — nahe der Sponsoren-Station fährt die Kamera
+    // seitlich an der Bande entlang auf die fokussierte Tafel (Pfeile im DOM).
+    // Der Fokus-x wird gedämpft → sanftes „von Bande zu Bande fahren".
+    const wSp = smoothstep(0.11, 0.03, Math.abs(smoothed.current - SP_U)) // 1 an der Station, 0 weg
+    if (wSp > 0.001) {
+      const targetBx = sponsorBoardX(useStore.getState().sponsorFocus)
+      smoothedSponsorX.current = THREE.MathUtils.damp(smoothedSponsorX.current, targetBx, 3.5, delta)
+      const bx = smoothedSponsorX.current
+      pos.current.x = THREE.MathUtils.lerp(pos.current.x, bx + 0.1, wSp)
+      look.current.x = THREE.MathUtils.lerp(look.current.x, bx, wSp)
+    }
 
     camera.position.copy(pos.current)
     // zeitbasiert (nicht pro Frame): konvergiert auch bei niedriger FPS

@@ -1166,3 +1166,37 @@
   display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
   gap: clamp(.9rem, 2vw, 1.6rem);
 }
+
+/* ── v12-E6: Sponsoren — schlanke Banden-Karussell-Steuerung (3D-Bande) ── */
+.sponsor-pills {
+  display: flex; flex-wrap: wrap; gap: 0.5rem;
+  margin-top: clamp(1.2rem, 3vw, 1.8rem); max-width: 640px;
+}
+.sponsor-pill {
+  font-size: 0.78rem; font-weight: 600; letter-spacing: 0.01em;
+  color: rgba(255,255,255,0.9);
+  padding: 0.4rem 0.8rem; border-radius: 999px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(233,29,41,0.35);
+}
+.band-nav {
+  display: flex; align-items: center; gap: 0.9rem;
+  margin-top: 1.4rem; max-width: 560px;
+  background: rgba(10,8,12,0.55);
+  border: 1px solid rgba(233,29,41,0.3);
+  border-radius: 14px; padding: 0.7rem 0.8rem;
+}
+.band-nav__arrow {
+  appearance: none; cursor: pointer; flex: 0 0 auto;
+  width: 46px; height: 46px; border-radius: 50%;
+  background: var(--red); color: #fff; border: none;
+  font-size: 1.6rem; line-height: 1;
+  display: grid; place-items: center;
+  transition: transform 0.15s ease, background 0.2s ease;
+}
+.band-nav__arrow:hover { transform: scale(1.08); background: #ff2d3a; }
+.band-nav__arrow:active { transform: scale(0.94); }
+.band-nav__center { flex: 1 1 auto; text-align: center; min-width: 0; display: flex; flex-direction: column; gap: 0.25rem; }
+.band-nav__claim { font-family: var(--font-display); font-weight: 400; text-transform: uppercase; font-size: clamp(1rem, 2.4vw, 1.4rem); color: #fff; line-height: 1; }
+.band-nav__count { font-size: 0.66rem; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.55); }
+.band-nav__dots { display: flex; gap: 0.4rem; justify-content: center; margin-top: 0.35rem; }

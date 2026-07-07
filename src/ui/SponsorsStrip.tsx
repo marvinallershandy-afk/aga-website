@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { SPONSORS, SPONSOR_PLACEHOLDER_SLOTS, NEXT_MATCH, CONTACT, whatsappUrl } from '../data/club'
+import { useStore } from '../store/useStore'
 
 // ─────────────────────────────────────────────────────────────
 // Sponsoren-Station (Geld-Station). v11-E6: die Partner/„dein-Logo"-
@@ -36,32 +37,56 @@ export function NextMatch() {
   )
 }
 
-const SPONSOR_ARGS = [
-  { h: 'Reichweite', p: 'Jeden Sonntag am Platz, jede Woche in der Story. Dein Logo sieht das halbe Dorf.' },
-  { h: 'Echtes Herz', p: 'Kein anonymes Banner an der Autobahn — ein Verein, den hier alle kennen und lieben.' },
-  { h: 'Logo am Platz', p: 'Deine Bande direkt am Spielfeldrand. Wir haben extra eine für dich freigelassen.' },
-]
+// v12-E6: kompakte Vorteils-Pills statt drei Text-Kästen (weniger Text).
+const SPONSOR_PILLS = ['Logo am Spielfeldrand', 'Reichweite im Dorf & in der Story', 'Kein Preisschild — einfach fragen']
 
+// Die Claims der leeren Banden-Tafeln (in Sync mit Barrier.tsx-Slots).
+const BAND_CLAIMS = ['Diese Bande sucht dich', 'Hier fehlst noch du', 'Dein Logo am Spielfeld', 'Werde Teil der Kurve']
+
+// v12-E6: Das KARUSSELL LEBT JETZT AUF DER 3D-BANDE. Die Pfeile hier fahren die
+// Kamera an der Bande entlang von Tafel zu Tafel (Store: sponsorFocus). Der DOM
+// bleibt bewusst schlank: kurzer Pitch, Pfeile + Punkte, zwei CTAs.
 export function SponsorPitch() {
+  const focus = useStore((s) => s.sponsorFocus)
+  const count = useStore((s) => s.sponsorCount)
+  const setFocus = useStore((s) => s.setSponsorFocus)
+
   return (
     <>
-      <motion.div className="sponsor-args" {...reveal}>
-        {SPONSOR_ARGS.map((a) => (
-          <div className="sponsor-arg" key={a.h}>
-            <h3>{a.h}</h3>
-            <p>{a.p}</p>
-          </div>
+      <motion.div className="sponsor-pills" {...reveal}>
+        {SPONSOR_PILLS.map((p) => (
+          <span className="sponsor-pill" key={p}>{p}</span>
         ))}
       </motion.div>
+
+      {/* Banden-Karussell-Steuerung → fährt die 3D-Kamera an der Bande entlang */}
+      <motion.div className="band-nav" {...reveal}>
+        <button className="band-nav__arrow" onClick={() => setFocus(focus - 1)} aria-label="Bande davor">‹</button>
+        <div className="band-nav__center">
+          <span className="band-nav__claim">{BAND_CLAIMS[focus % BAND_CLAIMS.length]}</span>
+          <span className="band-nav__count">Bande {focus + 1} / {count} · an der Kamera vorbei</span>
+          <div className="band-nav__dots">
+            {Array.from({ length: count }, (_, k) => (
+              <button
+                key={k}
+                className={`carousel__dot${k === focus ? ' is-active' : ''}`}
+                onClick={() => setFocus(k)}
+                aria-label={`Bande ${k + 1}`}
+              />
+            ))}
+          </div>
+        </div>
+        <button className="band-nav__arrow" onClick={() => setFocus(focus + 1)} aria-label="Nächste Bande">›</button>
+      </motion.div>
+
       <motion.div className="sponsor-ctas" {...reveal}>
         <a className="btn btn--wa" href={whatsappUrl(WA_TEXT)} target="_blank" rel="noreferrer">
           Bande sichern · WhatsApp
         </a>
         <a className="btn btn--ghost" href={mailtoUrl}>
-          Per E-Mail anfragen
+          E-Mail
         </a>
       </motion.div>
-      <SponsorCarousel />
     </>
   )
 }

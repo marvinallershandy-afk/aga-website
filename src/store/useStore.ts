@@ -50,6 +50,13 @@ interface AppState {
   partyNear: boolean
   setPartyNear: (v: boolean) => void
 
+  /** Sponsoren-Karussell (v12-E6): fokussierte Banden-Tafel 0..N-1.
+   *  Die Pfeile in der Sponsoren-Sektion setzen den Fokus; die Kamera
+   *  fährt an der 3D-Bande entlang auf die fokussierte Tafel. */
+  sponsorFocus: number
+  sponsorCount: number
+  setSponsorFocus: (i: number) => void
+
   /** Ton an/aus (Nutzer-Entscheidung am Tor bzw. Mute-Toggle). */
   soundOn: boolean
   setSoundOn: (v: boolean) => void
@@ -123,6 +130,15 @@ export const useStore = create<AppState>((set) => ({
   setPartyOpen: (v) => set({ partyOpen: v }),
   partyNear: false,
   setPartyNear: (v) => set((s) => (s.partyNear === v ? s : { partyNear: v })),
+
+  // v12-E6: 4 „dein-Logo"-Tafeln (Banden-Slots) — Fokus wandert per Pfeil.
+  sponsorFocus: 0,
+  sponsorCount: 4,
+  setSponsorFocus: (i) => set((s) => {
+    const n = s.sponsorCount
+    const wrapped = ((i % n) + n) % n
+    return s.sponsorFocus === wrapped ? s : { sponsorFocus: wrapped }
+  }),
 
   soundOn: false,
   setSoundOn: (v) => {
