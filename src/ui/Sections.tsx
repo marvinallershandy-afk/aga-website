@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { SECTIONS, CONTACT, CLUB, TEAM_PHOTO } from '../data/club'
+import { SECTIONS, CONTACT, CLUB, TEAM_PHOTO, whatsappUrl } from '../data/club'
 import { PlayerCardGrid } from './PlayerCardGrid'
 import { MusicSectionPlayer } from './MusicSection'
 import { FussballWidget } from './FussballWidget'
@@ -114,12 +114,33 @@ export function Sections() {
         <div className="section__scrim" />
         <Header kicker={kontakt.kicker} title={kontakt.title} body={kontakt.body} />
 
+        {/* v9-E5: direkter Draht ganz vorn — WhatsApp + Instagram prominent,
+            E-Mail nur noch sekundär im Info-Raster unten. */}
+        <motion.div className="contact-actions" {...reveal}>
+          <a
+            className="btn btn--wa"
+            href={whatsappUrl('Hallo SV Agathenburg-Dollern! Ich habe eine Frage / will vorbeikommen.')}
+            target="_blank"
+            rel="noreferrer"
+          >
+            WhatsApp schreiben
+          </a>
+          <a className="btn btn--ig" href={CONTACT.instagramUrl} target="_blank" rel="noreferrer">
+            {CONTACT.instagram} folgen
+          </a>
+        </motion.div>
+
         {/* Wen wir suchen — jeder Baustein mit nächstem Schritt */}
         <motion.div className="wanted-grid" {...reveal}>
           <div className="wanted-card">
             <h3>Spieler</h3>
             <p>Du kannst kicken? Oder glaubst es zumindest? Beides reicht für den Anfang.</p>
-            <a className="btn btn--primary" href={`mailto:${CONTACT.email}?subject=Probetraining`}>
+            <a
+              className="btn btn--primary"
+              href={whatsappUrl('Hallo! Ich würde gern beim Probetraining vorbeikommen.')}
+              target="_blank"
+              rel="noreferrer"
+            >
               Probetraining: einfach da sein
             </a>
           </div>
@@ -138,7 +159,12 @@ export function Sections() {
           <div className="wanted-card">
             <h3>Sponsoren</h3>
             <p>Deine Bande wartet schon, wir haben sie extra freigelassen. Logo am Platz, Reichweite im Dorf, Herz inklusive.</p>
-            <a className="btn btn--ghost" href={`mailto:${CONTACT.email}?subject=Bande%20sichern`}>
+            <a
+              className="btn btn--ghost"
+              href={whatsappUrl('Hallo! Ich interessiere mich für eine Bande / Sponsoring.')}
+              target="_blank"
+              rel="noreferrer"
+            >
               Bande sichern
             </a>
           </div>

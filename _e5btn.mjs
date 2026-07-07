@@ -1,0 +1,10 @@
+import { chromium } from 'playwright'
+const b = await chromium.launch({ args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'] })
+const p = await (await b.newContext({ viewport:{width:1440,height:900}, deviceScaleFactor:2 })).newPage()
+await p.goto('http://localhost:5199/',{waitUntil:'load',timeout:60000})
+await p.waitForFunction(()=>!document.querySelector('[data-testid=gate] button[disabled]'),null,{timeout:60000})
+await p.click('text=Lieber leise'); await p.waitForTimeout(2000)
+await p.evaluate(()=>document.getElementById('kontakt')?.scrollIntoView({block:'start',behavior:'instant'}))
+await p.waitForTimeout(2000)
+await p.screenshot({ path:'SVA_SCREENSHOTS/e5-kontakt-top.png' })
+console.log('ok'); await b.close()

@@ -5,6 +5,7 @@ import { Pitch } from './Pitch'
 import { Goals } from './Goals'
 import { Clubhouse } from './Clubhouse'
 import { LocationMarker } from './LocationMarker'
+import { MapGround } from './MapGround'
 import { Treeline } from './Treeline'
 import { ForestTrees } from './ForestTrees'
 import { SkyGradient } from './SkyGradient'
@@ -43,6 +44,7 @@ export function Scene() {
 
       <SkyGradient />
       <Ground />
+      <MapGround />
       <Pitch />
       <Goals />
       <CornerFlags />
