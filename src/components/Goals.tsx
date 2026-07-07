@@ -10,7 +10,7 @@ import { AOBlob } from './AOBlob'
 // als Drahtmodell. Echte Netze: ~11-12 cm Rautenmaschen. Kachel wird
 // jetzt weltmaßstäblich wiederholt (TILE_WORLD), Rauten statt Quadrate.
 
-const NET_DEPTH = 0.16
+const NET_DEPTH = 0.2   // v9-E6: etwas tiefer → echtere Tor-Proportion
 const TILE_WORLD = 0.072   // Welt-Größe einer Kachel (6 Maschen à ~1,2 cm → ~12 cm real)
 
 let netTex: THREE.CanvasTexture | null = null
@@ -69,7 +69,10 @@ function Goal({ side }: { side: 1 | -1 }) {
   const x = (PITCH.width / 2) * side
   const gw = PITCH.goalWidth / 2
   const gh = PITCH.goalHeight
-  const postR = 0.028
+  const postR = 0.024               // v9-E6: etwas schlanker (verzinkte Rohre)
+  const barR = 0.014                // Netz-Streben dünner als die Torpfosten
+  const barL = Math.hypot(NET_DEPTH, gh)          // Länge Diagonal-Strebe
+  const barTilt = Math.atan2(-NET_DEPTH, -gh)     // Neigung: Latte-Ecke → Boden hinten
   const tex = useMemo(() => getNetTexture(), [])
   const sideL = useMemo(() => sideGeometry(false), [])
   const sideR = useMemo(() => sideGeometry(true), [])
@@ -92,16 +95,30 @@ function Goal({ side }: { side: 1 | -1 }) {
 
   return (
     <group position={[x, 0, 0]} rotation-y={side > 0 ? 0 : Math.PI}>
-      {/* Pfosten + Latte */}
+      {/* Pfosten + Latte — mattes Pulverweiß statt Chrom (echte Vereinstore
+          sind lackiert, nicht verspiegelt; Chrom las als „Plastik-Look"). */}
       {[-gw, gw].map((z) => (
         <mesh key={z} position={[0, gh / 2, z]}>
           <cylinderGeometry args={[postR, postR, gh, 16]} />
-          <meshStandardMaterial color="#e8ecf0" metalness={0.55} roughness={0.35} />
+          <meshStandardMaterial color="#eef1f4" metalness={0.15} roughness={0.62} />
         </mesh>
       ))}
       <mesh position={[0, gh, 0]} rotation-x={Math.PI / 2}>
         <cylinderGeometry args={[postR, postR, PITCH.goalWidth, 16]} />
-        <meshStandardMaterial color="#e8ecf0" metalness={0.55} roughness={0.35} />
+        <meshStandardMaterial color="#eef1f4" metalness={0.15} roughness={0.62} />
+      </mesh>
+      {/* v9-E6: Rahmen-Streben — DAS gab dem Tor bisher keine Form. Zwei
+          Diagonalen (Latte-Ecke → Boden hinten) + Boden-Querstange spannen
+          das Netz sichtbar auf → liest als Tor, nicht als schwebende Fläche. */}
+      {[-gw, gw].map((z) => (
+        <mesh key={`bar${z}`} position={[NET_DEPTH / 2, gh / 2, z]} rotation-z={barTilt}>
+          <cylinderGeometry args={[barR, barR, barL, 10]} />
+          <meshStandardMaterial color="#eef1f4" metalness={0.15} roughness={0.62} />
+        </mesh>
+      ))}
+      <mesh position={[NET_DEPTH, 0.012, 0]} rotation-x={Math.PI / 2}>
+        <cylinderGeometry args={[barR, barR, PITCH.goalWidth, 10]} />
+        <meshStandardMaterial color="#eef1f4" metalness={0.15} roughness={0.62} />
       </mesh>
       {/* Netz: schräge Rückwand (explizite Geometrie — Latte oben,
           Boden hinten unten; keine Rotations-Akrobatik) */}

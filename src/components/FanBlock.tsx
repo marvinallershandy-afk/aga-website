@@ -104,8 +104,11 @@ function makeBannerTexture(): THREE.CanvasTexture {
   return tex
 }
 
-// Eine stilisierte Figur: Rumpf + Kopf (+ optional Fahnen-Arm)
-function Fan({ x, z, jersey, h, rot, flag }: { x: number; z: number; jersey: string; h: number; rot: number; flag?: boolean }) {
+// Eine stilisierte Figur: Rumpf + Kopf + Arme (+ optional Fahnen-Arm).
+// v9-E6: Arme + Hals ergänzt — vorher las die Figur als kopflastiger
+// Kegel. Arme optional (arms=false), damit Lehn-/Schal-Fans mit eigenen
+// Armen keine Doppelung bekommen. Kopf minimal kleiner, Hals-Absatz.
+function Fan({ x, z, jersey, h, rot, flag, arms = true }: { x: number; z: number; jersey: string; h: number; rot: number; flag?: boolean; arms?: boolean }) {
   return (
     <group position={[x, 0, z]} rotation-y={rot}>
       {/* Beine (dunkel) */}
@@ -118,9 +121,22 @@ function Fan({ x, z, jersey, h, rot, flag }: { x: number; z: number; jersey: str
         <cylinderGeometry args={[h * 0.16, h * 0.13, h * 0.36, 7]} />
         <meshStandardMaterial color={jersey} roughness={0.85} />
       </mesh>
+      {/* Arme — schlanke Zylinder, leicht nach außen hängend (Schulter → Hand).
+          Bei flag hält der rechte Arm die Stange (eigene Gruppe) → nur links. */}
+      {arms && (flag ? [-1] : [-1, 1]).map((s) => (
+        <mesh key={s} position={[s * h * 0.17, h * 0.62, 0]} rotation-z={s * 0.22}>
+          <cylinderGeometry args={[h * 0.045, h * 0.05, h * 0.34, 5]} />
+          <meshStandardMaterial color={jersey} roughness={0.85} />
+        </mesh>
+      ))}
+      {/* Hals-Absatz */}
+      <mesh position={[0, h * 0.86, 0]}>
+        <cylinderGeometry args={[h * 0.055, h * 0.07, h * 0.06, 6]} />
+        <meshStandardMaterial color="#c99a75" roughness={0.9} />
+      </mesh>
       {/* Kopf — bewusst ohne Gesicht */}
-      <mesh position={[0, h * 0.97, 0]}>
-        <sphereGeometry args={[h * 0.115, 8, 7]} />
+      <mesh position={[0, h * 0.98, 0]}>
+        <sphereGeometry args={[h * 0.108, 8, 7]} />
         <meshStandardMaterial color="#c99a75" roughness={0.9} />
       </mesh>
       {flag && (
@@ -243,7 +259,7 @@ export function FanBlock() {
       {/* Zwei lehnen an der Reling (Arme auf dem Handlauf) */}
       {[{ x: CX - 2.0, j: '#c41824' }, { x: CX + 1.9, j: '#1d1a1c' }].map(({ x, j }, i) => (
         <group key={`lean${i}`} position={[x, 0, HH + 0.16]} rotation-y={i ? -0.2 : 0.25} rotation-x={-0.14}>
-          <Fan x={0} z={0} jersey={j} h={0.185} rot={0} />
+          <Fan x={0} z={0} jersey={j} h={0.185} rot={0} arms={false} />
           {/* Arme zum Handlauf */}
           {[-0.045, 0.045].map((ax) => (
             <mesh key={ax} position={[ax, 0.135, -0.05]} rotation-x={0.9}>
@@ -256,7 +272,7 @@ export function FanBlock() {
 
       {/* Schal wird hochgehalten */}
       <group position={[CX + 1.25, 0, HH + 0.34]} rotation-y={Math.PI}>
-        <Fan x={0} z={0} jersey="#c41824" h={0.18} rot={0} />
+        <Fan x={0} z={0} jersey="#c41824" h={0.18} rot={0} arms={false} />
         {[-0.09, 0.09].map((ax) => (
           <mesh key={ax} position={[ax, 0.15, 0]} rotation-z={ax < 0 ? 0.5 : -0.5}>
             <cylinderGeometry args={[0.008, 0.008, 0.09, 5]} />
