@@ -131,9 +131,10 @@ function smooth01(t: number): number {
  *  das Tür-Glow und warmer Schleier ohnehin decken. */
 export function samplePartyApproach(p: number, outPos: THREE.Vector3, outLook: THREE.Vector3) {
   const k = THREE.MathUtils.clamp(p / PARTY_HOP, 0, 1)
-  // v5.5: 1.7 statt 2.2 — mit dem doppelten Scroll-Fenster darf das
-  // End-Tempo runter, die Fahrt liest sich ruhig und gewollt
-  const t = Math.pow(k, 1.7)
+  // v12-E4: Exponent 1.7 → 1.35 — weniger End-Rush direkt vor der Tür. Zusammen
+  // mit dem breiteren Scroll-Fenster (PartyDirector) fließt der Anflug gleichmäßig
+  // und ruhig statt am Ende schnell in die Tür zu tauchen.
+  const t = Math.pow(k, 1.35)
   approachPos.getPoint(t, _p)
   outPos.copy(_p)
   // Blick: von der Stations-Blickrichtung weich auf die Türöffnung
@@ -143,7 +144,11 @@ export function samplePartyApproach(p: number, outPos: THREE.Vector3, outLook: T
 
 /** Durchfahrt innen: p∈[HOP,1]. Schreibt Pocket-Pose (y absolut). */
 export function samplePartyInside(p: number, outPos: THREE.Vector3, outLook: THREE.Vector3) {
-  const t = smooth01((p - PARTY_HOP) / (1 - PARTY_HOP))
+  // v12-E4: Die Raum-Totale ist schon bei p≈0.82 erreicht (statt erst bei 1.0) —
+  // der letzte Scroll-Abschnitt der Musik-Sektion (bis zur Snap-Mitte) ist damit
+  // ein ruhiges „angekommen im Raum" statt weiterer Bewegung. So landet der
+  // Snap-Punkt zuverlässig TIEF im Saal (Tresen + Tracklist im Bild).
+  const t = smooth01((p - PARTY_HOP) / (0.82 - PARTY_HOP))
   insidePos.getPoint(t, _p)
   insideLook.getPoint(t, _l)
   outPos.copy(_p)
