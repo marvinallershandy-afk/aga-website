@@ -46,8 +46,11 @@ export function PartyDirector() {
       // wenn die Musik-Sektion wirklich eintritt und die Mannschaft-Karten
       // darüber weg sind (Marvins Überlappungs-Kritik). Fenster 1.15vh
       // bleibt großzügig (nicht zu schnell).
-      const pIn = Math.min(1, Math.max(0, (vh * 0.95 - rect.top) / (vh * 1.15)))
-      const pOut = Math.min(1, Math.max(0, (rect.bottom - vh * 0.3) / (vh * 0.8)))
+      // v11-E3 (Audit #18): Ein-/Ausflug-Fenster gestreckt (1.15→1.55, 0.8→1.05)
+      // → der Schwenk zum/vom Vereinsheim läuft deutlich ruhiger. Die höhere
+      // #musik-Sektion liefert den nötigen Scroll-Weg, damit p noch 1 erreicht.
+      const pIn = Math.min(1, Math.max(0, (vh * 0.95 - rect.top) / (vh * 1.55)))
+      const pOut = Math.min(1, Math.max(0, (rect.bottom - vh * 0.3) / (vh * 1.05)))
       const p = Math.min(pIn, pOut)
       setPartyProgress(p)
 

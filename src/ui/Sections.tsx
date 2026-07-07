@@ -94,8 +94,11 @@ export function Sections() {
           musik.top gekoppelt) startet später. */}
       <div id="team-musik-gap" aria-hidden="true" style={{ height: '60vh', pointerEvents: 'none' }} />
 
-      {/* 3 · MUSIK — AGA URKNALL, der Vereins-Soundtrack */}
-      <section id={musik.id} className="section section--left">
+      {/* 3 · MUSIK / PARTYRAUM-DURCHFAHRT — v11-E3: die Sektion ist bewusst
+          extra hoch (mehr Scroll-Puffer), damit der Vereinsheim-Schwenk rein
+          UND raus sich streckt und ruhig liest (Audit #18). Anker misst sich
+          aus dem DOM-Zentrum → Kamera-Station bleibt synchron. */}
+      <section id={musik.id} className="section section--left" style={{ minHeight: '210vh' }}>
         <div className="section__scrim" />
         <Header kicker={musik.kicker} title={musik.title} body={musik.body} />
         <MusicSectionPlayer />

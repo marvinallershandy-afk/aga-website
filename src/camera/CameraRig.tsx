@@ -51,7 +51,8 @@ export function CameraRig() {
     // fährt kontinuierlich zur Tür, der Welt-Hop passiert genau beim
     // Durchgang durch PARTY_HOP (Türöffnung füllt das Bild).
     const ppTarget = useStore.getState().partyProgress
-    smoothedParty.current = THREE.MathUtils.damp(smoothedParty.current, ppTarget, 5, delta)
+    // v11-E3: sanftere Dämpfung (5→3.8) → der Schwenk zieht weicher nach.
+    smoothedParty.current = THREE.MathUtils.damp(smoothedParty.current, ppTarget, 3.8, delta)
     const pp = smoothedParty.current
     if (pp > 0.005) {
       const aspect = state.size.width / state.size.height

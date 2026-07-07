@@ -24,7 +24,8 @@ export const PARTY_HOP = 0.48
  *  um das Zaun-Ende herum („um die Ecke") zur Tür. */
 export const DOOR = {
   x: 6.421, // Türebene (Anbau-Westseite, zum Platz)
-  z: -1.95, // v9-E3: an die linke/hintere Ecke, nördlich des Zaun-Endes
+  z: -2.5, // v11-E3: Gebäude ist länger & nach hinten gerückt → Tür weiter
+           //  hinten (Welt z≈−2.5), synchron mit Clubhouse.tsx CLUBHOUSE_POS.z
   w: 0.16,
   h: 0.26,
   cy: 0.13, // Zentrum der Öffnung
@@ -57,11 +58,13 @@ const HALF = ROOM.size / 2
 // nördlich am Zaun-Ende vorbei ist (z<−1.8), und dreht dann nach OSTEN in
 // die Tür an der Ecke (z=−1.95). So schneidet er weder Tor (z=±0.37) noch
 // Zaun — der Bogen liest sich als bewusstes „um die Ecke"-Manöver.
+// v11-E3: Tür sitzt weiter hinten (z=−2.5) → der „um-die-Ecke"-Bogen zieht
+// entsprechend weiter nach Norden, bevor er nach Osten in die Tür dreht.
 const approachPos = new THREE.CatmullRomCurve3(
   [
     new THREE.Vector3(4.6, 0.9, 1.5),
-    new THREE.Vector3(5.25, 0.6, -0.5),
-    new THREE.Vector3(5.8, 0.32, -2.05),
+    new THREE.Vector3(5.25, 0.62, -0.7),
+    new THREE.Vector3(5.8, 0.34, -2.55),
     new THREE.Vector3(6.28, DOOR.cy + 0.01, DOOR.z),
   ],
   false,

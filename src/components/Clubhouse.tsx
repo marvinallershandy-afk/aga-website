@@ -88,18 +88,23 @@ function makeFacadeTexture(len: number, h: number): THREE.CanvasTexture {
 // Beleg: dji_…0155…/f020.jpg, Bildschirmfoto…13.24.16.png
 // ─────────────────────────────────────────────────────────────
 
-export const CLUBHOUSE_POS = { x: 7.15, z: -0.3 } as const
+// v11-E3: Nach dem Audit (#19) war der Hauptkorpus zu kurz und die Tür saß
+// zu weit vorn. Das echte Vereinsheim ist ein LANGER Riegel (~42 m). Der
+// Korpus ist jetzt real länger (LEN) und die ganze Gruppe ein Stück nach
+// NORDEN (−z, „hinten") gerückt — dadurch wandert auch die Tür nach hinten
+// (Welt z ≈ −2.5). DOOR in camera/partyPath.ts ist synchron nachgezogen.
+export const CLUBHOUSE_POS = { x: 7.15, z: -0.85 } as const
 
-const LEN = 4.2      // Länge entlang z (Nord-Süd)
+const LEN = 5.6      // Länge entlang z (Nord-Süd) — v11-E3: real länger (war 4.2)
 const DEPTH = 0.85
 const EAVES = 0.34   // Traufhöhe
 const RISE = 0.24    // Firstanhebung
 const ANNEX_H = 0.24
 const ANNEX_D = 0.3
-// v9-E3: lange überdachte Terrasse (Referenzfoto) — nach Norden gezogen,
-// zentriert bei clubhouse-lokal z=−0.15 (Welt z=−0.45), damit der echte
-// Eingang an der LINKEN/hinteren Ecke sitzt.
-const ANNEX_LEN = 3.3
+// v11-E3: lange überdachte Terrasse über die ganze Gebäudelänge (Referenzfoto),
+// zentriert bei clubhouse-lokal z=−0.15. Der Eingang sitzt an der hinteren
+// (nördlichen) Hälfte (annex-lokal z=−1.5 → Welt z≈−2.5).
+const ANNEX_LEN = 4.8
 
 function GableEnds() {
   const geo = useMemo(() => {
@@ -190,14 +195,14 @@ export function Clubhouse() {
           <boxGeometry args={[0.28, 0.024, ANNEX_LEN]} />
           <meshStandardMaterial color="#6f7178" roughness={0.85} metalness={0.05} />
         </mesh>
-        {[-1.35, -0.3, 0.75, 1.5].map((z) => (
+        {[-2.35, -1.35, -0.3, 0.75, 1.5, 2.25].map((z) => (
           <mesh key={z} position={[-0.29, (ANNEX_H + 0.03) / 2, z]}>
             <cylinderGeometry args={[0.012, 0.012, ANNEX_H + 0.03, 6]} />
             <meshStandardMaterial color="#4a4d52" metalness={0.5} roughness={0.5} />
           </mesh>
         ))}
         {/* warme Fenster entlang der Terrasse (Original) — südlich der Tür */}
-        {[-0.7, 0.1, 0.9, 1.5].map((z) => (
+        {[-0.9, -0.15, 0.6, 1.3, 2.0].map((z) => (
           <mesh key={z} position={[-ANNEX_D / 2 - 0.004, 0.13, z]} rotation-y={-Math.PI / 2}>
             <planeGeometry args={[0.22, 0.12]} />
             <meshStandardMaterial
@@ -228,8 +233,8 @@ export function Clubhouse() {
         </group>
       </group>
 
-      {/* Terrasse: zwei Biertisch-Andeutungen */}
-      {[-0.1, 0.9].map((z) => (
+      {/* Terrasse: Biertisch-Andeutungen entlang der langen Terrasse */}
+      {[-0.1, 0.9, 1.95].map((z) => (
         <group key={z} position={[-DEPTH / 2 - ANNEX_D - 0.25, 0, z]}>
           <mesh position={[0, 0.075, 0]}>
             <boxGeometry args={[0.14, 0.02, 0.5]} />
