@@ -5,7 +5,7 @@ import { PlayerCardGrid } from './PlayerCardGrid'
 import { MusicSectionPlayer } from './MusicSection'
 import { FussballWidget } from './FussballWidget'
 import { PlatzFinden } from './PlatzFinden'
-import { SponsorsStrip, NextMatch, SponsorPitch } from './SponsorsStrip'
+import { SponsorPitch } from './SponsorsStrip'
 import { FanGallery } from './FanGallery'
 import { WaIcon, IgIcon } from './Icons'
 
@@ -129,8 +129,10 @@ export function Sections() {
         <div className="section__scrim" />
         <Header kicker={kontakt.kicker} title={kontakt.title} body={kontakt.body} />
 
-        {/* v9-E5: direkter Draht ganz vorn — WhatsApp + Instagram prominent,
-            E-Mail nur noch sekundär im Info-Raster unten. */}
+        {/* v9-E5: direkter Draht ganz vorn — WhatsApp + Instagram prominent.
+            v12-E7: NextMatch + Sponsoren-Karussell hier ENTFERNT (dupliziert die
+            Tabelle-/Sponsoren-Station) → der Mitmachen-Snap zeigt jetzt komponiert
+            die Kernaussage: Komm vorbei + WA/Insta + 3 Karten. */}
         <motion.div className="contact-actions" {...reveal}>
           <a
             className="btn btn--wa"
@@ -187,9 +189,6 @@ export function Sections() {
           </div>
         </motion.div>
 
-        <NextMatch />
-        <SponsorsStrip />
-
         <motion.dl className="contact-grid" {...reveal} style={{ maxWidth: 620 }}>
           <div>
             <dt>Training</dt>
@@ -213,6 +212,7 @@ export function Sections() {
           </div>
         </motion.dl>
 
+        {/* v12-E7: „Wo wir kicken" (Karte + Route) = zweiter Beat / Finale-Rauszoom. */}
         <PlatzFinden />
         <p style={{ marginTop: '3rem', fontSize: '0.7rem', letterSpacing: '0.1em', color: 'rgba(255,255,255,0.55)' }}>
           © Seit {CLUB.founded} · {CLUB.name} e.V. · Mit Herz gebaut, Platzhalter ehrlich markiert.
