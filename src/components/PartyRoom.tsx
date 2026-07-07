@@ -16,28 +16,10 @@ import { getDoorGlowTexture } from './doorGlow'
 // Look: dunkel, warm, Lichterkette in SVA-Rot, Poster, Neon.
 // ─────────────────────────────────────────────────────────────
 
-const H = ROOM.size / 2 // 1.6
-
-function svaNeonTexture(): THREE.CanvasTexture {
-  const cv = document.createElement('canvas')
-  cv.width = 256
-  cv.height = 96
-  const ctx = cv.getContext('2d')!
-  ctx.clearRect(0, 0, 256, 96)
-  ctx.font = '400 64px Anton, system-ui, sans-serif'
-  ctx.textAlign = 'center'
-  ctx.textBaseline = 'middle'
-  ctx.shadowColor = '#ff2230'
-  ctx.shadowBlur = 22
-  ctx.fillStyle = '#ff5560'
-  ctx.fillText('SVA', 128, 50)
-  ctx.shadowBlur = 8
-  ctx.fillStyle = '#ffd9dc'
-  ctx.fillText('SVA', 128, 50)
-  const t = new THREE.CanvasTexture(cv)
-  t.colorSpace = THREE.SRGBColorSpace
-  return t
-}
+const HX = ROOM.width / 2 // 1.6 (Ost-West-Halbbreite)
+const ZN = ROOM.zNorth // -1.6 (Eingangswand)
+const ZS = ROOM.zSouth // 4.8 (Südwand, hinten)
+const ZC = ROOM.zCenter // 1.6 (Mitte, für Boden/Decke/Seitenwände)
 
 // Stilisierte Figur (wie im Fanblock — keine Gesichter).
 function Person({ pos, jersey, h = 0.19, rot = 0, seated = false, lean = 0 }: {
@@ -104,6 +86,42 @@ function ProstArm() {
   )
 }
 
+// v11-E4 (Audit #26): Biertisch-Garnitur (Tisch + zwei Bänke) — die
+// Klassiker für Vereinsfeiern. Länge entlang z, Bänke links/rechts.
+function BierGarnitur({ pos, rot = 0 }: { pos: [number, number, number]; rot?: number }) {
+  const bench = (x: number) => (
+    <group position={[x, 0, 0]}>
+      <mesh position={[0, 0.11, 0]}>
+        <boxGeometry args={[0.12, 0.02, 0.92]} />
+        <meshStandardMaterial color="#6f5330" roughness={0.9} />
+      </mesh>
+      {[-0.4, 0.4].map((z) => (
+        <mesh key={z} position={[0, 0.055, z]}>
+          <boxGeometry args={[0.1, 0.11, 0.03]} />
+          <meshStandardMaterial color="#4a3a22" roughness={0.9} />
+        </mesh>
+      ))}
+    </group>
+  )
+  return (
+    <group position={pos} rotation-y={rot}>
+      {/* Tischplatte */}
+      <mesh position={[0, 0.2, 0]}>
+        <boxGeometry args={[0.34, 0.02, 1.0]} />
+        <meshStandardMaterial color="#8a6a40" roughness={0.85} />
+      </mesh>
+      {[-0.35, 0.35].map((z) => (
+        <mesh key={z} position={[0, 0.1, z]}>
+          <boxGeometry args={[0.3, 0.11, 0.03]} />
+          <meshStandardMaterial color="#5a4630" roughness={0.9} />
+        </mesh>
+      ))}
+      {bench(-0.28)}
+      {bench(0.28)}
+    </group>
+  )
+}
+
 const WALL_MAT = { roughness: 0.95 } as const
 
 // Tresen-Platte mit Maserung (v5 Mikro-Detail — Kamera kommt nah)
@@ -135,19 +153,25 @@ export default function PartyRoom() {
   // DIY-Siebdruck-Poster im AGA-URKNALL-Vibe, mit Tape an der Wand
   const urknallPoster = useTexture('/audio/poster-urknall.webp')
   urknallPoster.colorSpace = THREE.SRGBColorSpace
-  const neon = useMemo(svaNeonTexture, [])
+  // v11-E4: echtes Vereins-Wappen (AGA-Logo) an der Wand statt „SVA"-Neon (Audit #27)
+  const agaLogo = useTexture('/brand/aga-logo.png')
+  agaLogo.colorSpace = THREE.SRGBColorSpace
   const wood = useMemo(makeWoodTexture, [])
 
-  // Lichterkette: zwei durchhängende Bögen — Süd-Wand + Ost-Wand
+  // Lichterkette: durchhängende Bögen entlang der langen Ost-Wand + über der Bar
   const bulbs = useMemo(() => {
     const pts: [number, number, number][] = []
-    for (let i = 0; i <= 11; i++) {
-      const t = i / 11
-      pts.push([-1.5 + t * 3.0, 1.32 - Math.sin(t * Math.PI) * 0.14, H - 0.06])
+    // über der Bar (Ost-Wand, Nord-Hälfte)
+    for (let i = 0; i <= 9; i++) {
+      const t = i / 9
+      pts.push([HX - 0.06, 1.4 - Math.sin(t * Math.PI) * 0.12, -0.4 + t * 2.6])
     }
-    for (let i = 0; i <= 8; i++) {
-      const t = i / 8
-      pts.push([H - 0.06, 1.3 - Math.sin(t * Math.PI) * 0.12, 1.35 - t * 2.5])
+    // quer über den langen Saal (West→Ost), zwei Girlanden nach Süden
+    for (const zBase of [1.9, 3.4]) {
+      for (let i = 0; i <= 9; i++) {
+        const t = i / 9
+        pts.push([-1.45 + t * 2.9, 1.42 - Math.sin(t * Math.PI) * 0.16, zBase])
+      }
     }
     return pts
   }, [])
@@ -156,33 +180,32 @@ export default function PartyRoom() {
 
   return (
     <group position={[0, ROOM_Y, 0]}>
-      {/* ── Raum-Hülle: QUADRAT 3.2×3.2 ── */}
-      <mesh rotation-x={-Math.PI / 2}>
-        <planeGeometry args={[ROOM.size, ROOM.size]} />
+      {/* ── Raum-Hülle: LANGER SAAL 3.2 (x) × 6.4 (z), Mitte bei z=1.6 ── */}
+      <mesh rotation-x={-Math.PI / 2} position={[0, 0, ZC]}>
+        <planeGeometry args={[ROOM.width, ROOM.length]} />
         <meshStandardMaterial color="#33241a" {...WALL_MAT} roughness={0.9} />
       </mesh>
-      {/* Süd-Wand (hinten aus Eingangssicht) */}
-      <mesh position={[0, ROOM.height / 2, H]} rotation-y={Math.PI}>
-        <planeGeometry args={[ROOM.size, ROOM.height]} />
+      {/* Süd-Wand (hinten aus Eingangssicht, weit weg) */}
+      <mesh position={[0, ROOM.height / 2, ZS]} rotation-y={Math.PI}>
+        <planeGeometry args={[ROOM.width, ROOM.height]} />
         <meshStandardMaterial color="#2b2422" {...WALL_MAT} />
       </mesh>
       {/* Ost-Wand (links vom Eingang — hier lebt der Tresen) */}
-      <mesh position={[H, ROOM.height / 2, 0]} rotation-y={-Math.PI / 2}>
-        <planeGeometry args={[ROOM.size, ROOM.height]} />
+      <mesh position={[HX, ROOM.height / 2, ZC]} rotation-y={-Math.PI / 2}>
+        <planeGeometry args={[ROOM.length, ROOM.height]} />
         <meshStandardMaterial color="#292220" {...WALL_MAT} />
       </mesh>
-      {/* West-Wand */}
-      <mesh position={[-H, ROOM.height / 2, 0]} rotation-y={Math.PI / 2}>
-        <planeGeometry args={[ROOM.size, ROOM.height]} />
+      {/* West-Wand (mit Seitentür, s. u.) */}
+      <mesh position={[-HX, ROOM.height / 2, ZC]} rotation-y={Math.PI / 2}>
+        <planeGeometry args={[ROOM.length, ROOM.height]} />
         <meshStandardMaterial color="#2e2724" {...WALL_MAT} />
       </mesh>
-      {/* Nord-Wand mit TÜRÖFFNUNG (x −1.12…−0.5, Höhe 1.05) —
-          drei Segmente: links, rechts, Sturz. DoubleSide, weil der
-          Flur dahinter liegt. */}
+      {/* Nord-Wand mit TÜRÖFFNUNG (x −1.12…−0.5) — drei Segmente:
+          links, rechts, Sturz. DoubleSide, weil der Flur dahinter liegt. */}
       {(() => {
         const segs: { x: number; w: number; y: number; h: number }[] = [
-          { x: (-H + opening.x1) / 2, w: opening.x1 - -H, y: ROOM.height / 2, h: ROOM.height },
-          { x: (opening.x2 + H) / 2, w: H - opening.x2, y: ROOM.height / 2, h: ROOM.height },
+          { x: (-HX + opening.x1) / 2, w: opening.x1 - -HX, y: ROOM.height / 2, h: ROOM.height },
+          { x: (opening.x2 + HX) / 2, w: HX - opening.x2, y: ROOM.height / 2, h: ROOM.height },
           {
             x: (opening.x1 + opening.x2) / 2,
             w: opening.x2 - opening.x1,
@@ -191,17 +214,41 @@ export default function PartyRoom() {
           },
         ]
         return segs.map((s, i) => (
-          <mesh key={i} position={[s.x, s.y, -H]}>
+          <mesh key={i} position={[s.x, s.y, ZN]}>
             <planeGeometry args={[s.w, s.h]} />
             <meshStandardMaterial color="#2b2320" {...WALL_MAT} side={THREE.DoubleSide} />
           </mesh>
         ))
       })()}
       {/* Decke */}
-      <mesh rotation-x={Math.PI / 2} position={[0, ROOM.height, 0]}>
-        <planeGeometry args={[ROOM.size, ROOM.size]} />
+      <mesh rotation-x={Math.PI / 2} position={[0, ROOM.height, ZC]}>
+        <planeGeometry args={[ROOM.width, ROOM.length]} />
         <meshStandardMaterial color="#1c1715" roughness={1} />
       </mesh>
+
+      {/* ── SEITENTÜR (Audit #25): angedeutete Tür in der West-Wand,
+             links neben der Bar. Flache Laibung + Türblatt + „NOTAUSGANG"-
+             Schimmer, damit sie klar als Tür liest. ── */}
+      <group position={[-HX + 0.012, 0, 0.35]} rotation-y={Math.PI / 2}>
+        <mesh position={[0, 0.5, 0]}>
+          <planeGeometry args={[0.44, 0.94]} />
+          <meshStandardMaterial color="#181413" roughness={0.9} />
+        </mesh>
+        <mesh position={[0, 0.5, 0.006]}>
+          <planeGeometry args={[0.36, 0.86]} />
+          <meshStandardMaterial color="#274a34" roughness={0.7} />
+        </mesh>
+        {/* schmaler warmer Spalt unter der Tür */}
+        <mesh position={[0, 0.03, 0.008]}>
+          <planeGeometry args={[0.36, 0.03]} />
+          <meshBasicMaterial color="#ffcf8a" toneMapped={false} />
+        </mesh>
+        {/* Klinke */}
+        <mesh position={[0.13, 0.5, 0.02]}>
+          <boxGeometry args={[0.05, 0.02, 0.02]} />
+          <meshStandardMaterial color="#c9ccd4" metalness={0.7} roughness={0.3} />
+        </mesh>
+      </group>
 
       {/* ── FLUR nördlich (Kamera kommt in +x durchgelaufen) ── */}
       <mesh rotation-x={-Math.PI / 2} position={[(hall.xMin + hall.xMax) / 2, 0, (hall.zMin + hall.zMax) / 2]}>
@@ -313,8 +360,10 @@ export default function PartyRoom() {
         })}
       </group>
 
-      {/* Barkeeper hinterm Tresen (östlich, leicht vorgelehnt) */}
-      <Person pos={[1.44, 0, 0.88]} jersey="#1d1a1c" h={0.215} rot={Math.PI / 2 + 0.1} lean={0.05} />
+      {/* Personal HINTER dem Tresen (östlich): Zapfer links am Hahn +
+          zweite Bedienung, die Richtung Gäste schaut (v11-E4). */}
+      <Person pos={[1.44, 0, 0.42]} jersey="#1d1a1c" h={0.215} rot={Math.PI / 2 + 0.1} lean={0.05} />
+      <Person pos={[1.46, 0, 1.15]} jersey="#7a1016" h={0.208} rot={Math.PI / 2 - 0.15} />
       <ZapfArm />
       {/* Gäste: sitzen auf Hockern vor dem Tresen, einer prostet */}
       <Person pos={[0.68, 0, 0.28]} jersey="#c41824" rot={-Math.PI / 2} seated lean={-0.04} />
@@ -328,8 +377,25 @@ export default function PartyRoom() {
         </mesh>
       ))}
 
-      {/* Cover-2-Poster mit Rahmen — Süd-Wand (Blickfang der Totale) */}
-      <group position={[-0.75, 0.85, H - 0.03]} rotation-y={Math.PI}>
+      {/* ── TISCHE + BÄNKE (Audit #26): Biertisch-Garnituren im langen Saal,
+             auf der West-Seite (rechts beim Reinkommen) + eine Reihe mittig.
+             Ein paar sitzende Gäste beleben die Feier. ── */}
+      <BierGarnitur pos={[-0.95, 0, 1.9]} rot={0.05} />
+      <BierGarnitur pos={[-0.95, 0, 3.2]} rot={-0.04} />
+      <BierGarnitur pos={[0.35, 0, 3.5]} rot={0.9} />
+      <Person pos={[-0.62, 0, 1.75]} jersey="#c41824" rot={-1.2} seated lean={0.04} />
+      <Person pos={[-0.62, 0, 2.2]} jersey="#d8d4c9" rot={-1.9} seated lean={-0.05} />
+      <Person pos={[-1.28, 0, 3.1]} jersey="#2f5d8a" rot={1.4} seated lean={0.05} />
+      <Person pos={[-1.28, 0, 3.45]} jersey="#3a6b35" rot={1.6} seated lean={-0.03} />
+
+      {/* AGA-URKNALL-Siebdruck (Wand-Art, leicht schief getaped) — Ost-Wand,
+          südlich der Bar entlang des langen Saals */}
+      <mesh position={[HX - 0.02, 0.86, 2.15]} rotation-y={-Math.PI / 2} rotation-z={0.03}>
+        <planeGeometry args={[0.44, 0.62]} />
+        <meshStandardMaterial map={urknallPoster} roughness={0.85} />
+      </mesh>
+      {/* Cover-2-Poster mit Rahmen — Ost-Wand weiter südlich */}
+      <group position={[HX - 0.02, 0.82, 3.15]} rotation-y={-Math.PI / 2}>
         <mesh position={[0, 0, -0.005]}>
           <planeGeometry args={[0.66, 0.66]} />
           <meshStandardMaterial color="#151110" roughness={0.7} />
@@ -340,20 +406,19 @@ export default function PartyRoom() {
         </mesh>
       </group>
 
-      {/* AGA-URKNALL-Siebdruck (Wand-Art, leicht schief getaped) —
-          Süd-Wand östlich vom Cover, hinterm Tresen-Eck */}
-      <mesh position={[1.02, 0.8, H - 0.025]} rotation-y={Math.PI} rotation-z={0.03}>
-        <planeGeometry args={[0.42, 0.6]} />
-        <meshStandardMaterial map={urknallPoster} roughness={0.85} />
-      </mesh>
-
-      {/* SVA-Neon über dem Tresen (Ost-Wand) */}
-      <mesh position={[H - 0.04, 1.05, 0.68]} rotation-y={-Math.PI / 2}>
-        <planeGeometry args={[0.66, 0.25]} />
-        {/* Farb-Boost > 1: Neon glüht im selektiven Bloom (Loop 1:
-            1.7→1.3 — weniger CA-Fringe an den Konturen) */}
-        <meshBasicMaterial map={neon} transparent toneMapped={false} color={[1.3, 1.3, 1.3]} />
-      </mesh>
+      {/* v11-E4: echtes AGA-Wappen als beleuchtetes Wandschild über der Bar
+          (Ost-Wand), statt „SVA"-Neon (Audit #27). Dunkles Schild + Wappen,
+          leicht selbstleuchtend, damit es im dunklen Saal trägt. */}
+      <group position={[HX - 0.03, 1.06, 0.5]} rotation-y={-Math.PI / 2}>
+        <mesh position={[0, 0, -0.01]}>
+          <planeGeometry args={[0.62, 0.62]} />
+          <meshStandardMaterial color="#141013" roughness={0.85} />
+        </mesh>
+        <mesh>
+          <planeGeometry args={[0.5, 0.5]} />
+          <meshBasicMaterial map={agaLogo} transparent toneMapped={false} color={[1.18, 1.18, 1.18]} />
+        </mesh>
+      </group>
 
       {/* Lichterkette (SVA-Rot + warm im Wechsel) */}
       {bulbs.map((p, i) => (
@@ -375,6 +440,10 @@ export default function PartyRoom() {
       <pointLight position={[-1.1, 1.0, 0.5]} intensity={1.2} distance={4} color="#ff9d6a" />
       <pointLight position={[-1.5, 0.65, hall.z]} intensity={2.2} distance={3.5} color="#ffb26a" />
       <pointLight position={[-0.81, 0.75, -1.7]} intensity={1.5} distance={2.5} color="#ffca8a" />
+      {/* v11-E4: warmes Fill für den langen Süd-Teil (Tische/Bänke) */}
+      <pointLight position={[-0.3, 1.3, 2.3]} intensity={3.2} distance={6} color="#ffb87a" />
+      <pointLight position={[0.2, 1.3, 3.6]} intensity={2.6} distance={6} color="#ff9d5a" />
+      <pointLight position={[0.9, 0.9, 3.2]} intensity={1.4} distance={5} color="#e91d29" />
     </group>
   )
 }

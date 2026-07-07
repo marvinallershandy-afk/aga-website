@@ -36,9 +36,17 @@ export const DOOR = {
 // die echte Gebäudetür), der Raum liegt rechts (Süden, +z).
 // Quadratisch; Tresen hinten links = Ost-Wand, Süd-Hälfte.
 export const ROOM_Y = -40
+// v11-E4: Der Partyraum ist jetzt ein LANGER Saal (doppelte Länge). Breite
+// (x, Ost-West) bleibt; die Länge (z, Nord-Süd) verdoppelt sich nach SÜDEN.
+// Die Nordwand/Eingang (zNorth) + Flur bleiben unverändert → die Tür-Durchfahrt-
+// Transition ist unberührt; der Saal wächst nur hinter dem Eingang weiter.
 export const ROOM = {
-  size: 3.2, // quadratisch: Wände bei ±1.6
-  height: 1.5,
+  width: 3.2, // x (Ost-West): Wände bei ±1.6
+  length: 6.4, // z (Nord-Süd): doppelt so lang (war 3.2)
+  zNorth: -1.6, // Eingangswand (Flur liegt nördlich) — FIX
+  zSouth: 4.8, // = zNorth + length
+  zCenter: 1.6, // (zNorth + zSouth) / 2
+  height: 1.6,
   // Flur nördlich des Raums, Kamera läuft +x
   hall: { z: -1.87, zMin: -2.14, zMax: -1.6, xMin: -2.3, xMax: -0.42, height: 0.95 },
   // Türöffnung Flur→Raum in der Nordwand (rechts vom Flur)
@@ -47,7 +55,7 @@ export const ROOM = {
   innerDoorX: -2.28,
 } as const
 
-const HALF = ROOM.size / 2
+const HALF = ROOM.width / 2
 
 // ─── Anflug außen (Weltkoordinaten) ──────────────────────────
 // Startet in der MUSIK-Stationspose und senkt sich zur Tür.
@@ -78,8 +86,10 @@ const insidePos = new THREE.CatmullRomCurve3(
     new THREE.Vector3(-2.26, 0.55, ROOM.hall.z),
     new THREE.Vector3(-1.5, 0.55, ROOM.hall.z),
     new THREE.Vector3(-0.84, 0.55, -1.72),
-    new THREE.Vector3(-0.8, 0.57, -1.2),
-    new THREE.Vector3(-1.05, 0.64, -1.05),
+    new THREE.Vector3(-0.85, 0.6, -1.2),
+    // v11-E4: End-Totale etwas höher & weiter in den langen Saal gezogen,
+    // damit die neue Länge nach Süden sichtbar wird (Flur→Turn unverändert).
+    new THREE.Vector3(-1.02, 0.86, -0.55),
   ],
   false,
   'centripetal',
@@ -95,8 +105,9 @@ const insideLook = new THREE.CatmullRomCurve3(
     new THREE.Vector3(-0.9, 0.5, ROOM.hall.z),
     new THREE.Vector3(-0.65, 0.48, -1.5),
     new THREE.Vector3(-0.35, 0.42, 0.3),
-    new THREE.Vector3(0.7, 0.32, 0.4),
-    new THREE.Vector3(1.1, 0.3, 0.15),
+    new THREE.Vector3(0.6, 0.36, 0.9),
+    // v11-E4: Endblick zeigt Tresen (Ost) UND die Länge nach Süden.
+    new THREE.Vector3(0.9, 0.36, 1.5),
   ],
   false,
   'centripetal',
