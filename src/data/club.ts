@@ -28,9 +28,11 @@ export const SECTIONS: Section[] = [
   {
     id: 'verein',
     label: 'Verein',
-    kicker: 'Seit 1949 · Agathenburg',
+    kicker: 'Dein Dorfklub · Agathenburg',
     title: 'Willkommen\nam Platz',
-    body: 'Ein Dorf, Flutlicht an vier Masten, elf Mann — und eine Bande, hinter der man jeden kennt. Der SV Agathenburg-Dollern, seit 1949 mitten in Agathenburg. Scroll dich einmal quer über unseren Platz und schau, ob du bleibst. Spoiler: Du bleibst.',
+    // v11-E9: jüngerer, nahbarer Ton — weniger „Wohnzimmer seit 1949",
+    // mehr „komm vorbei, das hier ist deins".
+    body: 'Flutlicht an, Musik läuft, halbes Dorf an der Bande — und irgendwo mittendrin ein Platz für dich. Der SV Agathenburg-Dollern ist kein Museum, sondern der Klub, bei dem du sonntags bleibst und mittwochs schon dazugehörst. Scroll dich einmal quer über den Platz. Spoiler: Du bleibst.',
   },
   {
     id: 'mannschaft',

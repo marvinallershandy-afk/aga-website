@@ -152,6 +152,66 @@ class AudioManagerImpl {
     lp.connect(this.atmo)
     src.start()
     lfo.start()
+    // v11-E9: „Waldsportplatz" — dezente Naturgeräusche über dem Wind:
+    // Blätter-Rascheln (leiser Hochpass-Rausch-Layer) + gelegentliche
+    // Vogel-Zwitscher (synthetisch). Alles über this.atmo → respektiert
+    // Mute/Ducking/Boost automatisch. Nur im Ambient-Modus hörbar.
+    this.buildForest(ctx)
+  }
+
+  /** Waldkulisse: Blätter-Rascheln + prozedurale Vogel-Zwitscher. */
+  private buildForest(ctx: AudioContext) {
+    // Blätter: hochpass-gefiltertes Rauschen, sehr leise, langsam moduliert
+    const len = ctx.sampleRate * 3
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate)
+    const d = buf.getChannelData(0)
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1
+    const leaves = ctx.createBufferSource()
+    leaves.buffer = buf
+    leaves.loop = true
+    const hp = ctx.createBiquadFilter()
+    hp.type = 'highpass'
+    hp.frequency.value = 4200
+    const leafGain = ctx.createGain()
+    leafGain.gain.value = 0.05
+    const lfo2 = ctx.createOscillator()
+    lfo2.frequency.value = 0.13
+    const lfo2Gain = ctx.createGain()
+    lfo2Gain.gain.value = 0.03
+    lfo2.connect(lfo2Gain)
+    lfo2Gain.connect(leafGain.gain)
+    leaves.connect(hp)
+    hp.connect(leafGain)
+    leafGain.connect(this.atmo)
+    leaves.start()
+    lfo2.start()
+
+    // Vogel-Zwitscher: kurze Frequenz-Sweeps, in Abständen, nur im Ambient-Modus.
+    const chirp = () => {
+      if (!this.ctx || this.ctx !== ctx) return
+      if (this.mode === 'ambient') {
+        const now = ctx.currentTime
+        const notes = 2 + Math.floor(Math.random() * 3)
+        for (let n = 0; n < notes; n++) {
+          const t0 = now + n * (0.09 + Math.random() * 0.05)
+          const o = ctx.createOscillator()
+          o.type = 'triangle'
+          const f = 2400 + Math.random() * 1600
+          o.frequency.setValueAtTime(f, t0)
+          o.frequency.exponentialRampToValueAtTime(f * (1.3 + Math.random() * 0.4), t0 + 0.05)
+          const g = ctx.createGain()
+          g.gain.setValueAtTime(0.0001, t0)
+          g.gain.exponentialRampToValueAtTime(0.06, t0 + 0.012)
+          g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.11)
+          o.connect(g)
+          g.connect(this.atmo)
+          o.start(t0)
+          o.stop(t0 + 0.14)
+        }
+      }
+      window.setTimeout(chirp, 4500 + Math.random() * 7000)
+    }
+    window.setTimeout(chirp, 2500 + Math.random() * 3000)
   }
 
   private ramp(node: GainNode, v: number, t = 0.8) {

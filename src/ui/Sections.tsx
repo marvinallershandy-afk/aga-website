@@ -8,6 +8,7 @@ import { PlatzFinden } from './PlatzFinden'
 import { SponsorsStrip, NextMatch, SponsorPitch } from './SponsorsStrip'
 import { FanChantToggle } from './FanChantToggle'
 import { FanGallery } from './FanGallery'
+import { WaIcon, IgIcon } from './Icons'
 
 const reveal = {
   initial: { opacity: 0, y: 40 },
@@ -138,9 +139,11 @@ export function Sections() {
             target="_blank"
             rel="noreferrer"
           >
+            <WaIcon size={18} />
             WhatsApp schreiben
           </a>
           <a className="btn btn--ig" href={CONTACT.instagramUrl} target="_blank" rel="noreferrer">
+            <IgIcon size={18} />
             {CONTACT.instagram} folgen
           </a>
         </motion.div>

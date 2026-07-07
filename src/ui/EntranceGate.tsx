@@ -72,10 +72,12 @@ export function EntranceGate() {
     height: '50.5%',
     top: dir === -1 ? 0 : undefined,
     bottom: dir === 1 ? 0 : undefined,
+    // v11-E9: CI statt Magenta/Blau — dunkles Schwarz mit warmem Rot-Unterton
+    // (Dämmerung am Platz), passend zu SVA-Rot/Schwarz.
     background:
       dir === -1
-        ? 'linear-gradient(180deg, #0a0c1a 0%, #181430 80%, #241a33 100%)'
-        : 'linear-gradient(0deg, #0a0c1a 0%, #171128 80%, #241a33 100%)',
+        ? 'linear-gradient(180deg, #0b0708 0%, #1a0c0e 78%, #2a1013 100%)'
+        : 'linear-gradient(0deg, #0b0708 0%, #180b0d 78%, #2a1013 100%)',
     transform: opening && !reducedMotion ? `translateY(${dir * 102}%)` : 'translateY(0)',
     opacity: opening && reducedMotion ? 0 : 1,
     transition: reducedMotion

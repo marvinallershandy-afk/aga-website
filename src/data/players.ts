@@ -62,11 +62,13 @@ export const STAFF: Staff[] = [
   { id: 's2', name: 'Name folgt', role: 'co-trainer', since: 2020, photoUrl: null },
   {
     id: 's3',
-    name: 'Name folgt',
+    // v11-E9: echter Teammanager. Foto ist Marvins CI-Porträt (rot, Wappen, #30);
+    // ein „freigestelltes" Cutout kann es später ersetzen (Bild-Tool nötig).
+    name: 'Nico Hause',
     role: 'teammanager',
     since: 2018,
-    photoUrl: null,
-    contactMessage: 'Hallo! Ich habe eine Frage zum SV Agathenburg-Dollern.',
+    photoUrl: '/players/nico-hause.webp',
+    contactMessage: 'Hallo Nico! Ich habe eine Frage zum SV Agathenburg-Dollern.',
   },
 ]
 

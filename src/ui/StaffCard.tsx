@@ -1,6 +1,7 @@
 import type { Staff } from '../data/players'
 import { ROLE_LABEL } from '../data/players'
 import { CLUB, whatsappUrl } from '../data/club'
+import { WaIcon } from './Icons'
 
 // v10-E2: Trainerstab-Karte — bewusst KEINE FIFA-Spielerkarte (kein Rating,
 // keine Tore/Assists), sondern ruhig & seriös: Rolle + „seit im Verein",
@@ -31,6 +32,7 @@ export function StaffCard({ member }: { member: Staff }) {
             target="_blank"
             rel="noreferrer"
           >
+            <WaIcon size={17} />
             Schreib mir
           </a>
         )}
