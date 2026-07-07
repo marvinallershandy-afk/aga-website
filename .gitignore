@@ -25,3 +25,9 @@ dist-ssr
 
 # Referenz-Material (lokal, zu groß fürs Repo)
 REFERENZ/
+
+# Audit-Lauf (7.7.2026) — lokal, nicht committen
+SVA_AUDIT_SHOTS/
+_audit.mjs
+_auditfix.mjs
+_v10e1.mjs

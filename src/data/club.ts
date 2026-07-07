@@ -74,13 +74,16 @@ export const SECTIONS: Section[] = [
   },
 ]
 
-// ── Sponsoren (v8-E5) ────────────────────────────────────────
-// Echte lokale Sponsoren hier eintragen (logo = Pfad in public/sponsors/).
-// Solange leer, zeigt die Seite „Hier könnte dein Logo stehen"-Slots —
-// zugleich Verkaufsargument (Marvin liefert echte Logos).
+// ── Sponsoren (v8-E5 · v10-E1 Slot-System) ───────────────────
+// Echte lokale Sponsoren hier eintragen. `logoUrl` = Pfad zum Logo
+// (public/sponsors/<name>.png, transparent/weiß, quer). Ist logoUrl
+// gesetzt → Logo erscheint scharf auf der 3D-Bande UND im DOM-Strip.
+// Ist es leer (oder das Array leer) → „HIER KÖNNTE DEIN LOGO STEHEN".
+// Namensschema + Ablage siehe README (Abschnitt „Assets nachliefern").
 export interface Sponsor {
   name: string
-  logo?: string
+  /** Pfad zum Logo, z. B. '/sponsors/baeckerei-sonne.png'. Leer → Platzhalter. */
+  logoUrl?: string
   url?: string
 }
 export const SPONSORS: Sponsor[] = []

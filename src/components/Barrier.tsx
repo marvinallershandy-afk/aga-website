@@ -1,6 +1,7 @@
 import { useMemo, useRef, useEffect } from 'react'
 import * as THREE from 'three'
 import { PITCH, COLORS } from '../utils/constants'
+import { SPONSORS, SPONSOR_PLACEHOLDER_SLOTS, type Sponsor } from '../data/club'
 import { AOBlob } from './AOBlob'
 
 // ─────────────────────────────────────────────────────────────
@@ -16,66 +17,94 @@ const RAIL_H = 0.11
 const HW = PITCH.width / 2 + OFF
 const HH = PITCH.height / 2 + OFF
 
-// Kleines Dummy-Logo (v9-E4): Icon + Wortmarke — beispielhafte lokale
-// Sponsoren als VORBILD an der Bande (macht die freien Slots begehrt).
-// Bewusst generische Muster-Betriebe, KEINE echten Marken.
-function drawDummyLogo(ctx: CanvasRenderingContext2D, cx: number, cy: number, kind: 'sonne' | 'stern', name: string, accent: string) {
-  ctx.save()
-  ctx.translate(cx, cy)
-  ctx.fillStyle = accent
-  if (kind === 'sonne') {
-    ctx.beginPath(); ctx.arc(-88, 0, 12, 0, Math.PI * 2); ctx.fill()
-    ctx.strokeStyle = accent; ctx.lineWidth = 3
-    for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
-      ctx.beginPath(); ctx.moveTo(-88 + Math.cos(a) * 16, Math.sin(a) * 16); ctx.lineTo(-88 + Math.cos(a) * 22, Math.sin(a) * 22); ctx.stroke()
-    }
-  } else {
-    ctx.beginPath()
-    for (let i = 0; i < 5; i++) {
-      const a = -Math.PI / 2 + (i * 4 * Math.PI) / 5
-      ctx[i ? 'lineTo' : 'moveTo'](-88 + Math.cos(a) * 15, Math.sin(a) * 15)
-    }
-    ctx.closePath(); ctx.fill()
+// Text mittig in ein Rechteck setzen, Schriftgrad schrumpfen bis er passt
+// (mehrzeilig via \n). Sorgt für gestochen scharfe, nie überlaufende Schrift.
+function fitText(ctx: CanvasRenderingContext2D, text: string, cx: number, cy: number, maxW: number, basePx: number, weight = 800) {
+  const lines = text.split('\n')
+  let px = basePx
+  const font = (p: number) => `${weight} ${p}px Archivo, system-ui, sans-serif`
+  for (; px > 8; px -= 2) {
+    ctx.font = font(px)
+    if (lines.every((l) => ctx.measureText(l).width <= maxW)) break
   }
-  ctx.fillStyle = '#1a1718'
-  ctx.font = '800 20px Archivo, system-ui, sans-serif'
-  ctx.textAlign = 'left'; ctx.textBaseline = 'middle'
-  ctx.fillText(name, -62, 1)
-  ctx.restore()
+  const lh = px * 1.12
+  const y0 = cy - ((lines.length - 1) * lh) / 2
+  lines.forEach((l, i) => ctx.fillText(l, cx, y0 + i * lh))
 }
 
+// v10-E1: Banden-Textur HOCHAUFLÖSEND + datengetrieben. Boards lesen aus
+// SPONSORS[]: logoUrl gesetzt → echtes Logo (async nachgeladen, scharf),
+// sonst „HIER KÖNNTE DEIN LOGO STEHEN". Canvas 4096×256 (vorher 2048×64)
+// → Text bleibt beim Sponsoren-Zoom scharf. Erstes Board = Verein, letztes
+// = CTA; die begehrten Slots liegen mittig (dort zoomt die Station drauf).
 function makeBoardsTexture(): THREE.CanvasTexture {
   const cv = document.createElement('canvas')
-  cv.width = 2048
-  cv.height = 64
+  // Breite an das Banden-Seitenverhältnis gekoppelt (Board ist sehr breit &
+  // niedrig) → Schrift wird NICHT horizontal gestreckt (der alte „matschig"-
+  // Effekt kam von 16:1-Canvas auf ~37:1-Bande).
+  cv.width = 8192
+  cv.height = 220
   const ctx = cv.getContext('2d')!
-  // Reihenfolge: die begehrten Boards (Platzhalter + Beispiel-Logos)
-  // liegen MITTIG — dort zoomt die Sponsoren-Station drauf.
-  const boards: { text?: string; bg: string; fg?: string; logo?: 'sonne' | 'stern'; name?: string; accent?: string }[] = [
-    { text: 'SV AGATHENBURG-DOLLERN 1949', bg: '#1a1718', fg: '#e8e4da' },
-    { bg: '#f2efe8', logo: 'sonne', name: 'BÄCKEREI SONNE', accent: '#e0a020' },
-    { text: 'HIER KÖNNTE DEIN LOGO STEHEN', bg: '#f2efe8', fg: '#8a2530' },
-    { text: 'HIER KÖNNTE DEIN LOGO STEHEN', bg: '#e8e4da', fg: '#8a2530' },
-    { bg: '#eef1f4', logo: 'stern', name: 'AUTOHAUS NORDLICHT', accent: '#2f6e9e' },
-    { text: 'WERDE SPONSOR · WA', bg: COLORS.red, fg: '#ffffff' },
-  ]
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+
+  type Board = { kind: 'club' | 'cta' | 'empty' | 'logo' | 'name'; sponsor?: Sponsor }
+  const slotCount = Math.max(SPONSOR_PLACEHOLDER_SLOTS, SPONSORS.length)
+  const boards: Board[] = [{ kind: 'club' }]
+  for (let i = 0; i < slotCount; i++) {
+    const s = SPONSORS[i]
+    boards.push(s ? (s.logoUrl ? { kind: 'logo', sponsor: s } : { kind: 'name', sponsor: s }) : { kind: 'empty' })
+  }
+  boards.push({ kind: 'cta' })
+
   const w = cv.width / boards.length
-  boards.forEach((b, i) => {
-    ctx.fillStyle = b.bg
-    ctx.fillRect(i * w + 3, 4, w - 6, 56)
-    if (b.logo) {
-      drawDummyLogo(ctx, i * w + w / 2, 34, b.logo, b.name!, b.accent!)
-    } else if (b.text) {
-      ctx.fillStyle = b.fg!
-      ctx.font = '700 22px Archivo, system-ui, sans-serif'
-      ctx.textAlign = 'center'
-      ctx.textBaseline = 'middle'
-      ctx.fillText(b.text, i * w + w / 2, 34)
-    }
-  })
+  const H = cv.height
+  const pad = 10
   const tex = new THREE.CanvasTexture(cv)
   tex.colorSpace = THREE.SRGBColorSpace
-  tex.anisotropy = 4
+  tex.anisotropy = 16
+
+  boards.forEach((b, i) => {
+    const x0 = i * w
+    const cx = x0 + w / 2
+    const maxW = w - pad * 4
+    if (b.kind === 'club') {
+      ctx.fillStyle = '#17141a'; ctx.fillRect(x0 + pad, pad, w - pad * 2, H - pad * 2)
+      ctx.fillStyle = COLORS.red; ctx.fillRect(x0 + pad, pad, 14, H - pad * 2)
+      ctx.fillStyle = '#f0ece2'
+      fitText(ctx, 'SV AGATHENBURG-\nDOLLERN 1949', cx + 7, H / 2, maxW, 62)
+    } else if (b.kind === 'cta') {
+      ctx.fillStyle = COLORS.red; ctx.fillRect(x0 + pad, pad, w - pad * 2, H - pad * 2)
+      ctx.fillStyle = '#ffffff'
+      fitText(ctx, 'WERDE\nSPONSOR', cx, H / 2 - 18, maxW, 66)
+      ctx.fillStyle = 'rgba(255,255,255,0.85)'
+      fitText(ctx, 'per WhatsApp', cx, H / 2 + 58, maxW, 28, 700)
+    } else if (b.kind === 'name') {
+      ctx.fillStyle = '#eef1f4'; ctx.fillRect(x0 + pad, pad, w - pad * 2, H - pad * 2)
+      ctx.fillStyle = '#1a1718'
+      fitText(ctx, b.sponsor!.name.toUpperCase(), cx, H / 2, maxW, 52)
+    } else if (b.kind === 'logo') {
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(x0 + pad, pad, w - pad * 2, H - pad * 2)
+      // async: echtes Logo laden und mittig einpassen
+      const img = new Image()
+      img.onload = () => {
+        const bw = w - pad * 4, bh = H - pad * 4
+        const r = Math.min(bw / img.width, bh / img.height)
+        const dw = img.width * r, dh = img.height * r
+        ctx.drawImage(img, cx - dw / 2, H / 2 - dh / 2, dw, dh)
+        tex.needsUpdate = true
+      }
+      img.src = b.sponsor!.logoUrl!
+    } else {
+      // empty → begehrter Platzhalter
+      ctx.fillStyle = i % 2 ? '#f2efe8' : '#e8e4da'; ctx.fillRect(x0 + pad, pad, w - pad * 2, H - pad * 2)
+      ctx.strokeStyle = 'rgba(138,37,48,0.45)'; ctx.lineWidth = 4
+      ctx.setLineDash([16, 12]); ctx.strokeRect(x0 + pad * 3, pad * 3, w - pad * 6, H - pad * 6); ctx.setLineDash([])
+      ctx.fillStyle = '#8a2530'
+      fitText(ctx, 'HIER KÖNNTE\nDEIN LOGO STEHEN', cx, H / 2, maxW, 48)
+    }
+  })
+
   return tex
 }
 
@@ -128,12 +157,15 @@ export function Barrier() {
         </mesh>
       ))}
 
-      {/* Sponsor-Tafeln nur SÜD (vor dem Wald), hängen an der Reling */}
-      <mesh position={[0, RAIL_H - 0.02, HH + 0.035]}>
+      {/* Sponsor-Tafeln SÜD (vor dem Wald). v10-E1: VOR die Reling gerückt
+          (z = HH−0.02, Platzseite), damit das Handlauf-Rohr die Werbung nicht
+          mehr quert; leicht selbstleuchtend (emissiveMap) → nachts scharf
+          lesbar. Textur 8192×220 ≈ Banden-Proportion → keine gestreckte Schrift. */}
+      <mesh position={[0, RAIL_H - 0.02, HH - 0.02]}>
         <boxGeometry args={[PITCH.width * 0.86, 0.24, 0.03]} />
-        <meshStandardMaterial map={boardsTex} roughness={0.6} emissive="#20180f" emissiveIntensity={0.3} />
+        <meshStandardMaterial map={boardsTex} emissiveMap={boardsTex} emissive="#ffffff" emissiveIntensity={0.26} roughness={0.55} />
       </mesh>
-      <AOBlob position={[0, 0.004, HH + 0.05]} scale={[PITCH.width * 0.9, 0.5]} opacity={0.35} />
+      <AOBlob position={[0, 0.004, HH]} scale={[PITCH.width * 0.9, 0.5]} opacity={0.35} />
     </group>
   )
 }

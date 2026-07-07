@@ -73,8 +73,8 @@ export function SponsorsStrip() {
       <div className="sponsors__row">
         {slots.map((_, i) => {
           const sponsor = hasReal ? SPONSORS[i] : null
-          if (sponsor?.logo) {
-            const img = <img src={sponsor.logo} alt={sponsor.name} loading="lazy" />
+          if (sponsor?.logoUrl) {
+            const img = <img src={sponsor.logoUrl} alt={sponsor.name} loading="lazy" />
             return (
               <div className="sponsors__slot" key={i}>
                 {sponsor.url ? (

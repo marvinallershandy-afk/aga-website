@@ -62,6 +62,23 @@ Beschnitt/Einfärbung: Focal oben + Team-Duotone macht das CSS; die
 Graustufen sind aus Performance-Gründen in der Datei gebaked (s. Einzeiler). Eingebaut sind bereits: Tino (1, TW),
 Lennard (4), Julio (7), Carsten (9), Eli (10).
 
+## Sponsoren-Logos einpflegen (v10-E1 — Slot-System)
+
+Die 3D-Banden am Spielfeld UND der DOM-Partner-Strip lesen aus einem Array.
+Logo rein → erscheint überall scharf; leer → „HIER KÖNNTE DEIN LOGO STEHEN".
+
+1. **Logo** als PNG (transparent oder weißer Hintergrund), quer, ideal ~1200×400 px,
+   ablegen unter `public/sponsors/<name-klein>.png`
+   (z. B. `public/sponsors/baeckerei-sonne.png`).
+2. **Eintragen** in `src/data/club.ts` → `SPONSORS`:
+   ```ts
+   export const SPONSORS: Sponsor[] = [
+     { name: 'Bäckerei Sonne', logoUrl: '/sponsors/baeckerei-sonne.png', url: 'https://…' },
+   ]
+   ```
+   `url` ist optional (macht den DOM-Strip-Slot klickbar). Ohne `logoUrl` bleibt der Slot Platzhalter.
+3. Nicht belegte Slots bis `SPONSOR_PLACEHOLDER_SLOTS` zeigen weiter den Platzhalter — bewusstes Verkaufsargument.
+
 ## Marvins To-dos (v1 → echt)
 
 - Restliche Spielerfotos + echte Kadernamen (Pipeline oben; Nachnamen

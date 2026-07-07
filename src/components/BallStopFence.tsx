@@ -33,17 +33,23 @@ let bannerTex: THREE.CanvasTexture | null = null
 function getBannerTexture() {
   if (bannerTex) return bannerTex
   const cv = document.createElement('canvas')
-  cv.width = 512; cv.height = 96
+  // v10-E1: hochauflösend (1280×288 ≈ Banner-Proportion) → scharf.
+  cv.width = 1280; cv.height = 288
   const ctx = cv.getContext('2d')!
-  ctx.fillStyle = '#8f1620' // v5.5 CI-Pass: Banner-Slot in Vereinsrot
-  ctx.fillRect(0, 0, 512, 96)
+  ctx.fillStyle = '#8f1620' // CI: Banner-Slot in Vereinsrot
+  ctx.fillRect(0, 0, 1280, 288)
+  ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 8
+  ctx.setLineDash([30, 20]); ctx.strokeRect(28, 28, 1224, 232); ctx.setLineDash([])
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
   ctx.fillStyle = '#fff'
-  ctx.font = '800 40px Archivo, system-ui, sans-serif'
-  ctx.textAlign = 'center'
-  ctx.textBaseline = 'middle'
-  ctx.fillText('DEIN BANNER?', 256, 52)
+  ctx.font = '800 128px Archivo, system-ui, sans-serif'
+  ctx.fillText('DEIN BANNER?', 640, 128)
+  ctx.font = '700 44px Archivo, system-ui, sans-serif'
+  ctx.fillStyle = 'rgba(255,255,255,0.85)'
+  ctx.fillText('WERDE SPONSOR · PER WHATSAPP', 640, 214)
   bannerTex = new THREE.CanvasTexture(cv)
   bannerTex.colorSpace = THREE.SRGBColorSpace
+  bannerTex.anisotropy = 16
   return bannerTex
 }
 
@@ -67,9 +73,12 @@ function FencePanel({ x, zCenter, width, banner }: { x: number; zCenter: number;
         <meshBasicMaterial map={tex} transparent side={THREE.DoubleSide} depthWrite={false} />
       </mesh>
       {banner && (
-        <mesh position={[-0.01, 0.3, 0.1]} rotation-y={-Math.PI / 2}>
-          <planeGeometry args={[0.7, 0.14]} />
-          <meshStandardMaterial map={bannerTex2} roughness={0.8} side={THREE.DoubleSide} />
+        // v10-E1: klar VOR das Gitter (x=−0.07, Platzseite), größer, leicht
+        // selbstleuchtend + renderOrder → Maschendraht verdeckt die Werbung
+        // nicht mehr.
+        <mesh position={[-0.07, 0.31, 0.1]} rotation-y={-Math.PI / 2} renderOrder={3}>
+          <planeGeometry args={[0.92, 0.2]} />
+          <meshStandardMaterial map={bannerTex2} emissiveMap={bannerTex2} emissive="#ffffff" emissiveIntensity={0.22} roughness={0.75} side={THREE.DoubleSide} />
         </mesh>
       )}
     </group>
