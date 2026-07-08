@@ -8,11 +8,8 @@ import { Dashboard } from './pages/Dashboard'
 import { Placeholder } from './pages/Placeholder'
 import { Redaktionsplan } from './pages/Redaktionsplan'
 import { IdeenPool } from './pages/IdeenPool'
+import { Matchday } from './pages/Matchday'
 
-// Phase-3-Platzhalter; Phase 3 ersetzt diese durch den Grafik-Generator.
-function Matchday() {
-  return <Placeholder title="Matchday-Grafiken" subtitle="Ankündigung · Aufstellung · Ergebnis · MOTM" note="Kommt in Phase 3 — Matchday-Grafik-Generator." />
-}
 function Sponsoren() {
   return <Placeholder title="Sponsoren-CRM" subtitle="Pakete, Laufzeiten, Leistungen" note="Coming soon — Stub (Phase 4)." />
 }
