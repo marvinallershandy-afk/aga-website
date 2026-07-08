@@ -5,17 +5,11 @@ import { ProtectedRoute } from './auth/ProtectedRoute'
 import { Login } from './auth/Login'
 import { AdminLayout } from './AdminLayout'
 import { Dashboard } from './pages/Dashboard'
-import { Placeholder } from './pages/Placeholder'
 import { Redaktionsplan } from './pages/Redaktionsplan'
 import { IdeenPool } from './pages/IdeenPool'
 import { Matchday } from './pages/Matchday'
-
-function Sponsoren() {
-  return <Placeholder title="Sponsoren-CRM" subtitle="Pakete, Laufzeiten, Leistungen" note="Coming soon — Stub (Phase 4)." />
-}
-function Insights() {
-  return <Placeholder title="Insights" subtitle="Meta / TikTok Analytics" note="Coming soon — Stub (Phase 4)." />
-}
+import { Sponsoren } from './pages/Sponsoren'
+import { Insights } from './pages/Insights'
 
 export function AdminApp() {
   return (
