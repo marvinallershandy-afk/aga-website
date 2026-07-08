@@ -25,3 +25,12 @@ dist-ssr
 
 # Referenz-Material (lokal, zu groß fürs Repo)
 REFERENZ/
+
+# lokale Screenshot-/Hilfsskripte
+scripts/_*.mjs
+
+# Local Netlify folder
+.netlify
+
+# lokale Secrets
+.env
