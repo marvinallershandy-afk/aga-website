@@ -6,14 +6,10 @@ import { Login } from './auth/Login'
 import { AdminLayout } from './AdminLayout'
 import { Dashboard } from './pages/Dashboard'
 import { Placeholder } from './pages/Placeholder'
+import { Redaktionsplan } from './pages/Redaktionsplan'
+import { IdeenPool } from './pages/IdeenPool'
 
-// Phase-1-Platzhalter; Phase 2/3 ersetzen diese durch echte Seiten.
-function Redaktionsplan() {
-  return <Placeholder title="Redaktionsplan" subtitle="Wochen- & Kanban-Ansicht" note="Kommt in Phase 2 — Content-Datenbank & Redaktionsplan." />
-}
-function IdeenPool() {
-  return <Placeholder title="Ideen-Pool" subtitle="Wiederkehrende Formate" note="Kommt in Phase 2." />
-}
+// Phase-3-Platzhalter; Phase 3 ersetzt diese durch den Grafik-Generator.
 function Matchday() {
   return <Placeholder title="Matchday-Grafiken" subtitle="Ankündigung · Aufstellung · Ergebnis · MOTM" note="Kommt in Phase 3 — Matchday-Grafik-Generator." />
 }
