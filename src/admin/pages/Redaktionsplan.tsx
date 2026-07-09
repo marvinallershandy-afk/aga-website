@@ -1,9 +1,25 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Plus, ChevronLeft, ChevronRight, Table2, CalendarRange, Columns3, RefreshCw } from 'lucide-react'
+import {
+  Plus,
+  ChevronLeft,
+  ChevronRight,
+  Table2,
+  CalendarRange,
+  Columns3,
+  RefreshCw,
+  Search,
+  FolderOpen,
+  Film,
+  CalendarDays,
+} from 'lucide-react'
 import { PageHeader } from './Placeholder'
 import { Button } from '../components/ui/button'
 import { Select } from '../components/ui/select'
+import { Input } from '../components/ui/input'
 import { Badge } from '../components/ui/badge'
+import { SkeletonRows } from '../components/ui/skeleton'
+import { EmptyState } from '../components/ui/empty-state'
+import { useToast } from '../components/ui/toast'
 import { ContentEditor } from '../components/ContentEditor'
 import {
   fetchContent,
@@ -26,6 +42,38 @@ import { cn } from '../lib/utils'
 
 type View = 'tabelle' | 'woche' | 'kanban'
 
+// Kleine Icons, die anzeigen, ob Drive-Links hinterlegt sind (öffnen im neuen Tab).
+function DriveMarks({ row }: { row: ContentRow }) {
+  const open = (url: string | null, e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (url) window.open(url, '_blank', 'noopener')
+  }
+  return (
+    <>
+      {row.drive_rohmaterial_url && (
+        <button
+          onClick={(e) => open(row.drive_rohmaterial_url, e)}
+          className="text-muted-foreground transition-colors hover:text-primary"
+          title="Rohmaterial-Ordner öffnen"
+          aria-label="Rohmaterial-Ordner öffnen"
+        >
+          <FolderOpen className="h-3.5 w-3.5" />
+        </button>
+      )}
+      {row.drive_asset_url && (
+        <button
+          onClick={(e) => open(row.drive_asset_url, e)}
+          className="text-muted-foreground transition-colors hover:text-primary"
+          title="Fertiges Asset öffnen"
+          aria-label="Fertiges Asset öffnen"
+        >
+          <Film className="h-3.5 w-3.5" />
+        </button>
+      )}
+    </>
+  )
+}
+
 function KanalDots({ kanal }: { kanal: string[] }) {
   if (!kanal?.length) return <span className="text-xs text-muted-foreground">—</span>
   return (
@@ -40,6 +88,7 @@ function KanalDots({ kanal }: { kanal: string[] }) {
 }
 
 export function Redaktionsplan() {
+  const toast = useToast()
   const [content, setContent] = useState<ContentRow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -49,6 +98,7 @@ export function Redaktionsplan() {
   const [fKanal, setFKanal] = useState('')
   const [fStatus, setFStatus] = useState('')
   const [fKategorie, setFKategorie] = useState('')
+  const [fSuche, setFSuche] = useState('')
 
   // Editor
   const [editorOpen, setEditorOpen] = useState(false)
@@ -74,16 +124,22 @@ export function Redaktionsplan() {
     load()
   }, [])
 
-  const filtered = useMemo(
-    () =>
-      content.filter(
-        (r) =>
-          (!fKanal || r.kanal?.includes(fKanal)) &&
-          (!fStatus || r.status === fStatus) &&
-          (!fKategorie || r.kategorie === fKategorie),
-      ),
-    [content, fKanal, fStatus, fKategorie],
-  )
+  const filtered = useMemo(() => {
+    const q = fSuche.trim().toLowerCase()
+    return content.filter((r) => {
+      if (fKanal && !r.kanal?.includes(fKanal)) return false
+      if (fStatus && r.status !== fStatus) return false
+      if (fKategorie && r.kategorie !== fKategorie) return false
+      if (q) {
+        const hay = [r.titel, r.caption, r.hook, r.beschreibung, r.verantwortlich]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase()
+        if (!hay.includes(q)) return false
+      }
+      return true
+    })
+  }, [content, fKanal, fStatus, fKategorie, fSuche])
 
   const openNew = (date?: string | null) => {
     setEditRow(null)
@@ -117,9 +173,13 @@ export function Redaktionsplan() {
     setContent((c) => c.map((r) => (r.id === row.id ? { ...r, status } : r)))
     try {
       await updateContent(row.id, { status })
+      const label = STATUS.find((s) => s.value === status)?.label ?? status
+      toast.success(`„${row.titel}" → ${label}`)
     } catch (e) {
       setContent(prev) // Rollback
-      setError(e instanceof Error ? e.message : 'Status-Update fehlgeschlagen.')
+      const msg = e instanceof Error ? e.message : 'Status-Update fehlgeschlagen.'
+      setError(msg)
+      toast.error(msg)
     }
   }
 
@@ -170,6 +230,16 @@ export function Redaktionsplan() {
         </div>
 
         <div className="ml-auto flex flex-wrap items-center gap-2">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={fSuche}
+              onChange={(e) => setFSuche(e.target.value)}
+              placeholder="Suche…"
+              className="h-9 w-40 pl-8"
+              aria-label="Beiträge durchsuchen"
+            />
+          </div>
           <Select value={fKanal} onChange={(e) => setFKanal(e.target.value)} className="h-9 w-auto">
             <option value="">Alle Kanäle</option>
             {KANAELE.map((k) => (
@@ -204,9 +274,9 @@ export function Redaktionsplan() {
       )}
 
       {loading ? (
-        <p className="py-16 text-center text-muted-foreground">Lädt…</p>
+        <SkeletonRows rows={6} className="mt-2" />
       ) : view === 'tabelle' ? (
-        <TabelleView rows={filtered} onEdit={openEdit} onStatus={changeStatus} />
+        <TabelleView rows={filtered} onEdit={openEdit} onStatus={changeStatus} onAdd={() => openNew()} />
       ) : view === 'woche' ? (
         <WocheView
           days={days}
@@ -238,12 +308,14 @@ function TabelleView({
   rows,
   onEdit,
   onStatus,
+  onAdd,
 }: {
   rows: ContentRow[]
   onEdit: (r: ContentRow) => void
   onStatus: (r: ContentRow, s: string) => void
+  onAdd?: () => void
 }) {
-  if (!rows.length) return <EmptyHint />
+  if (!rows.length) return <EmptyHint onAdd={onAdd} />
   return (
     <div className="overflow-x-auto rounded-lg border border-border">
       <table className="w-full min-w-[720px] text-sm">
@@ -267,7 +339,12 @@ function TabelleView({
               <td className="whitespace-nowrap px-3 py-2 text-muted-foreground">
                 {formatDateShort(r.geplant_am)}
               </td>
-              <td className="px-3 py-2 font-medium">{r.titel}</td>
+              <td className="px-3 py-2 font-medium">
+                <span className="flex items-center gap-1.5">
+                  {r.titel}
+                  <DriveMarks row={r} />
+                </span>
+              </td>
               <td className="px-3 py-2">
                 <KanalDots kanal={r.kanal} />
               </td>
@@ -454,6 +531,9 @@ function ContentCard({
     >
       <div className="mb-1 flex items-start justify-between gap-2">
         <span className="line-clamp-2 text-xs font-medium leading-snug">{row.titel}</span>
+        <span className="flex shrink-0 items-center gap-1">
+          <DriveMarks row={row} />
+        </span>
       </div>
       <div className="flex flex-wrap items-center gap-1">
         {showDate && row.geplant_am && (
@@ -472,10 +552,19 @@ function ContentCard({
   )
 }
 
-function EmptyHint() {
+function EmptyHint({ onAdd }: { onAdd?: () => void }) {
   return (
-    <div className="rounded-lg border border-dashed border-border py-16 text-center text-muted-foreground">
-      Keine Beiträge für diese Filter. Lege oben rechts einen neuen an.
-    </div>
+    <EmptyState
+      icon={CalendarDays}
+      title="Noch keine Beiträge"
+      description="Für diese Filter gibt es nichts. Lege einen Beitrag an oder passe die Filter an."
+      action={
+        onAdd && (
+          <Button onClick={onAdd}>
+            <Plus className="h-4 w-4" /> Neuer Beitrag
+          </Button>
+        )
+      }
+    />
   )
 }

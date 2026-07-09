@@ -54,3 +54,13 @@
 }
 .admin-root button { font-family: inherit; }
 .admin-root a { color: inherit; text-decoration: none; }
+
+/* Toast-Einblendung (ersetzt tailwindcss-animate) */
+@keyframes sm-toast-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.sm-toast-in { animation: sm-toast-in 0.18s ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .sm-toast-in { animation: none; }
+}

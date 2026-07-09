@@ -14,6 +14,13 @@ export interface ContentRow {
   verantwortlich: string | null
   idee_id: string | null
   notizen: string | null
+  // Redaktionsplan-Vollausbau (P1)
+  hook: string | null
+  caption: string | null
+  cta: string | null
+  sound: string | null
+  drive_rohmaterial_url: string | null
+  drive_asset_url: string | null
   created_at: string
   updated_at: string
 }
@@ -32,6 +39,12 @@ export type ContentInput = Partial<
     | 'verantwortlich'
     | 'idee_id'
     | 'notizen'
+    | 'hook'
+    | 'caption'
+    | 'cta'
+    | 'sound'
+    | 'drive_rohmaterial_url'
+    | 'drive_asset_url'
   >
 >
 
