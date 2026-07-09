@@ -6,7 +6,6 @@ import {
   ExternalLink,
   Pencil,
   HardDriveDownload,
-  FolderPlus,
 } from 'lucide-react'
 import { PageHeader } from './Placeholder'
 import { Button } from '../components/ui/button'
@@ -16,6 +15,7 @@ import { SkeletonRows } from '../components/ui/skeleton'
 import { EmptyState } from '../components/ui/empty-state'
 import { useToast } from '../components/ui/toast'
 import { ContentEditor } from '../components/ContentEditor'
+import { DriveBrowser } from '../components/DriveBrowser'
 import {
   fetchContent,
   updateContent,
@@ -101,45 +101,26 @@ export function Produktion() {
         }
       />
 
-      {/* Drive-Bridge — Deep-Links jetzt; Live-Listing folgt (siehe Hinweis unten) */}
-      <div className="mb-4 grid gap-4 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
-          <CardHeader className="p-4">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <HardDriveDownload className="h-5 w-5 text-primary" /> Drive-Bridge
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-0 text-sm text-muted-foreground">
-            <p>
-              Der Admin <b>verlinkt</b> auf Google Drive — Dateien bleiben in Drive, hier wird nichts kopiert.
-              Jeder Beitrag kann auf seinen Rohmaterial-Ordner und sein fertiges Asset zeigen (im Beitrag
-              hinterlegen, hier per Klick öffnen).
-            </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <Button asChild size="sm" variant="outline">
-                <a href={driveFolderUrl(DRIVE_MASTER_FOLDER_ID)} target="_blank" rel="noopener noreferrer">
-                  <FolderOpen className="h-4 w-4" /> Master-Ordner
-                </a>
-              </Button>
-              <Button size="sm" variant="outline" disabled title="Live-Ansicht braucht Drive-Zugang (siehe Hinweis)">
-                <FolderPlus className="h-4 w-4" /> Spieltag-Ordner anlegen
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-dashed">
-          <CardHeader className="flex-row items-center justify-between space-y-0 p-4">
-            <CardTitle className="text-lg">Live-Ansicht</CardTitle>
-            <span className="rounded bg-secondary px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
-              bald
-            </span>
-          </CardHeader>
-          <CardContent className="p-4 pt-0 text-sm text-muted-foreground">
-            Ordner-Inhalte direkt im Admin anzeigen und Spieltag-Unterordner anlegen — sobald der
-            serverseitige Drive-Zugang eingerichtet ist.
-          </CardContent>
-        </Card>
-      </div>
+      {/* Drive-Bridge — Deep-Links + Live-Ansicht (Edge Function) */}
+      <Card className="mb-4">
+        <CardHeader className="flex-row items-center justify-between space-y-0 p-4">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <HardDriveDownload className="h-5 w-5 text-primary" /> Drive-Bridge
+          </CardTitle>
+          <Button asChild size="sm" variant="outline">
+            <a href={driveFolderUrl(DRIVE_MASTER_FOLDER_ID)} target="_blank" rel="noopener noreferrer">
+              <FolderOpen className="h-4 w-4" /> Master-Ordner
+            </a>
+          </Button>
+        </CardHeader>
+        <CardContent className="space-y-3 p-4 pt-0">
+          <p className="text-sm text-muted-foreground">
+            Der Admin <b>verlinkt</b> auf Google Drive — Dateien bleiben in Drive, hier wird nichts kopiert.
+            Live-Ansicht: Ordner durchsuchen und Spieltag-Unterordner direkt hier anlegen.
+          </p>
+          <DriveBrowser rootId={DRIVE_MASTER_FOLDER_ID} rootName="Social-Media (Master)" />
+        </CardContent>
+      </Card>
 
       <div className="mb-3 flex items-center justify-between">
         <h2 className="font-display text-lg tracking-wide">Produktions-Tracker</h2>
