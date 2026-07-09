@@ -84,11 +84,15 @@ export function Sections() {
           Beat. Kamera-Station 3 schwenkt in die SO-Ecke auf die Fans +
           wehendes Banner (FanBlock.tsx). Linksbündig, rechts lebt die
           Kurve im 3D. */}
-      <section id={fanblock.id} className="section section--left">
+      {/* v-website-polish: passthrough → Klicks in den freien Sektionsflächen
+          erreichen die 3D-Foto-Schilder in der Kurve (Raycast). Text ist
+          non-interaktiv, die Foto-Kacheln (button) reaktivieren pointer-events
+          selbst und bleiben mobil zuverlässig tippbar. */}
+      <section id={fanblock.id} className="section section--left section--passthrough">
         <div className="section__scrim" />
         <Header kicker={fanblock.kicker} title={fanblock.title} body={fanblock.body} />
-        {/* v12-E1: „Fangesang an"-Button entfernt — Ton ist global (Mute unten rechts). */}
-        {/* v11-E7: Meisterfeier-Kacheln + Lightbox (v12-E1: nur echte Fotos) */}
+        {/* v11-E7: Meisterfeier-Kacheln + Lightbox — dieselbe Lightbox öffnen
+            die 3D-Schilder (v-website-polish). Nur echte Fotos. */}
         <FanGallery />
       </section>
 

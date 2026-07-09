@@ -1,8 +1,11 @@
-import { useMemo, useRef } from 'react'
+import { useMemo, useRef, useState, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
+import { useTexture } from '@react-three/drei'
 import * as THREE from 'three'
 import { PITCH } from '../utils/constants'
 import { AOBlob } from './AOBlob'
+import { useStore } from '../store/useStore'
+import { FAN_PHOTOS } from '../data/club'
 
 // ─────────────────────────────────────────────────────────────
 // Der Fanblock in der SÜDOST-Ecke (Marvins v5-Review: Süd-Seite
@@ -273,8 +276,379 @@ const FANS: { x: number; z: number; jersey: string; h: number; rot: number; flag
   { x: CX - 1.5, z: HH + 0.42, jersey: '#1d1a1c', h: 0.183, rot: 0.55 },
 ]
 
+// ─────────────────────────────────────────────────────────────
+// v-website-polish: die Kurve wird VOLLER + emotionaler.
+// Kunst-Richtung bleibt: stilisierte Low-Poly-Figuren, KEINE Gesichter,
+// kein Fotoreal. Nur „reicher + echt".
+// ─────────────────────────────────────────────────────────────
+
+// Deterministischer PRNG → stabile, schöne Verteilung (kein Flackern
+// zwischen Renders, prerender-sicher).
+function mulberry32(seed: number) {
+  let a = seed
+  return () => {
+    a |= 0
+    a = (a + 0x6d2b79f5) | 0
+    let t = Math.imul(a ^ (a >>> 15), 1 | a)
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
+
+const SKIN = '#c99a75'
+const JERSEYS = ['#c9202b', '#d02530', '#b3141f', '#8f1620', '#1a1719', '#1d1a1c', '#d8d4c9', '#c7c2b6']
+
+// Instanzierte Zuschauer-Menge HINTER den handplatzierten Detail-Fans:
+// zwei InstancedMeshes (Körper + Kopf, je 1 Draw-Call) füllen die Kurve.
+// Leichte Idle-Bewegung (Wippen + Schunkeln) — performant für ~50 Figuren.
+function InstancedCrowd() {
+  const bodyRef = useRef<THREE.InstancedMesh>(null)
+  const headRef = useRef<THREE.InstancedMesh>(null)
+  const dummy = useMemo(() => new THREE.Object3D(), [])
+
+  const crowd = useMemo(() => {
+    const rand = mulberry32(20260626)
+    const out: { x: number; z: number; h: number; jersey: string; phase: number; speed: number; sway: number; lean0: number; yaw: number }[] = []
+    const ROWS = 7
+    // Abstandsbasierte DICHTE Packung (Schulter an Schulter, leicht überlappend)
+    // → die Silhouetten verschmelzen zur Masse statt einzeln als „Kegel" zu
+    // stehen. Reihen versetzt, hintere minimal höher gestaffelt (h wächst).
+    const STEP = 0.11
+    for (let r = 0; r < ROWS; r++) {
+      const z = HH + 0.36 + r * 0.17
+      const spanHalf = 2.35 - r * 0.08
+      const rowShift = (r % 2) * (STEP / 2) // halbe Lücke versetzt
+      for (let x = CX - spanHalf + rowShift; x <= CX + spanHalf; x += STEP) {
+        out.push({
+          x: x + (rand() - 0.5) * 0.05,
+          z: z + (rand() - 0.5) * 0.08,
+          // hintere Reihen etwas größer → Köpfe steigen über die vorderen an
+          h: 0.17 + r * 0.012 + rand() * 0.05,
+          jersey: JERSEYS[Math.floor(rand() * JERSEYS.length)],
+          phase: rand() * Math.PI * 2,
+          speed: 1.3 + rand() * 1.3,
+          sway: 0.025 + rand() * 0.05,
+          lean0: -0.05 - rand() * 0.06, // Grund-Vorlage Richtung Platz/Kamera
+          yaw: (rand() - 0.5) * 0.5, // leichte Blickrichtungs-Streuung
+        })
+      }
+    }
+    return out
+  }, [])
+
+  const N = crowd.length
+
+  // Geometrie mit Basis am Boden (translate nach oben) → Schunkeln pivotiert
+  // um die Füße; EIN Matrix pro Figur gilt für Körper UND Kopf.
+  const bodyGeo = useMemo(() => {
+    // breitere Schultern oben, schmaler zum Boden → menschlichere Silhouette.
+    const g = new THREE.CylinderGeometry(0.15, 0.1, 0.9, 6)
+    g.translate(0, 0.45, 0)
+    return g
+  }, [])
+  const headGeo = useMemo(() => {
+    const g = new THREE.SphereGeometry(0.092, 8, 6)
+    g.translate(0, 1.0, 0)
+    return g
+  }, [])
+
+  // Farben einmalig setzen.
+  useEffect(() => {
+    const body = bodyRef.current
+    const head = headRef.current
+    if (!body || !head) return
+    const col = new THREE.Color()
+    const skin = new THREE.Color(SKIN)
+    for (let i = 0; i < N; i++) {
+      body.setColorAt(i, col.set(crowd[i].jersey))
+      head.setColorAt(i, skin)
+    }
+    if (body.instanceColor) body.instanceColor.needsUpdate = true
+    if (head.instanceColor) head.instanceColor.needsUpdate = true
+  }, [crowd, N])
+
+  useFrame((state) => {
+    const body = bodyRef.current
+    const head = headRef.current
+    if (!body || !head) return
+    const t = state.clock.elapsedTime
+    for (let i = 0; i < N; i++) {
+      const f = crowd[i]
+      const sway = Math.sin(t * f.speed + f.phase) * f.sway
+      const bob = Math.sin(t * f.speed * 1.3 + f.phase) * 0.006
+      dummy.position.set(f.x, bob, f.z)
+      // x: Grund-Vorlage zur Kamera + leichtes Nicken; y: Blickstreuung; z: Schunkeln
+      dummy.rotation.set(f.lean0 + Math.sin(t * f.speed * 0.9 + f.phase) * 0.02, f.yaw, sway)
+      dummy.scale.setScalar(f.h)
+      dummy.updateMatrix()
+      body.setMatrixAt(i, dummy.matrix)
+      head.setMatrixAt(i, dummy.matrix)
+    }
+    body.instanceMatrix.needsUpdate = true
+    head.instanceMatrix.needsUpdate = true
+  })
+
+  return (
+    <group>
+      <instancedMesh ref={bodyRef} args={[bodyGeo, undefined, N]} castShadow={false}>
+        <meshStandardMaterial roughness={0.92} />
+      </instancedMesh>
+      <instancedMesh ref={headRef} args={[headGeo, undefined, N]} castShadow={false}>
+        <meshStandardMaterial roughness={0.9} />
+      </instancedMesh>
+    </group>
+  )
+}
+
+// Rot-schwarz geteilte Fahne (Referenz-Look).
+function makeFlagTex(): THREE.CanvasTexture {
+  const cv = document.createElement('canvas')
+  cv.width = 160
+  cv.height = 112
+  const ctx = cv.getContext('2d')!
+  ctx.fillStyle = '#c41824'
+  ctx.fillRect(0, 0, 160, 112)
+  ctx.fillStyle = '#141114'
+  ctx.beginPath()
+  ctx.moveTo(160, 0)
+  ctx.lineTo(160, 112)
+  ctx.lineTo(0, 112)
+  ctx.closePath()
+  ctx.fill()
+  // dünner Diagonal-Saum
+  ctx.strokeStyle = 'rgba(240,236,228,0.5)'
+  ctx.lineWidth = 3
+  ctx.beginPath()
+  ctx.moveTo(160, 0)
+  ctx.lineTo(0, 112)
+  ctx.stroke()
+  const tex = new THREE.CanvasTexture(cv)
+  tex.colorSpace = THREE.SRGBColorSpace
+  return tex
+}
+
+// Größere, im Wind wehende Fahne an einer Stange (Vertex-Ripple).
+function WindFlag({ x, z, poleH, tex, phase = 0 }: { x: number; z: number; poleH: number; tex: THREE.Texture; phase?: number }) {
+  const geoRef = useRef<THREE.PlaneGeometry>(null)
+  const base = useRef<Float32Array | null>(null)
+  const W = 0.26
+  const H = 0.17
+  useFrame((state) => {
+    const geo = geoRef.current
+    if (!geo) return
+    const pos = geo.attributes.position as THREE.BufferAttribute
+    if (!base.current) base.current = (pos.array as Float32Array).slice()
+    const b = base.current
+    const t = state.clock.elapsedTime
+    for (let i = 0; i < pos.count; i++) {
+      const x0 = b[i * 3]
+      const u = (x0 + W / 2) / W // 0 an Stange … 1 am freien Ende
+      const wave = Math.sin(u * 6 - t * 4 + phase) * 0.03 + Math.sin(u * 3 - t * 2.4 + phase) * 0.02
+      pos.setZ(i, b[i * 3 + 2] + wave * u) // Stangen-Ende fest, Flatterende frei
+    }
+    pos.needsUpdate = true
+    geo.computeVertexNormals()
+  })
+  return (
+    <group position={[x, 0, z]}>
+      <mesh position={[0, poleH / 2, 0]}>
+        <cylinderGeometry args={[0.008, 0.008, poleH, 5]} />
+        <meshStandardMaterial color="#3a3d42" roughness={0.6} />
+      </mesh>
+      <mesh position={[W / 2, poleH - H / 2 - 0.02, 0]}>
+        <planeGeometry ref={geoRef} args={[W, H, 12, 3]} />
+        <meshStandardMaterial map={tex} side={THREE.DoubleSide} roughness={0.85} />
+      </mesh>
+    </group>
+  )
+}
+
+// Großes Kurven-Banner „MEISTER 2026" am Zaun (der Vereinsname steht bereits
+// auf der Bande, s. Barrier.tsx — hier feiert die Kurve stattdessen den Titel,
+// passend zu Neles Aufstiegs-Fotos: emotional statt doppelt).
+function makeClubBannerTexture(): THREE.CanvasTexture {
+  const cv = document.createElement('canvas')
+  cv.width = 1024
+  cv.height = 220
+  const ctx = cv.getContext('2d')!
+  // schwarzes Tuch mit rotem Rahmen + Stoff-Fleckigkeit
+  ctx.fillStyle = '#141114'
+  ctx.fillRect(0, 0, 1024, 220)
+  for (let i = 0; i < 34; i++) {
+    ctx.fillStyle = `rgba(0,0,0,${0.05 + Math.random() * 0.08})`
+    ctx.beginPath()
+    ctx.arc(Math.random() * 1024, Math.random() * 220, 15 + Math.random() * 45, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  ctx.strokeStyle = '#c41824'
+  ctx.lineWidth = 12
+  ctx.strokeRect(16, 16, 1024 - 32, 220 - 32)
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillStyle = '#e8c15a'
+  ctx.font = '400 104px Anton, system-ui, sans-serif'
+  ctx.fillText('MEISTER 2026', 512, 88)
+  ctx.fillStyle = '#f2eee6'
+  ctx.font = '700 40px Archivo, system-ui, sans-serif'
+  ctx.fillText('★  SÜDKURVE · 1. KREISKLASSE  ★', 512, 162)
+  const tex = new THREE.CanvasTexture(cv)
+  tex.colorSpace = THREE.SRGBColorSpace
+  tex.anisotropy = 4
+  return tex
+}
+
+// Sanft driftendes Konfetti über der Kurve (instanziert, günstig).
+function Confetti() {
+  const ref = useRef<THREE.InstancedMesh>(null)
+  const dummy = useMemo(() => new THREE.Object3D(), [])
+  const N = 46
+  const bits = useMemo(() => {
+    const rand = mulberry32(4242)
+    return Array.from({ length: N }, () => ({
+      x: CX + (rand() - 0.5) * 4.6,
+      z: HH + 0.3 + rand() * 1.6,
+      y0: 1.2 + rand() * 1.4,
+      speed: 0.12 + rand() * 0.14,
+      spin: (rand() - 0.5) * 3,
+      drift: (rand() - 0.5) * 0.4,
+      phase: rand() * 10,
+      col: rand() > 0.5 ? '#e91d29' : rand() > 0.5 ? '#e8c15a' : '#f2eee6',
+    }))
+  }, [])
+  useEffect(() => {
+    const m = ref.current
+    if (!m) return
+    const col = new THREE.Color()
+    bits.forEach((b, i) => m.setColorAt(i, col.set(b.col)))
+    if (m.instanceColor) m.instanceColor.needsUpdate = true
+  }, [bits])
+  useFrame((state) => {
+    const m = ref.current
+    if (!m) return
+    const t = state.clock.elapsedTime
+    bits.forEach((b, i) => {
+      const fall = ((t * b.speed + b.phase) % 1.6)
+      const y = b.y0 - fall
+      dummy.position.set(b.x + Math.sin(t * 0.8 + b.phase) * b.drift, y, b.z)
+      dummy.rotation.set(t * b.spin, t * b.spin * 0.7, 0)
+      dummy.scale.setScalar(0.02)
+      dummy.updateMatrix()
+      m.setMatrixAt(i, dummy.matrix)
+    })
+    m.instanceMatrix.needsUpdate = true
+  })
+  return (
+    <instancedMesh ref={ref} args={[undefined, undefined, N]}>
+      <planeGeometry args={[1, 0.6]} />
+      <meshBasicMaterial side={THREE.DoubleSide} toneMapped={false} />
+    </instancedMesh>
+  )
+}
+
+// Ein Fan hält ein SCHILD mit einem echten Foto hoch → Klick öffnet die
+// Lightbox mit genau diesem Foto (mobil wie Desktop; DOM-Kacheln als
+// zuverlässiger Zweitzugang). Schild zeigt zur Kamera (−z, rotation-y=π).
+function PhotoSign({ index, x, z, y, jersey, yaw = 0 }: { index: number; x: number; z: number; y: number; jersey: string; yaw?: number }) {
+  const setFanPhoto = useStore((s) => s.setFanPhoto)
+  const photo = FAN_PHOTOS[index]
+  const tex = useTexture(photo.sign as string)
+  const grpRef = useRef<THREE.Group>(null)
+  const [hover, setHover] = useState(false)
+  useMemo(() => {
+    tex.colorSpace = THREE.SRGBColorSpace
+    tex.anisotropy = 8
+    // rotation-y=π spiegelt die Textur horizontal → hier zurückspiegeln,
+    // damit Banner-/Shirt-Schrift richtig herum steht.
+    tex.wrapS = THREE.RepeatWrapping
+    tex.repeat.x = -1
+    tex.offset.x = 1
+    tex.needsUpdate = true
+  }, [tex])
+  useFrame((state) => {
+    const g = grpRef.current
+    if (!g) return
+    const t = state.clock.elapsedTime
+    g.rotation.z = Math.sin(t * 1.1 + index * 1.7) * 0.04
+    g.position.y = y + Math.sin(t * 1.5 + index) * 0.006
+  })
+  const W = 0.4
+  const H = 0.3
+  return (
+    <group position={[x, 0, z]}>
+      {/* Halter-Fan (Arme hoch) */}
+      <Fan x={0} z={0} jersey={jersey} h={0.19} rot={0} arms={false} />
+      {[-0.05, 0.05].map((ax) => (
+        <mesh key={ax} position={[ax, 0.16, 0.01]} rotation-z={ax < 0 ? 0.35 : -0.35}>
+          <cylinderGeometry args={[0.008, 0.008, 0.12, 5]} />
+          <meshStandardMaterial color={jersey} roughness={0.85} />
+        </mesh>
+      ))}
+      {/* Halte-Stangen zum Schild */}
+      {[-W * 0.36, W * 0.36].map((px) => (
+        <mesh key={px} position={[px, y - H * 0.5 - 0.09, 0.02]}>
+          <cylinderGeometry args={[0.007, 0.007, 0.26, 5]} />
+          <meshStandardMaterial color="#2f3236" roughness={0.6} />
+        </mesh>
+      ))}
+      {/* Schild-Gruppe: zeigt zur Kamera */}
+      <group ref={grpRef} position={[0, y, 0.03]} rotation-y={Math.PI + yaw}>
+        {/* Gold-Rahmen (Signal: anklickbar) */}
+        <mesh position={[0, 0, -0.008]}>
+          <planeGeometry args={[W + 0.05, H + 0.05]} />
+          <meshStandardMaterial color={hover ? '#ffe08a' : '#e8c15a'} roughness={0.45} metalness={0.35} emissive="#e8c15a" emissiveIntensity={hover ? 0.5 : 0.22} />
+        </mesh>
+        <mesh position={[0, 0, -0.004]}>
+          <planeGeometry args={[W + 0.014, H + 0.014]} />
+          <meshStandardMaterial color="#0f0c0d" roughness={0.8} />
+        </mesh>
+        {/* Foto — anklickbar, leicht selbstleuchtend → nachts lesbar */}
+        <mesh
+          scale={hover ? 1.05 : 1}
+          onClick={(e) => {
+            e.stopPropagation()
+            setFanPhoto(index)
+          }}
+          onPointerOver={(e) => {
+            e.stopPropagation()
+            setHover(true)
+            document.body.style.cursor = 'pointer'
+          }}
+          onPointerOut={() => {
+            setHover(false)
+            document.body.style.cursor = ''
+          }}
+        >
+          <planeGeometry args={[W, H]} />
+          <meshStandardMaterial map={tex} emissiveMap={tex} emissive="#ffffff" emissiveIntensity={0.5} roughness={0.7} toneMapped />
+        </mesh>
+      </group>
+    </group>
+  )
+}
+
+// Die 3 Foto-Schilder (unter Suspense — Texturen laden per useTexture).
+const SIGN_SPOTS = [
+  { x: CX - 1.5, z: HH + 0.6, y: 0.66, jersey: '#c9202b', yaw: 0.14 },
+  { x: CX + 0.15, z: HH + 0.72, y: 0.74, jersey: '#1d1a1c', yaw: 0 },
+  { x: CX + 1.65, z: HH + 0.6, y: 0.66, jersey: '#d8d4c9', yaw: -0.14 },
+]
+function PhotoSigns() {
+  // nur Fotos mit sign-Textur (die ersten 3 FAN_PHOTOS).
+  const signs = FAN_PHOTOS.map((p, i) => ({ p, i })).filter((e) => !!e.p.sign).slice(0, 3)
+  return (
+    <>
+      {signs.map((e, k) => {
+        const spot = SIGN_SPOTS[k]
+        return <PhotoSign key={e.i} index={e.i} {...spot} />
+      })}
+    </>
+  )
+}
+
 export function FanBlock() {
   const bannerTex = useMemo(() => makeBannerTexture(), [])
+  const clubBannerTex = useMemo(() => makeClubBannerTexture(), [])
+  const flagTex = useMemo(() => makeFlagTex(), [])
   const railTex = useMemo(() => makeRailSponsorTex(), [])
   const bannerRef = useRef<THREE.Mesh>(null)
   const bannerGeo = useRef<THREE.PlaneGeometry>(null)
@@ -318,6 +692,22 @@ export function FanBlock() {
 
   return (
     <group>
+      {/* v-website-polish: instanzierte Menge füllt die Kurve (hinter den
+          Detail-Fans) + großes Vereins-Banner am Zaun im Rücken. */}
+      <InstancedCrowd />
+
+      {/* Großes Kurven-Banner „SV Agathenburg-Dollern 1949" am Zaun hinten,
+          Vorderseite zum Platz/zur Kamera (−z). */}
+      <mesh position={[CX - 0.1, 0.82, HH + 1.42]} rotation-y={Math.PI}>
+        <planeGeometry args={[2.9, 0.56]} />
+        <meshStandardMaterial map={clubBannerTex} side={THREE.DoubleSide} roughness={0.9} emissiveMap={clubBannerTex} emissive="#ffffff" emissiveIntensity={0.12} />
+      </mesh>
+
+      {/* Wehende Fahnen in der Menge */}
+      <WindFlag x={CX - 2.15} z={HH + 0.7} poleH={0.62} tex={flagTex} phase={0.4} />
+      <WindFlag x={CX + 2.1} z={HH + 0.62} poleH={0.7} tex={flagTex} phase={2.1} />
+      <WindFlag x={CX + 0.9} z={HH + 1.05} poleH={0.82} tex={flagTex} phase={3.3} />
+
       {/* Banner wird hochgehalten (Referenz: Team-Foto mit Fahne) —
           Vorderseite zeigt zum Platz */}
       <group position={[CX, 0, HH + 0.22]} rotation-y={Math.PI}>
@@ -390,7 +780,15 @@ export function FanBlock() {
       {/* v11-E7 (optional): dezentes Feuerwerk über der Meister-Kurve */}
       <Fireworks />
 
+      {/* v-website-polish: driftendes Konfetti + die 3 klickbaren Foto-Schilder */}
+      <Confetti />
+      <PhotoSigns />
+
       <AOBlob position={[CX, 0.005, HH + 0.35]} scale={[2.6, 1.2]} opacity={0.5} />
+      {/* breiter, dunkler Boden unter der dichten Menge → erdet die Kurve,
+          nimmt den hellen Rasen unter den Figuren zurück (kein „Kegel auf
+          Wiese"-Eindruck). */}
+      <AOBlob position={[CX, 0.004, HH + 1.05]} scale={[6.4, 3.2]} opacity={0.62} />
     </group>
   )
 }

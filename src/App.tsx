@@ -11,6 +11,7 @@ import { Sections } from './ui/Sections'
 import { Brandbar } from './ui/Brandbar'
 import { ScrollHint } from './ui/ScrollHint'
 import { PlayerModal } from './ui/PlayerModal'
+import { FanLightbox } from './ui/FanLightbox'
 import { PerfOverlay } from './ui/PerfOverlay'
 import { EntranceGate } from './ui/EntranceGate'
 import { PartyDirector } from './ui/PartyDirector'
@@ -70,6 +71,7 @@ export default function App() {
       {!fallback && <ScrollHint />}
       <Letterbox />
       <PlayerModal />
+      <FanLightbox />
       <PerfOverlay />
       <FxPanel />
     </>

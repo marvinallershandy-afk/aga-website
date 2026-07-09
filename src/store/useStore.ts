@@ -20,6 +20,13 @@ interface AppState {
   selectedPlayer: Player | null
   setSelectedPlayer: (p: Player | null) => void
 
+  /** Fanblock-Foto-Lightbox (v-website-polish): Index in FAN_PHOTOS des
+   *  aktuell groß gezeigten Fotos, oder null. Wird von den 3D-Schildern im
+   *  Fanblock (Canvas) UND den DOM-Kacheln gesetzt → eine gemeinsame Lightbox
+   *  am App-Root (analog PlayerModal). */
+  fanPhoto: number | null
+  setFanPhoto: (i: number | null) => void
+
   /** 3D-Assets geladen → Loader ausblenden. */
   ready: boolean
   setReady: (v: boolean) => void
@@ -108,6 +115,9 @@ export const useStore = create<AppState>((set) => ({
 
   selectedPlayer: null,
   setSelectedPlayer: (p) => set({ selectedPlayer: p }),
+
+  fanPhoto: null,
+  setFanPhoto: (i) => set({ fanPhoto: i }),
 
   ready: false,
   setReady: (v) => set({ ready: v }),
