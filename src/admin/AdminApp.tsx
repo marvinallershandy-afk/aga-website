@@ -9,6 +9,7 @@ import { AdminLayout } from './AdminLayout'
 import { Dashboard } from './pages/Dashboard'
 import { Redaktionsplan } from './pages/Redaktionsplan'
 import { IdeenPool } from './pages/IdeenPool'
+import { Produktion } from './pages/Produktion'
 import { Matchday } from './pages/Matchday'
 import { Sponsoren } from './pages/Sponsoren'
 import { Insights } from './pages/Insights'
@@ -33,6 +34,7 @@ export function AdminApp() {
                   <Route index element={<Dashboard />} />
                   <Route path="redaktionsplan" element={<Redaktionsplan />} />
                   <Route path="ideen" element={<IdeenPool />} />
+                  <Route path="produktion" element={<Produktion />} />
                   <Route path="matchday" element={<Matchday />} />
                   <Route path="sponsoren" element={<Sponsoren />} />
                   <Route path="insights" element={<Insights />} />

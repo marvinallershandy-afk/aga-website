@@ -32,6 +32,23 @@ export const RHYTHMEN = [
   { value: 'einmalig', label: 'Einmalig' },
 ] as const
 
+// Google-Drive-Anbindung (Deep-Links — keine Datei-Kopien).
+// Master-Ordner der SVA-Social-Media-Ablage; Live-Listing folgt via Drive-Bridge.
+export const DRIVE_MASTER_FOLDER_ID = '1PC427xN-lRU2OxC94mO-mJETh1QOm6EA'
+export const driveFolderUrl = (id: string) => `https://drive.google.com/drive/folders/${id}`
+
+// Triage-Status der Team-Ideen-Inbox (sm_ideen_eingang)
+export const EINGANG_STATUS = [
+  { value: 'offen', label: 'Offen', dot: '#3b82f6' },
+  { value: 'geprueft', label: 'Geprüft', dot: '#E8C15A' },
+  { value: 'uebernommen', label: 'Übernommen', dot: '#22c55e' },
+  { value: 'verworfen', label: 'Verworfen', dot: '#8a8a8a' },
+] as const
+
+export function eingangStatusMeta(v: string) {
+  return EINGANG_STATUS.find((s) => s.value === v) ?? { value: v, label: v, dot: '#8a8a8a' }
+}
+
 // Hilfsfunktionen für Label-Auflösung
 export function kanalLabel(v: string): string {
   return KANAELE.find((k) => k.value === v)?.label ?? v

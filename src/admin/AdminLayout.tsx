@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   CalendarDays,
   Lightbulb,
+  Clapperboard,
   Image as ImageIcon,
   Handshake,
   BarChart3,
@@ -29,7 +30,8 @@ const NAV: NavItem[] = [
   // sonst verdoppelt sich der basename zu /admin/admin/... (toter Link → Catch-all).
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/redaktionsplan', label: 'Redaktionsplan', icon: CalendarDays },
-  { to: '/ideen', label: 'Ideen-Pool', icon: Lightbulb },
+  { to: '/ideen', label: 'Ideen', icon: Lightbulb },
+  { to: '/produktion', label: 'Produktion & Assets', icon: Clapperboard },
   { to: '/matchday', label: 'Matchday-Grafiken', icon: ImageIcon },
   { to: '/sponsoren', label: 'Sponsoren', icon: Handshake, soon: true },
   { to: '/insights', label: 'Insights', icon: BarChart3, soon: true },

@@ -132,3 +132,67 @@ export async function deleteIdee(id: string): Promise<void> {
   const { error } = await supabase.from('sm_ideen_pool').delete().eq('id', id)
   if (error) throw error
 }
+
+// ── sm_ideen_eingang (Team-Inbox) ───────────────────────────────────────────
+
+export type EingangStatus = 'offen' | 'geprueft' | 'uebernommen' | 'verworfen'
+
+export interface EingangRow {
+  id: string
+  titel: string
+  beschreibung: string | null
+  von: string | null
+  kanal: string[]
+  status: EingangStatus
+  content_id: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type EingangInput = Partial<
+  Pick<EingangRow, 'titel' | 'beschreibung' | 'von' | 'kanal' | 'status' | 'content_id'>
+>
+
+export async function fetchEingang(): Promise<EingangRow[]> {
+  const { data, error } = await supabase
+    .from('sm_ideen_eingang')
+    .select('*')
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return (data ?? []) as EingangRow[]
+}
+
+export async function createEingang(input: EingangInput): Promise<EingangRow> {
+  const { data, error } = await supabase.from('sm_ideen_eingang').insert(input).select('*').single()
+  if (error) throw error
+  return data as EingangRow
+}
+
+export async function updateEingang(id: string, patch: EingangInput): Promise<EingangRow> {
+  const { data, error } = await supabase
+    .from('sm_ideen_eingang')
+    .update({ ...patch, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select('*')
+    .single()
+  if (error) throw error
+  return data as EingangRow
+}
+
+export async function deleteEingang(id: string): Promise<void> {
+  const { error } = await supabase.from('sm_ideen_eingang').delete().eq('id', id)
+  if (error) throw error
+}
+
+// Eingangs-Idee → Redaktionsplan: legt einen sm_content-Eintrag an und
+// markiert die Idee als „übernommen" (mit Verweis auf den neuen Beitrag).
+export async function eingangIntoPlan(row: EingangRow): Promise<ContentRow> {
+  const created = await createContent({
+    titel: row.titel,
+    beschreibung: row.beschreibung,
+    kanal: row.kanal ?? [],
+    status: 'geplant',
+  })
+  await updateEingang(row.id, { status: 'uebernommen', content_id: created.id })
+  return created
+}
