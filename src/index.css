@@ -140,6 +140,24 @@ body {
 .section--left .section__scrim {
   background: linear-gradient(90deg, rgba(8,7,10,0.82) 0%, rgba(8,7,10,0.5) 38%, rgba(8,7,10,0) 70%);
 }
+/* Mobil: der Text steht fast über die volle Breite, deshalb greift der
+   horizontale Links-Scrim (oben, fade bei 70% Breite) nicht — die rechte
+   Texthälfte + die 3D-Karten dahinter blieben ungeschützt (Mannschaft-Audit).
+   Root-Cause-Fix: auf schmalen Viewports einen VERTIKALEN Scrim fahren, der die
+   obere Text-Zone kräftig abdeckt und zum Sektionsboden ausläuft — 3D-Atmosphäre
+   unten bleibt, Text oben wird abgesichert. */
+@media (max-width: 640px) {
+  .section--left .section__scrim {
+    background: linear-gradient(
+      180deg,
+      rgba(8,7,10,0.92) 0%,
+      rgba(8,7,10,0.86) 50%,
+      rgba(8,7,10,0.55) 72%,
+      rgba(8,7,10,0.12) 88%,
+      rgba(8,7,10,0) 100%
+    );
+  }
+}
 /* v11-E1: Sektion für 3D-Karten-Klicks durchlässig machen. Die Sektion selbst
    fängt keine Pointer-Events mehr → Taps erreichen die 3D-Karten im Canvas
    darunter. Text bleibt sichtbar. Interaktive Kinder reaktivieren gezielt. */

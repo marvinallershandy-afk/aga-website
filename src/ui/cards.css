@@ -566,9 +566,20 @@
 .cockpit-table tr.is-self .cockpit-table__pos { color: var(--gold); }
 
 /* ── Kontakt ────────────────────────────────────────────────── */
-.contact-grid { display: flex; flex-wrap: wrap; gap: 1.4rem 3rem; margin-top: 2rem; }
+/* v-website-polish: eigenes lesbares Panel. Das Raster steht im Finale-
+   Rauszoom direkt über der hellen 3D-„Waldsportplatz"-Schrift (mobil + Desktop)
+   → ohne Backing war der weiße Text auf hellem Grund kaum lesbar (Audit). */
+.contact-grid {
+  display: flex; flex-wrap: wrap; gap: 1.4rem 3rem; margin-top: 2rem;
+  padding: 1.2rem 1.5rem;
+  border-radius: 16px;
+  background: rgba(8,7,10,0.62);
+  border: 1px solid rgba(255,255,255,0.08);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
 .contact-grid dt { font-size: .66rem; letter-spacing: .18em; text-transform: uppercase; color: var(--red); margin-bottom: .3rem; font-weight: 800; }
-.contact-grid dd { font-size: 1.05rem; color: #fff; }
+.contact-grid dd { font-size: 1.05rem; color: #fff; text-shadow: 0 1px 8px rgba(0,0,0,0.7); }
 
 /* ── Nächstes Heimspiel (v8) ────────────────────────────────── */
 .next-match {

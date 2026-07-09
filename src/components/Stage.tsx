@@ -21,12 +21,21 @@ function ReadyFlag() {
 
 // Meldet den drei-Ladefortschritt in den Store (drei bleibt so im
 // lazy Stage-Chunk, nicht im Haupt-Bundle des Fallback-Pfads).
+//
+// WICHTIG: NICHT den `useProgress`-Hook als Selektor abonnieren — drei mutiert
+// diesen Store SYNCHRON während des Renderns ladender Komponenten (ForestTrees,
+// PartyRoom via useGLTF/useTexture). Ein Hook-Abo würde ProgressReporter
+// mitten in deren Render neu einplanen → React-Warnung „Cannot update a
+// component while rendering a different component". Stattdessen abonnieren wir
+// den drei-Store außerhalb des Renders (in einem Effect) und schreiben von dort
+// in unseren Store. Kein setState-in-render mehr.
 function ProgressReporter() {
-  const progress = useProgress((s) => s.progress)
   const setLoadProgress = useStore((s) => s.setLoadProgress)
   useEffect(() => {
-    setLoadProgress(progress)
-  }, [progress, setLoadProgress])
+    setLoadProgress(useProgress.getState().progress)
+    const unsub = useProgress.subscribe((s) => setLoadProgress(s.progress))
+    return unsub
+  }, [setLoadProgress])
   return null
 }
 
