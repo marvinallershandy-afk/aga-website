@@ -46,13 +46,17 @@ function useLayout(): Placed[] {
       const n = inLine.length
       const spacing = Math.min(1.4, n > 1 ? 5.7 / (n - 1) : 0)
       inLine.forEach((p, i) => {
-        const z = (i - (n - 1) / 2) * spacing
+        // v13-E6: Formation leicht nach Norden (−z) versetzt — die südlichen
+        // Ketten-Karten lagen sonst unter der linken Textspalte der Sektion.
+        const z = (i - (n - 1) / 2) * spacing - 0.55
         placed.push({ player: p, x: LINE_X[pos], z, line, scale: 1, tex: makePlayerCardTexture(p, !!p.isPlayerOfMonth).texture })
       })
     })
-    // Trainerstab an der Seitenlinie (Süd, West-Ecke = nah an der Bank)
-    STAFF.forEach((m, i) => {
-      placed.push({ staff: m, x: -4.0 + i * 1.35, z: 4.35, line: 4, scale: 0.82, tex: makeStaffCardTexture(m).texture })
+    // Trainerstab an der Seitenlinie (Süd) — v13-E6: ohne Platzhalter-Slots
+    // („Name folgt" bleibt nur im DOM-Stab-Block) und weiter östlich, damit
+    // die Karten nicht unter der linken Textspalte der Sektion liegen.
+    STAFF.filter((m) => !m.isPlaceholder).forEach((m, i) => {
+      placed.push({ staff: m, x: 0.9 + i * 1.4, z: 3.85, line: 4, scale: 0.82, tex: makeStaffCardTexture(m).texture })
     })
     return placed
   }, [])

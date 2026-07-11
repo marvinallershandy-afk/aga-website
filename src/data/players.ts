@@ -49,6 +49,9 @@ export interface Staff {
   photoUrl: string | null
   /** Nur Teammanager: vorformulierte WhatsApp-Nachricht für „Schreib mir". */
   contactMessage?: string
+  /** v13-E6: true → Slot ohne echten Namen. Bleibt im DOM-Stab-Block
+   *  (ehrlich markiert), fliegt aber von der prominenten 3D-Seitenlinie. */
+  isPlaceholder?: boolean
 }
 
 export const ROLE_LABEL: Record<StaffRole, string> = {
@@ -59,7 +62,7 @@ export const ROLE_LABEL: Record<StaffRole, string> = {
 
 export const STAFF: Staff[] = [
   { id: 's1', name: 'Carsten', role: 'trainer', since: 2016, photoUrl: '/players/carsten.webp' },
-  { id: 's2', name: 'Name folgt', role: 'co-trainer', since: 2020, photoUrl: null },
+  { id: 's2', name: 'Name folgt', role: 'co-trainer', since: 2020, photoUrl: null, isPlaceholder: true },
   {
     id: 's3',
     // v11-E9: echter Teammanager. Foto ist Marvins CI-Porträt (rot, Wappen, #30);
