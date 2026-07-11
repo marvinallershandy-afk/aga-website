@@ -84,6 +84,23 @@ body {
   scroll-snap-align: center;
 }
 
+/* v13-E2: Sektionen, deren INHALT höher als der Viewport ist (Tabelle,
+   Mitmachen), dürfen nicht mittig snappen — Center-Snap schiebt den Titel
+   um (Inhalt−Viewport)/2 unter die Nav. Sie rasten am Sektions-ANFANG ein;
+   der zugehörige Kamera-Anker wird in useScrollProgress.ts synchron auf
+   offsetTop gemessen, damit Snap-Ruhepunkt und Kamera-Pose deckungsgleich
+   bleiben. Inhalt startet oben statt zentriert, sonst hinge er bei
+   Start-Snap unter dem Fenster. */
+.section--snap-start {
+  scroll-snap-align: start;
+  justify-content: flex-start;
+}
+@media (max-width: 640px) {
+  /* Mobil ist die Brandbar-Logo-Zone ~56px hoch und das Sektions-Padding
+     nur 1.5rem — Titel liefe unters Logo. Extra Kopf-Freiraum. */
+  .section--snap-start { padding-top: 4.5rem; }
+}
+
 .section__kicker {
   font-family: var(--font-body);
   font-weight: 700;

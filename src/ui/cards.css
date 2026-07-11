@@ -914,6 +914,19 @@
   padding: .32em .8em;
 }
 
+/* v13-E2 Mobil-Diät: Die Musik-Sektion snapt mittig (Kamera-Tuning aus
+   v12-E4 bleibt unangetastet) — dafür muss der Inhalt ins Viewport-Fenster
+   passen. Cover-Bild + Story fliegen mobil raus (das Cover hängt ohnehin
+   als Wandschild im 3D-Partyraum), Track-Zeilen kompakter. */
+@media (max-width: 640px) {
+  .music-section__cover img,
+  .music-section__coverGlow,
+  .music-section__story { display: none; }
+  .music-section__cover { width: 0; }
+  .music-section { gap: .8rem; margin-top: 1rem; }
+  .music-track { padding: .32rem .5rem; font-size: .82rem; }
+}
+
 /* ── Karten-Flip im Modal ───────────────────────────────────── */
 .flip-scene {
   perspective: 1100px;

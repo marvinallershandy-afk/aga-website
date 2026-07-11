@@ -7,6 +7,11 @@ import { setAnchors } from '../camera/anchors'
 // v9: fanblock (zw. mannschaft/musik) + sponsoren (zw. musik/tabelle).
 // v11-E5: Reihenfolge tabelle↔sponsoren getauscht (…musik, TABELLE, SPONSOREN, kontakt).
 const SECTION_IDS = ['verein', 'mannschaft', 'fanblock', 'musik', 'tabelle', 'sponsoren', 'kontakt']
+// v13-E2: Sektionen mit Inhalt > Viewport snappen am ANFANG (CSS
+// .section--snap-start) — ihr Kamera-Anker muss deshalb auf offsetTop
+// gemessen werden statt auf die Sektions-Mitte, sonst ruht der Scroll
+// an einer anderen Stelle als die komponierte Kamera-Pose.
+const SNAP_START_IDS = new Set(['tabelle', 'kontakt'])
 // Anteil des Wegs Verein→Mannschaft, an dem der Anstoß-Dive (Kamera-
 // Station 1) liegt — als nahtloser Übergang, ohne eigene Sektion.
 const ANSTOSS_FRAC = 0.55
@@ -30,8 +35,10 @@ export function useScrollProgress(enabled: boolean) {
       const secP = SECTION_IDS.map((id) => {
         const el = document.getElementById(id)
         if (!el) return 0
-        const center = el.offsetTop + el.offsetHeight / 2 - window.innerHeight / 2
-        return Math.min(1, Math.max(0, center / max))
+        const rest = SNAP_START_IDS.has(id)
+          ? el.offsetTop
+          : el.offsetTop + el.offsetHeight / 2 - window.innerHeight / 2
+        return Math.min(1, Math.max(0, rest / max))
       })
       // Erste Station: schon bei Scroll 0 im Hero-Frame stehen
       secP[0] = Math.min(secP[0], 0.12)

@@ -53,7 +53,10 @@ export const SECTIONS: Section[] = [
     label: 'Musik',
     kicker: 'Vereinsheim · Partyraum',
     title: 'AGA\nUrknall',
-    body: 'Willkommen im Partyraum — hier läuft „Aga Urknall", unsere eigene Musik, benannt nach der Truppe, die 2024 den Riesenkicker holte (Grüße an Dynamo Tresen und die Durstigen Männer). Songs über Anpfiff, Abpfiff und alles, was dazwischen knallt, geschrieben von einem von uns. Drück Play, dreh auf — wer mitgrölt, ist schon fast Mitglied.',
+    // v13-E2: gekürzt — mobil muss der Beat (Titel + Trackliste) ins
+    // Snap-Fenster passen. Riesenkicker-Story + Grüße leben weiter in
+    // der __story unterm Cover (Desktop, MusicSection).
+    body: 'Willkommen im Partyraum — hier läuft „Aga Urknall", unser eigenes Album, geschrieben von einem von uns. Drück Play, dreh auf: Wer mitgrölt, ist schon fast Mitglied.',
   },
   // v11-E5: Reihenfolge getauscht — erst die TABELLE/Saison (Ergebnis-Beat),
   // dann die SPONSOREN (Geld-Beat direkt vor „Mitmachen").

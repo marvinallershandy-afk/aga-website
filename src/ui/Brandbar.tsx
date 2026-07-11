@@ -39,11 +39,14 @@ export function Brandbar() {
               // v12-E3: Reiter = Snap-Ziel. Statt an den Sektions-ANFANG zu
               // springen (native #-Navigation), zentrieren wir die Sektion →
               // exakt der komponierte Snap-Punkt (= Kamera-Pose der Station).
+              // v13-E2: Start-Snap-Sektionen (Inhalt > Viewport) springen an
+              // ihren Anfang — deckungsgleich mit CSS .section--snap-start.
               onClick={(e) => {
                 const el = document.getElementById(s.id)
                 if (!el) return
                 e.preventDefault()
-                el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                const block = el.classList.contains('section--snap-start') ? 'start' : 'center'
+                el.scrollIntoView({ behavior: 'smooth', block })
               }}
             >
               {s.label}

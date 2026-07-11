@@ -114,7 +114,7 @@ export function Sections() {
 
       {/* 4 · TABELLE / SAISON-COCKPIT (v11-E5: jetzt VOR Sponsoren) —
           Live-Tabelle, Form, Top-Torschützen, letztes/nächstes Spiel. */}
-      <section id={tabelle.id} className="section section--left">
+      <section id={tabelle.id} className="section section--left section--snap-start">
         <div className="section__scrim" />
         <Header kicker={tabelle.kicker} title={tabelle.title} body={tabelle.body} />
         <FussballWidget />
@@ -129,7 +129,7 @@ export function Sections() {
       </section>
 
       {/* 3 · MITMACHEN/FINALE — linksbündig, rechts lebt der Fanblock */}
-      <section id={kontakt.id} className="section section--left">
+      <section id={kontakt.id} className="section section--left section--snap-start">
         <div className="section__scrim" />
         <Header kicker={kontakt.kicker} title={kontakt.title} body={kontakt.body} />
 
