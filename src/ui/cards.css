@@ -1114,6 +1114,29 @@
 .staff-card__since { font-size: .74rem; color: rgba(255,255,255,.5); }
 .staff-card__contact { margin-top: .7rem; align-self: flex-start; font-size: .72rem; padding: .5rem .9rem; }
 
+/* ── v13-E9: Probetraining-Pill an der Mannschafts-Station ──────── */
+.training-pill {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: .5em;
+  margin-top: .9rem;
+  padding: .55em 1.05em;
+  border: 1px solid rgba(233, 29, 41, .55);
+  border-radius: 999px;
+  background: rgba(233, 29, 41, .12);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: .78rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: background .2s ease, border-color .2s ease;
+}
+.training-pill:hover { background: rgba(233, 29, 41, .28); border-color: var(--red); }
+.training-pill span { color: var(--red); }
+
 /* ── Ton-Control (v10-E4) — dezent, fixiert unten rechts ──────── */
 .audio-toggle {
   position: fixed; right: clamp(1rem, 3vw, 2rem); bottom: clamp(1rem, 3vw, 2rem);

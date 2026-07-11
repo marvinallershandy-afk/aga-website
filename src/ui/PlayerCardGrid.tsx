@@ -1,9 +1,23 @@
 import { useState } from 'react'
 import { PLAYERS, STAFF } from '../data/players'
+import { CONTACT } from '../data/club'
 import { useStore } from '../store/useStore'
 import { HoloCard } from './HoloCard'
 import { StaffCard } from './StaffCard'
 import { PlayerGallery } from './PlayerGallery'
+import { jumpToSection } from './Brandbar'
+
+// v13-E9: Der Spieler-Funnel beginnt HIER (FIFA-Karten = „da will ich
+// spielen") — aber der Probetraining-Termin stand bisher erst ganz am
+// Ende der Reise. Die Pill bringt den Termin an die Mannschafts-Station
+// und springt direkt zum Mitmachen-Beat.
+function TrainingPill() {
+  return (
+    <button className="training-pill" onClick={() => jumpToSection('kontakt')}>
+      Selber kicken? Probetraining {CONTACT.training} <span aria-hidden="true">→</span>
+    </button>
+  )
+}
 
 export function PlayerCardGrid() {
   const setSelected = useStore((s) => s.setSelectedPlayer)
@@ -24,6 +38,7 @@ export function PlayerCardGrid() {
         <button className="btn btn--primary card-grid__all" onClick={() => setGalleryOpen(true)}>
           Alle Spieler anzeigen
         </button>
+        <TrainingPill />
         <PlayerGallery open={galleryOpen} onClose={() => setGalleryOpen(false)} />
       </>
     )
@@ -36,6 +51,8 @@ export function PlayerCardGrid() {
           <HoloCard key={p.id} player={p} onClick={setSelected} />
         ))}
       </div>
+
+      <TrainingPill />
 
       {/* v10-E2: Trainerstab als eigene, klar abgesetzte Kategorie */}
       <div className="staff-block">

@@ -32,7 +32,9 @@ export const SECTIONS: Section[] = [
     title: 'Willkommen\nam Platz',
     // v11-E9: jüngerer, nahbarer Ton — weniger „Wohnzimmer seit 1949",
     // mehr „komm vorbei, das hier ist deins".
-    body: 'Flutlicht an, Musik läuft, halbes Dorf an der Bande — und irgendwo mittendrin ein Platz für dich. Der SV Agathenburg-Dollern ist kein Museum, sondern der Klub, bei dem du sonntags bleibst und mittwochs schon dazugehörst. Scroll dich einmal quer über den Platz. Spoiler: Du bleibst.',
+    // v13-E9: verdichtet — IG-Traffic liest 3 Zeilen, nicht 7. Der
+    // „kein Museum"-Gedanke lebt sinngemäß im Mitmachen-Beat weiter.
+    body: 'Flutlicht an, Musik läuft, halbes Dorf an der Bande — und mittendrin ein Platz für dich. Scroll dich einmal quer über den Platz. Spoiler: Du bleibst.',
   },
   {
     id: 'mannschaft',
