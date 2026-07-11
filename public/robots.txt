@@ -2,5 +2,5 @@
 User-agent: *
 Allow: /
 
-# Domain ist PLATZHALTER — nach dem Deployment anpassen (Marvin)
-Sitemap: https://sv-agathenburg-dollern.de/sitemap.xml
+# MARVIN: nach Domain-Kauf auf die echte Domain tauschen (siehe index.html)
+Sitemap: https://sva-agathenburg-dollern.netlify.app/sitemap.xml

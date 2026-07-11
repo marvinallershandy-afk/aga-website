@@ -11,19 +11,26 @@
     <title>SV Agathenburg-Dollern — Fußball in Agathenburg seit 1949</title>
     <meta name="description" content="Fußball in Agathenburg: Der SV Agathenburg-Dollern (seit 1949) — Probetraining Di & Do ab 19 Uhr, Kader als Sammelkarten, Vereins-Soundtrack AGA Urknall, Live-Tabelle. Komm vorbei am Sportplatz." />
 
-    <!-- Canonical: Domain ist PLATZHALTER — nach Deployment anpassen (Marvin) -->
-    <link rel="canonical" href="https://sv-agathenburg-dollern.de/" />
+    <!-- v13-E5: SITE-URL — aktuell die funktionierende Netlify-URL.
+         MARVIN: Nach Domain-Kauf an DREI Stellen tauschen:
+         index.html (canonical + og:url + og:image + JSON-LD url/logo),
+         public/sitemap.xml, public/robots.txt -->
+    <link rel="canonical" href="https://sva-agathenburg-dollern.netlify.app/" />
 
-    <!-- Open Graph / Twitter -->
+    <!-- Open Graph / Twitter — og:image MUSS absolut sein, sonst zeigen
+         WhatsApp/Instagram/Telegram beim Teilen KEIN Vorschaubild. -->
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="de_DE" />
     <meta property="og:site_name" content="SV Agathenburg-Dollern" />
+    <meta property="og:url" content="https://sva-agathenburg-dollern.netlify.app/" />
     <meta property="og:title" content="SV Agathenburg-Dollern — Fußball in Agathenburg seit 1949" />
     <meta property="og:description" content="Ein Dorf. Ein Verein. Ein Platz. Scroll dich über unseren Platz — Kader-Sammelkarten, Vereins-Soundtrack, Probetraining Di & Do." />
-    <meta property="og:image" content="/og-image.jpg" />
+    <meta property="og:image" content="https://sva-agathenburg-dollern.netlify.app/og-image.jpg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="SV Agathenburg-Dollern 1949 — Flutlicht über dem Waldsportplatz. Ein Dorf. Ein Verein. Ein Platz." />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://sva-agathenburg-dollern.netlify.app/og-image.jpg" />
 
     <!-- Struktur-Daten: Verein + Vereins-Soundtrack -->
     <script type="application/ld+json">
@@ -36,13 +43,23 @@
           "alternateName": "SVA",
           "sport": "Fußball",
           "foundingDate": "1949",
-          "logo": "/brand/wappen.png",
-          "address": {
-            "@type": "PostalAddress",
-            "streetAddress": "Am Sportplatz 1",
-            "postalCode": "21684",
-            "addressLocality": "Agathenburg",
-            "addressCountry": "DE"
+          "slogan": "Ein Dorf. Ein Verein. Ein Platz.",
+          "url": "https://sva-agathenburg-dollern.netlify.app/",
+          "logo": "https://sva-agathenburg-dollern.netlify.app/brand/wappen.png",
+          "sameAs": [
+            "https://instagram.com/sva_fussball",
+            "https://www.fussball.de/mannschaft/-/team-id/00ES8GN7SS00004CVV0AG08LVUPGND5I"
+          ],
+          "location": {
+            "@type": "SportsActivityLocation",
+            "name": "Waldsportplatz Agathenburg",
+            "address": {
+              "@type": "PostalAddress",
+              "streetAddress": "Zur Mehrzweckhalle",
+              "postalCode": "21684",
+              "addressLocality": "Agathenburg",
+              "addressCountry": "DE"
+            }
           },
           "email": "info@sv-agathenburg-dollern.de",
           "memberOf": { "@type": "SportsOrganization", "name": "Kreisliga" }
@@ -62,7 +79,6 @@
     }
     </script>
 
-    <link rel="preconnect" href="https://www.fussball.de" crossorigin />
   </head>
   <body>
     <div id="root"><!--app-html--></div>

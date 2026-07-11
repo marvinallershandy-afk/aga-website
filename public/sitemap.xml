@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Domain ist PLATZHALTER — nach dem Deployment anpassen (Marvin) -->
+<!-- MARVIN: nach Domain-Kauf auf die echte Domain tauschen (siehe index.html) -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://sv-agathenburg-dollern.de/</loc>
+    <loc>https://sva-agathenburg-dollern.netlify.app/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
