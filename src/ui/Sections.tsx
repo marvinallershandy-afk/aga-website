@@ -1,13 +1,13 @@
 import { motion } from 'framer-motion'
 import { useStore } from '../store/useStore'
-import { SECTIONS, CONTACT, CLUB, TEAM_PHOTO, whatsappUrl } from '../data/club'
+import { SECTIONS, CONTACT, CLUB, TEAM_PHOTO, whatsappUrl, whatsappReady } from '../data/club'
 import { PlayerCardGrid } from './PlayerCardGrid'
 import { MusicSectionPlayer } from './MusicSection'
 import { FussballWidget } from './FussballWidget'
 import { PlatzFinden } from './PlatzFinden'
 import { SponsorPitch } from './SponsorsStrip'
 import { FanGallery } from './FanGallery'
-import { WaIcon, IgIcon } from './Icons'
+import { WaIcon, IgIcon, MailIcon } from './Icons'
 
 const reveal = {
   initial: { opacity: 0, y: 40 },
@@ -143,14 +143,16 @@ export function Sections() {
             Tabelle-/Sponsoren-Station) → der Mitmachen-Snap zeigt jetzt komponiert
             die Kernaussage: Komm vorbei + WA/Insta + 3 Karten. */}
         <motion.div className="contact-actions" {...reveal}>
+          {/* v13-E4: ohne echte Nummer wird der WA-Button ehrlich zum
+              E-Mail-Button (whatsappUrl fällt auf mailto zurück). */}
           <a
-            className="btn btn--wa"
+            className={whatsappReady ? 'btn btn--wa' : 'btn btn--primary'}
             href={whatsappUrl('Hallo SV Agathenburg-Dollern! Ich habe eine Frage / will vorbeikommen.')}
-            target="_blank"
-            rel="noreferrer"
+            target={whatsappReady ? '_blank' : undefined}
+            rel={whatsappReady ? 'noreferrer' : undefined}
           >
-            <WaIcon size={18} />
-            WhatsApp schreiben
+            {whatsappReady ? <WaIcon size={18} /> : <MailIcon size={18} />}
+            {whatsappReady ? 'WhatsApp schreiben' : 'E-Mail schreiben'}
           </a>
           <a className="btn btn--ig" href={CONTACT.instagramUrl} target="_blank" rel="noreferrer">
             <IgIcon size={18} />
@@ -166,8 +168,8 @@ export function Sections() {
             <a
               className="btn btn--primary"
               href={whatsappUrl('Hallo! Ich würde gern beim Probetraining vorbeikommen.')}
-              target="_blank"
-              rel="noreferrer"
+              target={whatsappReady ? '_blank' : undefined}
+              rel={whatsappReady ? 'noreferrer' : undefined}
             >
               Probetraining: einfach da sein
             </a>
@@ -190,8 +192,8 @@ export function Sections() {
             <a
               className="btn btn--ghost"
               href={whatsappUrl('Hallo! Ich interessiere mich für eine Bande / Sponsoring.')}
-              target="_blank"
-              rel="noreferrer"
+              target={whatsappReady ? '_blank' : undefined}
+              rel={whatsappReady ? 'noreferrer' : undefined}
             >
               Bande sichern
             </a>

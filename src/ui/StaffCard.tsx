@@ -1,7 +1,7 @@
 import type { Staff } from '../data/players'
 import { ROLE_LABEL } from '../data/players'
-import { CLUB, whatsappUrl } from '../data/club'
-import { WaIcon } from './Icons'
+import { CLUB, whatsappUrl, whatsappReady } from '../data/club'
+import { WaIcon, MailIcon } from './Icons'
 
 // v10-E2: Trainerstab-Karte — bewusst KEINE FIFA-Spielerkarte (kein Rating,
 // keine Tore/Assists), sondern ruhig & seriös: Rolle + „seit im Verein",
@@ -27,12 +27,12 @@ export function StaffCard({ member }: { member: Staff }) {
         <span className="staff-card__since">im Verein seit {member.since}</span>
         {member.role === 'teammanager' && member.contactMessage && (
           <a
-            className="btn btn--wa staff-card__contact"
+            className={`btn staff-card__contact ${whatsappReady ? 'btn--wa' : 'btn--primary'}`}
             href={whatsappUrl(member.contactMessage)}
-            target="_blank"
-            rel="noreferrer"
+            target={whatsappReady ? '_blank' : undefined}
+            rel={whatsappReady ? 'noreferrer' : undefined}
           >
-            <WaIcon size={17} />
+            {whatsappReady ? <WaIcon size={17} /> : <MailIcon size={17} />}
             Schreib mir
           </a>
         )}

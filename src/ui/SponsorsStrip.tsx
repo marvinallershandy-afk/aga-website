@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { SPONSORS, SPONSOR_PLACEHOLDER_SLOTS, NEXT_MATCH, CONTACT, whatsappUrl } from '../data/club'
+import { SPONSORS, SPONSOR_PLACEHOLDER_SLOTS, NEXT_MATCH, CONTACT, whatsappUrl, whatsappReady } from '../data/club'
 import { useStore } from '../store/useStore'
 
 // ─────────────────────────────────────────────────────────────
@@ -79,13 +79,23 @@ export function SponsorPitch() {
         <button className="band-nav__arrow" onClick={() => setFocus(focus + 1)} aria-label="Nächste Bande">›</button>
       </motion.div>
 
+      {/* v13-E4: ohne echte WA-Nummer gäbe es hier zwei E-Mail-Buttons —
+          dann nur EINEN ehrlichen primären E-Mail-CTA zeigen. */}
       <motion.div className="sponsor-ctas" {...reveal}>
-        <a className="btn btn--wa" href={whatsappUrl(WA_TEXT)} target="_blank" rel="noreferrer">
-          Bande sichern · WhatsApp
-        </a>
-        <a className="btn btn--ghost" href={mailtoUrl}>
-          E-Mail
-        </a>
+        {whatsappReady ? (
+          <>
+            <a className="btn btn--wa" href={whatsappUrl(WA_TEXT)} target="_blank" rel="noreferrer">
+              Bande sichern · WhatsApp
+            </a>
+            <a className="btn btn--ghost" href={mailtoUrl}>
+              E-Mail
+            </a>
+          </>
+        ) : (
+          <a className="btn btn--primary" href={mailtoUrl}>
+            Bande sichern · E-Mail
+          </a>
+        )}
       </motion.div>
     </>
   )
@@ -134,8 +144,10 @@ export function SponsorCarousel() {
               <span className="carousel__claim">{slot.claim}</span>
               <span className="carousel__sub">Deine Bande direkt am Platz — kein Preisschild, einfach fragen.</span>
               <div className="carousel__ctas">
-                <a className="btn btn--wa btn--sm" href={whatsappUrl(WA_TEXT)} target="_blank" rel="noreferrer">WhatsApp</a>
-                <a className="btn btn--ghost btn--sm" href={mailtoUrl}>E-Mail</a>
+                {whatsappReady && (
+                  <a className="btn btn--wa btn--sm" href={whatsappUrl(WA_TEXT)} target="_blank" rel="noreferrer">WhatsApp</a>
+                )}
+                <a className={`btn btn--sm ${whatsappReady ? 'btn--ghost' : 'btn--primary'}`} href={mailtoUrl}>E-Mail</a>
               </div>
             </div>
           )}

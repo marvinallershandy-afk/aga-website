@@ -3,7 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { PLAYERS, STAFF, type Player, type Staff } from '../data/players'
 import { useStore } from '../store/useStore'
-import { whatsappUrl } from '../data/club'
+import { whatsappUrl, whatsappReady } from '../data/club'
 import { cameraState } from '../camera/CameraPath'
 import { makePlayerCardTexture, makeStaffCardTexture } from '../three/playerCardTexture'
 
@@ -106,7 +106,13 @@ export function PlayerCards3D() {
           onClick={(e) => {
             e.stopPropagation()
             if (item.player) setSelected(item.player)
-            else if (item.staff?.contactMessage) window.open(whatsappUrl(item.staff.contactMessage), '_blank')
+            // v13-E4: mailto-Fallback darf nicht in einen Blank-Tab
+            // (window.open(mailto,'_blank') öffnet in Chromium einen leeren Tab)
+            else if (item.staff?.contactMessage) {
+              const url = whatsappUrl(item.staff.contactMessage)
+              if (whatsappReady) window.open(url, '_blank')
+              else window.location.href = url
+            }
           }}
           onPointerOver={() => { if (item.player || item.staff?.contactMessage) document.body.style.cursor = 'pointer' }}
           onPointerOut={() => (document.body.style.cursor = '')}

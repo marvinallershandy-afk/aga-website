@@ -205,7 +205,17 @@ export const CONTACT = {
   whatsapp: '491700000000',
 } as const
 
+// v13-E4: Solange die echte Nummer fehlt, ist der wa.me-Link tot — der
+// wichtigste Conversion-Pfad der Seite. Deshalb: whatsappReady steuert
+// alle WA-CTAs; ohne echte Nummer fallen sie auf E-Mail zurück (gleicher
+// vorformulierter Text im Body). Trägt Marvin die Nummer ein, flippt
+// alles automatisch auf WhatsApp.
+export const whatsappReady = CONTACT.whatsapp !== '491700000000'
+
 // wa.me-Deeplink mit vorformulierter Nachricht (v9-E4, Sponsoren-CTA).
 export function whatsappUrl(text: string): string {
+  if (!whatsappReady) {
+    return `mailto:${CONTACT.email}?subject=${encodeURIComponent('Anfrage über die Website')}&body=${encodeURIComponent(text)}`
+  }
   return `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(text)}`
 }
