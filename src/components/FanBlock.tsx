@@ -557,11 +557,11 @@ function PhotoSign({ index, x, z, y, jersey, yaw = 0 }: { index: number; x: numb
   useMemo(() => {
     tex.colorSpace = THREE.SRGBColorSpace
     tex.anisotropy = 8
-    // rotation-y=π spiegelt die Textur horizontal → hier zurückspiegeln,
-    // damit Banner-/Shirt-Schrift richtig herum steht.
-    tex.wrapS = THREE.RepeatWrapping
-    tex.repeat.x = -1
-    tex.offset.x = 1
+    // v13-E8: KEIN repeat-Flip mehr. Die Fanblock-Kamera (Station 3) sieht
+    // die Schilder von der Kurven-Seite — mit dem alten Flip stand die
+    // Shirt-Schrift genau dort spiegelverkehrt. Jetzt liest sich das Foto
+    // an der Station korrekt (die Pitch-Fernsicht zeigt Schilder nur als
+    // winzige Punkte).
     tex.needsUpdate = true
   }, [tex])
   useFrame((state) => {
@@ -696,11 +696,17 @@ export function FanBlock() {
           Detail-Fans) + großes Vereins-Banner am Zaun im Rücken. */}
       <InstancedCrowd />
 
-      {/* Großes Kurven-Banner „SV Agathenburg-Dollern 1949" am Zaun hinten,
-          Vorderseite zum Platz/zur Kamera (−z). */}
+      {/* Großes Kurven-Banner „MEISTER 2026" am Zaun hinten. v13-E8: statt
+          DoubleSide (Rückseite = spiegelverkehrt, prominent in Hero-/Finale-
+          Ansicht von Süden) zwei FrontSide-Planes Rücken an Rücken — wie ein
+          doppelt bedrucktes Banner, beide Seiten lesbar. */}
       <mesh position={[CX - 0.1, 0.82, HH + 1.42]} rotation-y={Math.PI}>
         <planeGeometry args={[2.9, 0.56]} />
-        <meshStandardMaterial map={clubBannerTex} side={THREE.DoubleSide} roughness={0.9} emissiveMap={clubBannerTex} emissive="#ffffff" emissiveIntensity={0.12} />
+        <meshStandardMaterial map={clubBannerTex} roughness={0.9} emissiveMap={clubBannerTex} emissive="#ffffff" emissiveIntensity={0.12} />
+      </mesh>
+      <mesh position={[CX - 0.1, 0.82, HH + 1.425]}>
+        <planeGeometry args={[2.9, 0.56]} />
+        <meshStandardMaterial map={clubBannerTex} roughness={0.9} emissiveMap={clubBannerTex} emissive="#ffffff" emissiveIntensity={0.12} />
       </mesh>
 
       {/* Wehende Fahnen in der Menge */}
