@@ -10,6 +10,7 @@ import { Login } from './auth/Login'
 import { AdminLayout } from './AdminLayout'
 import { Dashboard } from './pages/Dashboard'
 import { Redaktionsplan } from './pages/Redaktionsplan'
+import { Spiele } from './pages/Spiele'
 import { IdeenPool } from './pages/IdeenPool'
 import { Produktion } from './pages/Produktion'
 import { Matchday } from './pages/Matchday'
@@ -36,6 +37,7 @@ export function AdminApp() {
                 >
                   <Route index element={<Dashboard />} />
                   <Route path="redaktionsplan" element={<Redaktionsplan />} />
+                  <Route path="spiele" element={<Spiele />} />
                   <Route path="ideen" element={<IdeenPool />} />
                   <Route path="produktion" element={<Produktion />} />
                   <Route path="matchday" element={<Matchday />} />

@@ -3,6 +3,7 @@ import { NavLink, Outlet } from 'react-router-dom'
 import {
   LayoutDashboard,
   CalendarDays,
+  Trophy,
   Lightbulb,
   Clapperboard,
   Image as ImageIcon,
@@ -30,6 +31,7 @@ const NAV: NavItem[] = [
   // sonst verdoppelt sich der basename zu /admin/admin/... (toter Link → Catch-all).
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/redaktionsplan', label: 'Redaktionsplan', icon: CalendarDays },
+  { to: '/spiele', label: 'Spiele & Kader', icon: Trophy },
   { to: '/ideen', label: 'Ideen', icon: Lightbulb },
   { to: '/produktion', label: 'Produktion & Assets', icon: Clapperboard },
   { to: '/matchday', label: 'Matchday-Grafiken', icon: ImageIcon },

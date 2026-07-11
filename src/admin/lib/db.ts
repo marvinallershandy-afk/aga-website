@@ -13,6 +13,12 @@ export type ContentInput = Partial<Omit<TablesInsert<'sm_content'>, 'id' | 'crea
 export type IdeeRow = Tables<'sm_ideen_pool'>
 export type IdeeInput = Partial<Omit<TablesInsert<'sm_ideen_pool'>, 'id' | 'created_at' | 'updated_at'>>
 
+export type SpielRow = Tables<'sm_spiele'>
+export type SpielInput = Partial<Omit<TablesInsert<'sm_spiele'>, 'id' | 'created_at' | 'updated_at'>>
+
+export type RosterRow = Tables<'sm_roster'>
+export type RosterInput = Partial<Omit<TablesInsert<'sm_roster'>, 'id' | 'created_at' | 'updated_at'>>
+
 export type EingangStatus = 'offen' | 'geprueft' | 'uebernommen' | 'verworfen'
 export type EingangRow = Omit<Tables<'sm_ideen_eingang'>, 'status'> & { status: EingangStatus }
 export type EingangInput = Partial<Omit<TablesInsert<'sm_ideen_eingang'>, 'id' | 'created_at' | 'updated_at'>>
@@ -125,4 +131,88 @@ export async function eingangIntoPlan(row: EingangRow): Promise<ContentRow> {
   const { data, error } = await supabase.rpc('sm_eingang_into_plan', { p_eingang_id: row.id })
   if (error) throw error
   return data as ContentRow
+}
+
+// ── sm_spiele ───────────────────────────────────────────────────────────────
+
+export async function fetchSpiele(): Promise<SpielRow[]> {
+  const { data, error } = await supabase
+    .from('sm_spiele')
+    .select('*')
+    .order('anstoss', { ascending: true })
+  if (error) throw error
+  return data ?? []
+}
+
+export async function createSpiel(input: SpielInput): Promise<SpielRow> {
+  const { data, error } = await supabase
+    .from('sm_spiele')
+    .insert(input as TablesInsert<'sm_spiele'>)
+    .select('*')
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function updateSpiel(id: string, patch: SpielInput): Promise<SpielRow> {
+  const { data, error } = await supabase
+    .from('sm_spiele')
+    .update({ ...patch, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select('*')
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function deleteSpiel(id: string): Promise<void> {
+  const { error } = await supabase.from('sm_spiele').delete().eq('id', id)
+  if (error) throw error
+}
+
+// Ein Klick → komplettes Spieltagspaket (4 Beiträge, idempotent; RPC läuft in
+// einer Transaktion, Migration sm_spiele_roster).
+export async function spieltagspaket(spielId: string): Promise<ContentRow[]> {
+  const { data, error } = await supabase.rpc('sm_spieltagspaket', { p_spiel_id: spielId })
+  if (error) throw error
+  return (data ?? []) as ContentRow[]
+}
+
+// ── sm_roster (Kader) ───────────────────────────────────────────────────────
+
+export async function fetchRoster(): Promise<RosterRow[]> {
+  const { data, error } = await supabase
+    .from('sm_roster')
+    .select('*')
+    .order('sortierung', { ascending: true })
+    .order('nummer', { ascending: true, nullsFirst: false })
+    .order('name', { ascending: true })
+  if (error) throw error
+  return data ?? []
+}
+
+export async function createSpieler(input: RosterInput): Promise<RosterRow> {
+  const { data, error } = await supabase
+    .from('sm_roster')
+    .insert(input as TablesInsert<'sm_roster'>)
+    .select('*')
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function updateSpieler(id: string, patch: RosterInput): Promise<RosterRow> {
+  const { data, error } = await supabase
+    .from('sm_roster')
+    .update({ ...patch, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select('*')
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function deleteSpieler(id: string): Promise<void> {
+  const { error } = await supabase.from('sm_roster').delete().eq('id', id)
+  if (error) throw error
 }

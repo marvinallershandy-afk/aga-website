@@ -5,7 +5,18 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 import * as db from './db'
-import type { ContentInput, ContentRow, EingangInput, EingangRow, IdeeInput, IdeeRow } from './db'
+import type {
+  ContentInput,
+  ContentRow,
+  EingangInput,
+  EingangRow,
+  IdeeInput,
+  IdeeRow,
+  RosterInput,
+  RosterRow,
+  SpielInput,
+  SpielRow,
+} from './db'
 
 // Zentraler Daten-Layer auf TanStack Query: geteilter Cache über alle Seiten
 // (Dashboard/Redaktionsplan/Produktion laden sm_content nur noch EINMAL),
@@ -25,6 +36,8 @@ export const keys = {
   content: ['sm_content'] as const,
   ideen: ['sm_ideen_pool'] as const,
   eingang: ['sm_ideen_eingang'] as const,
+  spiele: ['sm_spiele'] as const,
+  roster: ['sm_roster'] as const,
 }
 
 export function useContent() {
@@ -35,6 +48,12 @@ export function useIdeen() {
 }
 export function useEingang() {
   return useQuery({ queryKey: keys.eingang, queryFn: db.fetchEingang })
+}
+export function useSpiele() {
+  return useQuery({ queryKey: keys.spiele, queryFn: db.fetchSpiele })
+}
+export function useRoster() {
+  return useQuery({ queryKey: keys.roster, queryFn: db.fetchRoster })
 }
 
 // Optimistisches Update einer Zeile in einer gecachten Liste; gibt den
@@ -144,4 +163,68 @@ export function useEingangMutations() {
     },
   })
   return { create, update, remove, intoPlan }
+}
+
+export function useSpieleMutations() {
+  const qc = useQueryClient()
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: keys.spiele })
+  }
+  const create = useMutation({
+    mutationFn: (input: SpielInput) => db.createSpiel(input),
+    onSuccess: invalidate,
+  })
+  const update = useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: SpielInput }) => db.updateSpiel(id, patch),
+    onMutate: async ({ id, patch }) => {
+      await qc.cancelQueries({ queryKey: keys.spiele })
+      return { prev: patchListCache<SpielRow>(qc, keys.spiele, id, patch as Partial<SpielRow>) }
+    },
+    onError: (_e, _vars, ctx) => {
+      if (ctx?.prev) qc.setQueryData(keys.spiele, ctx.prev)
+    },
+    onSettled: invalidate,
+  })
+  const remove = useMutation({
+    mutationFn: (id: string) => db.deleteSpiel(id),
+    onSuccess: () => {
+      invalidate()
+      // Paket-Beiträge hängen am Spiel (spiel_id wird genullt) → Content neu laden.
+      qc.invalidateQueries({ queryKey: keys.content })
+    },
+  })
+  const paket = useMutation({
+    mutationFn: (spielId: string) => db.spieltagspaket(spielId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: keys.content })
+    },
+  })
+  return { create, update, remove, paket }
+}
+
+export function useRosterMutations() {
+  const qc = useQueryClient()
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: keys.roster })
+  }
+  const create = useMutation({
+    mutationFn: (input: RosterInput) => db.createSpieler(input),
+    onSuccess: invalidate,
+  })
+  const update = useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: RosterInput }) => db.updateSpieler(id, patch),
+    onMutate: async ({ id, patch }) => {
+      await qc.cancelQueries({ queryKey: keys.roster })
+      return { prev: patchListCache<RosterRow>(qc, keys.roster, id, patch as Partial<RosterRow>) }
+    },
+    onError: (_e, _vars, ctx) => {
+      if (ctx?.prev) qc.setQueryData(keys.roster, ctx.prev)
+    },
+    onSettled: invalidate,
+  })
+  const remove = useMutation({
+    mutationFn: (id: string) => db.deleteSpieler(id),
+    onSuccess: invalidate,
+  })
+  return { create, update, remove }
 }

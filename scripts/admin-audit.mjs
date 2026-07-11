@@ -39,7 +39,33 @@ const DUMP = {
   ],
   sm_sponsoren: [],
   sm_admins: [{ email: 'preview@audit.local' }],
+  sm_spiele: [
+    { id: 'sp1', gegner: 'TSV Apensen', heim: false, anstoss: new Date(Date.now() - 6 * 864e5).toISOString(), ort: 'Sportplatz Apensen', wettbewerb: 'Kreisliga Stade', spieltag_nr: 21, tore_sva: 2, tore_gegner: 2, notizen: null, created_at: new Date(Date.now() - 20 * 864e5).toISOString(), updated_at: new Date(Date.now() - 6 * 864e5).toISOString() },
+    { id: 'sp2', gegner: 'TuS Fischbek', heim: true, anstoss: new Date(Date.now() + 2 * 864e5 + 3 * 36e5).toISOString(), ort: 'Sportplatz Agathenburg', wettbewerb: 'Kreisliga Stade', spieltag_nr: 22, tore_sva: null, tore_gegner: null, notizen: null, created_at: new Date(Date.now() - 10 * 864e5).toISOString(), updated_at: new Date(Date.now() - 10 * 864e5).toISOString() },
+    { id: 'sp3', gegner: 'VfL Güldenstern Stade III', heim: false, anstoss: new Date(Date.now() + 9 * 864e5).toISOString(), ort: 'Güldenstern-Arena', wettbewerb: 'Kreisliga Stade', spieltag_nr: 23, tore_sva: null, tore_gegner: null, notizen: null, created_at: new Date(Date.now() - 10 * 864e5).toISOString(), updated_at: new Date(Date.now() - 10 * 864e5).toISOString() },
+  ],
+  sm_roster: [
+    { id: 'r1', name: 'Carsten Beckmann', nummer: 1, position: 'Torwart', foto_url: '/players/carsten.webp', aktiv: true, sortierung: 10, steckbrief: {}, created_at: '2026-07-01T10:00:00Z', updated_at: '2026-07-01T10:00:00Z' },
+    { id: 'r2', name: 'Lennard Voss', nummer: 4, position: 'Abwehr', foto_url: '/players/lennard.webp', aktiv: true, sortierung: 20, steckbrief: {}, created_at: '2026-07-01T10:00:00Z', updated_at: '2026-07-01T10:00:00Z' },
+    { id: 'r3', name: 'Julio Fernandes', nummer: 8, position: 'Mittelfeld', foto_url: '/players/julio.webp', aktiv: true, sortierung: 30, steckbrief: {}, created_at: '2026-07-01T10:00:00Z', updated_at: '2026-07-01T10:00:00Z' },
+    { id: 'r4', name: 'Nico Hause', nummer: 10, position: 'Mittelfeld', foto_url: '/players/nico-hause.webp', aktiv: true, sortierung: 40, steckbrief: {}, created_at: '2026-07-01T10:00:00Z', updated_at: '2026-07-01T10:00:00Z' },
+    { id: 'r5', name: 'Tino Albers', nummer: 9, position: 'Sturm', foto_url: '/players/tino.webp', aktiv: true, sortierung: 50, steckbrief: {}, created_at: '2026-07-01T10:00:00Z', updated_at: '2026-07-01T10:00:00Z' },
+    { id: 'r6', name: 'Eli Brandt', nummer: 11, position: 'Sturm', foto_url: '/players/eli.webp', aktiv: false, sortierung: 60, steckbrief: {}, created_at: '2026-07-01T10:00:00Z', updated_at: '2026-07-01T10:00:00Z' },
+  ],
 }
+
+const PAKET_ROWS = [
+  { titel: 'Spieltag-Ankündigung: SVA vs. TuS Fischbek' },
+  { titel: 'Startaufstellung: SVA vs. TuS Fischbek' },
+  { titel: 'Endergebnis: SVA vs. TuS Fischbek' },
+  { titel: 'Spieler des Spiels: SVA vs. TuS Fischbek' },
+].map((r, i) => ({
+  id: `paket-${i}`, beschreibung: null, kanal: ['instagram'], status: 'geplant', format: 'Grafik',
+  kategorie: 'Spieltag', geplant_am: new Date(Date.now() + 2 * 864e5).toISOString().slice(0, 10),
+  verantwortlich: null, idee_id: null, notizen: null, hook: null, caption: null, cta: null, sound: null,
+  drive_rohmaterial_url: null, drive_asset_url: null, spiel_id: 'sp2',
+  created_at: new Date().toISOString(), updated_at: new Date().toISOString(), ...r,
+}))
 
 const DRIVE_FILES = {
   root: {
@@ -69,6 +95,9 @@ async function setupRoutes(ctx) {
     const req = route.request()
     const url = new URL(req.url())
     const table = url.pathname.split('/rest/v1/')[1]?.split('?')[0]
+    if (table === 'rpc/sm_spieltagspaket') {
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(PAKET_ROWS) })
+    }
     if (req.method() === 'GET' && table && DUMP[table]) {
       return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(DUMP[table]) })
     }
@@ -161,6 +190,26 @@ async function run(label, viewport) {
     await tryClick(page.getByRole('button', { name: /abbrechen|schließen/i }), 'Ideen: Editor schließen')
   }
 
+  // Spiele & Kader (P2)
+  await go('/admin/spiele')
+  await shot('spiele', true)
+  if (await tryClick(page.getByRole('button', { name: /spieltagspaket/i }), 'Spiele: Spieltagspaket anlegen')) {
+    await shot('spiele-paket-toast')
+  }
+  if (await tryClick(page.getByRole('button', { name: 'Bearbeiten' }).first(), 'Spiele: Spiel-Editor öffnen')) {
+    await shot('spiele-editor')
+    await page.keyboard.press('Escape')
+    await page.waitForTimeout(300)
+  }
+  if (await tryClick(page.getByRole('tab', { name: /kader/i }), 'Spiele: Tab Kader')) {
+    await shot('kader', true)
+    if (await tryClick(page.getByRole('button', { name: /neuer spieler/i }).first(), 'Kader: Spieler-Editor öffnen')) {
+      await shot('kader-editor')
+      await page.keyboard.press('Escape')
+      await page.waitForTimeout(300)
+    }
+  }
+
   // Produktion + Drive-Browser (gemockt)
   await go('/admin/produktion')
   await shot('produktion', true)
@@ -172,6 +221,15 @@ async function run(label, viewport) {
   // Matchday-Generator: alle 4 Templates + Story-Format + Export
   await go('/admin/matchday')
   await shot('matchday-spieltag', true)
+  // Prefill: Spiel aus Dropdown übernehmen
+  try {
+    await page.locator('#md-spiel').selectOption('sp2')
+    await page.waitForTimeout(400)
+    clicks.push(`[${label}] OK  Matchday: Spiel-Prefill (Dropdown)`)
+    await shot('matchday-prefill')
+  } catch {
+    clicks.push(`[${label}] FEHLT Matchday: Spiel-Prefill`)
+  }
   for (const t of ['Aufstellung', 'Ergebnis', 'MOTM']) {
     if (await tryClick(page.getByRole('button', { name: new RegExp(t, 'i') }), `Matchday: Template ${t}`)) {
       await shot(`matchday-${t.toLowerCase()}`)

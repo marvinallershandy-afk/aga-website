@@ -417,6 +417,7 @@ export type Database = {
           kategorie: string | null
           notizen: string | null
           sound: string | null
+          spiel_id: string | null
           status: string
           titel: string
           updated_at: string
@@ -438,6 +439,7 @@ export type Database = {
           kategorie?: string | null
           notizen?: string | null
           sound?: string | null
+          spiel_id?: string | null
           status?: string
           titel: string
           updated_at?: string
@@ -459,12 +461,20 @@ export type Database = {
           kategorie?: string | null
           notizen?: string | null
           sound?: string | null
+          spiel_id?: string | null
           status?: string
           titel?: string
           updated_at?: string
           verantwortlich?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "sm_content_spiel_id_fkey"
+            columns: ["spiel_id"]
+            isOneToOne: false
+            referencedRelation: "sm_spiele"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "sm_content_idee_id_fkey"
             columns: ["idee_id"]
@@ -554,6 +564,90 @@ export type Database = {
           sortierung?: number
           titel?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      sm_roster: {
+        Row: {
+          aktiv: boolean
+          created_at: string
+          foto_url: string | null
+          id: string
+          name: string
+          nummer: number | null
+          position: string | null
+          sortierung: number
+          steckbrief: Json
+          updated_at: string
+        }
+        Insert: {
+          aktiv?: boolean
+          created_at?: string
+          foto_url?: string | null
+          id?: string
+          name: string
+          nummer?: number | null
+          position?: string | null
+          sortierung?: number
+          steckbrief?: Json
+          updated_at?: string
+        }
+        Update: {
+          aktiv?: boolean
+          created_at?: string
+          foto_url?: string | null
+          id?: string
+          name?: string
+          nummer?: number | null
+          position?: string | null
+          sortierung?: number
+          steckbrief?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sm_spiele: {
+        Row: {
+          anstoss: string
+          created_at: string
+          gegner: string
+          heim: boolean
+          id: string
+          notizen: string | null
+          ort: string | null
+          spieltag_nr: number | null
+          tore_gegner: number | null
+          tore_sva: number | null
+          updated_at: string
+          wettbewerb: string | null
+        }
+        Insert: {
+          anstoss: string
+          created_at?: string
+          gegner: string
+          heim?: boolean
+          id?: string
+          notizen?: string | null
+          ort?: string | null
+          spieltag_nr?: number | null
+          tore_gegner?: number | null
+          tore_sva?: number | null
+          updated_at?: string
+          wettbewerb?: string | null
+        }
+        Update: {
+          anstoss?: string
+          created_at?: string
+          gegner?: string
+          heim?: boolean
+          id?: string
+          notizen?: string | null
+          ort?: string | null
+          spieltag_nr?: number | null
+          tore_gegner?: number | null
+          tore_sva?: number | null
+          updated_at?: string
+          wettbewerb?: string | null
         }
         Relationships: []
       }
@@ -725,6 +819,31 @@ export type Database = {
         Returns: undefined
       }
       rezept_speichern: { Args: { p_rezept: Json }; Returns: string }
+      sm_spieltagspaket: {
+        Args: { p_spiel_id: string }
+        Returns: {
+          beschreibung: string | null
+          caption: string | null
+          created_at: string
+          cta: string | null
+          drive_asset_url: string | null
+          drive_rohmaterial_url: string | null
+          format: string | null
+          geplant_am: string | null
+          hook: string | null
+          id: string
+          idee_id: string | null
+          kanal: string[]
+          kategorie: string | null
+          notizen: string | null
+          sound: string | null
+          spiel_id: string | null
+          status: string
+          titel: string
+          updated_at: string
+          verantwortlich: string | null
+        }[]
+      }
       sm_eingang_into_plan: {
         Args: { p_eingang_id: string; p_geplant_am?: string }
         Returns: {
@@ -743,6 +862,7 @@ export type Database = {
           kategorie: string | null
           notizen: string | null
           sound: string | null
+          spiel_id: string | null
           status: string
           titel: string
           updated_at: string

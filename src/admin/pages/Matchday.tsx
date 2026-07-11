@@ -1,5 +1,6 @@
-import { useRef, useState, type ReactNode } from 'react'
-import { Download, UploadCloud, Loader2 } from 'lucide-react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { Download, UploadCloud, Loader2, CalendarClock, Users } from 'lucide-react'
 import { PageHeader } from './Placeholder'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
@@ -7,6 +8,10 @@ import { Label } from '../components/ui/label'
 import { Textarea } from '../components/ui/textarea'
 import { Select } from '../components/ui/select'
 import { useToast } from '../components/ui/toast'
+import { useRoster, useSpiele } from '../lib/queries'
+import type { SpielRow } from '../lib/db'
+import { SVA_NAME } from '../lib/constants'
+import { formatAnstoss } from '../lib/format'
 import { cn } from '../lib/utils'
 import { MatchdayTemplate } from '../matchday/templates'
 import {
@@ -38,6 +43,51 @@ export function Matchday() {
   const [format, setFormat] = useState<FormatKey>('square')
   const [data, setData] = useState<MatchdayData>(DEFAULT_DATA)
   const [busy, setBusy] = useState<null | 'download' | 'upload'>(null)
+
+  // Prefill aus Spiele & Kader (P2): ?spiel=<id> oder Auswahl im Dropdown.
+  const [searchParams] = useSearchParams()
+  const spieleQ = useSpiele()
+  const rosterQ = useRoster()
+  const [spielId, setSpielId] = useState('')
+
+  const applySpiel = (s: SpielRow) => {
+    setSpielId(s.id)
+    setData((d) => ({
+      ...d,
+      wettbewerb: [s.wettbewerb, s.spieltag_nr ? `${s.spieltag_nr}. Spieltag` : null]
+        .filter(Boolean)
+        .join(' · ') || d.wettbewerb,
+      heim: s.heim ? SVA_NAME : s.gegner,
+      gast: s.heim ? s.gegner : SVA_NAME,
+      datum: formatAnstoss(s.anstoss),
+      ort: s.ort ?? d.ort,
+      toreHeim: s.heim
+        ? (s.tore_sva != null ? String(s.tore_sva) : d.toreHeim)
+        : (s.tore_gegner != null ? String(s.tore_gegner) : d.toreHeim),
+      toreGast: s.heim
+        ? (s.tore_gegner != null ? String(s.tore_gegner) : d.toreGast)
+        : (s.tore_sva != null ? String(s.tore_sva) : d.toreGast),
+    }))
+  }
+
+  // Deep-Link /matchday?spiel=<id> (z. B. vom Dashboard oder aus Spiele & Kader)
+  const urlSpiel = searchParams.get('spiel')
+  useEffect(() => {
+    if (!urlSpiel || !spieleQ.data) return
+    const s = spieleQ.data.find((x) => x.id === urlSpiel)
+    if (s) applySpiel(s)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlSpiel, spieleQ.data])
+
+  const aktiveSpieler = (rosterQ.data ?? []).filter((p) => p.aktiv)
+
+  const startelfAusKader = () => {
+    const elf = aktiveSpieler
+      .filter((p) => p.position !== 'Trainer/Staff')
+      .slice(0, 11)
+      .map((p) => (p.nummer != null ? `${p.nummer} ${p.name}` : p.name))
+    setData((d) => ({ ...d, aufstellung: elf }))
+  }
 
   const exportRef = useRef<HTMLDivElement>(null)
 
@@ -103,6 +153,36 @@ export function Matchday() {
         title="Matchday-Grafiken"
         subtitle="Vier Vorlagen · Feed (1080×1080) & Story (1080×1920) · PNG-Export."
       />
+
+      {/* Prefill aus Spieldaten */}
+      {(spieleQ.data?.length ?? 0) > 0 && (
+        <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-border bg-muted/20 p-3">
+          <CalendarClock className="h-4 w-4 text-primary" />
+          <Label htmlFor="md-spiel" className="shrink-0">
+            Spiel übernehmen
+          </Label>
+          <Select
+            id="md-spiel"
+            className="h-9 w-auto min-w-[260px]"
+            value={spielId}
+            onChange={(e) => {
+              const s = spieleQ.data?.find((x) => x.id === e.target.value)
+              if (s) applySpiel(s)
+              else setSpielId('')
+            }}
+          >
+            <option value="">— manuell —</option>
+            {spieleQ.data?.map((s) => (
+              <option key={s.id} value={s.id}>
+                {(s.heim ? `SVA vs. ${s.gegner}` : `${s.gegner} vs. SVA`) + ' · ' + formatAnstoss(s.anstoss)}
+              </option>
+            ))}
+          </Select>
+          <span className="text-xs text-muted-foreground">
+            füllt Wettbewerb, Teams, Anstoß, Ort & Ergebnis
+          </span>
+        </div>
+      )}
 
       {/* Vorlagen-Auswahl */}
       <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -171,6 +251,11 @@ export function Matchday() {
                 <Input value={data.formation} onChange={(e) => set('formation', e.target.value)} />
               </Field>
               <Field label="Startelf (eine Zeile pro Spieler, max. 11)">
+                {aktiveSpieler.length > 0 && (
+                  <Button size="sm" variant="outline" onClick={startelfAusKader} className="mb-2">
+                    <Users className="h-4 w-4" /> Startelf aus Kader füllen
+                  </Button>
+                )}
                 <Textarea
                   rows={11}
                   value={data.aufstellung.join('\n')}
@@ -202,6 +287,24 @@ export function Matchday() {
 
           {template === 'motm' && (
             <>
+              {aktiveSpieler.length > 0 && (
+                <Field label="Aus Kader übernehmen">
+                  <Select
+                    value=""
+                    onChange={(e) => {
+                      const p = aktiveSpieler.find((x) => x.id === e.target.value)
+                      if (p) setData((d) => ({ ...d, spielerName: p.name, spielerFoto: p.foto_url }))
+                    }}
+                  >
+                    <option value="">— Spieler wählen —</option>
+                    {aktiveSpieler.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.nummer != null ? `#${p.nummer} ` : ''}{p.name}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+              )}
               <Field label="Spielername">
                 <Input value={data.spielerName} onChange={(e) => set('spielerName', e.target.value)} />
               </Field>

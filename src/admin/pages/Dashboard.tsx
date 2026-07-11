@@ -17,9 +17,9 @@ import { Skeleton } from '../components/ui/skeleton'
 import { EmptyState } from '../components/ui/empty-state'
 import { ErrorState } from '../components/ui/error-state'
 import { PageHeader } from './Placeholder'
-import { useContent, useIdeen } from '../lib/queries'
+import { useContent, useIdeen, useSpiele } from '../lib/queries'
 import { STATUS, statusMeta, kanalLabel } from '../lib/constants'
-import { startOfWeek, weekDays, toISODate, isoWeekNumber, formatDateShort } from '../lib/format'
+import { startOfWeek, weekDays, toISODate, isoWeekNumber, formatDateShort, formatAnstoss } from '../lib/format'
 import { cn } from '../lib/utils'
 
 const QUICK = [
@@ -223,15 +223,7 @@ export function Dashboard() {
           badge="bald"
         />
 
-        {/* Matchday-Countdown — Platzhalter bis Website-Steuerung (P7) */}
-        <PlaceholderCard
-          icon={Trophy}
-          title="Nächstes Spiel"
-          note="Countdown & Gegner erscheinen hier, sobald die Spieldaten angebunden sind."
-          badge="bald"
-          to="/matchday"
-          toLabel="Zum Grafik-Generator"
-        />
+        <NaechstesSpielCard />
       </div>
     </>
   )
@@ -275,6 +267,82 @@ function StatusDot({ status }: { status: string }) {
       <span className="h-2.5 w-2.5 rounded-full" style={{ background: m.dot }} />
       <span className="hidden text-xs text-muted-foreground sm:inline">{m.label}</span>
     </span>
+  )
+}
+
+// Echtes Spieltag-Widget: nächstes Spiel + Countdown, dazu Ergebnis-Reminder.
+function NaechstesSpielCard() {
+  const spieleQ = useSpiele()
+  const spiele = spieleQ.data ?? []
+  const now = Date.now()
+  const next = spiele.find((s) => new Date(s.anstoss).getTime() >= now)
+  const ohneErgebnis = [...spiele]
+    .reverse()
+    .find((s) => new Date(s.anstoss).getTime() < now && (s.tore_sva == null || s.tore_gegner == null))
+
+  const countdown = (() => {
+    if (!next) return null
+    const diffH = Math.max(0, Math.round((new Date(next.anstoss).getTime() - now) / 3_600_000))
+    if (diffH < 24) return `in ${diffH} Std.`
+    const tage = Math.round(diffH / 24)
+    return tage === 1 ? 'morgen' : `in ${tage} Tagen`
+  })()
+
+  return (
+    <Card>
+      <CardHeader className="flex-row items-center justify-between space-y-0 p-4">
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <Trophy className="h-5 w-5 text-primary" /> Nächstes Spiel
+        </CardTitle>
+        {countdown && (
+          <Badge variant="default" className="shrink-0">
+            {countdown}
+          </Badge>
+        )}
+      </CardHeader>
+      <CardContent className="p-4 pt-0">
+        {spieleQ.isPending ? (
+          <div className="space-y-2">
+            <Skeleton className="h-6 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
+          </div>
+        ) : !next ? (
+          <>
+            <p className="text-sm text-muted-foreground">Kein Spiel geplant.</p>
+            <Link
+              to="/spiele"
+              className="mt-3 inline-flex items-center gap-1 text-sm text-primary hover:underline"
+            >
+              Spiel anlegen <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </>
+        ) : (
+          <>
+            <p className="font-display text-xl tracking-wide">
+              {next.heim ? `SVA vs. ${next.gegner}` : `${next.gegner} vs. SVA`}
+            </p>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              {formatAnstoss(next.anstoss)}
+              {next.ort ? ` · ${next.ort}` : ''}
+            </p>
+            <Link
+              to={`/matchday?spiel=${next.id}`}
+              className="mt-3 inline-flex items-center gap-1 text-sm text-primary hover:underline"
+            >
+              Grafik erstellen <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </>
+        )}
+        {ohneErgebnis && (
+          <p className="mt-3 border-t border-border/60 pt-2 text-xs text-muted-foreground">
+            Ergebnis fehlt:{' '}
+            <Link to="/spiele" className="text-primary hover:underline">
+              {ohneErgebnis.heim ? `SVA vs. ${ohneErgebnis.gegner}` : `${ohneErgebnis.gegner} vs. SVA`} eintragen →
+            </Link>
+          </p>
+        )}
+      </CardContent>
+    </Card>
   )
 }
 

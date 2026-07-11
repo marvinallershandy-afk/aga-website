@@ -52,3 +52,13 @@ export function isoWeekNumber(ref: Date): number {
   firstThursday.setUTCDate(firstThursday.getUTCDate() - firstDayNum + 3)
   return 1 + Math.round((d.getTime() - firstThursday.getTime()) / (7 * 24 * 3600 * 1000))
 }
+
+/** Anstoß-Zeit als „So, 13.07. · 15:00 Uhr" (lokale Zeit). */
+export function formatAnstoss(iso: string): string {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return iso
+  const tag = d.toLocaleDateString('de-DE', { weekday: 'short' }).replace('.', '')
+  const datum = d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })
+  const zeit = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+  return `${tag}, ${datum} · ${zeit} Uhr`
+}

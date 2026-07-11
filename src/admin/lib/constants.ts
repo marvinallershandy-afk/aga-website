@@ -32,6 +32,13 @@ export const RHYTHMEN = [
   { value: 'einmalig', label: 'Einmalig' },
 ] as const
 
+// Vereins-Identität (für Grafiken & Paarungs-Texte)
+export const SVA_NAME = 'SV Agathenburg-Dollern'
+export const SVA_KURZ = 'SVA'
+
+// Kader-Positionen (sm_roster)
+export const POSITIONEN = ['Torwart', 'Abwehr', 'Mittelfeld', 'Sturm', 'Trainer/Staff'] as const
+
 // Google-Drive-Anbindung (Deep-Links — keine Datei-Kopien).
 // Master-Ordner der SVA-Social-Media-Ablage; Live-Listing folgt via Drive-Bridge.
 export const DRIVE_MASTER_FOLDER_ID = '1PC427xN-lRU2OxC94mO-mJETh1QOm6EA'
