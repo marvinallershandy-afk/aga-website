@@ -9,6 +9,7 @@ import {
   Trophy,
   ArrowRight,
   CircleDot,
+  Handshake,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
@@ -17,9 +18,9 @@ import { Skeleton } from '../components/ui/skeleton'
 import { EmptyState } from '../components/ui/empty-state'
 import { ErrorState } from '../components/ui/error-state'
 import { PageHeader } from './Placeholder'
-import { useContent, useIdeen, useSpiele } from '../lib/queries'
+import { useContent, useIdeen, useSpiele, useSponsoren } from '../lib/queries'
 import { STATUS, statusMeta, kanalLabel } from '../lib/constants'
-import { startOfWeek, weekDays, toISODate, isoWeekNumber, formatDateShort, formatAnstoss } from '../lib/format'
+import { startOfWeek, weekDays, toISODate, isoWeekNumber, formatDateShort, formatAnstoss, tageBis } from '../lib/format'
 import { cn } from '../lib/utils'
 
 const QUICK = [
@@ -225,6 +226,8 @@ export function Dashboard() {
 
         <NaechstesSpielCard />
       </div>
+
+      <SponsorenReminder />
     </>
   )
 }
@@ -294,6 +297,31 @@ function StatusDot({ status }: { status: string }) {
       <span className="h-2.5 w-2.5 rounded-full" style={{ background: m.dot }} />
       <span className="hidden text-xs text-muted-foreground sm:inline">{m.label}</span>
     </span>
+  )
+}
+
+// Zeigt nur dann eine Zeile, wenn Sponsorenverträge in ≤ 60 Tagen enden.
+function SponsorenReminder() {
+  const sponsorenQ = useSponsoren()
+  const auslaufend = (sponsorenQ.data ?? []).filter((s) => {
+    const t = tageBis(s.laufzeit_bis)
+    return s.aktiv && t != null && t <= 60
+  })
+  if (!auslaufend.length) return null
+  return (
+    <div className="mt-4 flex items-start gap-2 rounded-lg border border-sva-gold/40 bg-sva-gold/10 px-3 py-2.5 text-sm">
+      <Handshake className="mt-0.5 h-4 w-4 shrink-0 text-sva-gold" />
+      <div>
+        <b>Sponsoren:</b>{' '}
+        {auslaufend
+          .map((s) => `${s.name} endet in ${tageBis(s.laufzeit_bis)} Tagen`)
+          .join(', ')}{' '}
+        —{' '}
+        <Link to="/sponsoren" className="text-primary hover:underline">
+          zum CRM →
+        </Link>
+      </div>
+    </div>
   )
 }
 

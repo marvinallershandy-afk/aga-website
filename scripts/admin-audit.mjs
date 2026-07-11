@@ -37,7 +37,11 @@ const DUMP = {
     {"id":"68666d32-a53e-4775-8329-08501095191b","titel":"Spieler-Steckbrief: Lieblingsessen & Trikotnummer","beschreibung":"Schnelle Frage-Antwort-Story mit einem Spieler pro Woche.","von":"Nico","kanal":["instagram"],"status":"offen","content_id":null,"created_at":"2026-07-09T13:19:01.178116+00:00","updated_at":"2026-07-09T13:19:01.178116+00:00"},
     {"id":"9f5f0cd2-c959-4748-b2cc-8ef2815bb47a","titel":"Torhymne-Voting","beschreibung":"Fans stimmen per Story-Sticker über die nächste Torhymne ab.","von":"Marvin","kanal":["instagram","facebook"],"status":"geprueft","content_id":null,"created_at":"2026-07-09T13:19:01.178116+00:00","updated_at":"2026-07-09T13:19:01.178116+00:00"}
   ],
-  sm_sponsoren: [],
+  sm_sponsoren: [
+    { id: 'so1', name: 'Autohaus Müller', paket: 'gold', laufzeit_von: '2025-08-01', laufzeit_bis: new Date(Date.now() + 32 * 864e5).toISOString().slice(0, 10), leistungen: 'Bande + 2 Instagram-Posts pro Saison + Trikotärmel', ansprechpartner: 'K. Müller', kontakt: 'info@autohaus-mueller.de', logo_url: null, aktiv: true, notizen: null, created_at: '2025-08-01T10:00:00Z', updated_at: '2025-08-01T10:00:00Z' },
+    { id: 'so2', name: 'Bäckerei Behrens', paket: 'silber', laufzeit_von: '2025-07-01', laufzeit_bis: '2027-06-30', leistungen: 'Bande + Sponsor des Monats', ansprechpartner: 'H. Behrens', kontakt: '04141 555 123', logo_url: null, aktiv: true, notizen: null, created_at: '2025-07-01T10:00:00Z', updated_at: '2025-07-01T10:00:00Z' },
+    { id: 'so3', name: 'Getränke Kruse', paket: 'bronze', laufzeit_von: '2024-07-01', laufzeit_bis: '2025-06-30', leistungen: 'Bande', ansprechpartner: null, kontakt: null, logo_url: null, aktiv: false, notizen: 'Nicht verlängert.', created_at: '2024-07-01T10:00:00Z', updated_at: '2025-07-01T10:00:00Z' },
+  ],
   sm_admins: [{ email: 'preview@audit.local' }],
   sm_spiele: [
     { id: 'sp1', gegner: 'TSV Apensen', heim: false, anstoss: new Date(Date.now() - 6 * 864e5).toISOString(), ort: 'Sportplatz Apensen', wettbewerb: 'Kreisliga Stade', spieltag_nr: 21, tore_sva: 2, tore_gegner: 2, notizen: null, created_at: new Date(Date.now() - 20 * 864e5).toISOString(), updated_at: new Date(Date.now() - 6 * 864e5).toISOString() },
@@ -250,9 +254,16 @@ async function run(label, viewport) {
     await shot('matchday-nach-export')
   }
 
-  // Stubs
+  // Sponsoren-CRM (P4)
   await go('/admin/sponsoren')
-  await shot('sponsoren-stub', true)
+  await shot('sponsoren', true)
+  if (await tryClick(page.getByRole('button', { name: /neuer sponsor/i }).first(), 'Sponsoren: Editor öffnen')) {
+    await shot('sponsoren-editor', true)
+    await page.keyboard.press('Escape')
+    await page.waitForTimeout(300)
+  }
+
+  // Insights (Stub)
   await go('/admin/insights')
   await shot('insights-stub', true)
 

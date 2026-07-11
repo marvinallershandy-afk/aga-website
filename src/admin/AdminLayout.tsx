@@ -35,7 +35,7 @@ const NAV: NavItem[] = [
   { to: '/ideen', label: 'Ideen', icon: Lightbulb },
   { to: '/produktion', label: 'Produktion & Assets', icon: Clapperboard },
   { to: '/matchday', label: 'Matchday-Grafiken', icon: ImageIcon },
-  { to: '/sponsoren', label: 'Sponsoren', icon: Handshake, soon: true },
+  { to: '/sponsoren', label: 'Sponsoren', icon: Handshake },
   { to: '/insights', label: 'Insights', icon: BarChart3, soon: true },
 ]
 

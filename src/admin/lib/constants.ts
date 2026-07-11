@@ -39,6 +39,17 @@ export const SVA_KURZ = 'SVA'
 // Kader-Positionen (sm_roster)
 export const POSITIONEN = ['Torwart', 'Abwehr', 'Mittelfeld', 'Sturm', 'Trainer/Staff'] as const
 
+// Sponsoren-Pakete (sm_sponsoren.paket)
+export const PAKETE = [
+  { value: 'gold', label: 'Gold', color: '#E8C15A' },
+  { value: 'silber', label: 'Silber', color: '#B9BDC4' },
+  { value: 'bronze', label: 'Bronze', color: '#C98A5E' },
+  { value: 'partner', label: 'Partner', color: '#8a8a8a' },
+] as const
+export function paketMeta(v: string | null) {
+  return PAKETE.find((p) => p.value === v) ?? null
+}
+
 // Google-Drive-Anbindung (Deep-Links — keine Datei-Kopien).
 // Master-Ordner der SVA-Social-Media-Ablage; Live-Listing folgt via Drive-Bridge.
 export const DRIVE_MASTER_FOLDER_ID = '1PC427xN-lRU2OxC94mO-mJETh1QOm6EA'

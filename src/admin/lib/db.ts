@@ -19,6 +19,9 @@ export type SpielInput = Partial<Omit<TablesInsert<'sm_spiele'>, 'id' | 'created
 export type RosterRow = Tables<'sm_roster'>
 export type RosterInput = Partial<Omit<TablesInsert<'sm_roster'>, 'id' | 'created_at' | 'updated_at'>>
 
+export type SponsorRow = Tables<'sm_sponsoren'>
+export type SponsorInput = Partial<Omit<TablesInsert<'sm_sponsoren'>, 'id' | 'created_at' | 'updated_at'>>
+
 export type EingangStatus = 'offen' | 'geprueft' | 'uebernommen' | 'verworfen'
 export type EingangRow = Omit<Tables<'sm_ideen_eingang'>, 'status'> & { status: EingangStatus }
 export type EingangInput = Partial<Omit<TablesInsert<'sm_ideen_eingang'>, 'id' | 'created_at' | 'updated_at'>>
@@ -214,5 +217,43 @@ export async function updateSpieler(id: string, patch: RosterInput): Promise<Ros
 
 export async function deleteSpieler(id: string): Promise<void> {
   const { error } = await supabase.from('sm_roster').delete().eq('id', id)
+  if (error) throw error
+}
+
+// ── sm_sponsoren (CRM) ──────────────────────────────────────────────────────
+
+export async function fetchSponsoren(): Promise<SponsorRow[]> {
+  const { data, error } = await supabase
+    .from('sm_sponsoren')
+    .select('*')
+    .order('aktiv', { ascending: false })
+    .order('name', { ascending: true })
+  if (error) throw error
+  return data ?? []
+}
+
+export async function createSponsor(input: SponsorInput): Promise<SponsorRow> {
+  const { data, error } = await supabase
+    .from('sm_sponsoren')
+    .insert(input as TablesInsert<'sm_sponsoren'>)
+    .select('*')
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function updateSponsor(id: string, patch: SponsorInput): Promise<SponsorRow> {
+  const { data, error } = await supabase
+    .from('sm_sponsoren')
+    .update({ ...patch, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select('*')
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function deleteSponsor(id: string): Promise<void> {
+  const { error } = await supabase.from('sm_sponsoren').delete().eq('id', id)
   if (error) throw error
 }

@@ -62,3 +62,11 @@ export function formatAnstoss(iso: string): string {
   const zeit = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
   return `${tag}, ${datum} · ${zeit} Uhr`
 }
+
+/** Tage bis zu einem ISO-Datum (Ende des Tages); null ohne Datum. */
+export function tageBis(dateIso: string | null): number | null {
+  if (!dateIso) return null
+  const ende = new Date(dateIso + 'T23:59:59')
+  if (Number.isNaN(ende.getTime())) return null
+  return Math.ceil((ende.getTime() - Date.now()) / 86_400_000)
+}

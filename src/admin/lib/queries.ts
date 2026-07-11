@@ -16,6 +16,8 @@ import type {
   RosterRow,
   SpielInput,
   SpielRow,
+  SponsorInput,
+  SponsorRow,
 } from './db'
 
 // Zentraler Daten-Layer auf TanStack Query: geteilter Cache über alle Seiten
@@ -38,6 +40,7 @@ export const keys = {
   eingang: ['sm_ideen_eingang'] as const,
   spiele: ['sm_spiele'] as const,
   roster: ['sm_roster'] as const,
+  sponsoren: ['sm_sponsoren'] as const,
 }
 
 export function useContent() {
@@ -54,6 +57,9 @@ export function useSpiele() {
 }
 export function useRoster() {
   return useQuery({ queryKey: keys.roster, queryFn: db.fetchRoster })
+}
+export function useSponsoren() {
+  return useQuery({ queryKey: keys.sponsoren, queryFn: db.fetchSponsoren })
 }
 
 // Optimistisches Update einer Zeile in einer gecachten Liste; gibt den
@@ -224,6 +230,33 @@ export function useRosterMutations() {
   })
   const remove = useMutation({
     mutationFn: (id: string) => db.deleteSpieler(id),
+    onSuccess: invalidate,
+  })
+  return { create, update, remove }
+}
+
+export function useSponsorenMutations() {
+  const qc = useQueryClient()
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: keys.sponsoren })
+  }
+  const create = useMutation({
+    mutationFn: (input: SponsorInput) => db.createSponsor(input),
+    onSuccess: invalidate,
+  })
+  const update = useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: SponsorInput }) => db.updateSponsor(id, patch),
+    onMutate: async ({ id, patch }) => {
+      await qc.cancelQueries({ queryKey: keys.sponsoren })
+      return { prev: patchListCache<SponsorRow>(qc, keys.sponsoren, id, patch as Partial<SponsorRow>) }
+    },
+    onError: (_e, _vars, ctx) => {
+      if (ctx?.prev) qc.setQueryData(keys.sponsoren, ctx.prev)
+    },
+    onSettled: invalidate,
+  })
+  const remove = useMutation({
+    mutationFn: (id: string) => db.deleteSponsor(id),
     onSuccess: invalidate,
   })
   return { create, update, remove }
