@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import {
   CalendarDays,
@@ -15,8 +15,9 @@ import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
 import { Skeleton } from '../components/ui/skeleton'
 import { EmptyState } from '../components/ui/empty-state'
+import { ErrorState } from '../components/ui/error-state'
 import { PageHeader } from './Placeholder'
-import { fetchContent, fetchIdeen, type ContentRow, type IdeeRow } from '../lib/db'
+import { useContent, useIdeen } from '../lib/queries'
 import { STATUS, statusMeta, kanalLabel } from '../lib/constants'
 import { startOfWeek, weekDays, toISODate, isoWeekNumber, formatDateShort } from '../lib/format'
 import { cn } from '../lib/utils'
@@ -27,24 +28,12 @@ const QUICK = [
 ]
 
 export function Dashboard() {
-  const [content, setContent] = useState<ContentRow[]>([])
-  const [ideen, setIdeen] = useState<IdeeRow[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    let active = true
-    Promise.all([fetchContent(), fetchIdeen()])
-      .then(([c, i]) => {
-        if (!active) return
-        setContent(c)
-        setIdeen(i)
-      })
-      .catch(() => {})
-      .finally(() => active && setLoading(false))
-    return () => {
-      active = false
-    }
-  }, [])
+  const contentQ = useContent()
+  const ideenQ = useIdeen()
+  const content = contentQ.data ?? []
+  const ideen = ideenQ.data ?? []
+  const loading = contentQ.isPending || ideenQ.isPending
+  const loadError = contentQ.error ?? ideenQ.error
 
   const stats = useMemo(() => {
     const today = new Date()
@@ -89,8 +78,19 @@ export function Dashboard() {
         }
       />
 
-      {/* KPI-Reihe */}
-      <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {loadError && !loading && (
+        <ErrorState
+          className="mb-4"
+          message={loadError.message}
+          onRetry={() => {
+            void contentQ.refetch()
+            void ideenQ.refetch()
+          }}
+        />
+      )}
+
+      {/* KPI-Reihe: mobil 2×2 statt vier gestapelter Karten */}
+      <div className="mb-4 grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
         <StatTile
           label={`Diese Woche · KW ${isoWeekNumber(stats.monday)}`}
           value={loading ? null : stats.weekCount}

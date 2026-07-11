@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { QueryClientProvider } from '@tanstack/react-query'
 import './admin.css'
+import { queryClient } from './lib/queries'
 import { ToastProvider } from './components/ui/toast'
 import { ConfirmProvider } from './components/ui/confirm'
 import { AuthProvider } from './auth/AuthProvider'
@@ -17,6 +19,7 @@ import { Insights } from './pages/Insights'
 export function AdminApp() {
   return (
     <div className="admin-root">
+      <QueryClientProvider client={queryClient}>
       <ToastProvider>
         <ConfirmProvider>
           <AuthProvider>
@@ -45,6 +48,7 @@ export function AdminApp() {
           </AuthProvider>
         </ConfirmProvider>
       </ToastProvider>
+      </QueryClientProvider>
     </div>
   )
 }

@@ -1,0 +1,13 @@
+# Deploy-Konfiguration (CI-tauglich, relative Pfade).
+# Hinweis: .netlify/netlify.toml ist lokaler CLI-State (gitignored) und enthielt
+# einen absoluten publish-Pfad — diese Datei hier ist die verbindliche Config.
+
+[build]
+command = "pnpm build"
+publish = "dist"
+
+# SPA-Fallback: deckt sowohl den 3D-Onepager als auch /admin/* ab.
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200

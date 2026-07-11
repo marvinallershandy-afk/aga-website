@@ -1,69 +1,21 @@
 import { supabase } from './supabase'
+import type { Tables, TablesInsert } from './database.types'
+import type { Status } from './constants'
 
-// ── Datentypen (spiegeln sm_content / sm_ideen_pool) ────────────────────────
+// ── Datentypen: aus dem Supabase-Schema generiert (database.types.ts),
+//    Status-Spalten auf die Unions aus constants.ts verengt. ────────────────
 
-export interface ContentRow {
-  id: string
-  titel: string
-  beschreibung: string | null
-  kanal: string[]
-  status: string
-  format: string | null
-  kategorie: string | null
-  geplant_am: string | null // ISO-Datum (YYYY-MM-DD)
-  verantwortlich: string | null
-  idee_id: string | null
-  notizen: string | null
-  // Redaktionsplan-Vollausbau (P1)
-  hook: string | null
-  caption: string | null
-  cta: string | null
-  sound: string | null
-  drive_rohmaterial_url: string | null
-  drive_asset_url: string | null
-  created_at: string
-  updated_at: string
-}
+export type ContentRow = Omit<Tables<'sm_content'>, 'status'> & { status: Status }
 
 // Beim Anlegen/Bearbeiten schreibbare Felder
-export type ContentInput = Partial<
-  Pick<
-    ContentRow,
-    | 'titel'
-    | 'beschreibung'
-    | 'kanal'
-    | 'status'
-    | 'format'
-    | 'kategorie'
-    | 'geplant_am'
-    | 'verantwortlich'
-    | 'idee_id'
-    | 'notizen'
-    | 'hook'
-    | 'caption'
-    | 'cta'
-    | 'sound'
-    | 'drive_rohmaterial_url'
-    | 'drive_asset_url'
-  >
->
+export type ContentInput = Partial<Omit<TablesInsert<'sm_content'>, 'id' | 'created_at' | 'updated_at'>>
 
-export interface IdeeRow {
-  id: string
-  titel: string
-  beschreibung: string | null
-  kanal: string[]
-  kategorie: string | null
-  rhythmus: string | null
-  aktiv: boolean
-  sortierung: number
-  created_at: string
-  updated_at: string
-}
+export type IdeeRow = Tables<'sm_ideen_pool'>
+export type IdeeInput = Partial<Omit<TablesInsert<'sm_ideen_pool'>, 'id' | 'created_at' | 'updated_at'>>
 
-export type IdeeInput = Partial<
-  Pick<IdeeRow, 'titel' | 'beschreibung' | 'kanal' | 'kategorie' | 'rhythmus' | 'aktiv'>
->
+export type EingangStatus = 'offen' | 'geprueft' | 'uebernommen' | 'verworfen'
+export type EingangRow = Omit<Tables<'sm_ideen_eingang'>, 'status'> & { status: EingangStatus }
+export type EingangInput = Partial<Omit<TablesInsert<'sm_ideen_eingang'>, 'id' | 'created_at' | 'updated_at'>>
 
 // ── sm_content ──────────────────────────────────────────────────────────────
 
@@ -78,7 +30,7 @@ export async function fetchContent(): Promise<ContentRow[]> {
 }
 
 export async function createContent(input: ContentInput): Promise<ContentRow> {
-  const { data, error } = await supabase.from('sm_content').insert(input).select('*').single()
+  const { data, error } = await supabase.from('sm_content').insert(input as TablesInsert<'sm_content'>).select('*').single()
   if (error) throw error
   return data as ContentRow
 }
@@ -86,7 +38,7 @@ export async function createContent(input: ContentInput): Promise<ContentRow> {
 export async function updateContent(id: string, patch: ContentInput): Promise<ContentRow> {
   const { data, error } = await supabase
     .from('sm_content')
-    .update(patch)
+    .update({ ...patch, updated_at: new Date().toISOString() })
     .eq('id', id)
     .select('*')
     .single()
@@ -108,24 +60,24 @@ export async function fetchIdeen(): Promise<IdeeRow[]> {
     .order('sortierung', { ascending: true })
     .order('titel', { ascending: true })
   if (error) throw error
-  return (data ?? []) as IdeeRow[]
+  return data ?? []
 }
 
 export async function createIdee(input: IdeeInput): Promise<IdeeRow> {
-  const { data, error } = await supabase.from('sm_ideen_pool').insert(input).select('*').single()
+  const { data, error } = await supabase.from('sm_ideen_pool').insert(input as TablesInsert<'sm_ideen_pool'>).select('*').single()
   if (error) throw error
-  return data as IdeeRow
+  return data
 }
 
 export async function updateIdee(id: string, patch: IdeeInput): Promise<IdeeRow> {
   const { data, error } = await supabase
     .from('sm_ideen_pool')
-    .update(patch)
+    .update({ ...patch, updated_at: new Date().toISOString() })
     .eq('id', id)
     .select('*')
     .single()
   if (error) throw error
-  return data as IdeeRow
+  return data
 }
 
 export async function deleteIdee(id: string): Promise<void> {
@@ -134,24 +86,6 @@ export async function deleteIdee(id: string): Promise<void> {
 }
 
 // ── sm_ideen_eingang (Team-Inbox) ───────────────────────────────────────────
-
-export type EingangStatus = 'offen' | 'geprueft' | 'uebernommen' | 'verworfen'
-
-export interface EingangRow {
-  id: string
-  titel: string
-  beschreibung: string | null
-  von: string | null
-  kanal: string[]
-  status: EingangStatus
-  content_id: string | null
-  created_at: string
-  updated_at: string
-}
-
-export type EingangInput = Partial<
-  Pick<EingangRow, 'titel' | 'beschreibung' | 'von' | 'kanal' | 'status' | 'content_id'>
->
 
 export async function fetchEingang(): Promise<EingangRow[]> {
   const { data, error } = await supabase
@@ -163,7 +97,7 @@ export async function fetchEingang(): Promise<EingangRow[]> {
 }
 
 export async function createEingang(input: EingangInput): Promise<EingangRow> {
-  const { data, error } = await supabase.from('sm_ideen_eingang').insert(input).select('*').single()
+  const { data, error } = await supabase.from('sm_ideen_eingang').insert(input as TablesInsert<'sm_ideen_eingang'>).select('*').single()
   if (error) throw error
   return data as EingangRow
 }
@@ -184,15 +118,11 @@ export async function deleteEingang(id: string): Promise<void> {
   if (error) throw error
 }
 
-// Eingangs-Idee → Redaktionsplan: legt einen sm_content-Eintrag an und
-// markiert die Idee als „übernommen" (mit Verweis auf den neuen Beitrag).
+// Eingangs-Idee → Redaktionsplan. Läuft als Postgres-Funktion in EINER
+// Transaktion (Migration sm_eingang_into_plan_rpc) — kein verwaister Content
+// mehr, wenn der zweite Schritt fehlschlägt.
 export async function eingangIntoPlan(row: EingangRow): Promise<ContentRow> {
-  const created = await createContent({
-    titel: row.titel,
-    beschreibung: row.beschreibung,
-    kanal: row.kanal ?? [],
-    status: 'geplant',
-  })
-  await updateEingang(row.id, { status: 'uebernommen', content_id: created.id })
-  return created
+  const { data, error } = await supabase.rpc('sm_eingang_into_plan', { p_eingang_id: row.id })
+  if (error) throw error
+  return data as ContentRow
 }

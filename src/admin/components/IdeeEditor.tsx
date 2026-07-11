@@ -5,6 +5,7 @@ import { Input } from './ui/input'
 import { Label } from './ui/label'
 import { Textarea } from './ui/textarea'
 import { Select } from './ui/select'
+import { useConfirm } from './ui/confirm'
 import { KanalChips } from './KanalChips'
 import { KATEGORIEN, RHYTHMEN } from '../lib/constants'
 import type { IdeeInput, IdeeRow } from '../lib/db'
@@ -31,6 +32,7 @@ export function IdeeEditor({
   onDelete?: (id: string) => Promise<void>
   row?: IdeeRow | null
 }) {
+  const confirm = useConfirm()
   const [form, setForm] = useState<IdeeInput>(EMPTY)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -81,7 +83,13 @@ export function IdeeEditor({
 
   const remove = async () => {
     if (!row || !onDelete) return
-    if (!window.confirm('Diese Idee wirklich löschen?')) return
+    const ok = await confirm({
+      title: 'Idee löschen?',
+      description: `„${row.titel}" wird endgültig entfernt.`,
+      confirmLabel: 'Löschen',
+      destructive: true,
+    })
+    if (!ok) return
     setSaving(true)
     try {
       await onDelete(row.id)

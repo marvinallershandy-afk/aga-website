@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Plus,
@@ -17,28 +17,22 @@ import { Card, CardContent } from '../components/ui/card'
 import { Select } from '../components/ui/select'
 import { SkeletonRows } from '../components/ui/skeleton'
 import { EmptyState } from '../components/ui/empty-state'
+import { ErrorState } from '../components/ui/error-state'
+import { Tabs } from '../components/ui/tabs'
+import { KanalIcons, StatusSelect } from '../components/ui/status'
 import { useToast } from '../components/ui/toast'
 import { useConfirm } from '../components/ui/confirm'
 import { IdeeEditor } from '../components/IdeeEditor'
 import { EingangEditor } from '../components/EingangEditor'
+import type { IdeeRow, IdeeInput, EingangRow, EingangInput, EingangStatus } from '../lib/db'
 import {
-  fetchIdeen,
-  createIdee,
-  updateIdee,
-  deleteIdee,
-  createContent,
-  fetchEingang,
-  createEingang,
-  updateEingang,
-  deleteEingang,
-  eingangIntoPlan,
-  type IdeeRow,
-  type IdeeInput,
-  type EingangRow,
-  type EingangInput,
-  type EingangStatus,
-} from '../lib/db'
-import { kanalLabel, rhythmusLabel, EINGANG_STATUS, eingangStatusMeta } from '../lib/constants'
+  useContentMutations,
+  useEingang,
+  useEingangMutations,
+  useIdeen,
+  useIdeenMutations,
+} from '../lib/queries'
+import { rhythmusLabel, EINGANG_STATUS } from '../lib/constants'
 import { toISODate, formatDateShort } from '../lib/format'
 import { cn } from '../lib/utils'
 
@@ -46,7 +40,10 @@ type Tab = 'bibliothek' | 'eingang'
 
 export function IdeenPool() {
   const [tab, setTab] = useState<Tab>('bibliothek')
-  const [eingangCount, setEingangCount] = useState<number | null>(null)
+  // Zähler kommt direkt aus dem geteilten Query-Cache — kein State-Gefrickel
+  // über onCount-Props mehr.
+  const eingangQ = useEingang()
+  const offen = (eingangQ.data ?? []).filter((r) => r.status === 'offen').length
 
   return (
     <>
@@ -55,98 +52,70 @@ export function IdeenPool() {
         subtitle="Format-Bibliothek und Team-Ideen — Triage bis in den Plan."
       />
 
-      <div className="mb-4 flex overflow-hidden rounded-md border border-border">
-        {(
-          [
-            { v: 'bibliothek', label: 'Format-Bibliothek', icon: Library },
-            { v: 'eingang', label: 'Ideen-Eingang', icon: Inbox },
-          ] as const
-        ).map((t) => {
-          const Icon = t.icon
-          return (
-            <button
-              key={t.v}
-              onClick={() => setTab(t.v)}
-              className={cn(
-                'flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors',
-                tab === t.v ? 'bg-primary text-primary-foreground' : 'hover:bg-accent',
-              )}
-            >
-              <Icon className="h-4 w-4" /> {t.label}
-              {t.v === 'eingang' && eingangCount != null && eingangCount > 0 && (
+      <Tabs
+        className="mb-4"
+        value={tab}
+        onChange={setTab}
+        items={[
+          { value: 'bibliothek', label: 'Format-Bibliothek', icon: Library },
+          {
+            value: 'eingang',
+            label: 'Ideen-Eingang',
+            icon: Inbox,
+            badge:
+              offen > 0 ? (
                 <span
                   className={cn(
-                    'ml-1 rounded-full px-1.5 text-[10px] font-semibold',
-                    tab === t.v ? 'bg-primary-foreground/20' : 'bg-primary/20 text-primary',
+                    'rounded-full px-1.5 text-[10px] font-semibold',
+                    tab === 'eingang' ? 'bg-primary-foreground/20' : 'bg-primary/20 text-primary',
                   )}
                 >
-                  {eingangCount}
+                  {offen}
                 </span>
-              )}
-            </button>
-          )
-        })}
-      </div>
+              ) : undefined,
+          },
+        ]}
+      />
 
-      {tab === 'bibliothek' ? <BibliothekTab /> : <EingangTab onCount={setEingangCount} />}
+      {tab === 'bibliothek' ? <BibliothekTab /> : <EingangTab />}
     </>
   )
 }
 
 // ── Format-Bibliothek (sm_ideen_pool) ───────────────────────────────────────
 function BibliothekTab() {
-  const navigate = useNavigate()
   const toast = useToast()
-  const [ideen, setIdeen] = useState<IdeeRow[]>([])
-  const [loading, setLoading] = useState(true)
+  const ideenQ = useIdeen()
+  const { create, update, remove } = useIdeenMutations()
+  const { create: createContentMut } = useContentMutations()
+  const ideen = ideenQ.data ?? []
   const [editorOpen, setEditorOpen] = useState(false)
   const [editRow, setEditRow] = useState<IdeeRow | null>(null)
 
-  const load = async () => {
-    setLoading(true)
-    try {
-      setIdeen(await fetchIdeen())
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Laden fehlgeschlagen.')
-    } finally {
-      setLoading(false)
-    }
-  }
-  useEffect(() => {
-    load()
-  }, [])
-
   const handleSave = async (input: IdeeInput, id?: string) => {
     if (id) {
-      const updated = await updateIdee(id, input)
-      setIdeen((prev) => prev.map((r) => (r.id === id ? updated : r)))
+      await update.mutateAsync({ id, patch: input })
       toast.success('Idee aktualisiert.')
     } else {
-      const created = await createIdee(input)
-      setIdeen((prev) => [...prev, created])
+      await create.mutateAsync(input)
       toast.success('Idee angelegt.')
     }
   }
   const handleDelete = async (id: string) => {
-    await deleteIdee(id)
-    setIdeen((prev) => prev.filter((r) => r.id !== id))
+    await remove.mutateAsync(id)
     toast.success('Idee gelöscht.')
   }
 
-  const toggleAktiv = async (row: IdeeRow) => {
-    const prev = ideen
-    setIdeen((list) => list.map((r) => (r.id === row.id ? { ...r, aktiv: !r.aktiv } : r)))
-    try {
-      await updateIdee(row.id, { aktiv: !row.aktiv })
-    } catch (e) {
-      setIdeen(prev)
-      toast.error(e instanceof Error ? e.message : 'Update fehlgeschlagen.')
-    }
+  const toggleAktiv = (row: IdeeRow) => {
+    update.mutate(
+      { id: row.id, patch: { aktiv: !row.aktiv } },
+      { onError: (e) => toast.error(e instanceof Error ? e.message : 'Update fehlgeschlagen.') },
+    )
   }
 
-  const intoPlan = async (row: IdeeRow) => {
-    try {
-      await createContent({
+  const intoPlan = (row: IdeeRow) => {
+    createContentMut.mutate(
+      {
         titel: row.titel,
         beschreibung: row.beschreibung,
         kanal: row.kanal ?? [],
@@ -154,11 +123,12 @@ function BibliothekTab() {
         status: 'geplant',
         geplant_am: toISODate(new Date()),
         idee_id: row.id,
-      })
-      toast.success(`„${row.titel}" als geplanter Beitrag (heute) angelegt.`)
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Anlegen fehlgeschlagen.')
-    }
+      },
+      {
+        onSuccess: () => toast.success(`„${row.titel}" als geplanter Beitrag (heute) angelegt.`),
+        onError: (e) => toast.error(e instanceof Error ? e.message : 'Anlegen fehlgeschlagen.'),
+      },
+    )
   }
 
   return (
@@ -166,8 +136,8 @@ function BibliothekTab() {
       <div className="mb-4 flex items-center justify-between">
         <p className="text-sm text-muted-foreground">Wiederkehrende Formate — per Klick in den Plan.</p>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={load} aria-label="Neu laden">
-            <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
+          <Button variant="ghost" size="icon" onClick={() => void ideenQ.refetch()} aria-label="Neu laden">
+            <RefreshCw className={cn('h-4 w-4', ideenQ.isFetching && 'animate-spin')} />
           </Button>
           <Button
             onClick={() => {
@@ -180,7 +150,11 @@ function BibliothekTab() {
         </div>
       </div>
 
-      {loading ? (
+      {ideenQ.error && !ideenQ.isPending && (
+        <ErrorState className="mb-4" message={ideenQ.error.message} onRetry={() => void ideenQ.refetch()} />
+      )}
+
+      {ideenQ.isPending ? (
         <SkeletonRows rows={4} />
       ) : ideen.length === 0 ? (
         <EmptyState
@@ -221,18 +195,15 @@ function BibliothekTab() {
                   <p className="line-clamp-3 text-sm text-muted-foreground">{idee.beschreibung}</p>
                 )}
 
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap items-center gap-1.5">
                   {idee.kategorie && <Badge variant="default">{idee.kategorie}</Badge>}
                   <Badge variant="secondary">{rhythmusLabel(idee.rhythmus)}</Badge>
-                  {idee.kanal?.map((k) => (
-                    <Badge key={k} variant="outline" className="text-[10px]">
-                      {kanalLabel(k)}
-                    </Badge>
-                  ))}
+                  <KanalIcons kanaele={idee.kanal ?? []} />
                 </div>
 
                 <div className="mt-auto flex gap-2 pt-2">
-                  <Button size="sm" className="flex-1" onClick={() => intoPlan(idee)}>
+                  {/* secondary statt Vollrot — neun rote Buttons pro Seite entwerten die Primärfarbe */}
+                  <Button size="sm" variant="secondary" className="flex-1" onClick={() => intoPlan(idee)}>
                     <CalendarPlus className="h-4 w-4" /> In den Plan
                   </Button>
                   <Button
@@ -260,66 +231,40 @@ function BibliothekTab() {
         onDelete={handleDelete}
         row={editRow}
       />
-      {/* navigate für „Zum Plan" aus Toast-losen Kontexten reserviert */}
-      <span className="hidden" onClick={() => navigate('/redaktionsplan')} />
     </>
   )
 }
 
 // ── Ideen-Eingang (sm_ideen_eingang) ────────────────────────────────────────
-function EingangTab({ onCount }: { onCount: (n: number) => void }) {
+function EingangTab() {
   const navigate = useNavigate()
   const toast = useToast()
   const confirm = useConfirm()
-  const [rows, setRows] = useState<EingangRow[]>([])
-  const [loading, setLoading] = useState(true)
+  const eingangQ = useEingang()
+  const { create, update, remove, intoPlan } = useEingangMutations()
+  const rows = eingangQ.data ?? []
   const [fStatus, setFStatus] = useState('')
   const [editorOpen, setEditorOpen] = useState(false)
   const [editRow, setEditRow] = useState<EingangRow | null>(null)
 
-  const load = async () => {
-    setLoading(true)
-    try {
-      const data = await fetchEingang()
-      setRows(data)
-      onCount(data.filter((r) => r.status === 'offen').length)
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Laden fehlgeschlagen.')
-    } finally {
-      setLoading(false)
-    }
-  }
-  useEffect(() => {
-    load()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
   const filtered = fStatus ? rows.filter((r) => r.status === fStatus) : rows
 
-  const setStatus = async (row: EingangRow, status: EingangStatus) => {
+  const setStatus = (row: EingangRow, status: EingangStatus) => {
     if (row.status === status) return
-    const prev = rows
-    setRows((list) => list.map((r) => (r.id === row.id ? { ...r, status } : r)))
-    onCount((fStatus ? rows : rows).filter((r) => (r.id === row.id ? status : r.status) === 'offen').length)
-    try {
-      await updateEingang(row.id, { status })
-    } catch (e) {
-      setRows(prev)
-      toast.error(e instanceof Error ? e.message : 'Status-Update fehlgeschlagen.')
-    }
+    update.mutate(
+      { id: row.id, patch: { status } },
+      { onError: (e) => toast.error(e instanceof Error ? e.message : 'Status-Update fehlgeschlagen.') },
+    )
   }
 
-  const intoPlan = async (row: EingangRow) => {
-    try {
-      await eingangIntoPlan(row)
-      setRows((list) => list.map((r) => (r.id === row.id ? { ...r, status: 'uebernommen' } : r)))
-      toast.success(`„${row.titel}" in den Plan übernommen.`)
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Übernehmen fehlgeschlagen.')
-    }
+  const handleIntoPlan = (row: EingangRow) => {
+    intoPlan.mutate(row, {
+      onSuccess: () => toast.success(`„${row.titel}" in den Plan übernommen.`),
+      onError: (e) => toast.error(e instanceof Error ? e.message : 'Übernehmen fehlgeschlagen.'),
+    })
   }
 
-  const remove = async (row: EingangRow) => {
+  const handleRemove = async (row: EingangRow) => {
     const ok = await confirm({
       title: 'Idee löschen?',
       description: `„${row.titel}" wird aus dem Eingang entfernt.`,
@@ -327,28 +272,20 @@ function EingangTab({ onCount }: { onCount: (n: number) => void }) {
       destructive: true,
     })
     if (!ok) return
-    const prev = rows
-    setRows((list) => list.filter((r) => r.id !== row.id))
-    try {
-      await deleteEingang(row.id)
-      toast.success('Idee gelöscht.')
-    } catch (e) {
-      setRows(prev)
-      toast.error(e instanceof Error ? e.message : 'Löschen fehlgeschlagen.')
-    }
+    remove.mutate(row.id, {
+      onSuccess: () => toast.success('Idee gelöscht.'),
+      onError: (e) => toast.error(e instanceof Error ? e.message : 'Löschen fehlgeschlagen.'),
+    })
   }
 
   const handleSave = async (input: EingangInput, id?: string) => {
     if (id) {
-      const updated = await updateEingang(id, input)
-      setRows((prev) => prev.map((r) => (r.id === id ? updated : r)))
+      await update.mutateAsync({ id, patch: input })
       toast.success('Idee aktualisiert.')
     } else {
-      const created = await createEingang({ ...input, status: 'offen' })
-      setRows((prev) => [created, ...prev])
+      await create.mutateAsync({ ...input, status: 'offen' })
       toast.success('Idee im Eingang gespeichert.')
     }
-    load()
   }
 
   return (
@@ -366,8 +303,8 @@ function EingangTab({ onCount }: { onCount: (n: number) => void }) {
               </option>
             ))}
           </Select>
-          <Button variant="ghost" size="icon" onClick={load} aria-label="Neu laden">
-            <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
+          <Button variant="ghost" size="icon" onClick={() => void eingangQ.refetch()} aria-label="Neu laden">
+            <RefreshCw className={cn('h-4 w-4', eingangQ.isFetching && 'animate-spin')} />
           </Button>
           <Button
             onClick={() => {
@@ -380,7 +317,11 @@ function EingangTab({ onCount }: { onCount: (n: number) => void }) {
         </div>
       </div>
 
-      {loading ? (
+      {eingangQ.error && !eingangQ.isPending && (
+        <ErrorState className="mb-4" message={eingangQ.error.message} onRetry={() => void eingangQ.refetch()} />
+      )}
+
+      {eingangQ.isPending ? (
         <SkeletonRows rows={4} />
       ) : filtered.length === 0 ? (
         <EmptyState
@@ -401,46 +342,32 @@ function EingangTab({ onCount }: { onCount: (n: number) => void }) {
       ) : (
         <div className="space-y-2">
           {filtered.map((row) => {
-            const meta = eingangStatusMeta(row.status)
             const done = row.status === 'uebernommen' || row.status === 'verworfen'
             return (
               <Card key={row.id} className={cn(done && 'opacity-70')}>
                 <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: meta.dot }} />
-                      <h3 className="truncate font-medium">{row.titel}</h3>
-                    </div>
+                    <h3 className="truncate font-medium">{row.titel}</h3>
                     {row.beschreibung && (
                       <p className="mt-0.5 line-clamp-2 text-sm text-muted-foreground">{row.beschreibung}</p>
                     )}
                     <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
                       {row.von && <span>von {row.von}</span>}
                       <span>· {formatDateShort(row.created_at.slice(0, 10))}</span>
-                      {row.kanal?.map((k) => (
-                        <Badge key={k} variant="outline" className="px-1.5 py-0 text-[10px]">
-                          {kanalLabel(k)}
-                        </Badge>
-                      ))}
+                      <KanalIcons kanaele={row.kanal ?? []} />
                     </div>
                   </div>
 
                   <div className="flex shrink-0 flex-wrap items-center gap-2">
-                    <Select
+                    <StatusSelect
+                      kind="eingang"
                       value={row.status}
-                      onChange={(e) => setStatus(row, e.target.value as EingangStatus)}
-                      className="h-8 w-auto min-w-[120px] text-xs"
-                      aria-label="Status"
-                    >
-                      {EINGANG_STATUS.map((s) => (
-                        <option key={s.value} value={s.value}>
-                          {s.label}
-                        </option>
-                      ))}
-                    </Select>
+                      onChange={(s) => setStatus(row, s as EingangStatus)}
+                    />
                     <Button
                       size="sm"
-                      onClick={() => intoPlan(row)}
+                      variant="secondary"
+                      onClick={() => handleIntoPlan(row)}
                       disabled={row.status === 'uebernommen'}
                       title={row.status === 'uebernommen' ? 'Bereits übernommen' : 'In den Redaktionsplan'}
                     >
@@ -457,7 +384,7 @@ function EingangTab({ onCount }: { onCount: (n: number) => void }) {
                     >
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button size="sm" variant="ghost" onClick={() => remove(row)} aria-label="Löschen">
+                    <Button size="sm" variant="ghost" onClick={() => handleRemove(row)} aria-label="Löschen">
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>

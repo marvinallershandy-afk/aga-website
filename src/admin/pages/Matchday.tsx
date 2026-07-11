@@ -6,6 +6,7 @@ import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
 import { Textarea } from '../components/ui/textarea'
 import { Select } from '../components/ui/select'
+import { useToast } from '../components/ui/toast'
 import { cn } from '../lib/utils'
 import { MatchdayTemplate } from '../matchday/templates'
 import {
@@ -32,11 +33,11 @@ const FOTOS = [
 ]
 
 export function Matchday() {
+  const toast = useToast()
   const [template, setTemplate] = useState<TemplateKey>('spieltag')
   const [format, setFormat] = useState<FormatKey>('square')
   const [data, setData] = useState<MatchdayData>(DEFAULT_DATA)
   const [busy, setBusy] = useState<null | 'download' | 'upload'>(null)
-  const [msg, setMsg] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null)
 
   const exportRef = useRef<HTMLDivElement>(null)
 
@@ -44,21 +45,36 @@ export function Matchday() {
   const scale = PREVIEW_W / spec.width
   const set = <K extends keyof MatchdayData>(k: K, v: MatchdayData[K]) => setData((d) => ({ ...d, [k]: v }))
 
+  // Der Export-Knoten wird nur während des Exports gemountet (spart die
+  // permanenten FitText-Reflows des zweiten Voll-Renders). Deshalb: auf Mount
+  // UND auf geladene Bilder warten, bevor html-to-image rendert.
   const capture = async (): Promise<Blob> => {
-    const node = exportRef.current
+    let node: HTMLDivElement | null = null
+    for (let i = 0; i < 30 && !(node = exportRef.current); i++) {
+      await new Promise((r) => requestAnimationFrame(r))
+    }
     if (!node) throw new Error('Render-Knoten fehlt.')
+    const imgs = Array.from(node.querySelectorAll('img'))
+    await Promise.all(
+      imgs.map((img) =>
+        img.complete
+          ? null
+          : new Promise((res) => {
+              img.onload = img.onerror = res
+            }),
+      ),
+    )
     return nodeToPngBlob(node, spec.width, spec.height)
   }
 
   const handleDownload = async () => {
     setBusy('download')
-    setMsg(null)
     try {
       const blob = await capture()
       downloadBlob(blob, buildFilename(template, format, data.heim, data.gast))
-      setMsg({ kind: 'ok', text: 'PNG heruntergeladen.' })
+      toast.success('PNG heruntergeladen.')
     } catch (e) {
-      setMsg({ kind: 'err', text: e instanceof Error ? e.message : 'Download fehlgeschlagen.' })
+      toast.error(e instanceof Error ? e.message : 'Download fehlgeschlagen.')
     } finally {
       setBusy(null)
     }
@@ -66,19 +82,16 @@ export function Matchday() {
 
   const handleUpload = async () => {
     setBusy('upload')
-    setMsg(null)
     try {
       const blob = await capture()
       const path = `${template}/${buildFilename(template, format, data.heim, data.gast)}`
       await uploadGrafik(blob, path)
-      setMsg({ kind: 'ok', text: `In Storage gespeichert: ${path}` })
+      toast.success(`In Storage gespeichert: ${path}`)
     } catch (e) {
-      setMsg({
-        kind: 'err',
-        text:
-          (e instanceof Error ? e.message : 'Upload fehlgeschlagen.') +
+      toast.error(
+        (e instanceof Error ? e.message : 'Upload fehlgeschlagen.') +
           ' — Der Download funktioniert unabhängig davon.',
-      })
+      )
     } finally {
       setBusy(null)
     }
@@ -220,9 +233,6 @@ export function Matchday() {
               In Storage speichern
             </Button>
           </div>
-          {msg && (
-            <p className={cn('text-sm', msg.kind === 'ok' ? 'text-green-500' : 'text-primary')}>{msg.text}</p>
-          )}
         </div>
 
         {/* Live-Vorschau (skaliert) */}
@@ -241,12 +251,14 @@ export function Matchday() {
         </div>
       </div>
 
-      {/* Offscreen-Export-Knoten in voller Auflösung */}
-      <div style={{ position: 'fixed', left: -99999, top: 0, pointerEvents: 'none' }} aria-hidden>
-        <div ref={exportRef} style={{ width: spec.width, height: spec.height }}>
-          <MatchdayTemplate template={template} data={data} format={format} />
+      {/* Offscreen-Export-Knoten in voller Auflösung — nur während des Exports */}
+      {busy !== null && (
+        <div style={{ position: 'fixed', left: -99999, top: 0, pointerEvents: 'none' }} aria-hidden>
+          <div ref={exportRef} style={{ width: spec.width, height: spec.height }}>
+            <MatchdayTemplate template={template} data={data} format={format} />
+          </div>
         </div>
-      </div>
+      )}
     </>
   )
 }

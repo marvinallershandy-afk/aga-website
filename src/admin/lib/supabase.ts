@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import type { Database } from './database.types'
 
 // Supabase-Client für den Admin-Bereich. Öffentliche Client-Keys (RLS schützt
 // die Daten). Projekt: SVA-Tabellen mit Prefix sm_ im Default-Projekt.
@@ -12,7 +13,7 @@ if (!url || !anonKey) {
   )
 }
 
-export const supabase = createClient(url, anonKey, {
+export const supabase = createClient<Database>(url, anonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   Plus,
   ChevronLeft,
@@ -12,6 +12,17 @@ import {
   Film,
   CalendarDays,
 } from 'lucide-react'
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  TouchSensor,
+  useDraggable,
+  useDroppable,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
 import { PageHeader } from './Placeholder'
 import { Button } from '../components/ui/button'
 import { Select } from '../components/ui/select'
@@ -19,17 +30,14 @@ import { Input } from '../components/ui/input'
 import { Badge } from '../components/ui/badge'
 import { SkeletonRows } from '../components/ui/skeleton'
 import { EmptyState } from '../components/ui/empty-state'
+import { ErrorState } from '../components/ui/error-state'
+import { Tabs } from '../components/ui/tabs'
+import { KanalIcons, StatusSelect } from '../components/ui/status'
 import { useToast } from '../components/ui/toast'
 import { ContentEditor } from '../components/ContentEditor'
-import {
-  fetchContent,
-  createContent,
-  updateContent,
-  deleteContent,
-  type ContentRow,
-  type ContentInput,
-} from '../lib/db'
-import { KANAELE, STATUS, KATEGORIEN, kanalLabel } from '../lib/constants'
+import type { ContentRow, ContentInput } from '../lib/db'
+import { useContent, useContentMutations } from '../lib/queries'
+import { KANAELE, STATUS, KATEGORIEN } from '../lib/constants'
 import {
   startOfWeek,
   addDays,
@@ -41,6 +49,12 @@ import {
 import { cn } from '../lib/utils'
 
 type View = 'tabelle' | 'woche' | 'kanban'
+
+const VIEW_TABS = [
+  { value: 'tabelle', label: 'Tabelle', icon: Table2 },
+  { value: 'woche', label: 'Woche', icon: CalendarRange },
+  { value: 'kanban', label: 'Kanban', icon: Columns3 },
+] as const
 
 // Kleine Icons, die anzeigen, ob Drive-Links hinterlegt sind (öffnen im neuen Tab).
 function DriveMarks({ row }: { row: ContentRow }) {
@@ -74,24 +88,12 @@ function DriveMarks({ row }: { row: ContentRow }) {
   )
 }
 
-function KanalDots({ kanal }: { kanal: string[] }) {
-  if (!kanal?.length) return <span className="text-xs text-muted-foreground">—</span>
-  return (
-    <div className="flex flex-wrap gap-1">
-      {kanal.map((k) => (
-        <Badge key={k} variant="outline" className="px-1.5 py-0 text-[10px]">
-          {kanalLabel(k)}
-        </Badge>
-      ))}
-    </div>
-  )
-}
-
 export function Redaktionsplan() {
   const toast = useToast()
-  const [content, setContent] = useState<ContentRow[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const contentQ = useContent()
+  const { create, update, remove } = useContentMutations()
+  const content = contentQ.data ?? []
+  const loading = contentQ.isPending
   const [view, setView] = useState<View>('tabelle')
 
   // Filter
@@ -107,22 +109,6 @@ export function Redaktionsplan() {
 
   // Wochenansicht
   const [weekRef, setWeekRef] = useState<Date>(() => new Date())
-
-  const load = async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      setContent(await fetchContent())
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Laden fehlgeschlagen.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    load()
-  }, [])
 
   const filtered = useMemo(() => {
     const q = fSuche.trim().toLowerCase()
@@ -153,34 +139,28 @@ export function Redaktionsplan() {
   }
 
   const handleSave = async (input: ContentInput, id?: string) => {
-    if (id) {
-      const updated = await updateContent(id, input)
-      setContent((prev) => prev.map((r) => (r.id === id ? updated : r)))
-    } else {
-      const created = await createContent(input)
-      setContent((prev) => [...prev, created])
-    }
+    if (id) await update.mutateAsync({ id, patch: input })
+    else await create.mutateAsync(input)
   }
   const handleDelete = async (id: string) => {
-    await deleteContent(id)
-    setContent((prev) => prev.filter((r) => r.id !== id))
+    await remove.mutateAsync(id)
   }
 
-  // Inline-Status ändern (Tabelle & Kanban-Drop)
-  const changeStatus = async (row: ContentRow, status: string) => {
+  // Inline-Status ändern (Tabelle & Kanban-Drop) — optimistisch mit Rollback
+  // (Cache-Logik in queries.ts), hier nur Feedback.
+  const changeStatus = (row: ContentRow, status: string) => {
     if (row.status === status) return
-    const prev = content
-    setContent((c) => c.map((r) => (r.id === row.id ? { ...r, status } : r)))
-    try {
-      await updateContent(row.id, { status })
-      const label = STATUS.find((s) => s.value === status)?.label ?? status
-      toast.success(`„${row.titel}" → ${label}`)
-    } catch (e) {
-      setContent(prev) // Rollback
-      const msg = e instanceof Error ? e.message : 'Status-Update fehlgeschlagen.'
-      setError(msg)
-      toast.error(msg)
-    }
+    update.mutate(
+      { id: row.id, patch: { status } },
+      {
+        onSuccess: () => {
+          const label = STATUS.find((s) => s.value === status)?.label ?? status
+          toast.success(`„${row.titel}" → ${label}`)
+        },
+        onError: (e) =>
+          toast.error(e instanceof Error ? e.message : 'Status-Update fehlgeschlagen.'),
+      },
+    )
   }
 
   const monday = startOfWeek(weekRef)
@@ -193,8 +173,14 @@ export function Redaktionsplan() {
         subtitle="Beiträge planen, Status pflegen, nichts vergessen."
         actions={
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={load} aria-label="Neu laden" title="Neu laden">
-              <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => void contentQ.refetch()}
+              aria-label="Neu laden"
+              title="Neu laden"
+            >
+              <RefreshCw className={cn('h-4 w-4', contentQ.isFetching && 'animate-spin')} />
             </Button>
             <Button onClick={() => openNew()}>
               <Plus className="h-4 w-4" /> Neuer Beitrag
@@ -205,29 +191,7 @@ export function Redaktionsplan() {
 
       {/* Ansicht + Filter */}
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <div className="flex overflow-hidden rounded-md border border-border">
-          {(
-            [
-              { v: 'tabelle', label: 'Tabelle', icon: Table2 },
-              { v: 'woche', label: 'Woche', icon: CalendarRange },
-              { v: 'kanban', label: 'Kanban', icon: Columns3 },
-            ] as const
-          ).map((t) => {
-            const Icon = t.icon
-            return (
-              <button
-                key={t.v}
-                onClick={() => setView(t.v)}
-                className={cn(
-                  'flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors',
-                  view === t.v ? 'bg-primary text-primary-foreground' : 'hover:bg-accent',
-                )}
-              >
-                <Icon className="h-4 w-4" /> {t.label}
-              </button>
-            )
-          })}
-        </div>
+        <Tabs items={VIEW_TABS} value={view} onChange={setView} />
 
         <div className="ml-auto flex flex-wrap items-center gap-2">
           <div className="relative">
@@ -267,10 +231,12 @@ export function Redaktionsplan() {
         </div>
       </div>
 
-      {error && (
-        <div className="mb-4 rounded-md border border-primary/40 bg-primary/10 px-3 py-2 text-sm text-primary">
-          {error}
-        </div>
+      {contentQ.error && !loading && (
+        <ErrorState
+          className="mb-4"
+          message={contentQ.error.message}
+          onRetry={() => void contentQ.refetch()}
+        />
       )}
 
       {loading ? (
@@ -346,22 +312,12 @@ function TabelleView({
                 </span>
               </td>
               <td className="px-3 py-2">
-                <KanalDots kanal={r.kanal} />
+                <KanalIcons kanaele={r.kanal ?? []} />
               </td>
               <td className="px-3 py-2 text-muted-foreground">{r.format ?? '—'}</td>
               <td className="px-3 py-2 text-muted-foreground">{r.kategorie ?? '—'}</td>
               <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
-                <Select
-                  value={r.status}
-                  onChange={(e) => onStatus(r, e.target.value)}
-                  className="h-8 w-auto min-w-[130px] text-xs"
-                >
-                  {STATUS.map((s) => (
-                    <option key={s.value} value={s.value}>
-                      {s.label}
-                    </option>
-                  ))}
-                </Select>
+                <StatusSelect value={r.status} onChange={(s) => onStatus(r, s)} />
               </td>
             </tr>
           ))}
@@ -454,7 +410,7 @@ function WocheView({
   )
 }
 
-// ── Kanban ──────────────────────────────────────────────────────────────────
+// ── Kanban (dnd-kit: Maus + Touch) ─────────────────────────────────────────
 function KanbanView({
   rows,
   onEdit,
@@ -464,57 +420,100 @@ function KanbanView({
   onEdit: (r: ContentRow) => void
   onStatus: (r: ContentRow, s: string) => void
 }) {
-  const [dragId, setDragId] = useState<string | null>(null)
-  const [overCol, setOverCol] = useState<string | null>(null)
+  const [activeId, setActiveId] = useState<string | null>(null)
+  const sensors = useSensors(
+    // distance-Constraint lässt normale Klicks (Karte öffnen) durch.
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    // Touch: kurz halten, dann ziehen — scrollt sonst normal weiter.
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
+  )
+  const activeRow = rows.find((r) => r.id === activeId) ?? null
+
+  const onDragEnd = (e: DragEndEvent) => {
+    const over = e.over?.id
+    const row = rows.find((r) => r.id === String(e.active.id))
+    if (row && typeof over === 'string' && row.status !== over) onStatus(row, over)
+    setActiveId(null)
+  }
 
   return (
-    <div className="grid grid-cols-1 gap-3 md:grid-cols-3 xl:grid-cols-5">
-      {STATUS.map((s) => {
-        const colRows = rows.filter((r) => r.status === s.value)
-        return (
-          <div
+    <DndContext
+      sensors={sensors}
+      onDragStart={(e) => setActiveId(String(e.active.id))}
+      onDragEnd={onDragEnd}
+      onDragCancel={() => setActiveId(null)}
+    >
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3 xl:grid-cols-5">
+        {STATUS.map((s) => (
+          <KanbanColumn
             key={s.value}
-            onDragOver={(e) => {
-              e.preventDefault()
-              setOverCol(s.value)
-            }}
-            onDragLeave={() => setOverCol((c) => (c === s.value ? null : c))}
-            onDrop={() => {
-              const row = rows.find((r) => r.id === dragId)
-              if (row) onStatus(row, s.value)
-              setDragId(null)
-              setOverCol(null)
-            }}
-            className={cn(
-              'flex min-h-[200px] flex-col rounded-lg border border-border bg-muted/20 p-2 transition-colors',
-              overCol === s.value && 'border-primary/70 bg-primary/5',
-            )}
-          >
-            <div className="mb-2 flex items-center gap-1.5 px-1">
-              <span className="h-2.5 w-2.5 rounded-full" style={{ background: s.dot }} />
-              <span className="text-sm font-semibold">{s.label}</span>
-              <span className="ml-auto text-xs text-muted-foreground">{colRows.length}</span>
-            </div>
-            <div className="flex flex-1 flex-col gap-1.5">
-              {colRows.map((r) => (
-                <div
-                  key={r.id}
-                  draggable
-                  onDragStart={() => setDragId(r.id)}
-                  onDragEnd={() => setDragId(null)}
-                >
-                  <ContentCard row={r} onEdit={onEdit} showDate />
-                </div>
-              ))}
-            </div>
+            meta={s}
+            rows={rows.filter((r) => r.status === s.value)}
+            onEdit={onEdit}
+          />
+        ))}
+      </div>
+      {/* DragOverlay portalt nach <body> — admin-root-Klasse stellt die Design-Tokens sicher. */}
+      <DragOverlay>
+        {activeRow && (
+          <div className="admin-root">
+            <ContentCard row={activeRow} onEdit={() => {}} showDate />
           </div>
-        )
-      })}
+        )}
+      </DragOverlay>
+    </DndContext>
+  )
+}
+
+function KanbanColumn({
+  meta,
+  rows,
+  onEdit,
+}: {
+  meta: (typeof STATUS)[number]
+  rows: ContentRow[]
+  onEdit: (r: ContentRow) => void
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id: meta.value })
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        'flex min-h-[200px] flex-col rounded-lg border border-border bg-muted/20 p-2 transition-colors',
+        isOver && 'border-primary/70 bg-primary/5',
+      )}
+    >
+      <div className="mb-2 flex items-center gap-1.5 px-1">
+        <span className="h-2.5 w-2.5 rounded-full" style={{ background: meta.dot }} />
+        <span className="text-sm font-semibold">{meta.label}</span>
+        <span className="ml-auto text-xs text-muted-foreground">{rows.length}</span>
+      </div>
+      <div className="flex flex-1 flex-col gap-1.5">
+        {rows.map((r) => (
+          <DraggableCard key={r.id} row={r} onEdit={onEdit} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function DraggableCard({ row, onEdit }: { row: ContentRow; onEdit: (r: ContentRow) => void }) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: row.id })
+  return (
+    <div
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      className={cn('touch-manipulation', isDragging && 'opacity-40')}
+    >
+      <ContentCard row={row} onEdit={onEdit} showDate />
     </div>
   )
 }
 
 // ── Gemeinsame Karte ────────────────────────────────────────────────────────
+// Bewusst KEIN <button>: enthält die DriveMarks-Buttons (verschachtelte
+// Buttons sind invalides HTML) — stattdessen div mit role="button".
 function ContentCard({
   row,
   onEdit,
@@ -525,9 +524,17 @@ function ContentCard({
   showDate?: boolean
 }) {
   return (
-    <button
+    <div
+      role="button"
+      tabIndex={0}
       onClick={() => onEdit(row)}
-      className="w-full rounded-md border border-border bg-card p-2 text-left transition-colors hover:border-primary/60"
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onEdit(row)
+        }
+      }}
+      className="w-full cursor-pointer rounded-md border border-border bg-card p-2 text-left transition-colors hover:border-primary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <div className="mb-1 flex items-start justify-between gap-2">
         <span className="line-clamp-2 text-xs font-medium leading-snug">{row.titel}</span>
@@ -535,7 +542,7 @@ function ContentCard({
           <DriveMarks row={row} />
         </span>
       </div>
-      <div className="flex flex-wrap items-center gap-1">
+      <div className="flex flex-wrap items-center gap-1.5">
         {showDate && row.geplant_am && (
           <Badge variant="outline" className="px-1.5 py-0 text-[10px]">
             {formatDateShort(row.geplant_am)}
@@ -546,9 +553,9 @@ function ContentCard({
             {row.format}
           </Badge>
         )}
-        <KanalDots kanal={row.kanal} />
+        <KanalIcons kanaele={row.kanal ?? []} />
       </div>
-    </button>
+    </div>
   )
 }
 

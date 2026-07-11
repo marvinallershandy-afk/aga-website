@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   RefreshCw,
   FolderOpen,
@@ -9,21 +9,17 @@ import {
 } from 'lucide-react'
 import { PageHeader } from './Placeholder'
 import { Button } from '../components/ui/button'
-import { Select } from '../components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { SkeletonRows } from '../components/ui/skeleton'
 import { EmptyState } from '../components/ui/empty-state'
+import { ErrorState } from '../components/ui/error-state'
+import { StatusSelect } from '../components/ui/status'
 import { useToast } from '../components/ui/toast'
 import { ContentEditor } from '../components/ContentEditor'
 import { DriveBrowser } from '../components/DriveBrowser'
-import {
-  fetchContent,
-  updateContent,
-  deleteContent,
-  type ContentRow,
-  type ContentInput,
-} from '../lib/db'
-import { STATUS, statusMeta, DRIVE_MASTER_FOLDER_ID, driveFolderUrl } from '../lib/constants'
+import type { ContentRow, ContentInput } from '../lib/db'
+import { useContent, useContentMutations } from '../lib/queries'
+import { statusMeta, DRIVE_MASTER_FOLDER_ID, driveFolderUrl } from '../lib/constants'
 import { formatDateShort } from '../lib/format'
 import { cn } from '../lib/utils'
 
@@ -32,54 +28,37 @@ const PROD_STATUS = ['geplant', 'in_arbeit', 'fertig']
 
 export function Produktion() {
   const toast = useToast()
-  const [content, setContent] = useState<ContentRow[]>([])
-  const [loading, setLoading] = useState(true)
+  const contentQ = useContent()
+  const { create, update, remove } = useContentMutations()
+  const content = contentQ.data ?? []
+  const loading = contentQ.isPending
   const [onlyProd, setOnlyProd] = useState(true)
   const [editorOpen, setEditorOpen] = useState(false)
   const [editRow, setEditRow] = useState<ContentRow | null>(null)
-
-  const load = async () => {
-    setLoading(true)
-    try {
-      setContent(await fetchContent())
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Laden fehlgeschlagen.')
-    } finally {
-      setLoading(false)
-    }
-  }
-  useEffect(() => {
-    load()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   const rows = useMemo(
     () => (onlyProd ? content.filter((r) => PROD_STATUS.includes(r.status)) : content),
     [content, onlyProd],
   )
 
-  const changeStatus = async (row: ContentRow, status: string) => {
+  const changeStatus = (row: ContentRow, status: string) => {
     if (row.status === status) return
-    const prev = content
-    setContent((c) => c.map((r) => (r.id === row.id ? { ...r, status } : r)))
-    try {
-      await updateContent(row.id, { status })
-      toast.success(`„${row.titel}" → ${statusMeta(status).label}`)
-    } catch (e) {
-      setContent(prev)
-      toast.error(e instanceof Error ? e.message : 'Status-Update fehlgeschlagen.')
-    }
+    update.mutate(
+      { id: row.id, patch: { status } },
+      {
+        onSuccess: () => toast.success(`„${row.titel}" → ${statusMeta(status).label}`),
+        onError: (e) => toast.error(e instanceof Error ? e.message : 'Status-Update fehlgeschlagen.'),
+      },
+    )
   }
 
+  // Deckt jetzt auch die Neuanlage ab — vorher schlug „Neu" hier still fehl.
   const handleSave = async (input: ContentInput, id?: string) => {
-    if (id) {
-      const updated = await updateContent(id, input)
-      setContent((prev) => prev.map((r) => (r.id === id ? updated : r)))
-    }
+    if (id) await update.mutateAsync({ id, patch: input })
+    else await create.mutateAsync(input)
   }
   const handleDelete = async (id: string) => {
-    await deleteContent(id)
-    setContent((prev) => prev.filter((r) => r.id !== id))
+    await remove.mutateAsync(id)
   }
 
   return (
@@ -89,8 +68,8 @@ export function Produktion() {
         subtitle="Vom Rohmaterial zum fertigen Reel — verlinkt mit Google Drive, ohne Kopien."
         actions={
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={load} aria-label="Neu laden">
-              <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
+            <Button variant="ghost" size="icon" onClick={() => void contentQ.refetch()} aria-label="Neu laden">
+              <RefreshCw className={cn('h-4 w-4', contentQ.isFetching && 'animate-spin')} />
             </Button>
             <Button asChild variant="outline">
               <a href={driveFolderUrl(DRIVE_MASTER_FOLDER_ID)} target="_blank" rel="noopener noreferrer">
@@ -135,6 +114,10 @@ export function Produktion() {
         </label>
       </div>
 
+      {contentQ.error && !loading && (
+        <ErrorState className="mb-4" message={contentQ.error.message} onRetry={() => void contentQ.refetch()} />
+      )}
+
       {loading ? (
         <SkeletonRows rows={5} />
       ) : rows.length === 0 ? (
@@ -164,17 +147,7 @@ export function Produktion() {
                   </td>
                   <td className="px-3 py-2 font-medium">{r.titel}</td>
                   <td className="px-3 py-2">
-                    <Select
-                      value={r.status}
-                      onChange={(e) => changeStatus(r, e.target.value)}
-                      className="h-8 w-auto min-w-[130px] text-xs"
-                    >
-                      {STATUS.map((s) => (
-                        <option key={s.value} value={s.value}>
-                          {s.label}
-                        </option>
-                      ))}
-                    </Select>
+                    <StatusSelect value={r.status} onChange={(s) => changeStatus(r, s)} />
                   </td>
                   <td className="px-3 py-2">
                     <DriveCell url={r.drive_rohmaterial_url} icon={FolderOpen} label="Ordner" />

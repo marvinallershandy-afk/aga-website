@@ -1,10 +1,12 @@
 import * as React from 'react'
+import * as Dialog from '@radix-ui/react-dialog'
 import { X } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { Button } from './button'
 
-// Schlankes Modal ohne Radix-Dialog-Dependency.
-// Schließt per Escape, Klick auf Overlay und X-Button; sperrt Body-Scroll.
+// Modal auf Radix-Dialog-Basis: echter Fokus-Trap, Fokus-Restore beim
+// Schließen, Escape & Overlay-Klick. Bewusst OHNE Portal gerendert, damit die
+// Design-Tokens (CSS-Variablen auf .admin-root) weiter greifen.
 export function Modal({
   open,
   onClose,
@@ -22,49 +24,34 @@ export function Modal({
   footer?: React.ReactNode
   className?: string
 }) {
-  React.useEffect(() => {
-    if (!open) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', onKey)
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.removeEventListener('keydown', onKey)
-      document.body.style.overflow = prev
-    }
-  }, [open, onClose])
-
-  if (!open) return null
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 sm:items-center"
-      onMouseDown={onClose}
-    >
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
-      <div
+    <Dialog.Root open={open} onOpenChange={(o) => !o && onClose()}>
+      <Dialog.Overlay className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm" />
+      <Dialog.Content
+        aria-describedby={description ? undefined : ''}
         className={cn(
-          'relative z-10 my-8 w-full max-w-lg rounded-lg border border-border bg-card p-5 shadow-xl',
+          'fixed left-1/2 top-1/2 z-50 max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border border-border bg-card p-5 shadow-xl',
           className,
         )}
-        onMouseDown={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
       >
         <div className="mb-4 flex items-start justify-between gap-4">
           <div>
-            <h2 className="font-display text-xl tracking-wide">{title}</h2>
-            {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
+            <Dialog.Title className="font-display text-xl tracking-wide">{title}</Dialog.Title>
+            {description && (
+              <Dialog.Description className="mt-1 text-sm text-muted-foreground">
+                {description}
+              </Dialog.Description>
+            )}
           </div>
-          <Button variant="ghost" size="icon" onClick={onClose} aria-label="Schließen">
-            <X className="h-5 w-5" />
-          </Button>
+          <Dialog.Close asChild>
+            <Button variant="ghost" size="icon" aria-label="Schließen">
+              <X className="h-5 w-5" />
+            </Button>
+          </Dialog.Close>
         </div>
         <div className="space-y-4">{children}</div>
         {footer && <div className="mt-6 flex justify-end gap-2">{footer}</div>}
-      </div>
-    </div>
+      </Dialog.Content>
+    </Dialog.Root>
   )
 }
