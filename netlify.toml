@@ -1,0 +1,44 @@
+# v13-E10: Cache-Kontrolle. Die Seite wird manuell deployt
+# (npx netlify-cli deploy --build --prod), Netlify ist NICHT git-verbunden.
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# Vite-Assets tragen Content-Hashes im Dateinamen → für immer cachebar.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Große, selten wechselnde Medien: lange cachen, aber revalidierbar
+# (Dateinamen sind NICHT gehasht — bei Austausch greift der ETag).
+[[headers]]
+  for = "/audio/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"
+
+[[headers]]
+  for = "/models/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"
+
+[[headers]]
+  for = "/draco/*"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000, immutable"
+
+[[headers]]
+  for = "/players/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"
+
+[[headers]]
+  for = "/fans/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"
+
+[[headers]]
+  for = "/brand/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"
