@@ -283,7 +283,39 @@ function TabelleView({
 }) {
   if (!rows.length) return <EmptyHint onAdd={onAdd} />
   return (
-    <div className="overflow-x-auto rounded-lg border border-border">
+    <>
+    {/* Mobil: Karten statt gequetschter Tabelle */}
+    <div className="space-y-2 md:hidden">
+      {rows.map((r) => (
+        <div
+          key={r.id}
+          role="button"
+          tabIndex={0}
+          onClick={() => onEdit(r)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') onEdit(r)
+          }}
+          className="cursor-pointer rounded-md border border-border bg-card p-3 transition-colors hover:border-primary/60"
+        >
+          <div className="flex items-start justify-between gap-2">
+            <span className="text-sm font-medium leading-snug">{r.titel}</span>
+            <span className="flex shrink-0 items-center gap-1">
+              <DriveMarks row={r} />
+            </span>
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {formatDateShort(r.geplant_am)}
+            {r.format ? ` · ${r.format}` : ''}
+            {r.kategorie ? ` · ${r.kategorie}` : ''}
+          </p>
+          <div className="mt-2 flex items-center justify-between" onClick={(e) => e.stopPropagation()}>
+            <KanalIcons kanaele={r.kanal ?? []} />
+            <StatusSelect value={r.status} onChange={(s) => onStatus(r, s)} />
+          </div>
+        </div>
+      ))}
+    </div>
+    <div className="hidden overflow-x-auto rounded-lg border border-border md:block">
       <table className="w-full min-w-[720px] text-sm">
         <thead className="border-b border-border bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
           <tr>
@@ -324,6 +356,7 @@ function TabelleView({
         </tbody>
       </table>
     </div>
+    </>
   )
 }
 
@@ -371,7 +404,7 @@ function WocheView({
           <div
             key={d.iso}
             className={cn(
-              'flex min-h-[140px] flex-col rounded-lg border border-border p-2',
+              'flex min-h-[112px] flex-col rounded-lg border border-border p-2',
               d.iso === todayIso && 'border-primary/70 ring-1 ring-primary/40',
             )}
           >
@@ -450,6 +483,7 @@ function KanbanView({
             meta={s}
             rows={rows.filter((r) => r.status === s.value)}
             onEdit={onEdit}
+            onStatus={onStatus}
           />
         ))}
       </div>
@@ -469,10 +503,12 @@ function KanbanColumn({
   meta,
   rows,
   onEdit,
+  onStatus,
 }: {
   meta: (typeof STATUS)[number]
   rows: ContentRow[]
   onEdit: (r: ContentRow) => void
+  onStatus: (r: ContentRow, s: string) => void
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: meta.value })
   return (
@@ -490,14 +526,22 @@ function KanbanColumn({
       </div>
       <div className="flex flex-1 flex-col gap-1.5">
         {rows.map((r) => (
-          <DraggableCard key={r.id} row={r} onEdit={onEdit} />
+          <DraggableCard key={r.id} row={r} onEdit={onEdit} onStatus={onStatus} />
         ))}
       </div>
     </div>
   )
 }
 
-function DraggableCard({ row, onEdit }: { row: ContentRow; onEdit: (r: ContentRow) => void }) {
+function DraggableCard({
+  row,
+  onEdit,
+  onStatus,
+}: {
+  row: ContentRow
+  onEdit: (r: ContentRow) => void
+  onStatus: (r: ContentRow, s: string) => void
+}) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: row.id })
   return (
     <div
@@ -506,7 +550,7 @@ function DraggableCard({ row, onEdit }: { row: ContentRow; onEdit: (r: ContentRo
       {...attributes}
       className={cn('touch-manipulation', isDragging && 'opacity-40')}
     >
-      <ContentCard row={row} onEdit={onEdit} showDate />
+      <ContentCard row={row} onEdit={onEdit} showDate onStatus={onStatus} />
     </div>
   )
 }
@@ -518,10 +562,12 @@ function ContentCard({
   row,
   onEdit,
   showDate,
+  onStatus,
 }: {
   row: ContentRow
   onEdit: (r: ContentRow) => void
   showDate?: boolean
+  onStatus?: (r: ContentRow, s: string) => void
 }) {
   return (
     <div
@@ -554,6 +600,11 @@ function ContentCard({
           </Badge>
         )}
         <KanalIcons kanaele={row.kanal ?? []} />
+        {onStatus && (
+          <span className="ml-auto" onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
+            <StatusSelect value={row.status} onChange={(s) => onStatus(row, s)} />
+          </span>
+        )}
       </div>
     </div>
   )

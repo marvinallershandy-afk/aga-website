@@ -52,7 +52,12 @@
   font-weight: 400;
   letter-spacing: 0.01em;
 }
-.admin-root button { font-family: inherit; }
+.admin-root button {
+  font-family: inherit;
+  background-color: transparent; /* UA-Default (buttonface) neutralisieren — preflight ist aus */
+  color: inherit;
+  cursor: pointer;
+}
 .admin-root a { color: inherit; text-decoration: none; }
 
 /* Toast-Einblendung (ersetzt tailwindcss-animate) */
@@ -61,6 +66,25 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 .sm-toast-in { animation: sm-toast-in 0.18s ease-out; }
+/* Seiten-Übergang: dezentes Fade-up beim Routenwechsel */
+@keyframes sm-page-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.sm-page-in { animation: sm-page-in 0.22s ease-out; }
+
+/* Modal: Overlay-Fade + Panel-Scale (Radix mount) */
+@keyframes sm-overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.sm-overlay-in { animation: sm-overlay-in 0.15s ease-out; }
+@keyframes sm-modal-in {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.97); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+.sm-modal-in { animation: sm-modal-in 0.18s cubic-bezier(0.16, 1, 0.3, 1); }
+
 @media (prefers-reduced-motion: reduce) {
-  .sm-toast-in { animation: none; }
+  .sm-toast-in, .sm-page-in, .sm-overlay-in, .sm-modal-in { animation: none; }
 }

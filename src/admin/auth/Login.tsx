@@ -96,7 +96,7 @@ export function Login() {
 
               <button
                 type="button"
-                className="w-full text-center text-xs text-muted-foreground hover:text-foreground"
+                className="w-full text-center text-xs text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground"
                 onClick={() => {
                   setMode(mode === 'magic' ? 'password' : 'magic')
                   setError(null)

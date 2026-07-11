@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   CalendarDays,
@@ -229,6 +229,32 @@ export function Dashboard() {
   )
 }
 
+// Zählt die KPI-Zahl beim ersten Rendern hoch (dezent, respektiert reduced-motion).
+function useCountUp(target: number | null): number | null {
+  const [shown, setShown] = useState<number | null>(target == null ? null : 0)
+  const done = useRef(false)
+  useEffect(() => {
+    if (target == null || done.current) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || target === 0) {
+      setShown(target)
+      done.current = true
+      return
+    }
+    done.current = true
+    const dauer = 450
+    const start = performance.now()
+    let raf = 0
+    const tick = (t: number) => {
+      const p = Math.min(1, (t - start) / dauer)
+      setShown(Math.round(target * (1 - Math.pow(1 - p, 3))))
+      if (p < 1) raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [target])
+  return target == null ? null : shown
+}
+
 function StatTile({
   label,
   value,
@@ -240,6 +266,7 @@ function StatTile({
   hint: string
   icon: typeof CalendarDays
 }) {
+  const shown = useCountUp(value)
   return (
     <Card>
       <CardContent className="flex items-center gap-3 p-4">
@@ -248,10 +275,10 @@ function StatTile({
         </div>
         <div className="min-w-0">
           <p className="truncate text-xs text-muted-foreground">{label}</p>
-          {value === null ? (
+          {shown === null ? (
             <Skeleton className="mt-1 h-6 w-10" />
           ) : (
-            <p className="text-2xl font-display leading-tight tabular-nums">{value}</p>
+            <p className="text-2xl font-display leading-tight tabular-nums">{shown}</p>
           )}
           <p className="truncate text-[11px] text-muted-foreground">{hint}</p>
         </div>

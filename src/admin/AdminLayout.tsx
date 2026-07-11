@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard,
   CalendarDays,
@@ -87,6 +87,7 @@ function Brand() {
 export function AdminLayout() {
   const { user, signOut } = useAuth()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const location = useLocation()
 
   return (
     <div className="min-h-screen">
@@ -133,7 +134,10 @@ export function AdminLayout() {
 
         {/* Inhalt */}
         <main className="min-w-0 flex-1 p-4 md:p-8">
-          <Outlet />
+          {/* key erzwingt Remount pro Route → dezentes Fade-up beim Wechsel */}
+          <div key={location.pathname} className="sm-page-in">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

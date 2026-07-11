@@ -26,11 +26,11 @@ export function Modal({
 }) {
   return (
     <Dialog.Root open={open} onOpenChange={(o) => !o && onClose()}>
-      <Dialog.Overlay className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm" />
+      <Dialog.Overlay className="sm-overlay-in fixed inset-0 z-50 bg-black/70 backdrop-blur-sm" />
       <Dialog.Content
         aria-describedby={description ? undefined : ''}
         className={cn(
-          'fixed left-1/2 top-1/2 z-50 max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border border-border bg-card p-5 shadow-xl',
+          'sm-modal-in fixed left-1/2 top-1/2 z-50 max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border border-border bg-card p-5 shadow-xl',
           className,
         )}
       >
