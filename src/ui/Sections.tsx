@@ -130,6 +130,11 @@ export function Sections() {
 
       {/* 3 · MITMACHEN/FINALE — linksbündig, rechts lebt der Fanblock */}
       <section id={kontakt.id} className="section section--left section--snap-start">
+        {/* v13-E3: sprechender Anker-Alias fürs Link-in-Bio —
+            /#mitmachen landet direkt am CTA-Beat. Absolut an der Sektions-
+            Oberkante, damit der native Anker-Sprung exakt am Snap-Ruhepunkt
+            (offsetTop, .section--snap-start) landet statt hinterm Padding. */}
+        <span id="mitmachen" aria-hidden="true" style={{ position: 'absolute', top: 0 }} />
         <div className="section__scrim" />
         <Header kicker={kontakt.kicker} title={kontakt.title} body={kontakt.body} />
 

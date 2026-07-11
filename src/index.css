@@ -232,6 +232,78 @@ body::before {
 .brandbar__nav a:hover, .brandbar__nav a[data-active="true"] { color: #fff; }
 @media (max-width: 640px) { .brandbar__nav { display: none; } }
 
+/* ── v13-E3: Mobil-Dock — Kapitel-Punkte + „Mitmachen"-Pill ────
+   Ersatz für die mobil ausgeblendete Nav-Zeile. Unten zentriert,
+   daumen-erreichbar; der aktive Punkt zeigt sein Kapitel-Label.
+   Nur ≤640px sichtbar. Liegt unter Gate (400) und Letterbox (360). */
+.mobile-dock {
+  display: none;
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(0.9rem + env(safe-area-inset-bottom, 0px));
+  z-index: 46;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.4rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(14, 12, 14, 0.72);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+  pointer-events: auto;
+  max-width: calc(100vw - 1.2rem);
+}
+@media (max-width: 640px) { .mobile-dock { display: flex; } }
+.mobile-dock__dot {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  height: 34px;
+  padding: 0 0.42rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: #fff;
+}
+.mobile-dock__pt {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.38);
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.mobile-dock__dot[data-active="true"] .mobile-dock__pt {
+  background: var(--red);
+  transform: scale(1.35);
+}
+.mobile-dock__label {
+  display: none;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.92);
+  white-space: nowrap;
+}
+.mobile-dock__dot[data-active="true"] .mobile-dock__label { display: inline; }
+.mobile-dock__cta {
+  margin-left: 0.2rem;
+  border: none;
+  border-radius: 999px;
+  padding: 0.55em 0.95em;
+  background: var(--red);
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(233, 29, 41, 0.35);
+}
+.mobile-dock__cta:active { transform: translateY(1px); }
+
 /* ── Scroll hint ────────────────────────────────────────────── */
 .scrollhint {
   position: fixed;
@@ -248,6 +320,10 @@ body::before {
   text-transform: uppercase;
   color: rgba(255,255,255,0.6);
   pointer-events: none;
+}
+/* v13-E3: mobil über dem Kapitel-Dock schweben */
+@media (max-width: 640px) {
+  .scrollhint { bottom: calc(4.6rem + env(safe-area-inset-bottom, 0px)); }
 }
 .scrollhint__mouse {
   width: 22px; height: 34px;

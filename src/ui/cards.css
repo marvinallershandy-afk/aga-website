@@ -1129,6 +1129,10 @@
 .audio-toggle[data-on="false"] { color: rgba(255,255,255,.55); }
 .audio-toggle:focus-visible { outline: 2px solid var(--red); outline-offset: 3px; }
 @media (prefers-reduced-motion: reduce) { .audio-toggle { transition: none; } }
+/* v13-E3: mobil sitzt unten das Kapitel-Dock — Ton-Control eine Etage höher */
+@media (max-width: 640px) {
+  .audio-toggle { bottom: calc(4.4rem + env(safe-area-inset-bottom, 0px)); }
+}
 
 /* ── v12-E2: „Alle Spieler anzeigen"-Button + Galerie-Overlay ──────── */
 .card-grid__all {
