@@ -567,6 +567,42 @@ export type Database = {
         }
         Relationships: []
       }
+      sm_insights: {
+        Row: {
+          created_at: string
+          datum: string
+          follower: number | null
+          id: string
+          kanal: string
+          notizen: string | null
+          reichweite: number | null
+          top_beitrag: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          datum: string
+          follower?: number | null
+          id?: string
+          kanal: string
+          notizen?: string | null
+          reichweite?: number | null
+          top_beitrag?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          datum?: string
+          follower?: number | null
+          id?: string
+          kanal?: string
+          notizen?: string | null
+          reichweite?: number | null
+          top_beitrag?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       sm_roster: {
         Row: {
           aktiv: boolean

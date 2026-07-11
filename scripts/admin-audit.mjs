@@ -43,6 +43,17 @@ const DUMP = {
     { id: 'so3', name: 'Getränke Kruse', paket: 'bronze', laufzeit_von: '2024-07-01', laufzeit_bis: '2025-06-30', leistungen: 'Bande', ansprechpartner: null, kontakt: null, logo_url: null, aktiv: false, notizen: 'Nicht verlängert.', created_at: '2024-07-01T10:00:00Z', updated_at: '2025-07-01T10:00:00Z' },
   ],
   sm_admins: [{ email: 'preview@audit.local' }],
+  sm_insights: Array.from({ length: 8 }, (_, i) => ({
+    id: `ig-${i}`, datum: new Date(Date.now() - (7 - i) * 7 * 864e5).toISOString().slice(0, 10),
+    kanal: 'instagram', follower: 320 + i * 14 + (i % 3) * 5, reichweite: 1800 + i * 210,
+    top_beitrag: i === 7 ? 'Endergebnis-Kachel SVA vs. Apensen' : null, notizen: null,
+    created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+  })).concat(Array.from({ length: 4 }, (_, i) => ({
+    id: `tt-${i}`, datum: new Date(Date.now() - (3 - i) * 7 * 864e5).toISOString().slice(0, 10),
+    kanal: 'tiktok', follower: 95 + i * 22, reichweite: 4200 + i * 800,
+    top_beitrag: null, notizen: null,
+    created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+  }))),
   sm_spiele: [
     { id: 'sp1', gegner: 'TSV Apensen', heim: false, anstoss: new Date(Date.now() - 6 * 864e5).toISOString(), ort: 'Sportplatz Apensen', wettbewerb: 'Kreisliga Stade', spieltag_nr: 21, tore_sva: 2, tore_gegner: 2, notizen: null, created_at: new Date(Date.now() - 20 * 864e5).toISOString(), updated_at: new Date(Date.now() - 6 * 864e5).toISOString() },
     { id: 'sp2', gegner: 'TuS Fischbek', heim: true, anstoss: new Date(Date.now() + 2 * 864e5 + 3 * 36e5).toISOString(), ort: 'Sportplatz Agathenburg', wettbewerb: 'Kreisliga Stade', spieltag_nr: 22, tore_sva: null, tore_gegner: null, notizen: null, created_at: new Date(Date.now() - 10 * 864e5).toISOString(), updated_at: new Date(Date.now() - 10 * 864e5).toISOString() },
@@ -263,9 +274,14 @@ async function run(label, viewport) {
     await page.waitForTimeout(300)
   }
 
-  // Insights (Stub)
+  // Insights (P5)
   await go('/admin/insights')
-  await shot('insights-stub', true)
+  await shot('insights', true)
+  if (await tryClick(page.getByRole('button', { name: /kpis eintragen/i }).first(), 'Insights: Editor öffnen')) {
+    await shot('insights-editor')
+    await page.keyboard.press('Escape')
+    await page.waitForTimeout(300)
+  }
 
   // Mobil: Drawer
   if (label === 'mobile') {

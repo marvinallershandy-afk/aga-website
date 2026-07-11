@@ -22,6 +22,9 @@ export type RosterInput = Partial<Omit<TablesInsert<'sm_roster'>, 'id' | 'create
 export type SponsorRow = Tables<'sm_sponsoren'>
 export type SponsorInput = Partial<Omit<TablesInsert<'sm_sponsoren'>, 'id' | 'created_at' | 'updated_at'>>
 
+export type InsightRow = Tables<'sm_insights'>
+export type InsightInput = Partial<Omit<TablesInsert<'sm_insights'>, 'id' | 'created_at' | 'updated_at'>>
+
 export type EingangStatus = 'offen' | 'geprueft' | 'uebernommen' | 'verworfen'
 export type EingangRow = Omit<Tables<'sm_ideen_eingang'>, 'status'> & { status: EingangStatus }
 export type EingangInput = Partial<Omit<TablesInsert<'sm_ideen_eingang'>, 'id' | 'created_at' | 'updated_at'>>
@@ -255,5 +258,32 @@ export async function updateSponsor(id: string, patch: SponsorInput): Promise<Sp
 
 export async function deleteSponsor(id: string): Promise<void> {
   const { error } = await supabase.from('sm_sponsoren').delete().eq('id', id)
+  if (error) throw error
+}
+
+// ── sm_insights (manuelle Kanal-KPIs) ───────────────────────────────────────
+
+export async function fetchInsights(): Promise<InsightRow[]> {
+  const { data, error } = await supabase
+    .from('sm_insights')
+    .select('*')
+    .order('datum', { ascending: true })
+  if (error) throw error
+  return data ?? []
+}
+
+export async function upsertInsight(input: InsightInput): Promise<InsightRow> {
+  // unique(datum, kanal): erneutes Eintragen derselben Woche überschreibt.
+  const { data, error } = await supabase
+    .from('sm_insights')
+    .upsert({ ...(input as TablesInsert<'sm_insights'>), updated_at: new Date().toISOString() }, { onConflict: 'datum,kanal' })
+    .select('*')
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function deleteInsight(id: string): Promise<void> {
+  const { error } = await supabase.from('sm_insights').delete().eq('id', id)
   if (error) throw error
 }

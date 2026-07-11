@@ -18,10 +18,10 @@ import { Skeleton } from '../components/ui/skeleton'
 import { EmptyState } from '../components/ui/empty-state'
 import { ErrorState } from '../components/ui/error-state'
 import { PageHeader } from './Placeholder'
-import { useContent, useIdeen, useSpiele, useSponsoren } from '../lib/queries'
+import { useContent, useIdeen, useInsights, useSpiele, useSponsoren } from '../lib/queries'
 import { STATUS, statusMeta, kanalLabel } from '../lib/constants'
 import { startOfWeek, weekDays, toISODate, isoWeekNumber, formatDateShort, formatAnstoss, tageBis } from '../lib/format'
-import { cn } from '../lib/utils'
+import { Sparkline } from '../components/ui/sparkline'
 
 const QUICK = [
   { to: '/redaktionsplan', icon: Plus, label: 'Neuer Beitrag' },
@@ -216,13 +216,7 @@ export function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* KPI-Snapshot — Platzhalter bis Insights (P6) */}
-        <PlaceholderCard
-          icon={TrendingUp}
-          title="Reichweite & Follower"
-          note="KPI-Snapshot kommt mit dem Insights-Modul (Meta/TikTok-Anbindung)."
-          badge="bald"
-        />
+        <InsightsCard />
 
         <NaechstesSpielCard />
       </div>
@@ -297,6 +291,66 @@ function StatusDot({ status }: { status: string }) {
       <span className="h-2.5 w-2.5 rounded-full" style={{ background: m.dot }} />
       <span className="hidden text-xs text-muted-foreground sm:inline">{m.label}</span>
     </span>
+  )
+}
+
+// KPI-Snapshot aus den manuell gepflegten Insights (P5).
+function InsightsCard() {
+  const insightsQ = useInsights()
+  const rows = insightsQ.data ?? []
+  const kanaele = ['instagram', 'tiktok', 'facebook']
+    .map((k) => {
+      const serie = rows.filter((r) => r.kanal === k && r.follower != null)
+      return { kanal: k, serie, aktuell: serie.at(-1) ?? null }
+    })
+    .filter((k) => k.aktuell)
+
+  return (
+    <Card>
+      <CardHeader className="flex-row items-center justify-between space-y-0 p-4">
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <TrendingUp className="h-5 w-5 text-primary" /> Reichweite & Follower
+        </CardTitle>
+        <Link to="/insights" className="text-sm text-primary hover:underline">
+          Insights →
+        </Link>
+      </CardHeader>
+      <CardContent className="p-4 pt-0">
+        {insightsQ.isPending ? (
+          <div className="space-y-2">
+            {[0, 1].map((i) => (
+              <Skeleton key={i} className="h-8 w-full" />
+            ))}
+          </div>
+        ) : kanaele.length === 0 ? (
+          <>
+            <p className="text-sm text-muted-foreground">
+              Noch keine Kennzahlen — einmal pro Woche Follower & Reichweite eintragen.
+            </p>
+            <Link
+              to="/insights"
+              className="mt-3 inline-flex items-center gap-1 text-sm text-primary hover:underline"
+            >
+              KPIs eintragen <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </>
+        ) : (
+          <ul className="space-y-2.5">
+            {kanaele.map(({ kanal, serie, aktuell }) => (
+              <li key={kanal} className="flex items-center gap-3">
+                <span className="w-20 text-sm text-muted-foreground">{kanalLabel(kanal)}</span>
+                <span className="font-display text-lg tabular-nums">
+                  {aktuell!.follower!.toLocaleString('de-DE')}
+                </span>
+                <span className="ml-auto">
+                  <Sparkline values={serie.slice(-8).map((r) => r.follower ?? 0)} width={72} height={22} />
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardContent>
+    </Card>
   )
 }
 
@@ -395,48 +449,6 @@ function NaechstesSpielCard() {
               {ohneErgebnis.heim ? `SVA vs. ${ohneErgebnis.gegner}` : `${ohneErgebnis.gegner} vs. SVA`} eintragen →
             </Link>
           </p>
-        )}
-      </CardContent>
-    </Card>
-  )
-}
-
-function PlaceholderCard({
-  icon: Icon,
-  title,
-  note,
-  badge,
-  to,
-  toLabel,
-}: {
-  icon: typeof TrendingUp
-  title: string
-  note: string
-  badge?: string
-  to?: string
-  toLabel?: string
-}) {
-  return (
-    <Card className="border-dashed">
-      <CardHeader className="flex-row items-center justify-between space-y-0 p-4">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Icon className="h-5 w-5 text-muted-foreground" /> {title}
-        </CardTitle>
-        {badge && (
-          <span className="rounded bg-secondary px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
-            {badge}
-          </span>
-        )}
-      </CardHeader>
-      <CardContent className="p-4 pt-0">
-        <p className="text-sm text-muted-foreground">{note}</p>
-        {to && (
-          <Link
-            to={to}
-            className={cn('mt-3 inline-flex items-center gap-1 text-sm text-primary hover:underline')}
-          >
-            {toLabel} <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
         )}
       </CardContent>
     </Card>

@@ -18,6 +18,7 @@ import type {
   SpielRow,
   SponsorInput,
   SponsorRow,
+  InsightInput,
 } from './db'
 
 // Zentraler Daten-Layer auf TanStack Query: geteilter Cache über alle Seiten
@@ -41,6 +42,7 @@ export const keys = {
   spiele: ['sm_spiele'] as const,
   roster: ['sm_roster'] as const,
   sponsoren: ['sm_sponsoren'] as const,
+  insights: ['sm_insights'] as const,
 }
 
 export function useContent() {
@@ -60,6 +62,9 @@ export function useRoster() {
 }
 export function useSponsoren() {
   return useQuery({ queryKey: keys.sponsoren, queryFn: db.fetchSponsoren })
+}
+export function useInsights() {
+  return useQuery({ queryKey: keys.insights, queryFn: db.fetchInsights })
 }
 
 // Optimistisches Update einer Zeile in einer gecachten Liste; gibt den
@@ -260,4 +265,20 @@ export function useSponsorenMutations() {
     onSuccess: invalidate,
   })
   return { create, update, remove }
+}
+
+export function useInsightsMutations() {
+  const qc = useQueryClient()
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: keys.insights })
+  }
+  const upsert = useMutation({
+    mutationFn: (input: InsightInput) => db.upsertInsight(input),
+    onSuccess: invalidate,
+  })
+  const remove = useMutation({
+    mutationFn: (id: string) => db.deleteInsight(id),
+    onSuccess: invalidate,
+  })
+  return { upsert, remove }
 }

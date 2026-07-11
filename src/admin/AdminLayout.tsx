@@ -36,7 +36,7 @@ const NAV: NavItem[] = [
   { to: '/produktion', label: 'Produktion & Assets', icon: Clapperboard },
   { to: '/matchday', label: 'Matchday-Grafiken', icon: ImageIcon },
   { to: '/sponsoren', label: 'Sponsoren', icon: Handshake },
-  { to: '/insights', label: 'Insights', icon: BarChart3, soon: true },
+  { to: '/insights', label: 'Insights', icon: BarChart3 },
 ]
 
 function NavItems({ onNavigate }: { onNavigate?: () => void }) {
