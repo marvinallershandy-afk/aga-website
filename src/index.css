@@ -154,8 +154,12 @@ body {
   -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 14%, #000 86%, transparent 100%);
   mask-image: linear-gradient(180deg, transparent 0, #000 14%, #000 86%, transparent 100%);
 }
+/* v13-F1 „Licht & Luft": Der Lesbarkeits-Scrim war mit 0.82 ein schwarzer
+   Vorhang über der halben Bühne — die Seite fühlte sich erdrückend an.
+   Leichter + früher auslaufend; die Text-Schatten tragen die restliche
+   Lesbarkeit. */
 .section--left .section__scrim {
-  background: linear-gradient(90deg, rgba(8,7,10,0.82) 0%, rgba(8,7,10,0.5) 38%, rgba(8,7,10,0) 70%);
+  background: linear-gradient(90deg, rgba(8,7,10,0.66) 0%, rgba(8,7,10,0.36) 36%, rgba(8,7,10,0) 64%);
 }
 /* Mobil: der Text steht fast über die volle Breite, deshalb greift der
    horizontale Links-Scrim (oben, fade bei 70% Breite) nicht — die rechte
@@ -165,12 +169,13 @@ body {
    unten bleibt, Text oben wird abgesichert. */
 @media (max-width: 640px) {
   .section--left .section__scrim {
+    /* v13-F1: auch mobil dosiert — Deckel weg, Atmosphäre durchlassen. */
     background: linear-gradient(
       180deg,
-      rgba(8,7,10,0.92) 0%,
-      rgba(8,7,10,0.86) 50%,
-      rgba(8,7,10,0.55) 72%,
-      rgba(8,7,10,0.12) 88%,
+      rgba(8,7,10,0.8) 0%,
+      rgba(8,7,10,0.7) 48%,
+      rgba(8,7,10,0.4) 72%,
+      rgba(8,7,10,0.08) 88%,
       rgba(8,7,10,0) 100%
     );
   }

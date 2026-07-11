@@ -78,8 +78,10 @@ export function CinemaEffects() {
         modulationOffset={0.78}
       />,
     )
-  if (fx.vignette) chain.push(<Vignette key="vig" eskil={false} offset={0.3} darkness={0.55} />)
-  if (fx.grain) chain.push(<Noise key="grain" premultiply opacity={0.45} />)
+  // v13-F1: Vignette + Korn dosiert — die alte Kombination drückte die
+  // Ränder zu und ließ die ganze Bühne schwerer wirken, als sie ist.
+  if (fx.vignette) chain.push(<Vignette key="vig" eskil={false} offset={0.26} darkness={0.42} />)
+  if (fx.grain) chain.push(<Noise key="grain" premultiply opacity={0.32} />)
   chain.push(<ToneMapping key="tm" mode={ToneMappingMode.ACES_FILMIC} />)
 
   return (

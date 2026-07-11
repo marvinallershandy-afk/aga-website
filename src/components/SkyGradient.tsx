@@ -10,8 +10,10 @@ export function SkyGradient() {
     canvas.height = 512
     const ctx = canvas.getContext('2d')!
     const g = ctx.createLinearGradient(0, 0, 0, 512)
-    g.addColorStop(0.0, '#0a0c1a')   // Zenit fast schwarz-blau
-    g.addColorStop(0.35, '#141830')  // Nachtblau
+    // v13-F1: Zenit einen Hauch geöffnet — auf Mobil füllte der fast
+    // schwarze Himmel große Flächen über den Stationen („Deckel"-Gefühl).
+    g.addColorStop(0.0, '#0e1224')   // Zenit dunkles Nachtblau
+    g.addColorStop(0.35, '#1a2038')  // Nachtblau
     g.addColorStop(0.6, '#2c2340')   // violetter Übergang
     g.addColorStop(0.8, '#5a3a3a')   // warmer Dunst
     g.addColorStop(0.92, '#3a2622')  // Horizont bräunlich
