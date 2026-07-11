@@ -9,11 +9,13 @@ import { SponsorPitch } from './SponsorsStrip'
 import { FanGallery } from './FanGallery'
 import { WaIcon, IgIcon, MailIcon } from './Icons'
 
+// v13-F3: Reveals leichter — weniger Hub, kürzer. 40px/0.7s fühlte sich
+// bei jedem Vorbeiscrollen wie Gewicht an, das erst hochgestemmt wird.
 const reveal = {
-  initial: { opacity: 0, y: 40 },
+  initial: { opacity: 0, y: 22 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: false, amount: 0.4 },
-  transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] as const },
+  transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] as const },
 }
 
 function Header({ kicker, title, body, center, h1 }: { kicker: string; title: string; body: string; center?: boolean; h1?: boolean }) {

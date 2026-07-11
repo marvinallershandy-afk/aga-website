@@ -41,14 +41,15 @@ export const SECTIONS: Section[] = [
     label: 'Mannschaft',
     kicker: '1. Herren',
     title: 'Unsere\nMannschaft',
-    body: 'Eine Truppe, die montags humpelt und sonntags fliegt. Jeder als Sammelkarte — Metall-Foil, echte Zahlen und genug Stolz für ein ganzes Album. Tipp eine Karte an und teil deinen Spieler in der Story. Der Trainerstab steht darunter — die, die den Laden zusammenhalten.',
+    // v13-F2: verdichtet — 2–3 Zeilen pro Station, Luft statt Textwand.
+    body: 'Eine Truppe, die montags humpelt und sonntags fliegt — jeder als Sammelkarte mit echten Zahlen. Tipp eine Karte an und teil deinen Spieler in der Story.',
   },
   {
     id: 'fanblock',
     label: 'Fans',
     kicker: 'Die Südkurve',
     title: 'Der\nFanblock',
-    body: 'Elf auf dem Platz, aber gewonnen wird an der Bande. Unsere Kurve steht bei jedem Wetter, hält die Fahne hoch und wird auch bei 0:3 nicht leiser. Banner hoch, Schal um, Stimme kaputt — hier gehörst du dazu, ab dem ersten Sonntag.',
+    body: 'Elf auf dem Platz, gewonnen wird an der Bande. Unsere Kurve steht bei jedem Wetter — und du gehörst dazu, ab dem ersten Sonntag.',
   },
   {
     id: 'musik',
@@ -67,21 +68,21 @@ export const SECTIONS: Section[] = [
     label: 'Tabelle',
     kicker: 'Saison-Cockpit',
     title: 'Die Wahrheit\nvom Wochenende',
-    body: 'Manchmal Tabellenführer der Herzen, manchmal einfach Tabellenführer. Tabelle, Form der letzten Spiele, Top-Torschützen und das nächste Spiel — live von fussball.de, ungefiltert und gelegentlich glorreich.',
+    body: 'Manchmal Tabellenführer der Herzen, manchmal einfach Tabellenführer. Tabelle, Form, Torschützen, nächstes Spiel — ungefiltert und gelegentlich glorreich.',
   },
   {
     id: 'sponsoren',
     label: 'Sponsoren',
     kicker: 'Für Unternehmen',
     title: 'Deine Bande\nwartet',
-    body: 'Jeden Sonntag stehen hier Leute an der Bande, im Dorf und in der Story. Dein Logo direkt am Spielfeld — plus Reichweite auf Instagram, echtes lokales Herz und ein Verein, hinter dem das ganze Dorf steht. Wir haben eine Bande extra für dich freigelassen.',
+    body: 'Dein Logo direkt am Spielfeld — plus Reichweite im Dorf und in der Story. Eine Bande haben wir extra für dich freigelassen.',
   },
   {
     id: 'kontakt',
     label: 'Mitmachen',
     kicker: 'Mitmachen',
     title: 'Komm\nvorbei',
-    body: 'Probetraining ist bei uns ein kompliziertes Verfahren: hinkommen, Schuhe an, fertig. Dienstag & Donnerstag ab 19 Uhr, kein Anruf nötig, keine Ausrede möglich.',
+    body: 'Probetraining ist bei uns ein kompliziertes Verfahren: hinkommen, Schuhe an, fertig. Di & Do ab 19 Uhr — keine Anmeldung, keine Ausrede.',
   },
 ]
 

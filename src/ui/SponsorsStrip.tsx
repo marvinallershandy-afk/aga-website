@@ -10,11 +10,12 @@ import { useStore } from '../store/useStore'
 // E-Mail als CTA.
 // ─────────────────────────────────────────────────────────────
 
+// v13-F3: synchron zum leichteren Sections-Reveal.
 const reveal = {
-  initial: { opacity: 0, y: 20 },
+  initial: { opacity: 0, y: 16 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true, amount: 0.4 },
-  transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] as const },
+  transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] as const },
 }
 
 const WA_TEXT = 'Hallo SV Agathenburg-Dollern! Ich interessiere mich für eine Bande / ein Sponsoring. Erzählt mir mehr?'
