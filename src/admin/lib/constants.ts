@@ -39,6 +39,15 @@ export const SVA_KURZ = 'SVA'
 // Kader-Positionen (sm_roster)
 export const POSITIONEN = ['Torwart', 'Abwehr', 'Mittelfeld', 'Sturm', 'Trainer/Staff'] as const
 
+// Steckbrief-Felder (sm_roster.steckbrief JSONB + Steckbrief-Grafik)
+export const STECKBRIEF_FELDER = [
+  { key: 'im_verein_seit', frage: 'Im Verein seit' },
+  { key: 'lieblingsessen', frage: 'Lieblingsessen' },
+  { key: 'lieblingsverein', frage: 'Lieblings-Profiklub' },
+  { key: 'staerke', frage: 'Größte Stärke' },
+  { key: 'motto', frage: 'Motto' },
+] as const
+
 // Sponsoren-Pakete (sm_sponsoren.paket)
 export const PAKETE = [
   { value: 'gold', label: 'Gold', color: '#E8C15A' },

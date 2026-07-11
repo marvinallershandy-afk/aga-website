@@ -63,7 +63,7 @@ const DUMP = {
     { id: 'r1', name: 'Carsten Beckmann', nummer: 1, position: 'Torwart', foto_url: '/players/carsten.webp', aktiv: true, sortierung: 10, steckbrief: {}, created_at: '2026-07-01T10:00:00Z', updated_at: '2026-07-01T10:00:00Z' },
     { id: 'r2', name: 'Lennard Voss', nummer: 4, position: 'Abwehr', foto_url: '/players/lennard.webp', aktiv: true, sortierung: 20, steckbrief: {}, created_at: '2026-07-01T10:00:00Z', updated_at: '2026-07-01T10:00:00Z' },
     { id: 'r3', name: 'Julio Fernandes', nummer: 8, position: 'Mittelfeld', foto_url: '/players/julio.webp', aktiv: true, sortierung: 30, steckbrief: {}, created_at: '2026-07-01T10:00:00Z', updated_at: '2026-07-01T10:00:00Z' },
-    { id: 'r4', name: 'Nico Hause', nummer: 10, position: 'Mittelfeld', foto_url: '/players/nico-hause.webp', aktiv: true, sortierung: 40, steckbrief: {}, created_at: '2026-07-01T10:00:00Z', updated_at: '2026-07-01T10:00:00Z' },
+    { id: 'r4', name: 'Nico Hause', nummer: 10, position: 'Mittelfeld', foto_url: '/players/nico-hause.webp', aktiv: true, sortierung: 40, steckbrief: { im_verein_seit: '2018', lieblingsessen: 'Lasagne', lieblingsverein: 'HSV', staerke: 'Übersicht', motto: 'Immer weiter.' }, created_at: '2026-07-01T10:00:00Z', updated_at: '2026-07-01T10:00:00Z' },
     { id: 'r5', name: 'Tino Albers', nummer: 9, position: 'Sturm', foto_url: '/players/tino.webp', aktiv: true, sortierung: 50, steckbrief: {}, created_at: '2026-07-01T10:00:00Z', updated_at: '2026-07-01T10:00:00Z' },
     { id: 'r6', name: 'Eli Brandt', nummer: 11, position: 'Sturm', foto_url: '/players/eli.webp', aktiv: false, sortierung: 60, steckbrief: {}, created_at: '2026-07-01T10:00:00Z', updated_at: '2026-07-01T10:00:00Z' },
   ],
@@ -244,6 +244,17 @@ async function run(label, viewport) {
     await shot('matchday-prefill')
   } catch {
     clicks.push(`[${label}] FEHLT Matchday: Spiel-Prefill`)
+  }
+  // Steckbrief-Template inkl. Kader-Übernahme
+  if (await tryClick(page.getByRole('button', { name: /steckbrief/i }), 'Matchday: Template Steckbrief')) {
+    try {
+      await page.locator('select').filter({ hasText: 'Spieler wählen' }).first().selectOption('r4')
+      await page.waitForTimeout(400)
+      clicks.push(`[${label}] OK  Matchday: Steckbrief aus Kader (Nico)`)
+    } catch {
+      clicks.push(`[${label}] FEHLT Matchday: Steckbrief-Kader-Select`)
+    }
+    await shot('matchday-steckbrief', true)
   }
   for (const t of ['Aufstellung', 'Ergebnis', 'MOTM']) {
     if (await tryClick(page.getByRole('button', { name: new RegExp(t, 'i') }), `Matchday: Template ${t}`)) {

@@ -10,7 +10,7 @@ import { Select } from '../components/ui/select'
 import { useToast } from '../components/ui/toast'
 import { useRoster, useSpiele } from '../lib/queries'
 import type { SpielRow } from '../lib/db'
-import { SVA_NAME } from '../lib/constants'
+import { SVA_NAME, STECKBRIEF_FELDER } from '../lib/constants'
 import { formatAnstoss } from '../lib/format'
 import { cn } from '../lib/utils'
 import { MatchdayTemplate } from '../matchday/templates'
@@ -151,7 +151,7 @@ export function Matchday() {
     <>
       <PageHeader
         title="Matchday-Grafiken"
-        subtitle="Vier Vorlagen · Feed (1080×1080) & Story (1080×1920) · PNG-Export."
+        subtitle="Fünf Vorlagen · Feed (1080×1080) & Story (1080×1920) · PNG-Export."
       />
 
       {/* Prefill aus Spieldaten */}
@@ -192,7 +192,9 @@ export function Matchday() {
             onClick={() => setTemplate(t.key)}
             className={cn(
               'rounded-lg border p-3 text-left transition-colors',
-              template === t.key ? 'border-primary bg-primary/10' : 'border-border hover:border-primary/50',
+              template === t.key
+                ? 'border-primary bg-primary/10'
+                : 'border-border bg-card hover:border-primary/50',
             )}
           >
             <div className="text-sm font-semibold">{t.label}</div>
@@ -206,14 +208,16 @@ export function Matchday() {
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <Label className="shrink-0">Format</Label>
-            <div className="flex overflow-hidden rounded-md border border-border">
+            <div className="flex overflow-hidden rounded-md bg-secondary">
               {FORMATS.map((f) => (
                 <button
                   key={f.key}
                   onClick={() => setFormat(f.key)}
                   className={cn(
                     'px-3 py-1.5 text-sm font-medium transition-colors',
-                    format === f.key ? 'bg-primary text-primary-foreground' : 'hover:bg-accent',
+                    format === f.key
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:text-foreground',
                   )}
                 >
                   {f.label}
@@ -282,6 +286,79 @@ export function Matchday() {
                   onChange={(e) => set('torschuetzen', e.target.value)}
                 />
               </Field>
+            </>
+          )}
+
+          {template === 'steckbrief' && (
+            <>
+              {aktiveSpieler.length > 0 && (
+                <Field label="Aus Kader übernehmen">
+                  <Select
+                    value=""
+                    onChange={(e) => {
+                      const p = aktiveSpieler.find((x) => x.id === e.target.value)
+                      if (!p) return
+                      const sb =
+                        p.steckbrief && typeof p.steckbrief === 'object' && !Array.isArray(p.steckbrief)
+                          ? (Object.fromEntries(
+                              Object.entries(p.steckbrief).filter(([, v]) => typeof v === 'string'),
+                            ) as Record<string, string>)
+                          : {}
+                      setData((d) => ({
+                        ...d,
+                        spielerName: p.name,
+                        spielerFoto: p.foto_url,
+                        spielerNummer: p.nummer != null ? String(p.nummer) : '',
+                        spielerPosition: p.position ?? '',
+                        steckbrief: sb,
+                      }))
+                    }}
+                  >
+                    <option value="">— Spieler wählen —</option>
+                    {aktiveSpieler.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.nummer != null ? `#${p.nummer} ` : ''}{p.name}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+              )}
+              <div className="grid grid-cols-[1fr_auto_auto] gap-3">
+                <Field label="Spielername">
+                  <Input value={data.spielerName} onChange={(e) => set('spielerName', e.target.value)} />
+                </Field>
+                <Field label="Nr.">
+                  <Input className="w-16" value={data.spielerNummer} onChange={(e) => set('spielerNummer', e.target.value)} />
+                </Field>
+                <Field label="Position">
+                  <Input className="w-32" value={data.spielerPosition} onChange={(e) => set('spielerPosition', e.target.value)} />
+                </Field>
+              </div>
+              <Field label="Foto">
+                <Select
+                  value={data.spielerFoto ?? ''}
+                  onChange={(e) => set('spielerFoto', e.target.value || null)}
+                >
+                  {FOTOS.map((f) => (
+                    <option key={f.value} value={f.value}>
+                      {f.label}
+                    </option>
+                  ))}
+                  {data.spielerFoto && !FOTOS.some((f) => f.value === data.spielerFoto) && (
+                    <option value={data.spielerFoto}>Foto aus Kader</option>
+                  )}
+                </Select>
+              </Field>
+              {STECKBRIEF_FELDER.map((f) => (
+                <Field key={f.key} label={f.frage}>
+                  <Input
+                    value={data.steckbrief[f.key] ?? ''}
+                    onChange={(e) =>
+                      setData((d) => ({ ...d, steckbrief: { ...d.steckbrief, [f.key]: e.target.value } }))
+                    }
+                  />
+                </Field>
+              ))}
             </>
           )}
 

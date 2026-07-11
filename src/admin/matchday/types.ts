@@ -1,6 +1,6 @@
 // Datenmodelle für die vier Matchday-Vorlagen.
 
-export type TemplateKey = 'spieltag' | 'aufstellung' | 'ergebnis' | 'motm'
+export type TemplateKey = 'spieltag' | 'aufstellung' | 'ergebnis' | 'motm' | 'steckbrief'
 export type FormatKey = 'square' | 'story' // 1080×1080 | 1080×1920
 
 export interface FormatSpec {
@@ -34,6 +34,10 @@ export interface MatchdayData {
   spielerName: string
   spielerFoto: string | null // Pfad/URL, optional
   motmZusatz: string // kurzer Text, z. B. "2 Tore, 1 Assist"
+  // Steckbrief
+  spielerNummer: string
+  spielerPosition: string
+  steckbrief: Record<string, string> // key → Antwort (STECKBRIEF_FELDER)
 }
 
 export const DEFAULT_DATA: MatchdayData = {
@@ -62,6 +66,15 @@ export const DEFAULT_DATA: MatchdayData = {
   spielerName: 'Marvin Allers',
   spielerFoto: null,
   motmZusatz: '2 Tore, 1 Vorlage',
+  spielerNummer: '7',
+  spielerPosition: 'Mittelfeld',
+  steckbrief: {
+    im_verein_seit: '2015',
+    lieblingsessen: 'Currywurst mit Pommes',
+    lieblingsverein: 'Werder Bremen',
+    staerke: 'Standards',
+    motto: 'Einer für alle, alle für einen.',
+  },
 }
 
 export const TEMPLATES: { key: TemplateKey; label: string; desc: string }[] = [
@@ -69,4 +82,5 @@ export const TEMPLATES: { key: TemplateKey; label: string; desc: string }[] = [
   { key: 'aufstellung', label: 'Startaufstellung', desc: 'Formation & Startelf' },
   { key: 'ergebnis', label: 'Endergebnis', desc: 'Ergebnis & Torschützen' },
   { key: 'motm', label: 'Spieler des Spiels', desc: 'MOTM-Würdigung' },
+  { key: 'steckbrief', label: 'Steckbrief', desc: 'Spieler-Vorstellung' },
 ]

@@ -6,7 +6,7 @@ import { Label } from './ui/label'
 import { Select } from './ui/select'
 import { useConfirm } from './ui/confirm'
 import type { RosterInput, RosterRow } from '../lib/db'
-import { POSITIONEN } from '../lib/constants'
+import { POSITIONEN, STECKBRIEF_FELDER } from '../lib/constants'
 
 interface FormState {
   name: string
@@ -14,9 +14,10 @@ interface FormState {
   position: string
   foto_url: string
   aktiv: boolean
+  steckbrief: Record<string, string>
 }
 
-const EMPTY: FormState = { name: '', nummer: '', position: '', foto_url: '', aktiv: true }
+const EMPTY: FormState = { name: '', nummer: '', position: '', foto_url: '', aktiv: true, steckbrief: {} }
 
 export function SpielerEditor({
   open,
@@ -46,6 +47,12 @@ export function SpielerEditor({
         position: row.position ?? '',
         foto_url: row.foto_url ?? '',
         aktiv: row.aktiv,
+        steckbrief:
+          row.steckbrief && typeof row.steckbrief === 'object' && !Array.isArray(row.steckbrief)
+            ? (Object.fromEntries(
+                Object.entries(row.steckbrief).filter(([, v]) => typeof v === 'string'),
+              ) as Record<string, string>)
+            : {},
       })
     } else {
       setForm(EMPTY)
@@ -69,6 +76,9 @@ export function SpielerEditor({
           position: form.position || null,
           foto_url: form.foto_url.trim() || null,
           aktiv: form.aktiv,
+          steckbrief: Object.fromEntries(
+            Object.entries(form.steckbrief).filter(([, v]) => v.trim() !== ''),
+          ),
         },
         row?.id,
       )
@@ -170,6 +180,29 @@ export function SpielerEditor({
           Pfad unter /players (Website-Assets) oder externe URL — wird in Grafiken verwendet.
         </p>
       </div>
+
+      <fieldset className="rounded-md border border-border p-3">
+        <legend className="px-1 text-xs uppercase tracking-wide text-muted-foreground">
+          Steckbrief (für die Steckbrief-Grafik)
+        </legend>
+        <div className="space-y-2.5">
+          {STECKBRIEF_FELDER.map((f) => (
+            <div key={f.key} className="space-y-1">
+              <Label htmlFor={`sb-${f.key}`}>{f.frage}</Label>
+              <Input
+                id={`sb-${f.key}`}
+                value={form.steckbrief[f.key] ?? ''}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    steckbrief: { ...prev.steckbrief, [f.key]: e.target.value },
+                  }))
+                }
+              />
+            </div>
+          ))}
+        </div>
+      </fieldset>
 
       <label className="flex items-center gap-2 text-sm">
         <input
