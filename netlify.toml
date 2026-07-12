@@ -1,10 +1,19 @@
-# v13-E10: Cache-Kontrolle. Die Seite wird manuell deployt
-# (npx netlify-cli deploy --build --prod), Netlify ist NICHT git-verbunden.
+# Deploy-Konfiguration (CI-tauglich, relative Pfade).
+# release = öffentliche v13-Website + /admin-Cockpit in einem Build.
+# Hinweis: .netlify/netlify.toml ist lokaler CLI-State (gitignored) und enthielt
+# einen absoluten publish-Pfad — diese Datei hier ist die verbindliche Config.
 
 [build]
-  command = "npm run build"
+  command = "pnpm build"
   publish = "dist"
 
+# SPA-Fallback: deckt sowohl den 3D-Onepager als auch /admin/* ab.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# ── Cache-Kontrolle (v13-E10) ─────────────────────────────────
 # Vite-Assets tragen Content-Hashes im Dateinamen → für immer cachebar.
 [[headers]]
   for = "/assets/*"
