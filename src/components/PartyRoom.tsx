@@ -124,6 +124,134 @@ function BierGarnitur({ pos, rot = 0 }: { pos: [number, number, number]; rot?: n
 
 const WALL_MAT = { roughness: 0.95 } as const
 
+// v13-K3: Wimpelketten-Textur — durchhängende Schnur mit CI-Wimpeln.
+// Als 2 Alpha-Planes quer durch den Saal statt 22 Einzel-Meshes.
+function makePennantTexture(): THREE.CanvasTexture {
+  const W = 512
+  const H = 96
+  const cv = document.createElement('canvas')
+  cv.width = W
+  cv.height = H
+  const ctx = cv.getContext('2d')!
+  ctx.clearRect(0, 0, W, H)
+  const sag = (t: number) => 14 + Math.sin(t * Math.PI) * 26
+  ctx.strokeStyle = 'rgba(30,22,18,0.9)'
+  ctx.lineWidth = 2.5
+  ctx.beginPath()
+  for (let i = 0; i <= 40; i++) {
+    const x = (i / 40) * W
+    const y = sag(i / 40)
+    if (i === 0) ctx.moveTo(x, y)
+    else ctx.lineTo(x, y)
+  }
+  ctx.stroke()
+  const cols = ['#e91d29', '#f2eee6', '#231F20']
+  for (let i = 0; i < 11; i++) {
+    const t = (i + 0.5) / 11
+    const x = t * W
+    const y = sag(t)
+    ctx.fillStyle = cols[i % 3]
+    ctx.beginPath()
+    ctx.moveTo(x - 13, y)
+    ctx.lineTo(x + 13, y)
+    ctx.lineTo(x, y + 34)
+    ctx.closePath()
+    ctx.fill()
+  }
+  const t = new THREE.CanvasTexture(cv)
+  t.colorSpace = THREE.SRGBColorSpace
+  t.anisotropy = 4
+  return t
+}
+
+// v13-K3: kleines Messing-Schild „MEISTER 2026" für die Pokal-Vitrine.
+function makeTrophyLabelTexture(): THREE.CanvasTexture {
+  const cv = document.createElement('canvas')
+  cv.width = 256
+  cv.height = 64
+  const ctx = cv.getContext('2d')!
+  ctx.fillStyle = '#171210'
+  ctx.fillRect(0, 0, 256, 64)
+  ctx.strokeStyle = 'rgba(232,193,90,0.8)'
+  ctx.lineWidth = 3
+  ctx.strokeRect(4, 4, 248, 56)
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillStyle = '#e8c15a'
+  ctx.font = '400 30px Anton, system-ui, sans-serif'
+  ctx.fillText('MEISTER 2026', 128, 22)
+  ctx.fillStyle = 'rgba(242,238,230,0.85)'
+  ctx.font = '700 15px Archivo, system-ui, sans-serif'
+  ctx.fillText('1. KREISKLASSE · STADE', 128, 46)
+  const t = new THREE.CanvasTexture(cv)
+  t.colorSpace = THREE.SRGBColorSpace
+  return t
+}
+
+// v13-K3: Die Pokal-Vitrine an der Südwand — der Story-Payoff des Raums
+// („Meister 2026") und zugleich der Blickfang am Ende des langen Saals,
+// der vorher als leere Wand auslief.
+function TrophyCase() {
+  const label = useMemo(makeTrophyLabelTexture, [])
+  return (
+    <group position={[0, 0, ZS - 0.055]} rotation-y={Math.PI}>
+      {/* dunkler Vitrinen-Korpus */}
+      <mesh position={[0, 0.66, -0.02]}>
+        <boxGeometry args={[0.92, 0.78, 0.04]} />
+        <meshStandardMaterial color="#191311" roughness={0.85} />
+      </mesh>
+      {/* warme Innen-Rückwand */}
+      <mesh position={[0, 0.66, -0.003]}>
+        <planeGeometry args={[0.84, 0.7]} />
+        <meshStandardMaterial color="#2a1d14" roughness={0.9} emissive="#57351a" emissiveIntensity={0.35} />
+      </mesh>
+      {/* Regalboden */}
+      <mesh position={[0, 0.44, 0.03]}>
+        <boxGeometry args={[0.84, 0.025, 0.12]} />
+        <meshStandardMaterial color="#3c2c1e" roughness={0.8} />
+      </mesh>
+      {/* Pokal: Sockel, Kelch, Deckel — Gold mit Glanz */}
+      <group position={[0, 0.455, 0.03]}>
+        <mesh position={[0, 0.025, 0]}>
+          <cylinderGeometry args={[0.045, 0.055, 0.05, 10]} />
+          <meshStandardMaterial color="#2a2018" roughness={0.5} />
+        </mesh>
+        <mesh position={[0, 0.075, 0]}>
+          <cylinderGeometry args={[0.012, 0.02, 0.05, 8]} />
+          <meshStandardMaterial color="#e8c15a" metalness={0.85} roughness={0.25} emissive="#8a6a1c" emissiveIntensity={0.4} />
+        </mesh>
+        <mesh position={[0, 0.145, 0]}>
+          <cylinderGeometry args={[0.055, 0.028, 0.09, 12]} />
+          <meshStandardMaterial color="#f2cf6a" metalness={0.9} roughness={0.2} emissive="#9a7620" emissiveIntensity={0.5} />
+        </mesh>
+        <mesh position={[0, 0.2, 0]}>
+          <sphereGeometry args={[0.02, 8, 6]} />
+          <meshStandardMaterial color="#f2cf6a" metalness={0.9} roughness={0.2} emissive="#9a7620" emissiveIntensity={0.5} />
+        </mesh>
+        {/* Henkel */}
+        {[-1, 1].map((s) => (
+          <mesh key={s} position={[s * 0.062, 0.15, 0]} rotation-z={s * 0.5}>
+            <torusGeometry args={[0.022, 0.005, 6, 10, Math.PI * 1.3]} />
+            <meshStandardMaterial color="#e8c15a" metalness={0.85} roughness={0.3} />
+          </mesh>
+        ))}
+      </group>
+      {/* Messing-Schild */}
+      <mesh position={[0, 0.33, 0.012]}>
+        <planeGeometry args={[0.34, 0.085]} />
+        <meshStandardMaterial map={label} roughness={0.6} emissiveMap={label} emissive="#ffffff" emissiveIntensity={0.25} />
+      </mesh>
+      {/* Glas-Andeutung */}
+      <mesh position={[0, 0.66, 0.055]}>
+        <planeGeometry args={[0.86, 0.72]} />
+        <meshStandardMaterial color="#aac4d4" transparent opacity={0.07} roughness={0.1} metalness={0.4} />
+      </mesh>
+      {/* warmes Vitrinen-Spot */}
+      <pointLight position={[0, 0.95, 0.35]} intensity={1.6} distance={1.6} color="#ffd98a" />
+    </group>
+  )
+}
+
 // Tresen-Platte mit Maserung (v5 Mikro-Detail — Kamera kommt nah)
 function makeWoodTexture(): THREE.CanvasTexture {
   const cv = document.createElement('canvas')
@@ -177,13 +305,22 @@ export default function PartyRoom() {
   }, [])
 
   const { hall, opening } = ROOM
+  // v13-K3: Dielenboden statt flacher Farbfläche
+  const floorWood = useMemo(() => {
+    const t = makeWoodTexture()
+    t.wrapS = THREE.RepeatWrapping
+    t.wrapT = THREE.RepeatWrapping
+    t.repeat.set(2.5, 5)
+    return t
+  }, [])
+  const pennants = useMemo(makePennantTexture, [])
 
   return (
     <group position={[0, ROOM_Y, 0]}>
       {/* ── Raum-Hülle: LANGER SAAL 3.2 (x) × 6.4 (z), Mitte bei z=1.6 ── */}
       <mesh rotation-x={-Math.PI / 2} position={[0, 0, ZC]}>
         <planeGeometry args={[ROOM.width, ROOM.length]} />
-        <meshStandardMaterial color="#33241a" {...WALL_MAT} roughness={0.9} />
+        <meshStandardMaterial map={floorWood} color="#8a6a4a" {...WALL_MAT} roughness={0.85} />
       </mesh>
       {/* Süd-Wand (hinten aus Eingangssicht, weit weg) */}
       <mesh position={[0, ROOM.height / 2, ZS]} rotation-y={Math.PI}>
@@ -220,11 +357,28 @@ export default function PartyRoom() {
           </mesh>
         ))
       })()}
-      {/* Decke */}
+      {/* Decke — v13-K3: wärmer + Balken, damit oben kein schwarzes Loch klafft */}
       <mesh rotation-x={Math.PI / 2} position={[0, ROOM.height, ZC]}>
         <planeGeometry args={[ROOM.width, ROOM.length]} />
-        <meshStandardMaterial color="#1c1715" roughness={1} />
+        <meshStandardMaterial color="#292019" roughness={1} />
       </mesh>
+      {[0.2, 1.9, 3.6].map((z) => (
+        <mesh key={z} position={[0, ROOM.height - 0.035, z]}>
+          <boxGeometry args={[ROOM.width, 0.07, 0.09]} />
+          <meshStandardMaterial color="#241a13" roughness={0.9} />
+        </mesh>
+      ))}
+
+      {/* v13-K3: Wimpelketten quer durch den Saal (2 Alpha-Planes) */}
+      {[1.15, 2.75].map((z, i) => (
+        <mesh key={z} position={[0, ROOM.height - 0.22, z]} rotation-y={i ? 0.06 : -0.05}>
+          <planeGeometry args={[ROOM.width - 0.2, 0.28]} />
+          <meshStandardMaterial map={pennants} transparent side={THREE.DoubleSide} roughness={0.9} alphaTest={0.15} />
+        </mesh>
+      ))}
+
+      {/* v13-K3: Pokal-Vitrine als Blickfang am Ende des Saals */}
+      <TrophyCase />
 
       {/* ── SEITENTÜR (Audit #25): angedeutete Tür in der West-Wand,
              links neben der Bar. Flache Laibung + Türblatt + „NOTAUSGANG"-
@@ -383,10 +537,18 @@ export default function PartyRoom() {
       <BierGarnitur pos={[-0.95, 0, 1.9]} rot={0.05} />
       <BierGarnitur pos={[-0.95, 0, 3.2]} rot={-0.04} />
       <BierGarnitur pos={[0.35, 0, 3.5]} rot={0.9} />
+      {/* v13-K3: der lange Saal war ab z≈3.5 leer — eine Garnitur mehr
+          und Gäste bis fast zur Vitrine, der Raum wirkt bewohnt. */}
+      <BierGarnitur pos={[0.75, 0, 2.35]} rot={-0.85} />
       <Person pos={[-0.62, 0, 1.75]} jersey="#c41824" rot={-1.2} seated lean={0.04} />
       <Person pos={[-0.62, 0, 2.2]} jersey="#d8d4c9" rot={-1.9} seated lean={-0.05} />
       <Person pos={[-1.28, 0, 3.1]} jersey="#2f5d8a" rot={1.4} seated lean={0.05} />
       <Person pos={[-1.28, 0, 3.45]} jersey="#3a6b35" rot={1.6} seated lean={-0.03} />
+      <Person pos={[0.5, 0, 2.05]} jersey="#c41824" rot={2.4} seated lean={0.03} />
+      <Person pos={[1.02, 0, 2.6]} jersey="#231F20" rot={-0.7} seated lean={-0.04} />
+      {/* zwei stehen an der Vitrine und schauen auf den Pokal */}
+      <Person pos={[-0.28, 0, 4.35]} jersey="#c41824" h={0.21} rot={0.25} lean={0.05} />
+      <Person pos={[0.24, 0, 4.42]} jersey="#d8d4c9" h={0.2} rot={-0.3} lean={-0.04} />
 
       {/* AGA-URKNALL-Siebdruck (Wand-Art, leicht schief getaped) — Ost-Wand,
           südlich der Bar entlang des langen Saals */}
@@ -444,6 +606,9 @@ export default function PartyRoom() {
       <pointLight position={[-0.3, 1.3, 2.3]} intensity={3.2} distance={6} color="#ffb87a" />
       <pointLight position={[0.2, 1.3, 3.6]} intensity={2.6} distance={6} color="#ff9d5a" />
       <pointLight position={[0.9, 0.9, 3.2]} intensity={1.4} distance={5} color="#e91d29" />
+      {/* v13-K3: Süd-Ende + Vitrine aufhellen — der Saal läuft nicht mehr
+          ins Schwarze aus, der Raum wirkt größer statt erdrückend */}
+      <pointLight position={[0, 1.25, 4.3]} intensity={2.2} distance={4} color="#ffc98a" />
     </group>
   )
 }
