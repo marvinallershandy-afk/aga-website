@@ -24,6 +24,7 @@ import { ConeDust } from './ConeDust'
 import { GroundMist } from './GroundMist'
 import { LIGHTING } from '../theme/lighting'
 import { NightEnvironment } from '../theme/NightEnvironment'
+import { StaticShadows } from '../theme/StaticShadows'
 
 // Partyraum: eigener Chunk — lädt erst, wenn die Musik-Sektion
 // näher rückt (partyNear, PartyDirector) → beim Schnitt schon da.
@@ -42,9 +43,28 @@ export function Scene() {
 
       {/* v13-X2: Nacht-IBL — Environment für alle Standard-Materialien */}
       <NightEnvironment />
+      {/* v13-X3: statisch gebackene Schatten (Bake-Steuerung, Caster-Traversal) */}
+      <StaticShadows />
       <ambientLight intensity={L.ambient.intensity} color={L.ambient.color} />
       <hemisphereLight args={[L.hemi.sky, L.hemi.ground, L.hemi.intensity]} />
-      <directionalLight position={L.moon.position} intensity={L.moon.intensity} color={L.moon.color} />
+      {/* v13-X3: der Mond ist jetzt das Key-Shadow-Licht — enge Ortho-
+          Frustum nur über Platz+Vereinsheim, 1024er-Map, einmalig gebacken */}
+      <directionalLight
+        position={L.moon.position}
+        intensity={L.moon.shadowIntensity}
+        color={L.moon.color}
+        castShadow
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
+        shadow-camera-left={-10}
+        shadow-camera-right={10}
+        shadow-camera-top={9}
+        shadow-camera-bottom={-8}
+        shadow-camera-near={1}
+        shadow-camera-far={30}
+        shadow-bias={-0.0004}
+        shadow-normalBias={0.03}
+      />
       <pointLight position={[0, 2.4, 0]} intensity={L.ballAccent.intensity} distance={L.ballAccent.distance} color={L.ballAccent.color} />
 
       <SkyGradient />

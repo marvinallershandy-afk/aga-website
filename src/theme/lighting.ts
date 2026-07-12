@@ -4,7 +4,9 @@ export const LIGHTING = {
 
   ambient: { intensity: 0.3, color: '#5a6a9c' },
   hemi: { sky: '#232c54', ground: '#141810', intensity: 0.68 },
-  moon: { intensity: 0.32, color: '#8f9fd0', position: [-6, 9, -4] as const },
+  // v13-X3: shadowIntensity = Mond als Key-Shadow-Licht (sichtbare, weiche
+  // Schlagschatten brauchen mehr Punch als das alte reine Fülllicht).
+  moon: { intensity: 0.32, shadowIntensity: 0.55, color: '#8f9fd0', position: [-6, 9, -4] as const },
   ballAccent: { intensity: 7, distance: 9, color: '#ffe6b0' },
 
   // Flutlicht (wird ab Etappe 2/3 zentral über "level" 0..1 getrieben)

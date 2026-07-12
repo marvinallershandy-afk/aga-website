@@ -198,7 +198,8 @@ export function Pitch() {
   // der Albedo bereits sichtbar. (Frametime-Gate.)
   void roughnessMap
   return (
-    <mesh rotation-x={-Math.PI / 2} position={[0, 0, 0]}>
+    // v13-X3: der Rasen empfängt die statisch gebackenen Schatten
+    <mesh rotation-x={-Math.PI / 2} position={[0, 0, 0]} receiveShadow>
       <planeGeometry args={[MESH_W, MESH_H]} />
       <meshStandardMaterial map={map} roughness={0.94} metalness={0} />
     </mesh>
