@@ -389,11 +389,14 @@ function InstancedCrowd() {
 
   return (
     <group>
+      {/* v13-X4: Stoff/Haut matt halten — envMapIntensity gedrosselt,
+          sonst glänzt die Menge wie Plastikfiguren. (castShadow wird vom
+          StaticShadows-Traversal bewusst aktiviert — statischer Bake.) */}
       <instancedMesh ref={bodyRef} args={[bodyGeo, undefined, N]} castShadow={false}>
-        <meshStandardMaterial roughness={0.92} />
+        <meshStandardMaterial roughness={0.92} envMapIntensity={0.35} />
       </instancedMesh>
       <instancedMesh ref={headRef} args={[headGeo, undefined, N]} castShadow={false}>
-        <meshStandardMaterial roughness={0.9} />
+        <meshStandardMaterial roughness={0.9} envMapIntensity={0.35} />
       </instancedMesh>
     </group>
   )

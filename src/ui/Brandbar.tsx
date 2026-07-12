@@ -40,9 +40,11 @@ export function jumpToSection(id: string) {
         setTimeout(check, 180)
         return
       }
-      if (Math.abs(window.scrollY - target()) > 8 && tries < 3) {
+      if (Math.abs(window.scrollY - target()) > 8 && tries < 6) {
         tries++
-        window.scrollTo({ top: target(), behavior: 'smooth' })
+        // Letzter Versuch: instant statt smooth — auf sehr langsamen
+        // Geräten kriecht der Smooth-Scroll und die Versuche verhungern.
+        window.scrollTo({ top: target(), behavior: tries >= 5 ? 'auto' : 'smooth' })
         setTimeout(check, 400)
       }
     }

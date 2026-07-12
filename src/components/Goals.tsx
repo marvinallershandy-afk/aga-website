@@ -100,12 +100,12 @@ function Goal({ side }: { side: 1 | -1 }) {
       {[-gw, gw].map((z) => (
         <mesh key={z} position={[0, gh / 2, z]}>
           <cylinderGeometry args={[postR, postR, gh, 16]} />
-          <meshStandardMaterial color="#eef1f4" metalness={0.15} roughness={0.62} />
+          <meshStandardMaterial color="#eef1f4" metalness={0.15} roughness={0.62} envMapIntensity={1.15} />
         </mesh>
       ))}
       <mesh position={[0, gh, 0]} rotation-x={Math.PI / 2}>
         <cylinderGeometry args={[postR, postR, PITCH.goalWidth, 16]} />
-        <meshStandardMaterial color="#eef1f4" metalness={0.15} roughness={0.62} />
+        <meshStandardMaterial color="#eef1f4" metalness={0.15} roughness={0.62} envMapIntensity={1.15} />
       </mesh>
       {/* v9-E6: Rahmen-Streben — DAS gab dem Tor bisher keine Form. Zwei
           Diagonalen (Latte-Ecke → Boden hinten) + Boden-Querstange spannen
@@ -113,12 +113,12 @@ function Goal({ side }: { side: 1 | -1 }) {
       {[-gw, gw].map((z) => (
         <mesh key={`bar${z}`} position={[NET_DEPTH / 2, gh / 2, z]} rotation-z={barTilt}>
           <cylinderGeometry args={[barR, barR, barL, 10]} />
-          <meshStandardMaterial color="#eef1f4" metalness={0.15} roughness={0.62} />
+          <meshStandardMaterial color="#eef1f4" metalness={0.15} roughness={0.62} envMapIntensity={1.15} />
         </mesh>
       ))}
       <mesh position={[NET_DEPTH, 0.012, 0]} rotation-x={Math.PI / 2}>
         <cylinderGeometry args={[barR, barR, PITCH.goalWidth, 10]} />
-        <meshStandardMaterial color="#eef1f4" metalness={0.15} roughness={0.62} />
+        <meshStandardMaterial color="#eef1f4" metalness={0.15} roughness={0.62} envMapIntensity={1.15} />
       </mesh>
       {/* Netz: schräge Rückwand (explizite Geometrie — Latte oben,
           Boden hinten unten; keine Rotations-Akrobatik) */}
