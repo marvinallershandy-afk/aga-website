@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { SPONSORS, SPONSOR_PLACEHOLDER_SLOTS, NEXT_MATCH, CONTACT, whatsappUrl, whatsappReady } from '../data/club'
 import { useStore } from '../store/useStore'
@@ -51,6 +51,15 @@ export function SponsorPitch() {
   const focus = useStore((s) => s.sponsorFocus)
   const count = useStore((s) => s.sponsorCount)
   const setFocus = useStore((s) => s.setSponsorFocus)
+  // v13-K5 „Deine Bande": lokaler Wert sofort, Store (→ 3D-Bake) debounced.
+  const setPreview = useStore((s) => s.setSponsorPreviewName)
+  const [tryName, setTryName] = useState('')
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const onTryName = (v: string) => {
+    setTryName(v)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => setPreview(v.trim()), 160)
+  }
 
   return (
     <>
@@ -78,6 +87,32 @@ export function SponsorPitch() {
           </div>
         </div>
         <button className="band-nav__arrow" onClick={() => setFocus(focus + 1)} aria-label="Nächste Bande">›</button>
+      </motion.div>
+
+      {/* v13-K5: „Wie sähe DEINE Bande aus?" — Name tippen, er erscheint
+          LIVE auf der fokussierten 3D-Bande. Der Begehrlichkeits-Moment. */}
+      <motion.div className="band-try" {...reveal}>
+        <label className="band-try__label" htmlFor="band-try-input">
+          Wie sähe <em>deine</em> Bande aus?
+        </label>
+        <div className="band-try__row">
+          <input
+            id="band-try-input"
+            className="band-try__input"
+            type="text"
+            maxLength={26}
+            placeholder="Firmenname eintippen …"
+            value={tryName}
+            onChange={(e) => onTryName(e.target.value)}
+            autoComplete="organization"
+          />
+          <span className="band-try__hint" aria-hidden="true">→ schau auf die Bande</span>
+        </div>
+        <ol className="band-steps">
+          <li>Anfragen</li>
+          <li>Wir drucken</li>
+          <li>Sonntag hängt sie am Platz</li>
+        </ol>
       </motion.div>
 
       {/* v13-E4: ohne echte WA-Nummer gäbe es hier zwei E-Mail-Buttons —

@@ -63,6 +63,10 @@ interface AppState {
   sponsorFocus: number
   sponsorCount: number
   setSponsorFocus: (i: number) => void
+  /** v13-K5 „Deine Bande": eingetippter Firmenname erscheint live auf
+   *  der fokussierten leeren 3D-Bande. */
+  sponsorPreviewName: string
+  setSponsorPreviewName: (v: string) => void
 
   /** Ton an/aus (Nutzer-Entscheidung am Tor bzw. Mute-Toggle). */
   soundOn: boolean
@@ -149,6 +153,8 @@ export const useStore = create<AppState>((set) => ({
     const wrapped = ((i % n) + n) % n
     return s.sponsorFocus === wrapped ? s : { sponsorFocus: wrapped }
   }),
+  sponsorPreviewName: '',
+  setSponsorPreviewName: (v) => set({ sponsorPreviewName: v }),
 
   soundOn: false,
   setSoundOn: (v) => {

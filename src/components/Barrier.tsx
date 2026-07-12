@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import { PITCH, COLORS } from '../utils/constants'
 import { SPONSORS, SPONSOR_PLACEHOLDER_SLOTS, type Sponsor } from '../data/club'
 import { AOBlob } from './AOBlob'
+import { useStore } from '../store/useStore'
 
 // ─────────────────────────────────────────────────────────────
 // Die echte Umrandung nach REFERENZ_MODELL: niedrige verzinkte
@@ -37,7 +38,9 @@ function fitText(ctx: CanvasRenderingContext2D, text: string, cx: number, cy: nu
 // sonst „HIER KÖNNTE DEIN LOGO STEHEN". Canvas 4096×256 (vorher 2048×64)
 // → Text bleibt beim Sponsoren-Zoom scharf. Erstes Board = Verein, letztes
 // = CTA; die begehrten Slots liegen mittig (dort zoomt die Station drauf).
-function makeBoardsTexture(): THREE.CanvasTexture {
+// v13-K5: previewName + focusSlot — der eingetippte Firmenname wird als
+// „gedruckte" Bande in den gerade fokussierten leeren Slot gebacken.
+function makeBoardsTexture(previewName = '', focusSlot = 0): THREE.CanvasTexture {
   const cv = document.createElement('canvas')
   // Breite an das Banden-Seitenverhältnis gekoppelt (Board ist sehr breit &
   // niedrig) → Schrift wird NICHT horizontal gestreckt (der alte „matschig"-
@@ -45,6 +48,10 @@ function makeBoardsTexture(): THREE.CanvasTexture {
   cv.width = 8192
   cv.height = 220
   const ctx = cv.getContext('2d')!
+  // v13-K5: dunkle Grundfüllung — die Banden-Box zeigt an Ober-/Unterkante
+  // Textur-Randzeilen; vorher schmierte dort heller Slot-Hintergrund lang.
+  ctx.fillStyle = '#100d0e'
+  ctx.fillRect(0, 0, cv.width, cv.height)
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
 
@@ -98,6 +105,23 @@ function makeBoardsTexture(): THREE.CanvasTexture {
       }
       img.src = b.sponsor!.logoUrl!
     } else {
+      // v13-K5: „Deine Bande"-Moment — der getippte Name erscheint als
+      // echte gedruckte Sponsor-Bande im fokussierten Slot.
+      const slotIdx = i - 1 // boards[0] = Verein
+      // Die Banden-Front läuft in Welt-x GEGEN die Canvas-u-Richtung
+      // (empirisch: Fokus 0 zeigt Canvas-Panel 4, Fokus 1 Panel 3) →
+      // das angeschaute Canvas-Panel ist slotIdx = 3 − focus.
+      if (previewName && slotIdx === 3 - focusSlot) {
+        ctx.fillStyle = '#f2efe8'; ctx.fillRect(x0 + pad, pad, w - pad * 2, H - pad * 2)
+        ctx.fillStyle = COLORS.red; ctx.fillRect(x0 + pad, pad, 14, H - pad * 2)
+        ctx.fillStyle = '#191416'
+        fitText(ctx, previewName.toUpperCase(), cx + 7, H / 2 - 12, maxW, 64)
+        ctx.fillStyle = 'rgba(25,20,22,0.55)'
+        fitText(ctx, 'STOLZER PARTNER DES SVA', cx + 7, H / 2 + 62, maxW, 22, 800)
+        ctx.fillStyle = COLORS.red
+        ctx.fillRect(cx - Math.min(maxW, 520) / 2, H / 2 + 30, Math.min(maxW, 520), 6)
+        return
+      }
       // v11-E6: leerer Slot im CI-Look (Schwarz/Rot) statt weiß-cremiger Tafel.
       // Wechselnder, einladender Claim — kein Preis, klare „du fehlst"-Ansprache.
       const emptyIdx = i // Board-Index für Alternierung
@@ -117,7 +141,12 @@ function makeBoardsTexture(): THREE.CanvasTexture {
 }
 
 export function Barrier() {
-  const boardsTex = useMemo(() => makeBoardsTexture(), [])
+  // v13-K5: Name + Fokus aus dem Store — die Bande wird bei jeder Eingabe
+  // neu gebacken (einige ms, per Debounce im Eingabefeld entkoppelt).
+  const previewName = useStore((s) => s.sponsorPreviewName)
+  const focusSlot = useStore((s) => s.sponsorFocus)
+  const boardsTex = useMemo(() => makeBoardsTexture(previewName, focusSlot), [previewName, focusSlot])
+  useEffect(() => () => boardsTex.dispose(), [boardsTex])
   const postsRef = useRef<THREE.InstancedMesh>(null)
 
   // Pfosten instanziert (1 Draw-Call)
