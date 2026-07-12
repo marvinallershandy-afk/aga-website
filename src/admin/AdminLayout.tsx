@@ -9,6 +9,7 @@ import {
   Image as ImageIcon,
   Handshake,
   BarChart3,
+  Zap,
   LogOut,
   Menu,
   X,
@@ -37,6 +38,8 @@ const NAV: NavItem[] = [
   { to: '/matchday', label: 'Matchday-Grafiken', icon: ImageIcon },
   { to: '/sponsoren', label: 'Sponsoren', icon: Handshake },
   { to: '/insights', label: 'Insights', icon: BarChart3 },
+  // v13-K9: n8n-Andockpunkte (Webhook-Registry + Rezepte)
+  { to: '/automationen', label: 'Automationen', icon: Zap },
 ]
 
 function NavItems({ onNavigate }: { onNavigate?: () => void }) {
