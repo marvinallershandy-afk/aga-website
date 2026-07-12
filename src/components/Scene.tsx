@@ -12,6 +12,7 @@ import { SkyGradient } from './SkyGradient'
 import { Floodlights } from './Floodlights'
 import { CornerFlags } from './CornerFlags'
 import { Barrier } from './Barrier'
+import { Scoreboard } from './Scoreboard'
 import { BallStopFence } from './BallStopFence'
 import { BrickHut } from './BrickHut'
 import { Village } from './Village'
@@ -53,6 +54,9 @@ export function Scene() {
       <BallStopFence />
       <Floodlights />
       <Clubhouse />
+      {/* v13-K6: LED-Anzeigetafel am Giebel — der Tabelle-Beat bekommt
+          einen Ort in der Welt. */}
+      <Scoreboard />
       <LocationMarker />
       <BrickHut />
       <Village />
