@@ -48,12 +48,16 @@ export function Stage() {
     <div className="stage-canvas">
       <Canvas
         gl={{
-          antialias: true,
+          // v13-X1: MSAA ist unterm EffectComposer wirkungslos (eigene
+          // Buffer) — AA übernimmt die SMAA-Pass in der Kette. Und der
+          // Renderer tonemappt NICHT mehr: vorher lief ACES doppelt
+          // (Material-Pass UND ToneMapping-Effekt) → plattgedrückte
+          // Mitten. ACES lebt jetzt ausschließlich am Ende des Composers.
+          antialias: false,
           alpha: false,
           powerPreference: 'high-performance',
           stencil: false,
-          toneMapping: THREE.ACESFilmicToneMapping,
-          toneMappingExposure: 1.15,
+          toneMapping: THREE.NoToneMapping,
         }}
         dpr={getClampedPixelRatio(2)}
         camera={{

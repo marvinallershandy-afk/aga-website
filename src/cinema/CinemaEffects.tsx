@@ -7,6 +7,7 @@ import {
   Noise,
   ChromaticAberration,
   ToneMapping,
+  SMAA,
 } from '@react-three/postprocessing'
 import { ToneMappingMode, BlendFunction } from 'postprocessing'
 import { useStore } from '../store/useStore'
@@ -83,6 +84,9 @@ export function CinemaEffects() {
   if (fx.vignette) chain.push(<Vignette key="vig" eskil={false} offset={0.26} darkness={0.42} />)
   if (fx.grain) chain.push(<Noise key="grain" premultiply opacity={0.32} />)
   chain.push(<ToneMapping key="tm" mode={ToneMappingMode.ACES_FILMIC} />)
+  // v13-X1: SMAA als Abschluss (auf dem LDR-Bild) — der Composer hat kein
+  // MSAA, ohne diese Pass flimmerten Linien/Banden. Mobil günstig.
+  chain.push(<SMAA key="smaa" />)
 
   return (
     <EffectComposer multisampling={0} enableNormalPass={false}>
