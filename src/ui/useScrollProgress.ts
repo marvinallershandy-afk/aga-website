@@ -27,6 +27,11 @@ export function useScrollProgress(enabled: boolean) {
     const setActive = useStore.getState().setActiveSection
     let raf = 0
     let sectionAnchors: { id: string; p: number }[] = []
+    // v13-K1: Präsenz-Fenster pro Sektion — der DOM-Text lebt nur rund um
+    // seinen Snap-Ruhepunkt (bzw. innerhalb des Inhalts bei Start-Snap-
+    // Sektionen) und blendet auf den Reise-Etappen aus. Vorher standen im
+    // Transit die Texte ZWEIER Stationen gleichzeitig im Bild.
+    let presenceZones: { el: HTMLElement; w0: number; w1: number }[] = []
 
     const measure = () => {
       const doc = document.documentElement
@@ -53,6 +58,18 @@ export function useScrollProgress(enabled: boolean) {
       sectionAnchors = SECTION_IDS
         .map((id, i) => ({ id, p: secP[i] }))
         .filter((a) => SECTIONS.some((s) => s.id === a.id))
+      // v13-K1: Präsenz-Fenster messen (in scrollY-Pixeln, nicht normiert).
+      presenceZones = SECTION_IDS.flatMap((id) => {
+        const el = document.getElementById(id)
+        if (!el) return []
+        const vh = window.innerHeight
+        const center = el.offsetTop + el.offsetHeight / 2 - vh / 2
+        const w0 = id === 'verein' ? 0 : SNAP_START_IDS.has(id) ? el.offsetTop : center
+        const w1 = SNAP_START_IDS.has(id)
+          ? el.offsetTop + Math.max(0, el.offsetHeight - vh)
+          : center
+        return [{ el, w0, w1 }]
+      })
     }
 
     const update = () => {
@@ -61,6 +78,19 @@ export function useScrollProgress(enabled: boolean) {
       const max = doc.scrollHeight - window.innerHeight
       const p = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0
       setScroll(p)
+      // v13-K1: Präsenz anwenden — ½ Viewport Fade-Weg ab Ruhefenster.
+      // Tap-Schutz im Transit über pointer-events, NICHT visibility:
+      // visibility:hidden würde die Snap-Fläche der Sektion entfernen und
+      // programmatische Sprünge (Nav/Dock) vom Proximity-Snap wegziehen.
+      const fadeDist = window.innerHeight * 0.5
+      const y = window.scrollY
+      for (const z of presenceZones) {
+        const dist = y < z.w0 ? z.w0 - y : y > z.w1 ? y - z.w1 : 0
+        const t = Math.min(1, dist / fadeDist)
+        const presence = 1 - t * t * (3 - 2 * t)
+        z.el.style.opacity = presence.toFixed(3)
+        z.el.style.pointerEvents = presence < 0.04 ? 'none' : ''
+      }
       // Nav-Highlight: nächstgelegene Sektions-Station
       if (sectionAnchors.length) {
         let best = 0

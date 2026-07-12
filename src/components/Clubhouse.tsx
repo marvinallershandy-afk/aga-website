@@ -1,4 +1,5 @@
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
+import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { COLORS } from '../utils/constants'
 import { AOBlob, LightPool } from './AOBlob'
@@ -105,6 +106,70 @@ const ANNEX_D = 0.3
 // zentriert bei clubhouse-lokal z=−0.15. Der Eingang sitzt an der hinteren
 // (nördlichen) Hälfte (annex-lokal z=−1.5 → Welt z≈−2.5).
 const ANNEX_LEN = 4.8
+
+// v13-K1: 16 träge treibende Staub-Motten im warmen Türlicht (instanziert,
+// additiv). Sie geben dem Tür-Transit physische Tiefe — man fliegt durch
+// Raumluft, nicht durch eine Fläche.
+let moteTex: THREE.CanvasTexture | null = null
+function getMoteTexture(): THREE.CanvasTexture {
+  if (moteTex) return moteTex
+  const cv = document.createElement('canvas')
+  cv.width = 16
+  cv.height = 16
+  const ctx = cv.getContext('2d')!
+  const g = ctx.createRadialGradient(8, 8, 0, 8, 8, 8)
+  g.addColorStop(0, 'rgba(255,255,255,1)')
+  g.addColorStop(0.5, 'rgba(255,255,255,0.5)')
+  g.addColorStop(1, 'rgba(255,255,255,0)')
+  ctx.fillStyle = g
+  ctx.fillRect(0, 0, 16, 16)
+  moteTex = new THREE.CanvasTexture(cv)
+  return moteTex
+}
+
+function DoorDust() {
+  const ref = useRef<THREE.InstancedMesh>(null)
+  const dummy = useMemo(() => new THREE.Object3D(), [])
+  const seeds = useMemo(
+    () =>
+      Array.from({ length: 16 }, (_, i) => ({
+        ph: i * 0.61,
+        r: 0.02 + ((i * 37) % 10) * 0.006,
+        sp: 0.3 + ((i * 17) % 10) * 0.05,
+        z: -1.5 + (((i * 23) % 10) / 10 - 0.5) * 0.14,
+      })),
+    [],
+  )
+  useFrame((state) => {
+    const m = ref.current
+    if (!m) return
+    const t = state.clock.elapsedTime
+    seeds.forEach((s, i) => {
+      const y = 0.04 + ((t * 0.012 * s.sp + s.ph) % 0.2)
+      const x = -ANNEX_D / 2 - 0.035 - s.r * (0.4 + 0.6 * Math.sin(t * 0.4 + s.ph))
+      dummy.position.set(x, y, s.z + Math.sin(t * 0.5 + s.ph) * 0.02)
+      dummy.rotation.y = -Math.PI / 2
+      dummy.scale.setScalar(0.6 + 0.4 * Math.sin(t * 0.9 + s.ph * 2))
+      dummy.updateMatrix()
+      m.setMatrixAt(i, dummy.matrix)
+    })
+    m.instanceMatrix.needsUpdate = true
+  })
+  return (
+    <instancedMesh ref={ref} args={[undefined, undefined, 16]} frustumCulled={false}>
+      <planeGeometry args={[0.008, 0.008]} />
+      <meshBasicMaterial
+        map={getMoteTexture()}
+        color="#ffc37a"
+        transparent
+        opacity={0.55}
+        blending={THREE.AdditiveBlending}
+        depthWrite={false}
+        toneMapped={false}
+      />
+    </instancedMesh>
+  )
+}
 
 function GableEnds() {
   const geo = useMemo(() => {
@@ -231,6 +296,9 @@ export function Clubhouse() {
             <meshStandardMaterial color="#2f5d8a" roughness={0.75} />
           </mesh>
         </group>
+        {/* v13-K1: Staub-Motten im Türlicht — die Licht-Schleuse wirkt wie
+            ein Ort mit Atmosphäre, nicht wie eine Textur (1 Draw-Call). */}
+        <DoorDust />
       </group>
 
       {/* Terrasse: Biertisch-Andeutungen entlang der langen Terrasse */}
