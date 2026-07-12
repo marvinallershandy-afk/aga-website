@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { cameraState } from '../camera/CameraPath'
@@ -18,6 +18,55 @@ import { COLORS } from '../utils/constants'
 const SIZE = 62 // v11-E8: größere flache Karte → Platz wird zum Solitär
 const FADE_START = 0.84
 const FADE_SPAN = 0.12
+
+// v13-K7: Straßen, Parkplatz, Platz-Umriss, Labels + Pin-Ring — geteilt
+// zwischen gezeichneter Fallback-Karte und dem Luftbild-Layer (die Labels
+// und die Zufahrt sind die Verortungs-Anker der Karte).
+function drawMapOverlays(ctx: CanvasRenderingContext2D, c: number) {
+  const road = (pts: number[][], w: number) => {
+    ctx.strokeStyle = '#33343a'; ctx.lineWidth = w
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round'
+    ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1])
+    for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1])
+    ctx.stroke()
+    ctx.strokeStyle = '#54555c'; ctx.lineWidth = Math.max(1, w * 0.12)
+    ctx.setLineDash([10, 12]); ctx.stroke(); ctx.setLineDash([])
+  }
+  // Zufahrt „Zur Mehrzweckhalle" → Parkplatz SO; Platz bleibt frei.
+  road([[40, 980], [220, 880], [430, 760], [610, 690], [700, 662]], 20)
+  road([[700, 662], [760, 560], [850, 470]], 12)
+  ctx.fillStyle = '#2a2b30'
+  roundRect(ctx, 660, 636, 96, 60, 6)
+  ctx.fill()
+
+  // Platz-Fußabdruck (der echte 3D-Platz deckt das — sauberer Fade-in)
+  ctx.fillStyle = '#1e3a20'
+  ctx.strokeStyle = 'rgba(242,245,248,0.5)'
+  ctx.lineWidth = 3
+  const pw = 244, ph = 158
+  roundRect(ctx, c - pw / 2, c - ph / 2, pw, ph, 8)
+  ctx.fill(); ctx.stroke()
+
+  ctx.fillStyle = 'rgba(230,230,228,0.9)'
+  ctx.textAlign = 'center'
+  ctx.shadowColor = 'rgba(0,0,0,0.9)'
+  ctx.shadowBlur = 8
+  ctx.font = '800 42px Archivo, system-ui, sans-serif'
+  ctx.fillText('AGATHENBURG', c, 104)
+  ctx.fillStyle = 'rgba(238,240,242,0.92)'
+  ctx.font = '800 30px Archivo, system-ui, sans-serif'
+  ctx.fillText('Waldsportplatz', c, c + ph / 2 + 42)
+  ctx.save()
+  ctx.translate(250, 820); ctx.rotate(-0.55)
+  ctx.fillStyle = 'rgba(190,195,200,0.7)'
+  ctx.font = '700 20px Archivo, system-ui, sans-serif'
+  ctx.fillText('Zur Mehrzweckhalle', 0, 0)
+  ctx.restore()
+  ctx.shadowBlur = 0
+
+  ctx.strokeStyle = COLORS.red; ctx.lineWidth = 4
+  ctx.beginPath(); ctx.arc(c, c, 20, 0, Math.PI * 2); ctx.stroke()
+}
 
 function makeMapTexture(): THREE.CanvasTexture {
   // v11-E8: doppelte Canvas-Auflösung (2048), Zeichnung bleibt im 1024-Logik-
@@ -55,59 +104,7 @@ function makeMapTexture(): THREE.CanvasTexture {
   ctx.bezierCurveTo(760, 760, 820, 900, 980, 980)
   ctx.stroke()
 
-  // Straßen: Hauptzufahrt „Zur Mehrzweckhalle" von SW zum Platz + Ortsstraße N
-  const road = (pts: number[][], w: number) => {
-    ctx.strokeStyle = '#33343a'; ctx.lineWidth = w
-    ctx.lineCap = 'round'; ctx.lineJoin = 'round'
-    ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1])
-    for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1])
-    ctx.stroke()
-    // Mittellinie
-    ctx.strokeStyle = '#54555c'; ctx.lineWidth = Math.max(1, w * 0.12)
-    ctx.setLineDash([10, 12]); ctx.stroke(); ctx.setLineDash([])
-  }
-  // v11-E8: Die Zufahrt „Zur Mehrzweckhalle" endet auf einem PARKPLATZ
-  //   SÜDÖSTLICH des Platzes — sie läuft NICHT mehr durch den Rasen.
-  //   Der Platz (x∈[390,634], y∈[433,591]) bleibt frei.
-  road([[40, 980], [220, 880], [430, 760], [610, 690], [700, 662]], 20)
-  // Ortsstraße im Norden (weit über dem Platz)
-  road([[c - 360, 150], [c - 120, 175], [c + 140, 165], [c + 380, 190]], 16)
-  // Stichweg Parkplatz → Vereinsheim (östlich, am Platz vorbei)
-  road([[700, 662], [760, 560], [850, 470]], 12)
-
-  // Parkplatz-Fläche am Ende der Zufahrt (SO, außerhalb des Platzes)
-  ctx.fillStyle = '#2a2b30'
-  roundRect(ctx, 660, 636, 96, 60, 6)
-  ctx.fill()
-
-  // Der Platz als leichte Rasenfläche mit Umriss (der echte 3D-Platz
-  // deckt das später — sorgt für sauberen Fade-in-Moment).
-  ctx.fillStyle = '#1e3a20'
-  ctx.strokeStyle = 'rgba(242,245,248,0.5)'
-  ctx.lineWidth = 3
-  const pw = 244, ph = 158
-  roundRect(ctx, c - pw / 2, c - ph / 2, pw, ph, 8)
-  ctx.fill(); ctx.stroke()
-
-  // Ortslabel + Straßenname (v11-E8: größer & fetter → scharf beim Rauszoom)
-  ctx.fillStyle = 'rgba(230,230,228,0.9)'
-  ctx.textAlign = 'center'
-  ctx.font = '800 42px Archivo, system-ui, sans-serif'
-  ctx.fillText('AGATHENBURG', c, 104)
-  // „Waldsportplatz" als klar lesbares Label unter dem Platz, mit Pin-Punkt
-  ctx.fillStyle = 'rgba(238,240,242,0.92)'
-  ctx.font = '800 30px Archivo, system-ui, sans-serif'
-  ctx.fillText('Waldsportplatz', c, c + ph / 2 + 42)
-  ctx.save()
-  ctx.translate(250, 820); ctx.rotate(-0.55)
-  ctx.fillStyle = 'rgba(190,195,200,0.7)'
-  ctx.font = '700 20px Archivo, system-ui, sans-serif'
-  ctx.fillText('Zur Mehrzweckhalle', 0, 0)
-  ctx.restore()
-
-  // SVA-roter Akzent-Ring am Platz-Mittelpunkt (Karten-Pin-Fuß)
-  ctx.strokeStyle = COLORS.red; ctx.lineWidth = 4
-  ctx.beginPath(); ctx.arc(c, c, 20, 0, Math.PI * 2); ctx.stroke()
+  drawMapOverlays(ctx, c)
 
   const tex = new THREE.CanvasTexture(cv)
   tex.colorSpace = THREE.SRGBColorSpace
@@ -125,10 +122,69 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.closePath()
 }
 
+// v13-K7: Das Finale bekommt ein ECHTES Nacht-Luftbild (Higgsfield-Generat
+// nach Referenz-Layout: Platz-Lichtung im Wald, Dorf im Norden, Bahnlinie
+// NO — public/map-aerial.webp). Das Bild wird zur Karten-Textur:
+// Pitch-Zentrum weich mit Waldton überdeckt (dort steht das echte 3D-Feld),
+// Außenkanten zu Transparent ausgeblendet, dezente Labels obendrauf.
+// Die gezeichnete Karte bleibt Fallback, bis das Bild geladen ist.
+function makeAerialTexture(img: HTMLImageElement): THREE.CanvasTexture {
+  const N = 1024
+  const cv = document.createElement('canvas')
+  cv.width = cv.height = N
+  const ctx = cv.getContext('2d')!
+  ctx.drawImage(img, 0, 0, N, N)
+  // Aufhellen: gegen den schwarzen Seitenhintergrund war das Nacht-Bild
+  // zu leise — ein kühler Screen-Lift macht Wald/Dorf lesbar.
+  ctx.globalCompositeOperation = 'screen'
+  ctx.fillStyle = 'rgba(64,84,104,0.22)'
+  ctx.fillRect(0, 0, N, N)
+  ctx.globalCompositeOperation = 'source-over'
+  // Zentrum abdecken: das generierte Flutlicht-Feld ist ~2× so groß wie
+  // das echte 3D-Feld darüber → weicher Wald-Verlauf statt Doppel-Platz.
+  const g = ctx.createRadialGradient(N / 2, N / 2, 60, N / 2, N / 2, 265)
+  g.addColorStop(0, 'rgba(18,26,21,1)')
+  g.addColorStop(0.78, 'rgba(18,26,21,0.96)')
+  g.addColorStop(1, 'rgba(18,26,21,0)')
+  ctx.fillStyle = g
+  ctx.fillRect(0, 0, N, N)
+  // Außenkanten auflösen (kein harter Karten-Rand im Rauszoom)
+  const edge = 70
+  ctx.globalCompositeOperation = 'destination-out'
+  for (const dir of ['top', 'bottom', 'left', 'right'] as const) {
+    const lg =
+      dir === 'top' ? ctx.createLinearGradient(0, 0, 0, edge)
+      : dir === 'bottom' ? ctx.createLinearGradient(0, N, 0, N - edge)
+      : dir === 'left' ? ctx.createLinearGradient(0, 0, edge, 0)
+      : ctx.createLinearGradient(N, 0, N - edge, 0)
+    lg.addColorStop(0, 'rgba(0,0,0,1)')
+    lg.addColorStop(1, 'rgba(0,0,0,0)')
+    ctx.fillStyle = lg
+    if (dir === 'top') ctx.fillRect(0, 0, N, edge)
+    else if (dir === 'bottom') ctx.fillRect(0, N - edge, N, edge)
+    else if (dir === 'left') ctx.fillRect(0, 0, edge, N)
+    else ctx.fillRect(N - edge, 0, edge, N)
+  }
+  ctx.globalCompositeOperation = 'source-over'
+  // Verortungs-Anker (Straßen + Labels + Pin) über das Luftbild
+  drawMapOverlays(ctx, N / 2)
+  const tex = new THREE.CanvasTexture(cv)
+  tex.colorSpace = THREE.SRGBColorSpace
+  tex.anisotropy = 8
+  return tex
+}
+
 export function MapGround() {
   const mat = useRef<THREE.MeshBasicMaterial>(null)
   const group = useRef<THREE.Group>(null)
-  const tex = useMemo(() => makeMapTexture(), [])
+  const fallbackTex = useMemo(() => makeMapTexture(), [])
+  const [aerialTex, setAerialTex] = useState<THREE.CanvasTexture | null>(null)
+  useEffect(() => {
+    const img = new Image()
+    img.onload = () => setAerialTex(makeAerialTexture(img))
+    img.src = '/map-aerial.webp'
+  }, [])
+  const tex = aerialTex ?? fallbackTex
 
   useFrame(() => {
     const vis = THREE.MathUtils.clamp((cameraState.u - FADE_START) / FADE_SPAN, 0, 1)
