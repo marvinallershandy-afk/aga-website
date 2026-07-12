@@ -4,6 +4,7 @@ import { useTexture } from '@react-three/drei'
 import * as THREE from 'three'
 import { PITCH } from '../utils/constants'
 import { AOBlob } from './AOBlob'
+import { getHumanBodyGeometry } from '../three/humanGeometry'
 import { useStore } from '../store/useStore'
 import { FAN_PHOTOS } from '../data/club'
 
@@ -338,14 +339,12 @@ function InstancedCrowd() {
 
   const N = crowd.length
 
-  // Geometrie mit Basis am Boden (translate nach oben) → Schunkeln pivotiert
-  // um die Füße; EIN Matrix pro Figur gilt für Körper UND Kopf.
-  const bodyGeo = useMemo(() => {
-    // breitere Schultern oben, schmaler zum Boden → menschlichere Silhouette.
-    const g = new THREE.CylinderGeometry(0.15, 0.1, 0.9, 6)
-    g.translate(0, 0.45, 0)
-    return g
-  }, [])
+  // Geometrie mit Basis am Boden → Schunkeln pivotiert um die Füße;
+  // EIN Matrix pro Figur gilt für Körper UND Kopf.
+  // v13-K2: echte Menschen-Silhouette (Beine, Hüfte, taillierter Rumpf,
+  // hängende Arme) statt Zylinder — die Masse liest sich als Publikum,
+  // nicht als Kegelfeld. Gleiche Höhe/Basis → Matrizen unverändert.
+  const bodyGeo = useMemo(() => getHumanBodyGeometry(), [])
   const headGeo = useMemo(() => {
     const g = new THREE.SphereGeometry(0.092, 8, 6)
     g.translate(0, 1.0, 0)
@@ -397,6 +396,45 @@ function InstancedCrowd() {
         <meshStandardMaterial roughness={0.9} />
       </instancedMesh>
     </group>
+  )
+}
+
+// v13-K2: Sporadische Handy-Blitzer in der Menge — kurze weiße Aufblitzer
+// wie Fotos bei der Meisterfeier. Ein instanziertes Quad-Set, „aus" =
+// Scale 0 (Material bleibt eins, 1 Draw-Call).
+function PhoneFlashes() {
+  const ref = useRef<THREE.InstancedMesh>(null)
+  const dummy = useMemo(() => new THREE.Object3D(), [])
+  const spots = useMemo(() => {
+    const rand = mulberry32(4711)
+    return Array.from({ length: 6 }, () => ({
+      x: CX + (rand() - 0.5) * 4.2,
+      z: HH + 0.45 + rand() * 1.1,
+      y: 0.17 + rand() * 0.06,
+      period: 2.8 + rand() * 4.5,
+      offset: rand() * 8,
+    }))
+  }, [])
+  useFrame((state) => {
+    const m = ref.current
+    if (!m) return
+    const t = state.clock.elapsedTime
+    spots.forEach((s, i) => {
+      const local = (t + s.offset) % s.period
+      const on = local < 0.13 ? 1 - local / 0.13 : 0
+      dummy.position.set(s.x, s.y, s.z)
+      dummy.rotation.y = Math.PI
+      dummy.scale.setScalar(on > 0 ? 0.05 + on * 0.06 : 0.0001)
+      dummy.updateMatrix()
+      m.setMatrixAt(i, dummy.matrix)
+    })
+    m.instanceMatrix.needsUpdate = true
+  })
+  return (
+    <instancedMesh ref={ref} args={[undefined, undefined, 6]} frustumCulled={false}>
+      <planeGeometry args={[1, 1]} />
+      <meshBasicMaterial color="#eaf2ff" transparent opacity={0.9} blending={THREE.AdditiveBlending} depthWrite={false} toneMapped={false} />
+    </instancedMesh>
   )
 }
 
@@ -695,6 +733,7 @@ export function FanBlock() {
       {/* v-website-polish: instanzierte Menge füllt die Kurve (hinter den
           Detail-Fans) + großes Vereins-Banner am Zaun im Rücken. */}
       <InstancedCrowd />
+      <PhoneFlashes />
 
       {/* Großes Kurven-Banner „MEISTER 2026" am Zaun hinten. v13-E8: statt
           DoubleSide (Rückseite = spiegelverkehrt, prominent in Hero-/Finale-

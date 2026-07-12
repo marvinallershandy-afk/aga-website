@@ -37,6 +37,24 @@ function Person({ pos, jersey, h = 0.19, rot = 0, seated = false, lean = 0 }: {
         <cylinderGeometry args={[h * 0.16, h * 0.13, h * 0.36, 7]} />
         <meshStandardMaterial color={jersey} roughness={0.85} />
       </mesh>
+      {/* v13-K2: Arme mit Schulterkugel — vorher armlose Litfaßsäulen.
+          Sitzend winkeln die Arme nach vorn Richtung Tisch. */}
+      {[-1, 1].map((s) => (
+        <group key={s}>
+          <mesh position={[s * h * 0.15, legH + h * 0.29, 0]}>
+            <sphereGeometry args={[h * 0.07, 7, 6]} />
+            <meshStandardMaterial color={jersey} roughness={0.85} />
+          </mesh>
+          <mesh
+            position={[s * h * 0.17, legH + h * (seated ? 0.2 : 0.12), seated ? h * 0.1 : 0]}
+            rotation-z={s * 0.14}
+            rotation-x={seated ? -0.7 : 0}
+          >
+            <cylinderGeometry args={[h * 0.042, h * 0.05, h * 0.34, 6]} />
+            <meshStandardMaterial color={jersey} roughness={0.85} />
+          </mesh>
+        </group>
+      ))}
       <mesh position={[0, legH + h * 0.43, 0]}>
         <sphereGeometry args={[h * 0.115, 8, 7]} />
         <meshStandardMaterial color="#c99a75" roughness={0.9} />
