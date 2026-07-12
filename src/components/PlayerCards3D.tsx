@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { PLAYERS, STAFF, type Player, type Staff } from '../data/players'
@@ -62,19 +62,52 @@ function useLayout(): Placed[] {
   }, [])
 }
 
+const _launchTarget = new THREE.Vector3()
+const _launchBase = new THREE.Vector3()
+const _camDir = new THREE.Vector3()
+
 export function PlayerCards3D() {
   const layout = useLayout()
   const { camera } = useThree()
   const setSelected = useStore((s) => s.setSelectedPlayer)
   const groupRef = useRef<THREE.Group>(null)
   const meshes = useRef<(THREE.Mesh | null)[]>([])
+  // v13-K4: Tap-Launch — die angetippte Karte fliegt der Kamera entgegen,
+  // DANN öffnet das Flip-Modal. Verkauft Kontinuität statt DOM-Bruch.
+  const launch = useRef<{ i: number; t0: number } | null>(null)
+  // v13-K4: gemeinsame Glint-Zeit für den Foil-Sweep aller Karten.
+  const glintT = useRef({ value: 0 })
 
-  useFrame(() => {
+  // Foil-Glint in die Basic-Materialien injizieren (einmalig, dann recompile).
+  useEffect(() => {
+    meshes.current.forEach((m) => {
+      if (!m) return
+      const mat = m.material as THREE.MeshBasicMaterial
+      mat.onBeforeCompile = (shader) => {
+        shader.uniforms.uGlintT = glintT.current
+        shader.fragmentShader = shader.fragmentShader
+          .replace('void main() {', 'uniform float uGlintT;\nvoid main() {')
+          .replace(
+            '#include <map_fragment>',
+            `#include <map_fragment>
+#ifdef USE_UV
+  float glintBand = abs(fract(vUv.x * 0.9 - vUv.y * 0.38 + uGlintT * 0.05) - 0.5) - 0.055;
+  float glint = smoothstep(0.05, 0.0, glintBand);
+  diffuseColor.rgb += glint * vec3(1.0, 0.93, 0.72) * 0.10;
+#endif`,
+          )
+      }
+      mat.needsUpdate = true
+    })
+  }, [layout])
+
+  useFrame((state) => {
     const u = cameraState.u
     const rp = smoothstep(0.20, MANN_U, u)
     const fo = 1 - smoothstep(0.34, 0.42, u)
     const g = groupRef.current
     if (!g) return
+    glintT.current.value = state.clock.elapsedTime
     let anyVisible = false
     for (let i = 0; i < layout.length; i++) {
       const m = meshes.current[i]
@@ -95,6 +128,22 @@ export function PlayerCards3D() {
         // beim Reveal leicht aufsteigen
         m.position.y = CY - (1 - ease) * 0.25
       }
+      // v13-K4: Launch-Animation überlagert Reveal-Pose
+      const L = launch.current
+      if (L && L.i === i) {
+        const k = Math.min(1, (performance.now() - L.t0) / 240)
+        const e2 = k * k * (3 - 2 * k)
+        camera.getWorldDirection(_camDir)
+        _launchTarget.copy(camera.position).addScaledVector(_camDir, 1.15)
+        _launchBase.set(item.x, CY, item.z)
+        m.position.lerpVectors(_launchBase, _launchTarget, e2)
+        const ls = s * (1 + 0.55 * e2)
+        m.scale.set(CARD_W * ls, CARD_H * ls, 1)
+        m.rotation.y += e2 * 0.35
+        m.visible = true
+        anyVisible = true
+        if (k >= 1) launch.current = null
+      }
     }
     g.visible = anyVisible
   })
@@ -109,7 +158,12 @@ export function PlayerCards3D() {
           visible={false}
           onClick={(e) => {
             e.stopPropagation()
-            if (item.player) setSelected(item.player)
+            if (item.player) {
+              // v13-K4: erst der 240ms-Flug zur Kamera, dann das Modal
+              launch.current = { i, t0: performance.now() }
+              const p = item.player
+              setTimeout(() => setSelected(p), 230)
+            }
             // v13-E4: mailto-Fallback darf nicht in einen Blank-Tab
             // (window.open(mailto,'_blank') öffnet in Chromium einen leeren Tab)
             else if (item.staff?.contactMessage) {

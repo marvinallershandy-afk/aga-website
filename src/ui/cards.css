@@ -1218,6 +1218,36 @@
   gap: clamp(.9rem, 2vw, 1.6rem);
 }
 
+/* v13-K4: Karte + Story-Share als Einheit */
+.pgal__cardwrap { display: flex; flex-direction: column; gap: .5rem; }
+.pgal__share {
+  align-self: center;
+  border: 1px solid rgba(233,29,41,.5);
+  background: rgba(233,29,41,.1);
+  color: rgba(255,255,255,.92);
+  font-family: var(--font-body);
+  font-size: .68rem; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: .42em 1em; border-radius: 999px; cursor: pointer;
+  transition: background .18s ease, border-color .18s ease;
+}
+.pgal__share:hover { background: rgba(233,29,41,.32); border-color: var(--red); }
+
+/* v13-K4: Mobil wird die Galerie ein KARTEN-DECK — ein Wisch = eine
+   Karte, wie ein Pack-Opening. Gruppen bleiben als Kapitel. */
+@media (max-width: 640px) {
+  .pgal__grid {
+    display: flex;
+    gap: .9rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding: .2rem .4rem 1rem;
+    -webkit-overflow-scrolling: touch;
+  }
+  .pgal__grid > * { flex: 0 0 72vw; scroll-snap-align: center; }
+  .pgal__grid--staff > * { flex-basis: 82vw; }
+}
+
 /* ── v12-E6: Sponsoren — schlanke Banden-Karussell-Steuerung (3D-Bande) ── */
 .sponsor-pills {
   display: flex; flex-wrap: wrap; gap: 0.5rem;

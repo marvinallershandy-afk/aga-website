@@ -4,6 +4,7 @@ import { PLAYERS, STAFF, POSITION_LABEL, type Position, type Player } from '../d
 import { useStore } from '../store/useStore'
 import { HoloCard } from './HoloCard'
 import { StaffCard } from './StaffCard'
+import { shareStory } from './storyShare'
 
 // ─────────────────────────────────────────────────────────────
 // v12-E2: „Alle Spieler anzeigen" — Vollbild-Galerie über den ganzen
@@ -65,7 +66,14 @@ export function PlayerGallery({ open, onClose }: { open: boolean; onClose: () =>
                     <span className="pgal__grouplabel">{POSITION_LABEL[pos]}</span>
                     <div className="pgal__grid">
                       {group.map((p) => (
-                        <HoloCard key={p.id} player={p} onClick={(pl) => { setSelected(pl) }} />
+                        // v13-K4: jede Karte trägt ihren Story-Share direkt —
+                        // der IG-Loop (Karte sehen → teilen → Reichweite) in einem Tap.
+                        <div key={p.id} className="pgal__cardwrap">
+                          <HoloCard player={p} onClick={(pl) => { setSelected(pl) }} />
+                          <button className="pgal__share" onClick={() => void shareStory(p)}>
+                            Story teilen ↗
+                          </button>
+                        </div>
                       ))}
                     </div>
                   </section>
