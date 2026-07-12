@@ -23,6 +23,7 @@ import { KickoffDirector } from './KickoffDirector'
 import { ConeDust } from './ConeDust'
 import { GroundMist } from './GroundMist'
 import { LIGHTING } from '../theme/lighting'
+import { NightEnvironment } from '../theme/NightEnvironment'
 
 // Partyraum: eigener Chunk — lädt erst, wenn die Musik-Sektion
 // näher rückt (partyNear, PartyDirector) → beim Schnitt schon da.
@@ -39,6 +40,8 @@ export function Scene() {
     <group>
       <fog attach="fog" args={[L.fog.color, L.fog.near, L.fog.far]} />
 
+      {/* v13-X2: Nacht-IBL — Environment für alle Standard-Materialien */}
+      <NightEnvironment />
       <ambientLight intensity={L.ambient.intensity} color={L.ambient.color} />
       <hemisphereLight args={[L.hemi.sky, L.hemi.ground, L.hemi.intensity]} />
       <directionalLight position={L.moon.position} intensity={L.moon.intensity} color={L.moon.color} />
