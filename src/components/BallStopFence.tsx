@@ -14,18 +14,23 @@ const HEIGHT = 0.55
 let meshTex: THREE.CanvasTexture | null = null
 function getMeshTexture() {
   if (meshTex) return meshTex
+  // v14-E5: Moiré-Fix — die alte 64px-Textur (6px-Zellen, 1.2px-Linien,
+  // 10× getiled) flimmerte im flachen Winkel als Schachbrett. Jetzt:
+  // größere Zellen, DICKERE Stränge (mipmappen sauber), weniger Tiles
+  // + Anisotropie. Stilisiert bleibt's — aber ruhig statt glitzernd.
   const cv = document.createElement('canvas')
-  cv.width = cv.height = 64
+  cv.width = cv.height = 128
   const ctx = cv.getContext('2d')!
-  ctx.strokeStyle = 'rgba(150,158,168,0.5)'
-  ctx.lineWidth = 1.2
-  for (let i = 0; i <= 64; i += 6) {
-    ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 64); ctx.stroke()
-    ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(64, i); ctx.stroke()
+  ctx.strokeStyle = 'rgba(148,156,166,0.55)'
+  ctx.lineWidth = 3
+  for (let i = 0; i <= 128; i += 16) {
+    ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 128); ctx.stroke()
+    ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(128, i); ctx.stroke()
   }
   meshTex = new THREE.CanvasTexture(cv)
   meshTex.wrapS = meshTex.wrapT = THREE.RepeatWrapping
-  meshTex.repeat.set(10, 3)
+  meshTex.repeat.set(6, 1.7)
+  meshTex.anisotropy = 8
   return meshTex
 }
 

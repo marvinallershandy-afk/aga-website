@@ -171,6 +171,59 @@ function DoorDust() {
   )
 }
 
+// v14-E5: Dach als Stehfalz-Blech statt flacher Slab — feine Falz-Linien
+// + leichte Ton-Variation. Eine kleine Textur, beide Dachflächen teilen sie.
+let roofTex: THREE.CanvasTexture | null = null
+function getRoofTexture(): THREE.CanvasTexture {
+  if (roofTex) return roofTex
+  const cv = document.createElement('canvas')
+  cv.width = 256
+  cv.height = 64
+  const ctx = cv.getContext('2d')!
+  ctx.fillStyle = '#26262a'
+  ctx.fillRect(0, 0, 256, 64)
+  for (let x = 0; x < 256; x += 16) {
+    const g = ctx.createLinearGradient(x, 0, x + 16, 0)
+    g.addColorStop(0, 'rgba(255,255,255,0.07)')
+    g.addColorStop(0.12, 'rgba(255,255,255,0.02)')
+    g.addColorStop(0.85, 'rgba(0,0,0,0.12)')
+    g.addColorStop(1, 'rgba(0,0,0,0.28)')
+    ctx.fillStyle = g
+    ctx.fillRect(x, 0, 16, 64)
+  }
+  roofTex = new THREE.CanvasTexture(cv)
+  roofTex.wrapS = roofTex.wrapT = THREE.RepeatWrapping
+  roofTex.repeat.set(4, 1)
+  roofTex.anisotropy = 4
+  return roofTex
+}
+
+// v14-E5: beleuchtetes Vereins-Schild am Süd-Giebel (CI-Moment — die
+// Tabelle-Station schaut genau auf diese Ecke).
+function makeGableSignTexture(): THREE.CanvasTexture {
+  const cv = document.createElement('canvas')
+  cv.width = 512
+  cv.height = 96
+  const ctx = cv.getContext('2d')!
+  ctx.fillStyle = '#191316'
+  ctx.fillRect(0, 0, 512, 96)
+  ctx.strokeStyle = 'rgba(233,29,41,0.9)'
+  ctx.lineWidth = 5
+  ctx.strokeRect(6, 6, 500, 84)
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillStyle = '#f2eee6'
+  ctx.font = '400 44px Anton, system-ui, sans-serif'
+  ctx.fillText('SV AGATHENBURG-DOLLERN', 256, 40)
+  ctx.fillStyle = '#E91D29'
+  ctx.font = '800 22px Archivo, system-ui, sans-serif'
+  ctx.fillText('SEIT 1949', 256, 74)
+  const tex = new THREE.CanvasTexture(cv)
+  tex.colorSpace = THREE.SRGBColorSpace
+  tex.anisotropy = 8
+  return tex
+}
+
 function GableEnds() {
   const geo = useMemo(() => {
     const half = DEPTH / 2 + 0.01
@@ -197,6 +250,7 @@ export function Clubhouse() {
   const slabLen = Math.hypot(DEPTH / 2 + 0.12, RISE + 0.04)
   const roofA = Math.atan2(RISE, DEPTH / 2)
   const facade = useMemo(() => makeFacadeTexture(LEN, EAVES), [])
+  const gableSign = useMemo(() => makeGableSignTexture(), [])
 
   return (
     <group position={[CLUBHOUSE_POS.x, 0, CLUBHOUSE_POS.z]}>
@@ -214,9 +268,47 @@ export function Clubhouse() {
           rotation-z={s * roofA}
         >
           <boxGeometry args={[slabLen, 0.05, LEN + 0.25]} />
-          <meshStandardMaterial color="#26262a" roughness={0.8} metalness={0.1} />
+          <meshStandardMaterial map={getRoofTexture()} roughness={0.75} metalness={0.15} />
         </mesh>
       ))}
+      {/* First-Kappe + Traufen-Blende West (v14-E5: Dachkanten lesen als
+          gebaute Kanten statt geschnittener Slab) */}
+      <mesh position={[0, EAVES + RISE + 0.035, 0]}>
+        <boxGeometry args={[0.09, 0.022, LEN + 0.27]} />
+        <meshStandardMaterial color="#1c1c20" roughness={0.7} metalness={0.2} />
+      </mesh>
+      <mesh position={[-DEPTH / 2 - 0.045, EAVES + 0.035, 0]}>
+        <boxGeometry args={[0.02, 0.045, LEN + 0.25]} />
+        <meshStandardMaterial color="#4a4c52" roughness={0.85} />
+      </mesh>
+      {/* OG-Fensterband als ECHTES Relief: dunkler Streifen + Sprossen +
+          Trimm-Leisten (die gemalte Version darunter verschwindet) */}
+      <group position={[-DEPTH / 2 - 0.008, EAVES * 0.795, 0]}>
+        <mesh rotation-y={-Math.PI / 2}>
+          <planeGeometry args={[LEN * 0.86, 0.032]} />
+          <meshStandardMaterial color="#171c24" roughness={0.4} metalness={0.1} />
+        </mesh>
+        {Array.from({ length: 13 }, (_, i) => -LEN * 0.4 + i * (LEN * 0.8 / 12)).map((z) => (
+          <mesh key={z} position={[0.003, 0, z]}>
+            <boxGeometry args={[0.006, 0.032, 0.008]} />
+            <meshStandardMaterial color="#b9b5a8" roughness={0.8} />
+          </mesh>
+        ))}
+        {[-1, 1].map((s) => (
+          <mesh key={s} position={[0.002, s * 0.022, 0]}>
+            <boxGeometry args={[0.008, 0.01, LEN * 0.87]} />
+            <meshStandardMaterial color="#c9c5b8" roughness={0.85} />
+          </mesh>
+        ))}
+      </group>
+      {/* Beleuchtetes Vereins-Schild — auf der PLATZ-Seite (alle Stationen
+          schauen von Westen aufs Gebäude), südlich über dem Anbau-Dach */}
+      <group position={[-DEPTH / 2 - 0.016, 0.293, 1.7]} rotation-y={-Math.PI / 2}>
+        <mesh>
+          <planeGeometry args={[0.46, 0.086]} />
+          <meshBasicMaterial map={gableSign} color={[1.25, 1.25, 1.25]} toneMapped={false} />
+        </mesh>
+      </group>
       {/* Ziegel-Schornstein */}
       <mesh position={[0, EAVES + RISE + 0.1, 0.55]}>
         <boxGeometry args={[0.16, 0.28, 0.2]} />
@@ -319,14 +411,37 @@ export function Clubhouse() {
             <meshStandardMaterial color="#4a4d52" metalness={0.5} roughness={0.5} />
           </mesh>
         ))}
-        {/* warme Fenster entlang der Terrasse (Original) — südlich der Tür */}
+        {/* warme Fenster entlang der Terrasse (Original) — südlich der Tür.
+            v14-E5: mit ECHTEM Rahmen-Relief (helle Zarge + Fensterbank +
+            Sprosse) statt nackter Leucht-Rechtecke auf der Fläche. */}
         {[-0.9, -0.15, 0.6, 1.3, 2.0].map((z) => (
-          <mesh key={z} position={[-ANNEX_D / 2 - 0.004, 0.13, z]} rotation-y={-Math.PI / 2}>
-            <planeGeometry args={[0.22, 0.12]} />
-            <meshStandardMaterial
-              color="#ffb765" emissive="#ff9d3f" emissiveIntensity={1.6}
-              toneMapped={false} roughness={1}
-            />
+          <group key={z} position={[-ANNEX_D / 2, 0.13, z]}>
+            <mesh position={[-0.006, 0, 0]} rotation-y={-Math.PI / 2}>
+              <planeGeometry args={[0.25, 0.15]} />
+              <meshStandardMaterial color="#e2ded2" roughness={0.85} />
+            </mesh>
+            <mesh position={[-0.009, 0, 0]} rotation-y={-Math.PI / 2}>
+              <planeGeometry args={[0.22, 0.12]} />
+              <meshStandardMaterial
+                color="#ffb765" emissive="#ff9d3f" emissiveIntensity={1.6}
+                toneMapped={false} roughness={1}
+              />
+            </mesh>
+            <mesh position={[-0.011, 0, 0]}>
+              <boxGeometry args={[0.006, 0.12, 0.008]} />
+              <meshStandardMaterial color="#e2ded2" roughness={0.85} />
+            </mesh>
+            <mesh position={[-0.014, -0.082, 0]}>
+              <boxGeometry args={[0.02, 0.008, 0.27]} />
+              <meshStandardMaterial color="#c9c5b8" roughness={0.9} />
+            </mesh>
+          </group>
+        ))}
+        {/* Wandleuchten zwischen den Fenstern (kleine warme Punkte) */}
+        {[-0.55, 0.95].map((z) => (
+          <mesh key={z} position={[-ANNEX_D / 2 - 0.012, ANNEX_H - 0.045, z]}>
+            <boxGeometry args={[0.014, 0.02, 0.02]} />
+            <meshBasicMaterial color={[1.9, 1.5, 0.95]} toneMapped={false} />
           </mesh>
         ))}
         {/* offenes Türblatt (~105° aufgeschwungen) */}
