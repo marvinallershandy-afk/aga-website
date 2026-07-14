@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useTexture } from '@react-three/drei'
 import { ROOM_Y, ROOM } from '../camera/partyPath'
+import { SKIN_TONES, HAIR_TONES } from '../three/humanGeometry'
 import { getDoorGlowTexture } from './doorGlow'
 
 // ─────────────────────────────────────────────────────────────
@@ -27,6 +28,12 @@ function Person({ pos, jersey, h = 0.19, rot = 0, seated = false, lean = 0 }: {
 }) {
   const legH = seated ? h * 0.2 : h * 0.54
   const base = seated ? 0.18 : 0
+  // v14-E2: deterministische Haut-/Haar-Varianz aus der Position — auch das
+  // Partyraum-Personal ist Publikum, keine Schaufensterpuppen.
+  const seed = Math.abs(Math.sin(pos[0] * 12.9898 + pos[2] * 78.233)) * 43758.5453
+  const skin = SKIN_TONES[Math.floor((seed % 1) * SKIN_TONES.length)]
+  const hairPick = (seed * 7.13) % 1
+  const hair = hairPick < 0.78 ? HAIR_TONES[Math.floor(((seed * 3.7) % 1) * HAIR_TONES.length)] : null
   return (
     <group position={[pos[0], pos[1] + base, pos[2]]} rotation-y={rot} rotation-z={lean}>
       <mesh position={[0, legH / 2, 0]}>
@@ -55,10 +62,16 @@ function Person({ pos, jersey, h = 0.19, rot = 0, seated = false, lean = 0 }: {
           </mesh>
         </group>
       ))}
-      <mesh position={[0, legH + h * 0.43, 0]}>
-        <sphereGeometry args={[h * 0.115, 8, 7]} />
-        <meshStandardMaterial color="#c99a75" roughness={0.9} />
+      <mesh position={[0, legH + h * 0.43, 0]} scale={[1, 1.14, 0.94]}>
+        <sphereGeometry args={[h * 0.111, 8, 7]} />
+        <meshStandardMaterial color={skin} roughness={0.9} />
       </mesh>
+      {hair && (
+        <mesh position={[0, legH + h * 0.47, -h * 0.008]} scale={[1, 0.82, 0.98]}>
+          <sphereGeometry args={[h * 0.118, 8, 5, 0, Math.PI * 2, 0, Math.PI * 0.55]} />
+          <meshStandardMaterial color={hair} roughness={0.96} />
+        </mesh>
+      )}
     </group>
   )
 }

@@ -4,7 +4,14 @@ import { useTexture } from '@react-three/drei'
 import * as THREE from 'three'
 import { PITCH } from '../utils/constants'
 import { AOBlob } from './AOBlob'
-import { getHumanBodyGeometry } from '../three/humanGeometry'
+import {
+  getHumanBodyGeometry,
+  getHumanHeadGeometry,
+  getHairCapGeometry,
+  SKIN_TONES,
+  HAIR_TONES,
+  BEANIE_TONES,
+} from '../three/humanGeometry'
 import { useStore } from '../store/useStore'
 import { FAN_PHOTOS } from '../data/club'
 
@@ -186,6 +193,16 @@ function Fireworks() {
 // Kegel. Arme optional (arms=false), damit Lehn-/Schal-Fans mit eigenen
 // Armen keine Doppelung bekommen. Kopf minimal kleiner, Hals-Absatz.
 function Fan({ x, z, jersey, h, rot, flag, arms = true }: { x: number; z: number; jersey: string; h: number; rot: number; flag?: boolean; arms?: boolean }) {
+  // v14-E2: deterministische Haut-/Haar-Varianz aus der Position — die
+  // handplatzierten Fans bekommen dieselbe Menschlichkeit wie die Menge.
+  const seed = Math.abs(Math.sin(x * 12.9898 + z * 78.233)) * 43758.5453
+  const skin = SKIN_TONES[Math.floor((seed % 1) * SKIN_TONES.length)]
+  const hairPick = (seed * 7.13) % 1
+  const hair = hairPick < 0.62
+    ? HAIR_TONES[Math.floor(((seed * 3.7) % 1) * HAIR_TONES.length)]
+    : hairPick < 0.85
+      ? BEANIE_TONES[Math.floor(((seed * 5.1) % 1) * BEANIE_TONES.length)]
+      : null
   return (
     <group position={[x, 0, z]} rotation-y={rot}>
       {/* Beine (dunkel) */}
@@ -217,13 +234,20 @@ function Fan({ x, z, jersey, h, rot, flag, arms = true }: { x: number; z: number
       {/* Hals-Absatz */}
       <mesh position={[0, h * 0.86, 0]}>
         <cylinderGeometry args={[h * 0.055, h * 0.07, h * 0.06, 6]} />
-        <meshStandardMaterial color="#c99a75" roughness={0.9} />
+        <meshStandardMaterial color={skin} roughness={0.9} />
       </mesh>
-      {/* Kopf — bewusst ohne Gesicht */}
-      <mesh position={[0, h * 0.98, 0]}>
-        <sphereGeometry args={[h * 0.108, 8, 7]} />
-        <meshStandardMaterial color="#c99a75" roughness={0.9} />
+      {/* Kopf — bewusst ohne Gesicht, leicht ellipsoid */}
+      <mesh position={[0, h * 0.98, 0]} scale={[1, 1.14, 0.94]}>
+        <sphereGeometry args={[h * 0.104, 8, 7]} />
+        <meshStandardMaterial color={skin} roughness={0.9} />
       </mesh>
+      {/* Haar/Beanie-Kappe (v14-E2) — nimmt dem Kopf die Murmel-Optik */}
+      {hair && (
+        <mesh position={[0, h * 1.02, -h * 0.008]} scale={[1, 0.82, 0.98]}>
+          <sphereGeometry args={[h * 0.111, 8, 5, 0, Math.PI * 2, 0, Math.PI * 0.55]} />
+          <meshStandardMaterial color={hair} roughness={0.96} />
+        </mesh>
+      )}
       {flag && (
         <group position={[h * 0.14, h * 0.75, 0]} rotation-z={-0.5}>
           {/* Fahnen-Arm + Stange */}
@@ -296,34 +320,49 @@ function mulberry32(seed: number) {
   }
 }
 
-const SKIN = '#c99a75'
 const JERSEYS = ['#c9202b', '#d02530', '#b3141f', '#8f1620', '#1a1719', '#1d1a1c', '#d8d4c9', '#c7c2b6']
 
-// Instanzierte Zuschauer-Menge HINTER den handplatzierten Detail-Fans:
-// zwei InstancedMeshes (Körper + Kopf, je 1 Draw-Call) füllen die Kurve.
-// Leichte Idle-Bewegung (Wippen + Schunkeln) — performant für ~50 Figuren.
+// Instanzierte Zuschauer-Menge HINTER den handplatzierten Detail-Fans.
+// v14-E2 „Menschen 3.0": drei Posen-Silhouetten (idle/point/cheer) mit
+// Vertex-Color-Hosen, Hautton-Varianz auf ellipsoiden Köpfen und ein
+// Haar-/Beanie-Layer — 5 Draw-Calls für die ganze Kurve.
 function InstancedCrowd() {
-  const bodyRef = useRef<THREE.InstancedMesh>(null)
+  const bodyRefs = useRef<(THREE.InstancedMesh | null)[]>([null, null, null])
   const headRef = useRef<THREE.InstancedMesh>(null)
+  const hairRef = useRef<THREE.InstancedMesh>(null)
   const dummy = useMemo(() => new THREE.Object3D(), [])
 
   const crowd = useMemo(() => {
     const rand = mulberry32(20260626)
-    const out: { x: number; z: number; h: number; jersey: string; phase: number; speed: number; sway: number; lean0: number; yaw: number }[] = []
+    const out: {
+      x: number; z: number; h: number; jersey: string; phase: number; speed: number
+      sway: number; lean0: number; yaw: number
+      pose: number; slot: number; skin: string; hair: string; hairScale: number
+    }[] = []
+    const slots = [0, 0, 0]
     const ROWS = 7
     // Abstandsbasierte DICHTE Packung (Schulter an Schulter, leicht überlappend)
-    // → die Silhouetten verschmelzen zur Masse statt einzeln als „Kegel" zu
-    // stehen. Reihen versetzt, hintere minimal höher gestaffelt (h wächst).
+    // → die Silhouetten verschmelzen zur Masse. Reihen versetzt, hintere
+    // minimal höher gestaffelt (h wächst).
     const STEP = 0.11
     for (let r = 0; r < ROWS; r++) {
       const z = HH + 0.36 + r * 0.17
       const spanHalf = 2.35 - r * 0.08
       const rowShift = (r % 2) * (STEP / 2) // halbe Lücke versetzt
       for (let x = CX - spanHalf + rowShift; x <= CX + spanHalf; x += STEP) {
+        // Posen-Mix: 55% stehen, 25% eine Faust hoch, 20% beide Arme im V
+        const pr = rand()
+        const pose = pr < 0.55 ? 0 : pr < 0.8 ? 1 : 2
+        // Kopfbedeckung: 62% Haare, 20% CI-Beanie, 18% Glatze/frei
+        const hr = rand()
+        const hair = hr < 0.62
+          ? HAIR_TONES[Math.floor(rand() * HAIR_TONES.length)]
+          : hr < 0.82
+            ? BEANIE_TONES[Math.floor(rand() * BEANIE_TONES.length)]
+            : '#000000'
         out.push({
           x: x + (rand() - 0.5) * 0.05,
           z: z + (rand() - 0.5) * 0.08,
-          // hintere Reihen etwas größer → Köpfe steigen über die vorderen an
           h: 0.17 + r * 0.012 + rand() * 0.05,
           jersey: JERSEYS[Math.floor(rand() * JERSEYS.length)],
           phase: rand() * Math.PI * 2,
@@ -331,72 +370,92 @@ function InstancedCrowd() {
           sway: 0.025 + rand() * 0.05,
           lean0: -0.05 - rand() * 0.06, // Grund-Vorlage Richtung Platz/Kamera
           yaw: (rand() - 0.5) * 0.5, // leichte Blickrichtungs-Streuung
+          pose,
+          slot: slots[pose]++,
+          skin: SKIN_TONES[Math.floor(rand() * SKIN_TONES.length)],
+          hair,
+          hairScale: hr < 0.82 ? 1 : 0,
         })
       }
     }
-    return out
+    return { out, counts: slots }
   }, [])
 
-  const N = crowd.length
+  const N = crowd.out.length
+  const bodyGeos = useMemo(
+    () => [getHumanBodyGeometry('idle'), getHumanBodyGeometry('point'), getHumanBodyGeometry('cheer')],
+    [],
+  )
+  const headGeo = useMemo(() => getHumanHeadGeometry(), [])
+  const hairGeo = useMemo(() => getHairCapGeometry(), [])
 
-  // Geometrie mit Basis am Boden → Schunkeln pivotiert um die Füße;
-  // EIN Matrix pro Figur gilt für Körper UND Kopf.
-  // v13-K2: echte Menschen-Silhouette (Beine, Hüfte, taillierter Rumpf,
-  // hängende Arme) statt Zylinder — die Masse liest sich als Publikum,
-  // nicht als Kegelfeld. Gleiche Höhe/Basis → Matrizen unverändert.
-  const bodyGeo = useMemo(() => getHumanBodyGeometry(), [])
-  const headGeo = useMemo(() => {
-    const g = new THREE.SphereGeometry(0.092, 8, 6)
-    g.translate(0, 1.0, 0)
-    return g
-  }, [])
-
-  // Farben einmalig setzen.
+  // Farben einmalig setzen (Trikot je Pose-Mesh, Haut + Haar global).
   useEffect(() => {
-    const body = bodyRef.current
     const head = headRef.current
-    if (!body || !head) return
+    const hair = hairRef.current
+    if (!head || !hair) return
     const col = new THREE.Color()
-    const skin = new THREE.Color(SKIN)
     for (let i = 0; i < N; i++) {
-      body.setColorAt(i, col.set(crowd[i].jersey))
-      head.setColorAt(i, skin)
+      const f = crowd.out[i]
+      bodyRefs.current[f.pose]?.setColorAt(f.slot, col.set(f.jersey))
+      head.setColorAt(i, col.set(f.skin))
+      hair.setColorAt(i, col.set(f.hair === '#000000' ? f.skin : f.hair))
     }
-    if (body.instanceColor) body.instanceColor.needsUpdate = true
+    bodyRefs.current.forEach((b) => { if (b?.instanceColor) b.instanceColor.needsUpdate = true })
     if (head.instanceColor) head.instanceColor.needsUpdate = true
+    if (hair.instanceColor) hair.instanceColor.needsUpdate = true
   }, [crowd, N])
 
   useFrame((state) => {
-    const body = bodyRef.current
     const head = headRef.current
-    if (!body || !head) return
+    const hair = hairRef.current
+    if (!head || !hair) return
     const t = state.clock.elapsedTime
     for (let i = 0; i < N; i++) {
-      const f = crowd[i]
-      const sway = Math.sin(t * f.speed + f.phase) * f.sway
-      const bob = Math.sin(t * f.speed * 1.3 + f.phase) * 0.006
+      const f = crowd.out[i]
+      // Jubel-Posen leben stärker (mehr Wippen), Idle bleibt ruhig
+      const amp = f.pose === 2 ? 1.7 : f.pose === 1 ? 1.3 : 1
+      const sway = Math.sin(t * f.speed + f.phase) * f.sway * amp
+      const bob = Math.sin(t * f.speed * 1.3 + f.phase) * 0.006 * amp
       dummy.position.set(f.x, bob, f.z)
       // x: Grund-Vorlage zur Kamera + leichtes Nicken; y: Blickstreuung; z: Schunkeln
       dummy.rotation.set(f.lean0 + Math.sin(t * f.speed * 0.9 + f.phase) * 0.02, f.yaw, sway)
       dummy.scale.setScalar(f.h)
       dummy.updateMatrix()
-      body.setMatrixAt(i, dummy.matrix)
+      bodyRefs.current[f.pose]?.setMatrixAt(f.slot, dummy.matrix)
       head.setMatrixAt(i, dummy.matrix)
+      if (f.hairScale === 0) {
+        dummy.scale.setScalar(0.0001)
+        dummy.updateMatrix()
+      }
+      hair.setMatrixAt(i, dummy.matrix)
     }
-    body.instanceMatrix.needsUpdate = true
+    bodyRefs.current.forEach((b) => { if (b) b.instanceMatrix.needsUpdate = true })
     head.instanceMatrix.needsUpdate = true
+    hair.instanceMatrix.needsUpdate = true
   })
 
   return (
     <group>
       {/* v13-X4: Stoff/Haut matt halten — envMapIntensity gedrosselt,
           sonst glänzt die Menge wie Plastikfiguren. (castShadow wird vom
-          StaticShadows-Traversal bewusst aktiviert — statischer Bake.) */}
-      <instancedMesh ref={bodyRef} args={[bodyGeo, undefined, N]} castShadow={false}>
-        <meshStandardMaterial roughness={0.92} envMapIntensity={0.35} />
-      </instancedMesh>
+          StaticShadows-Traversal bewusst aktiviert — statischer Bake.)
+          vertexColors: Hose dunkel, Trikot-Zone × Instanzfarbe. */}
+      {bodyGeos.map((geo, p) => (
+        <instancedMesh
+          key={p}
+          ref={(el) => { bodyRefs.current[p] = el }}
+          args={[geo, undefined, Math.max(1, crowd.counts[p])]}
+          castShadow={false}
+        >
+          <meshStandardMaterial roughness={0.92} envMapIntensity={0.35} vertexColors />
+        </instancedMesh>
+      ))}
       <instancedMesh ref={headRef} args={[headGeo, undefined, N]} castShadow={false}>
         <meshStandardMaterial roughness={0.9} envMapIntensity={0.35} />
+      </instancedMesh>
+      <instancedMesh ref={hairRef} args={[hairGeo, undefined, N]} castShadow={false}>
+        <meshStandardMaterial roughness={0.96} envMapIntensity={0.25} />
       </instancedMesh>
     </group>
   )
