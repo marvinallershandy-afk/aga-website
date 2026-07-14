@@ -68,12 +68,18 @@ const HALF = ROOM.width / 2
 // Zaun — der Bogen liest sich als bewusstes „um die Ecke"-Manöver.
 // v11-E3: Tür sitzt weiter hinten (z=−2.5) → der „um-die-Ecke"-Bogen zieht
 // entsprechend weiter nach Norden, bevor er nach Osten in die Tür dreht.
+// v14-E4: Die Kurve endet nicht mehr VOR der Türebene (x=6.42), sondern
+// IM Windfang (x≈6.58) — die Kamera fliegt körperlich durch die Öffnung,
+// der Türrahmen streift den Bildrand (Parallaxe verkauft den Durchtritt),
+// und der Welt-Hop bei p=PARTY_HOP passiert erst, wenn echte Geometrie
+// (Windfang-Wände + Glow-Rückwand) das Bild komplett rahmt.
 const approachPos = new THREE.CatmullRomCurve3(
   [
     new THREE.Vector3(4.6, 0.9, 1.5),
     new THREE.Vector3(5.25, 0.62, -0.7),
     new THREE.Vector3(5.8, 0.34, -2.55),
-    new THREE.Vector3(6.28, DOOR.cy + 0.01, DOOR.z),
+    new THREE.Vector3(6.3, DOOR.cy + 0.01, DOOR.z),
+    new THREE.Vector3(6.58, DOOR.cy, DOOR.z),
   ],
   false,
   'centripetal',
@@ -116,7 +122,8 @@ const insideLook = new THREE.CatmullRomCurve3(
 
 const _p = new THREE.Vector3()
 const _l = new THREE.Vector3()
-const DOOR_LOOK = new THREE.Vector3(DOOR.x + 0.25, DOOR.cy, DOOR.z)
+// Blick zieht bis auf die Glow-Rückwand des Windfangs (x≈6.72)
+const DOOR_LOOK = new THREE.Vector3(DOOR.x + 0.3, DOOR.cy, DOOR.z)
 const MUSIK_LOOK = new THREE.Vector3(7.1, 0.5, -0.35)
 
 function smooth01(t: number): number {

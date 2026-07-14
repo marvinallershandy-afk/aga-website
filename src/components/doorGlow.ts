@@ -84,3 +84,65 @@ export function getDoorGlowTexture(): THREE.CanvasTexture {
   tex.anisotropy = 4
   return tex
 }
+
+// ─────────────────────────────────────────────────────────────
+// v14-E4: Windfang-Rückwand. Die K1-Mural-Textur (Wimpel/Regal)
+// liest im Vollbild als Poster — die Rückwand des ECHTEN Windfangs
+// ist deshalb eine ruhige, warm angestrahlte Putzwand mit einer
+// inneren Türöffnung als Licht-Rechteck (dorthin geht die Reise
+// weiter → der Welt-Hop setzt genau diese Bewegung fort).
+// ─────────────────────────────────────────────────────────────
+let wallTex: THREE.CanvasTexture | null = null
+
+export function getVestibuleWallTexture(): THREE.CanvasTexture {
+  if (wallTex) return wallTex
+  const W = 160
+  const H = 200
+  const cv = document.createElement('canvas')
+  cv.width = W
+  cv.height = H
+  const ctx = cv.getContext('2d')!
+  // warmer Putz, oben von der Deckenlampe angestrahlt
+  const g = ctx.createLinearGradient(0, 0, 0, H)
+  g.addColorStop(0, '#e8c896')
+  g.addColorStop(0.4, '#c9a06e')
+  g.addColorStop(1, '#8a6544')
+  ctx.fillStyle = g
+  ctx.fillRect(0, 0, W, H)
+  const rg = ctx.createRadialGradient(W * 0.5, H * 0.08, 6, W * 0.5, H * 0.12, W * 0.9)
+  rg.addColorStop(0, 'rgba(255,238,200,0.55)')
+  rg.addColorStop(1, 'rgba(255,238,200,0)')
+  ctx.fillStyle = rg
+  ctx.fillRect(0, 0, W, H)
+  // feines Putz-Korn
+  const img = ctx.getImageData(0, 0, W, H)
+  for (let p = 0; p < img.data.length; p += 4) {
+    const n = ((Math.sin(p * 12.9898) * 43758.5453) % 1) * 10 - 5
+    img.data[p] += n
+    img.data[p + 1] += n
+    img.data[p + 2] += n
+  }
+  ctx.putImageData(img, 0, 0)
+  // innere Türöffnung rechts (Süd): dunkle Laibung + warmes Lichtrechteck
+  const dx = W * 0.56, dw = W * 0.3, dy = H * 0.3, dh = H * 0.62
+  ctx.fillStyle = '#241708'
+  ctx.fillRect(dx - 5, dy - 5, dw + 10, dh + 5)
+  const dg = ctx.createLinearGradient(0, dy, 0, dy + dh)
+  dg.addColorStop(0, '#ffe6b8')
+  dg.addColorStop(0.5, '#ffc270')
+  dg.addColorStop(1, '#d98f3e')
+  ctx.fillStyle = dg
+  ctx.fillRect(dx, dy, dw, dh)
+  // Licht-Halo um die Öffnung
+  const hg = ctx.createRadialGradient(dx + dw / 2, dy + dh * 0.5, 8, dx + dw / 2, dy + dh * 0.5, W * 0.5)
+  hg.addColorStop(0, 'rgba(255,205,130,0.25)')
+  hg.addColorStop(1, 'rgba(255,205,130,0)')
+  ctx.fillStyle = hg
+  ctx.fillRect(0, 0, W, H)
+  // Sockelleiste
+  ctx.fillStyle = 'rgba(50,32,20,0.8)'
+  ctx.fillRect(0, H - 7, W, 7)
+  wallTex = new THREE.CanvasTexture(cv)
+  wallTex.colorSpace = THREE.SRGBColorSpace
+  return wallTex
+}

@@ -71,6 +71,15 @@ export function CameraRig() {
     // v11-E3: sanftere Dämpfung (5→3.8) → der Schwenk zieht weicher nach.
     smoothedParty.current = THREE.MathUtils.damp(smoothedParty.current, ppTarget, 3.8, delta)
     const pp = smoothedParty.current
+    // v14-E4: Der Windfang ist nur 0.3 tief / 0.2 breit — im Tür-Fenster
+    // senken wir die Near-Plane ab, sonst clippen Laibung/Decke beim
+    // Durchtritt. Außerhalb sofort zurück (Tiefen-Präzision).
+    const persp = camera as THREE.PerspectiveCamera
+    const wantNear = pp > 0.3 && pp < 0.55 ? 0.045 : 0.1
+    if (persp.near !== wantNear) {
+      persp.near = wantNear
+      persp.updateProjectionMatrix()
+    }
     if (pp > 0.005) {
       const aspect = state.size.width / state.size.height
       if (pp < PARTY_HOP) {
