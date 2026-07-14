@@ -29,10 +29,13 @@ function makeMistTexture(): THREE.CanvasTexture {
   return t
 }
 
+// v14-E3: einen Hauch präsenter + eine vierte Bahn an der Nord-Seite —
+// die Lichtkegel stehen jetzt „in etwas", nicht über blankem Boden.
 const SHEETS: { pos: [number, number, number]; scale: [number, number]; opacity: number }[] = [
-  { pos: [-2.5, 0.09, 3.6], scale: [7, 1.6], opacity: 0.4 },   // Süd-Reling / Waldrand
-  { pos: [-4.8, 0.12, -2.2], scale: [6, 1.8], opacity: 0.34 }, // Nordwest-Tiefe
-  { pos: [5.9, 0.1, -1.6], scale: [5, 1.4], opacity: 0.38 },   // hinterm Ost-Tor
+  { pos: [-2.5, 0.09, 3.6], scale: [7, 1.6], opacity: 0.46 },  // Süd-Reling / Waldrand
+  { pos: [-4.8, 0.12, -2.2], scale: [6, 1.8], opacity: 0.4 },  // Nordwest-Tiefe
+  { pos: [5.9, 0.1, -1.6], scale: [5, 1.4], opacity: 0.44 },   // hinterm Ost-Tor
+  { pos: [1.6, 0.11, -3.4], scale: [6.5, 1.5], opacity: 0.34 }, // Nord-Tiefe
 ]
 
 export function GroundMist() {

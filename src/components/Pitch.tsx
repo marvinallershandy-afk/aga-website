@@ -189,19 +189,23 @@ export function Pitch() {
     // v5.5: 4× Anisotropie (8 kostete die vsync-Kante mit voller Kette;
     // 4 behebt den Tiefen-Matsch bereits sichtbar)
     map.anisotropy = 4
-    const roughnessMap = new THREE.CanvasTexture(rcv)
+    // v14-E3: roughnessMap kommt zurück — aber auf 512px runtergerechnet.
+    // Die volle 2048er-Probe pro Fragment war das Frametime-Problem (v5.5);
+    // bei 512 ist die Probe cache-freundlich und die Mähstreifen bekommen
+    // unter IBL/Mond wieder unterschiedlichen Glanz (Tiefe statt Farbfläche).
+    const rSmall = document.createElement('canvas')
+    rSmall.width = 512
+    rSmall.height = Math.round(512 * (TEX_H / TEX_W))
+    rSmall.getContext('2d')!.drawImage(rcv, 0, 0, rSmall.width, rSmall.height)
+    const roughnessMap = new THREE.CanvasTexture(rSmall)
     return { map, roughnessMap }
   }, [])
 
-  // roughnessMap bewusst NICHT gebunden: kostet eine Textur-Probe pro
-  // Fragment über die größte Fläche der Szene; die Variation ist in
-  // der Albedo bereits sichtbar. (Frametime-Gate.)
-  void roughnessMap
   return (
     // v13-X3: der Rasen empfängt die statisch gebackenen Schatten
     <mesh rotation-x={-Math.PI / 2} position={[0, 0, 0]} receiveShadow>
       <planeGeometry args={[MESH_W, MESH_H]} />
-      <meshStandardMaterial map={map} roughness={0.94} metalness={0} />
+      <meshStandardMaterial map={map} roughnessMap={roughnessMap} roughness={1} metalness={0} />
     </mesh>
   )
 }
