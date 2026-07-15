@@ -42,8 +42,13 @@ export default function App() {
     if (reducedMotion || !webglOK) setReady(true) // kein 3D-Ladevorgang
   }, [setCaps, setReady])
 
-  // Debug: „p" = Perf-Overlay, „e" = Kino-Effekt-Panel
+  // Debug: „p" = Perf-Overlay, „e" = Kino-Effekt-Panel.
+  // NUR im Dev-Build: in Produktion hingen die Hotkeys ungeschützt am window,
+  // d. h. jeder Besucher konnte sich mit „p"/„e" die Debug-Panels einblenden
+  // (z. B. beim Tippen in einem Feld). import.meta.env.DEV ist zur Build-Zeit
+  // konstant → Vite entfernt den Block im Prod-Bundle komplett (dead code).
   useEffect(() => {
+    if (!import.meta.env.DEV) return
     const onKey = (e: KeyboardEvent) => {
       if (e.key.toLowerCase() === 'p') togglePerf()
       if (e.key.toLowerCase() === 'e') toggleFxPanel()
