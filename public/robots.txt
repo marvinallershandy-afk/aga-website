@@ -1,6 +1,16 @@
-# SV Agathenburg-Dollern — alle Crawler willkommen
+# SV Agathenburg-Dollern — Crawler-Regeln
+# Die öffentliche Seite darf komplett indexiert werden.
+# Das /admin-Cockpit nicht: es liegt laut netlify.toml im selben Build und
+# ist damit unter derselben Domain erreichbar — in einen Suchindex gehört es
+# trotzdem nicht.
+# Wichtig: robots.txt ist KEIN Zugriffsschutz, sondern nur eine Bitte an
+# brave Crawler. Der echte Schutz des Cockpits ist und bleibt die Auth.
 User-agent: *
+Disallow: /admin
 Allow: /
 
-# MARVIN: nach Domain-Kauf auf die echte Domain tauschen (siehe index.html)
+# MARVIN: nach Domain-Kauf auf die echte Domain tauschen (siehe index.html).
+# Bewusst unverändert gelassen, solange die Zieldomain nicht entschieden und
+# gekauft ist — eine Sitemap-URL auf eine Wunschdomain, die niemandem gehört,
+# wäre schlechter als der Status quo.
 Sitemap: https://sva-agathenburg-dollern.netlify.app/sitemap.xml
