@@ -7,6 +7,22 @@
   command = "pnpm build"
   publish = "dist"
 
+# Rechtsseiten als eigenständige statische HTML-Dateien (public/).
+# MÜSSEN vor dem SPA-Fallback stehen — Netlify wertet Redirects von oben nach
+# unten aus, der erste Treffer gewinnt. Sonst bögen die /*-Regel die hübschen
+# URLs (/impressum) auf den 3D-Onepager um.
+# Grund für statische Seiten statt In-App-Route: Impressum/Datenschutz müssen
+# ständig verfügbar sein (§ 5 DDG) — auch ohne WebGL und ohne JavaScript.
+[[redirects]]
+  from = "/impressum"
+  to = "/impressum.html"
+  status = 200
+
+[[redirects]]
+  from = "/datenschutz"
+  to = "/datenschutz.html"
+  status = 200
+
 # SPA-Fallback: deckt sowohl den 3D-Onepager als auch /admin/* ab.
 [[redirects]]
   from = "/*"

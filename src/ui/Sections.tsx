@@ -227,7 +227,17 @@ export function Sections() {
 
         {/* v12-E7: „Wo wir kicken" (Karte + Route) = zweiter Beat / Finale-Rauszoom. */}
         <PlatzFinden />
-        <p style={{ marginTop: '3rem', fontSize: '0.7rem', letterSpacing: '0.1em', color: 'rgba(255,255,255,0.55)' }}>
+        {/* Pflicht-Links: Impressum/Datenschutz müssen leicht erkennbar und
+            unmittelbar erreichbar sein (§ 5 DDG). Bewusst echte <a>-Links auf
+            statische HTML-Seiten statt In-App-Routen — die bleiben erreichbar,
+            auch wenn WebGL fehlt oder das 3D-Bundle nicht lädt. Sie stehen im
+            prerenderten .scroll-root, also auch ohne JS im Quelltext. */}
+        <p style={{ marginTop: '3rem', fontSize: '0.72rem', letterSpacing: '0.1em' }}>
+          <a href="/impressum.html" style={{ color: 'rgba(255,255,255,0.75)' }}>Impressum</a>
+          <span style={{ color: 'rgba(255,255,255,0.35)', margin: '0 0.6rem' }}>·</span>
+          <a href="/datenschutz.html" style={{ color: 'rgba(255,255,255,0.75)' }}>Datenschutz</a>
+        </p>
+        <p style={{ marginTop: '0.9rem', fontSize: '0.7rem', letterSpacing: '0.1em', color: 'rgba(255,255,255,0.55)' }}>
           © Seit {CLUB.founded} · {CLUB.name} e.V. · Mit Herz gebaut, Platzhalter ehrlich markiert.
         </p>
       </section>

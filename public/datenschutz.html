@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0E0D0D" />
+    <meta name="color-scheme" content="dark" />
+    <title>Datenschutzerklärung — SV Agathenburg-Dollern</title>
+
+    <!-- GERÜST, STAND 15.07.2026 — NOCH NICHT VERÖFFENTLICHEN.
+         TODO-MARVIN: noindex erst entfernen, wenn alle [TODO-MARVIN] gefüllt
+         und alle [TODO-JURIST] geprüft sind. -->
+    <meta name="robots" content="noindex, nofollow" />
+
+    <!-- Bewusst KEINE externen Fonts/CDNs — siehe Abschnitt 6. -->
+    <style>
+      :root { --rot: #E91D29; --bg: #0E0D0D; --fg: #ECEAE8; --mut: rgba(236,234,232,.62); }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0; background: var(--bg); color: var(--fg);
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        line-height: 1.65; font-size: 17px;
+      }
+      .wrap { max-width: 46rem; margin: 0 auto; padding: 3rem 1.5rem 5rem; }
+      a { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
+      a:hover { color: var(--rot); }
+      .back { display: inline-block; margin-bottom: 2.5rem; font-size: .82rem;
+              letter-spacing: .12em; text-transform: uppercase; color: var(--mut); }
+      h1 { font-size: clamp(2rem, 6vw, 3rem); line-height: 1.05; margin: 0 0 .4rem;
+           text-transform: uppercase; letter-spacing: .01em; }
+      h1 span { color: var(--rot); }
+      h2 { font-size: 1.05rem; text-transform: uppercase; letter-spacing: .1em;
+           margin: 2.6rem 0 .6rem; color: #fff; }
+      h3 { font-size: .95rem; margin: 1.6rem 0 .4rem; color: #fff; }
+      .lead { color: var(--mut); margin: 0 0 2rem; }
+      .rule { height: 3px; width: 64px; background: var(--rot); border: 0; margin: 1.4rem 0 2rem; }
+      p, li { color: rgba(236,234,232,.88); }
+      ul { padding-left: 1.1rem; }
+      li { margin-bottom: .35rem; }
+      .todo {
+        display: inline-block; background: rgba(233,29,41,.14);
+        border: 1px dashed var(--rot); color: #FF8A91;
+        padding: .1rem .5rem; border-radius: 4px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .82em;
+      }
+      .note { border-left: 3px solid rgba(236,234,232,.22); padding: .1rem 0 .1rem 1rem;
+              color: var(--mut); font-size: .92rem; margin: 1rem 0; }
+      .good { border-left: 3px solid var(--rot); padding: .1rem 0 .1rem 1rem;
+              font-size: .92rem; margin: 1rem 0; }
+      footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid rgba(236,234,232,.12);
+               font-size: .8rem; color: var(--mut); }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <a class="back" href="/">← Zurück zum Platz</a>
+
+      <h1>Daten<span>schutz</span></h1>
+      <hr class="rule" />
+      <p class="lead">Informationen zur Verarbeitung personenbezogener Daten gemäß Art. 13 DSGVO.</p>
+
+      <div class="note">
+        <strong>Hinweis an das Team (nicht veröffentlichen):</strong> Gerüst vom 15.07.2026.
+        Die technischen Feststellungen unten (Abschnitte 4–6) wurden am Code verifiziert und
+        stimmen mit dem aktuellen Stand überein. Alle Vereins- und Rechtsangaben sind offen.
+      </div>
+
+      <h2>1. Verantwortlicher</h2>
+      <!-- TODO-MARVIN: Verantwortlicher i. S. v. Art. 4 Nr. 7 DSGVO = der Verein,
+           vertreten durch den Vorstand. Muss identisch sein mit den Angaben im
+           Impressum — bitte nach dem Ausfüllen gegenprüfen. -->
+      <p>
+        Verantwortlich für die Datenverarbeitung auf dieser Website ist:<br />
+        <span class="todo">TODO-MARVIN: Vereinsname, Anschrift, vertreten durch den Vorstand</span><br />
+        Kontakt: <span class="todo">TODO-MARVIN: E-Mail + Telefon (identisch zum Impressum)</span>
+      </p>
+      <p>Siehe auch das <a href="/impressum.html">Impressum</a>.</p>
+
+      <h2>2. Datenschutzbeauftragter</h2>
+      <!-- TODO-JURIST: Prüfen, ob eine Benennungspflicht nach Art. 37 DSGVO /
+           § 38 BDSG besteht (Faustregel: i. d. R. ab 20 Personen, die ständig
+           mit automatisierter Verarbeitung befasst sind — bei Vereinen meist
+           NICHT der Fall). Wenn nicht erforderlich: Abschnitt löschen. -->
+      <p><span class="todo">TODO-JURIST: Benennungspflicht prüfen — sonst Abschnitt löschen</span></p>
+
+      <h2>3. Hosting</h2>
+      <!-- TODO-MARVIN: Die Seite wird aktuell auf Netlify gehostet (siehe
+           netlify.toml). Netlify ist Auftragsverarbeiter → ein AV-Vertrag
+           (Art. 28 DSGVO) MUSS abgeschlossen werden, bevor die Seite live geht.
+           TODO-JURIST: Drittlandtransfer USA (Art. 44 ff. DSGVO) bewerten —
+           Rechtsgrundlage/Angemessenheitsbeschluss bzw. Standardvertragsklauseln
+           benennen. Exakte Anbieter-Firmierung + Anschrift aus dem AVV übernehmen. -->
+      <p>
+        Diese Website wird bei einem externen Dienstleister gehostet
+        (<span class="todo">TODO-MARVIN: Anbieter-Firmierung + Anschrift laut AV-Vertrag — aktuell Netlify</span>).
+        Der Anbieter verarbeitet die Daten als Auftragsverarbeiter weisungsgebunden nach Art. 28 DSGVO.
+      </p>
+      <p><span class="todo">TODO-JURIST: Drittlandtransfer (USA) bewerten und Rechtsgrundlage benennen</span></p>
+      <p><span class="todo">TODO-MARVIN: AV-Vertrag mit dem Hoster abschließen — Pflicht VOR dem Livegang</span></p>
+
+      <h2>4. Server-Logfiles</h2>
+      <p>
+        Beim Aufruf der Website werden durch den Hosting-Anbieter automatisch Daten
+        verarbeitet, die Ihr Browser übermittelt (u. a. IP-Adresse, Datum und Uhrzeit
+        des Zugriffs, aufgerufene Datei, übertragene Datenmenge, Referrer, Browsertyp
+        und Betriebssystem).
+      </p>
+      <p>
+        <strong>Zweck:</strong> Auslieferung der Website, Betriebssicherheit und Abwehr von Angriffen.<br />
+        <strong>Rechtsgrundlage:</strong> Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse am
+        technisch fehlerfreien und sicheren Betrieb).<br />
+        <strong>Speicherdauer:</strong>
+        <span class="todo">TODO-MARVIN: konkrete Speicherdauer beim Hoster erfragen und eintragen</span>
+      </p>
+
+      <h2>5. Einstellungen im lokalen Speicher (kein Tracking)</h2>
+      <!-- Verifiziert am Code (src/store/useStore.ts): Es werden ausschließlich
+           zwei Schlüssel im localStorage gesetzt, und zwar erst NACHDEM der/die
+           Nutzer:in selbst auf den Ton-/Fangesang-Schalter geklickt hat.
+           TODO-JURIST: Einordnung nach § 25 TDDDG bestätigen — Argument: für den
+           ausdrücklich gewünschten Dienst unbedingt erforderlich (§ 25 Abs. 2
+           Nr. 2 TDDDG), daher einwilligungsfrei. Keine Cookies, keine IDs. -->
+      <p>
+        Diese Website setzt <strong>keine Cookies</strong> und bindet keine Analyse- oder
+        Tracking-Dienste ein. Im lokalen Speicher (localStorage) Ihres Browsers werden
+        lediglich zwei von Ihnen selbst getroffene Einstellungen gespeichert:
+      </p>
+      <ul>
+        <li><code>sva-sound</code> — ob der Ton ein- oder ausgeschaltet ist</li>
+        <li><code>sva-fanchant</code> — ob der Fangesang ein- oder ausgeschaltet ist</li>
+      </ul>
+      <p>
+        Diese Werte werden erst gespeichert, wenn Sie den jeweiligen Schalter selbst
+        betätigen. Sie enthalten keine Kennung, mit der Sie identifiziert werden könnten,
+        verlassen Ihr Gerät nicht und werden nicht an uns übertragen. Sie können sie
+        jederzeit über die Einstellungen Ihres Browsers löschen.
+      </p>
+      <p><span class="todo">TODO-JURIST: Einordnung als „unbedingt erforderlich" nach § 25 Abs. 2 Nr. 2 TDDDG bestätigen</span></p>
+
+      <h2>6. Keine Einbindung von Drittanbieter-Inhalten</h2>
+      <div class="good">
+        <strong>Technisch geprüft am 15.07.2026:</strong> Die Seite lädt beim Aufruf
+        <strong>keine Ressourcen von Drittanbietern</strong>. Schriftarten sind lokal
+        eingebunden (self-hosted), es werden keine externen Fonts, CDNs, Karten-Dienste
+        oder Social-Media-Widgets nachgeladen. Karten (Routenplanung), fussball.de und
+        Instagram sind ausschließlich als <em>Links</em> eingebunden — dabei fließen erst
+        dann Daten an den jeweiligen Anbieter, wenn Sie den Link bewusst anklicken und
+        die fremde Seite dadurch selbst aufrufen. Dort gilt die Datenschutzerklärung des
+        jeweiligen Anbieters.
+      </div>
+      <p>
+        Aus diesem Grund benötigt diese Website <strong>kein Cookie-Banner</strong> und keine
+        Einwilligungsabfrage.
+      </p>
+      <div class="note">
+        <strong>Wichtig fürs Team:</strong> Diese Aussage gilt nur, solange es so bleibt.
+        Sobald etwas eingebettet wird, das beim Laden externe Server kontaktiert
+        (z. B. Google Maps als iFrame, YouTube-Video, Instagram-Feed, Google Fonts,
+        ein Analytics-Tool), ist dieser Abschnitt falsch und es werden Einwilligung
+        (Art. 6 Abs. 1 lit. a DSGVO, § 25 Abs. 1 TDDDG) sowie ein Consent-Banner nötig.
+        Dann müssen dieser Abschnitt und die Startseite gemeinsam angepasst werden.
+      </div>
+
+      <h2>7. Kontaktaufnahme</h2>
+      <!-- TODO-MARVIN: Sobald WhatsApp als Kontaktweg aktiv ist (club.ts:
+           whatsappReady), MUSS hier ein eigener Abschnitt zu WhatsApp
+           ergänzt werden — inkl. Drittlandtransfer. Aktuell fallen alle
+           CTAs auf E-Mail zurück, deshalb hier noch nicht beschrieben. -->
+      <p>
+        Wenn Sie uns per E-Mail kontaktieren, verarbeiten wir Ihre Angaben
+        (E-Mail-Adresse, Name, Inhalt der Nachricht) ausschließlich zur Bearbeitung
+        Ihres Anliegens.
+      </p>
+      <p>
+        <strong>Rechtsgrundlage:</strong> Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse
+        an der Beantwortung von Anfragen); bei Anfragen zur Mitgliedschaft zusätzlich
+        Art. 6 Abs. 1 lit. b DSGVO (Anbahnung eines Mitgliedschaftsverhältnisses).<br />
+        <strong>Speicherdauer:</strong> Löschung, sobald das Anliegen abschließend geklärt ist
+        und keine gesetzlichen Aufbewahrungsfristen entgegenstehen.
+      </p>
+      <p><span class="todo">TODO-MARVIN: Sobald die echte WhatsApp-Nummer aktiv ist, Abschnitt „WhatsApp" ergänzen</span></p>
+
+      <h2>8. Fotos auf dieser Website</h2>
+      <!-- TODO-MARVIN: Auf den Fanblock-/Kaderfotos sind Personen erkennbar.
+           Dafür braucht es eine Rechtsgrundlage (i. d. R. Einwilligung nach
+           Art. 6 Abs. 1 lit. a DSGVO, ggf. KUG) — schriftlich einholen und
+           dokumentieren, inkl. Widerrufsmöglichkeit. -->
+      <p><span class="todo">TODO-MARVIN: Rechtsgrundlage für Personenfotos (Einwilligungen) beschreiben</span></p>
+      <p><span class="todo">TODO-JURIST: Verhältnis DSGVO/KUG und Widerruf prüfen</span></p>
+
+      <h2>9. Empfänger der Daten</h2>
+      <p>
+        Eine Weitergabe Ihrer Daten findet nur an den Hosting-Anbieter als
+        Auftragsverarbeiter (Abschnitt 3) statt. Eine darüber hinausgehende Übermittlung
+        erfolgt nicht.
+        <span class="todo">TODO-JURIST: bestätigen, sobald Abschnitt 3 gefüllt ist</span>
+      </p>
+
+      <h2>10. Ihre Rechte</h2>
+      <p>Sie haben uns gegenüber folgende Rechte hinsichtlich Ihrer personenbezogenen Daten:</p>
+      <ul>
+        <li>Recht auf Auskunft (Art. 15 DSGVO)</li>
+        <li>Recht auf Berichtigung (Art. 16 DSGVO)</li>
+        <li>Recht auf Löschung (Art. 17 DSGVO)</li>
+        <li>Recht auf Einschränkung der Verarbeitung (Art. 18 DSGVO)</li>
+        <li>Recht auf Datenübertragbarkeit (Art. 20 DSGVO)</li>
+        <li>Recht auf Widerspruch gegen die Verarbeitung (Art. 21 DSGVO)</li>
+        <li>Recht auf Widerruf einer erteilten Einwilligung (Art. 7 Abs. 3 DSGVO)</li>
+      </ul>
+      <p>
+        Zur Ausübung genügt eine formlose Nachricht an den Verantwortlichen (Abschnitt 1).
+      </p>
+
+      <h2>11. Beschwerderecht bei der Aufsichtsbehörde</h2>
+      <!-- TODO-MARVIN: Zuständig ist die Aufsichtsbehörde am Sitz des Vereins.
+           Bewusst NICHT eingetragen, solange die Vereinsanschrift (Impressum)
+           nicht feststeht — die Zuständigkeit folgt aus dem Sitz. -->
+      <p>
+        Unbeschadet anderer Rechtsbehelfe haben Sie das Recht auf Beschwerde bei einer
+        Datenschutz-Aufsichtsbehörde (Art. 77 DSGVO).
+      </p>
+      <p><span class="todo">TODO-MARVIN: Zuständige Aufsichtsbehörde am Vereinssitz eintragen (Name, Anschrift, Website)</span></p>
+
+      <h2>12. Keine automatisierte Entscheidungsfindung</h2>
+      <p>
+        Eine automatisierte Entscheidungsfindung einschließlich Profiling nach
+        Art. 22 DSGVO findet nicht statt.
+      </p>
+
+      <h2>13. Stand dieser Erklärung</h2>
+      <p>
+        <span class="todo">TODO-MARVIN: Datum eintragen, sobald die Erklärung freigegeben ist</span>
+      </p>
+
+      <footer>
+        <a href="/impressum.html">Impressum</a> ·
+        <a href="/">Startseite</a>
+      </footer>
+    </main>
+  </body>
+</html>

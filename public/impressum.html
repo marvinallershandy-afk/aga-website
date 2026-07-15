@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0E0D0D" />
+    <meta name="color-scheme" content="dark" />
+    <title>Impressum — SV Agathenburg-Dollern</title>
+
+    <!-- GERÜST, STAND 15.07.2026 — NOCH NICHT VERÖFFENTLICHEN.
+         Solange Platzhalter offen sind, bleibt diese Seite auf noindex.
+         TODO-MARVIN: Wenn alle [TODO-MARVIN] gefüllt UND [TODO-JURIST]
+         geprüft sind, die folgende robots-Zeile ENTFERNEN — ein Impressum
+         muss auffindbar sein. Ein halbfertiges aber nicht. -->
+    <meta name="robots" content="noindex, nofollow" />
+
+    <!-- Bewusst KEINE externen Fonts/CDNs: Die Seite lädt Stand heute keine
+         Third-Party-Ressourcen. Das ist der Grund, warum kein Cookie-Banner
+         nötig ist — diese Seite darf das nicht kaputt machen. -->
+    <style>
+      :root { --rot: #E91D29; --bg: #0E0D0D; --fg: #ECEAE8; --mut: rgba(236,234,232,.62); }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0; background: var(--bg); color: var(--fg);
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        line-height: 1.65; font-size: 17px;
+      }
+      .wrap { max-width: 46rem; margin: 0 auto; padding: 3rem 1.5rem 5rem; }
+      a { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
+      a:hover { color: var(--rot); }
+      .back { display: inline-block; margin-bottom: 2.5rem; font-size: .82rem;
+              letter-spacing: .12em; text-transform: uppercase; color: var(--mut); }
+      h1 { font-size: clamp(2rem, 6vw, 3rem); line-height: 1.05; margin: 0 0 .4rem;
+           text-transform: uppercase; letter-spacing: .01em; }
+      h1 span { color: var(--rot); }
+      h2 { font-size: 1.05rem; text-transform: uppercase; letter-spacing: .1em;
+           margin: 2.6rem 0 .6rem; color: #fff; }
+      .lead { color: var(--mut); margin: 0 0 2rem; }
+      .rule { height: 3px; width: 64px; background: var(--rot); border: 0; margin: 1.4rem 0 2rem; }
+      p, li { color: rgba(236,234,232,.88); }
+      /* Platzhalter absichtlich SICHTBAR und laut: Niemand soll diese Seite
+         versehentlich mit Lücken live schalten. */
+      .todo {
+        display: inline-block; background: rgba(233,29,41,.14);
+        border: 1px dashed var(--rot); color: #FF8A91;
+        padding: .1rem .5rem; border-radius: 4px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .82em;
+      }
+      .note { border-left: 3px solid rgba(236,234,232,.22); padding: .1rem 0 .1rem 1rem;
+              color: var(--mut); font-size: .92rem; margin: 1rem 0; }
+      footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid rgba(236,234,232,.12);
+               font-size: .8rem; color: var(--mut); }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <a class="back" href="/">← Zurück zum Platz</a>
+
+      <h1>Impres<span>sum</span></h1>
+      <hr class="rule" />
+      <p class="lead">Angaben gemäß § 5 DDG (Digitale-Dienste-Gesetz).</p>
+
+      <div class="note">
+        <strong>Hinweis an das Team (nicht veröffentlichen):</strong> Diese Seite ist ein
+        Gerüst. Alle rot markierten Felder müssen mit den <em>echten</em> Vereinsdaten
+        gefüllt und anschließend juristisch geprüft werden. Es wurde bewusst nichts
+        geraten oder erfunden.
+      </div>
+
+      <h2>Diensteanbieter</h2>
+      <!-- TODO-MARVIN: Vollständiger, eingetragener Vereinsname inkl. Rechtsform.
+           Aus der Website-Datenbasis (src/data/club.ts) bekannt:
+           "SV Agathenburg-Dollern e.V." — bitte gegen den Vereinsregister-
+           Auszug prüfen, die Schreibweise dort ist maßgeblich. -->
+      <p><span class="todo">TODO-MARVIN: Vereinsname exakt laut Vereinsregister</span></p>
+
+      <h2>Ladungsfähige Anschrift</h2>
+      <!-- TODO-MARVIN: Die ladungsfähige Anschrift des VEREINS (i. d. R. die im
+           Vereinsregister eingetragene Adresse / Adresse des Vorstands).
+           ACHTUNG: NICHT ungeprüft die Sportplatz-Adresse eintragen. In
+           src/data/club.ts steht "Waldsportplatz Agathenburg, Zur Mehrzweckhalle,
+           21684 Agathenburg" — das ist der SPIELORT, nicht zwingend die
+           ladungsfähige Anschrift. Ein Postfach genügt hier NICHT. -->
+      <p>
+        <span class="todo">TODO-MARVIN: Straße + Hausnummer</span><br />
+        <span class="todo">TODO-MARVIN: PLZ + Ort</span>
+      </p>
+
+      <h2>Vertreten durch</h2>
+      <!-- TODO-MARVIN: Vertretungsberechtigter Vorstand nach § 26 BGB —
+           die Namen der Personen, die laut Satzung/Register vertretungs-
+           berechtigt sind (oft 1. und 2. Vorsitzende:r). Keine Fantasienamen. -->
+      <p>
+        Vorstand gemäß § 26 BGB:<br />
+        <span class="todo">TODO-MARVIN: Vor- und Nachname 1. Vorsitzende:r</span><br />
+        <span class="todo">TODO-MARVIN: weitere vertretungsberechtigte Personen</span>
+      </p>
+
+      <h2>Kontakt</h2>
+      <!-- TODO-MARVIN: Telefonnummer des Vereins bestätigen. In club.ts ist
+           die WhatsApp-Nummer noch der Platzhalter 491700000000 → unbrauchbar.
+           E-Mail unten stammt aus club.ts, bitte auf Erreichbarkeit prüfen. -->
+      <p>
+        E-Mail: <a href="mailto:info@sv-agathenburg-dollern.de">info@sv-agathenburg-dollern.de</a>
+        <span class="todo">TODO-MARVIN: Adresse bestätigen (aus club.ts übernommen)</span><br />
+        Telefon: <span class="todo">TODO-MARVIN: Rufnummer (§ 5 DDG: schnelle elektronische Kontaktaufnahme)</span>
+      </p>
+
+      <h2>Registereintrag</h2>
+      <!-- TODO-MARVIN: Registergericht + VR-Nummer aus dem Registerauszug.
+           NICHT raten — das zuständige Amtsgericht muss belegt werden. -->
+      <p>
+        Eintragung im Vereinsregister<br />
+        Registergericht: <span class="todo">TODO-MARVIN: zuständiges Amtsgericht</span><br />
+        Registernummer: <span class="todo">TODO-MARVIN: VR-Nummer</span>
+      </p>
+
+      <h2>Umsatzsteuer-Identifikationsnummer</h2>
+      <!-- TODO-JURIST / TODO-MARVIN: Nur angeben, WENN eine USt-IdNr. nach
+           § 27a UStG existiert. Viele Vereine haben keine → dann diesen
+           gesamten Abschnitt ersatzlos löschen, nicht "keine" hinschreiben. -->
+      <p><span class="todo">TODO-MARVIN: USt-IdNr. falls vorhanden — sonst Abschnitt löschen</span></p>
+
+      <h2>Redaktionell verantwortlich (§ 18 Abs. 2 MStV)</h2>
+      <!-- TODO-JURIST: Prüfen, ob die Seite journalistisch-redaktionelle
+           Inhalte enthält. TODO-MARVIN: Name + Anschrift der verantwortlichen
+           Person (muss eine natürliche Person mit Anschrift in D sein). -->
+      <p><span class="todo">TODO-MARVIN: Name + Anschrift der verantwortlichen Person</span></p>
+
+      <h2>Verbraucherstreitbeilegung</h2>
+      <!-- TODO-JURIST: Formulierung freigeben. Übliche Aussage für Vereine:
+           nicht bereit und nicht verpflichtet, an Streitbeilegungsverfahren vor
+           einer Verbraucherschlichtungsstelle teilzunehmen (§ 36 VSBG).
+           Bewusst NICHT vorformuliert stehen gelassen — das ist eine
+           rechtsverbindliche Erklärung, keine Textbaustein-Entscheidung. -->
+      <p><span class="todo">TODO-JURIST: Erklärung nach § 36 VSBG freigeben</span></p>
+
+      <h2>Bildnachweise</h2>
+      <!-- TODO-MARVIN: Fotocredits (u. a. Fanblock-Fotos). Wichtig: Für Fotos,
+           auf denen Personen erkennbar sind, müssen Einwilligungen vorliegen
+           (DSGVO / KUG). Das betrifft die Bilder unter public/fans/. -->
+      <p><span class="todo">TODO-MARVIN: Urheber/Fotocredits + Einwilligungen für erkennbare Personen</span></p>
+
+      <footer>
+        <a href="/datenschutz.html">Datenschutzerklärung</a> ·
+        <a href="/">Startseite</a>
+      </footer>
+    </main>
+  </body>
+</html>
