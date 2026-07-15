@@ -107,6 +107,12 @@ export interface Match {
   opponent: string
   date: string
   home: boolean
+  /**
+   * Echter Anstoß als ISO-String MIT Zeitzonen-Offset,
+   * z. B. '2026-08-16T15:00:00+02:00'.
+   * Fehlt der Wert → KEIN Countdown, KEIN Kalender-Button (siehe nextKickoff).
+   */
+  kickoff?: string
   isPlaceholder?: boolean
 }
 export const NEXT_MATCH: Match = {
@@ -114,6 +120,18 @@ export const NEXT_MATCH: Match = {
   date: 'Sonntag · Termin folgt',
   home: true,
   isPlaceholder: true,
+}
+
+// Bis 15.07.2026 erzeugte das Widget den Anstoß synthetisch („nächster
+// Sonntag 15:00"). Damit zählte die Seite live auf ein Spiel herunter, das
+// es nicht gibt, und der ICS-Export legte einen Fake-Termin in den Kalender
+// der Besucher. Ehrlicher Vertrag (analog whatsappReady): Ohne echten
+// kickoff gibt es KEINEN Countdown — lieber „Termin folgt" als eine Zahl,
+// die lügt. Trägt Marvin einen kickoff ein, erscheint alles automatisch.
+export function nextKickoff(): Date | null {
+  if (!NEXT_MATCH.kickoff) return null
+  const d = new Date(NEXT_MATCH.kickoff)
+  return Number.isNaN(d.getTime()) ? null : d
 }
 
 // ── Saison-Cockpit (v11-E5) ──────────────────────────────────

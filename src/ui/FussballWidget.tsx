@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { CLUB, CONTACT, fussballDeTeamUrl, FORM, LAST_MATCH, NEXT_MATCH, TABLE_PREVIEW, type FormResult } from '../data/club'
+import { CLUB, CONTACT, fussballDeTeamUrl, FORM, LAST_MATCH, NEXT_MATCH, nextKickoff, TABLE_PREVIEW, type FormResult } from '../data/club'
 import { PLAYERS } from '../data/players'
 
 // ─────────────────────────────────────────────────────────────
@@ -40,19 +40,6 @@ function ScorerFace({ name, photoUrl }: { name: string; photoUrl: string | null 
       )}
     </span>
   )
-}
-
-// Nächster Sonntag 15:00 (typische Anstoßzeit) — vorläufiger Termin, bis
-// fussball.de/Marvin den echten liefert. Hält den Countdown „lebendig".
-function nextSunday1500(): Date {
-  const now = new Date()
-  const d = new Date(now)
-  d.setHours(15, 0, 0, 0)
-  const day = d.getDay() // 0 = Sonntag
-  let add = (7 - day) % 7
-  if (add === 0 && d.getTime() <= now.getTime()) add = 7
-  d.setDate(d.getDate() + add)
-  return d
 }
 
 function pad(n: number) { return String(n).padStart(2, '0') }
@@ -103,7 +90,8 @@ function downloadICS(start: Date, opponent: string) {
 
 export function FussballWidget() {
   const topScorers = [...PLAYERS].sort((a, b) => b.stats.goals - a.stats.goals).slice(0, 3)
-  const kickoff = nextSunday1500()
+  // null = kein echter Termin hinterlegt → Countdown/ICS bleiben aus.
+  const kickoff = nextKickoff()
   const opponent = NEXT_MATCH.home ? NEXT_MATCH.opponent : 'SVA'
 
   return (
@@ -192,13 +180,27 @@ export function FussballWidget() {
               <span className="match-card__vs">vs</span>
               <b>{NEXT_MATCH.home ? NEXT_MATCH.opponent : 'SVA'}</b>
             </div>
-            <Countdown target={kickoff} />
-            <div className="match-card__cta">
-              <button className="btn btn--sm btn--primary" onClick={() => downloadICS(kickoff, opponent)}>
-                In Kalender
-              </button>
-              <span className="match-card__meta">So 15:00 · Termin vorläufig</span>
-            </div>
+            {kickoff ? (
+              <>
+                <Countdown target={kickoff} />
+                <div className="match-card__cta">
+                  <button className="btn btn--sm btn--primary" onClick={() => downloadICS(kickoff, opponent)}>
+                    In Kalender
+                  </button>
+                  <span className="match-card__meta">
+                    {kickoff.toLocaleString('de-DE', {
+                      weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
+                    })} Uhr
+                  </span>
+                </div>
+              </>
+            ) : (
+              /* Kein erfundener Countdown: solange kein echter Anstoß
+                 hinterlegt ist, sagt die Karte ehrlich, dass der Termin fehlt. */
+              <span className="match-card__meta">
+                {NEXT_MATCH.date} — sobald der Spielplan steht, läuft hier der Countdown.
+              </span>
+            )}
           </div>
         </div>
       </div>
