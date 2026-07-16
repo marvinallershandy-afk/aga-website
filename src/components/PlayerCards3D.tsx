@@ -55,6 +55,14 @@ interface Placed {
 
 function useLayout(): Placed[] {
   return useMemo(() => {
+    // P5-E2 (Katalog #7, Mobil): Auf schmalen Viewports (≤640px) rendern wir
+    // die 17 Karten NICHT als 3D-Formation — sie können dort nicht einzeln
+    // lesbar/überlappungsfrei stehen. Stattdessen liefert PlayerCardGrid ein
+    // inline DOM-Grid (alle Karten lesbar), die 3D-Bühne bleibt Backdrop.
+    // Leeres Layout → dieser Layer rendert nichts.
+    if (typeof window !== 'undefined' && window.matchMedia('(max-width: 640px)').matches) {
+      return []
+    }
     // Portrait: engere z-Spreizung, damit die Reihen in den schmalen
     // Bildausschnitt passen (der Rig zieht zusätzlich zurück).
     const portrait = typeof window !== 'undefined' && window.innerHeight > window.innerWidth
@@ -150,6 +158,7 @@ export function PlayerCards3D() {
   // Wand-Zentrum (für den gemeinsamen Yaw)
   const wallCenter = useMemo(() => {
     const c = new THREE.Vector3()
+    if (layout.length === 0) return c
     layout.forEach((p) => c.add(_dummy.position.set(p.x, p.y, p.z)))
     return c.divideScalar(layout.length)
   }, [layout])

@@ -80,7 +80,7 @@ export function Sections() {
           die 3D-Karten unter der Sektion erreichen; Text bleibt sichtbar & lesbar. */}
       <section
         id={mannschaft.id}
-        className={`section section--left${fallback ? '' : ' section--passthrough'}`}
+        className={`section section--left section--roster${fallback ? '' : ' section--passthrough'}`}
       >
         <div className="section__scrim" />
         <Header kicker={mannschaft.kicker} title={mannschaft.title} body={mannschaft.body} />

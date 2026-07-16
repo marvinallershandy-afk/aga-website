@@ -37,10 +37,19 @@ export function useScrollProgress(enabled: boolean) {
       const doc = document.documentElement
       const max = doc.scrollHeight - window.innerHeight
       if (max <= 0) return
+      // P5-E2: Sektionen, deren Inhalt HÖHER als der Viewport ist, verhalten
+      // sich wie snap-start (Ruhepunkt = Oberkante). Das betrifft ausser
+      // tabelle/kontakt neu auch die Mannschaft auf Mobil, wo das inline
+      // Karten-Grid (E2) die Sektion über eine Viewport-Höhe wachsen lässt —
+      // sonst läge der Kamera-Anker mitten im Grid und stünde nicht zum
+      // Snap-Ruhepunkt (Oberkante) passend. Desktop: Mannschaft ≈ 1 Viewport
+      // → nicht „tall" → unverändert (Center-Anker).
+      const isSpanLike = (id: string, el: HTMLElement) =>
+        SNAP_START_IDS.has(id) || el.offsetHeight > window.innerHeight + 4
       const secP = SECTION_IDS.map((id) => {
         const el = document.getElementById(id)
         if (!el) return 0
-        const rest = SNAP_START_IDS.has(id)
+        const rest = isSpanLike(id, el)
           ? el.offsetTop
           : el.offsetTop + el.offsetHeight / 2 - window.innerHeight / 2
         return Math.min(1, Math.max(0, rest / max))
@@ -64,10 +73,12 @@ export function useScrollProgress(enabled: boolean) {
         if (!el) return []
         const vh = window.innerHeight
         const center = el.offsetTop + el.offsetHeight / 2 - vh / 2
-        const w0 = id === 'verein' ? 0 : SNAP_START_IDS.has(id) ? el.offsetTop : center
-        const w1 = SNAP_START_IDS.has(id)
-          ? el.offsetTop + Math.max(0, el.offsetHeight - vh)
-          : center
+        // P5-E2: hohe Sektionen (inkl. Mannschaft mit Karten-Grid auf Mobil)
+        // behalten ihre Präsenz über den GANZEN Scroll-Bereich — sonst faden
+        // die unteren Karten weg, sobald man vom Center wegscrollt.
+        const spanLike = isSpanLike(id, el)
+        const w0 = id === 'verein' ? 0 : spanLike ? el.offsetTop : center
+        const w1 = spanLike ? el.offsetTop + Math.max(0, el.offsetHeight - vh) : center
         return [{ el, w0, w1 }]
       })
     }

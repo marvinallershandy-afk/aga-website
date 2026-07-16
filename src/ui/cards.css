@@ -11,6 +11,26 @@
   margin-top: clamp(2rem, 5vw, 3.5rem);
 }
 
+/* P5-E2 (Katalog #7, Mobil): auf schmalen Viewports das inline DOM-Grid als
+   feste 2-Spalten-Raster — jede FIFA-Karte gross genug, Name/Rating lesbar,
+   nichts überlappt (löst das 3D-Formations-Chaos auf 375px ab). */
+@media (max-width: 640px) {
+  .card-grid,
+  .staff-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.7rem;
+  }
+  .card-grid { margin-top: 1.6rem; }
+}
+
+/* P5-E2: Die Mannschaft-Sektion ist im 3D-Pfad `section--passthrough`
+   (pointer-events:none, damit Taps die 3D-Karten treffen). Die HoloCards sind
+   klickbare <div role="button"> (keine <a>/<button>) — sie brauchen pointer-
+   events explizit zurück, sonst wäre das inline DOM-Grid auf Mobil nicht
+   tippbar (Tap ginge durch auf die 3D-Bühne). */
+.section--passthrough .holo,
+.section--passthrough .staff-card { pointer-events: auto; }
+
 /* v11-E1: Hinweis im 3D-Pfad — die Karten leben auf dem Platz. */
 .card-grid__hint {
   margin-top: clamp(1.4rem, 3vw, 2.2rem);

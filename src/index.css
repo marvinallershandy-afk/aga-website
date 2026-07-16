@@ -99,6 +99,17 @@ body {
   /* Mobil ist die Brandbar-Logo-Zone ~56px hoch und das Sektions-Padding
      nur 1.5rem — Titel liefe unters Logo. Extra Kopf-Freiraum. */
   .section--snap-start { padding-top: 4.5rem; }
+  /* P5-E2: Auf Mobil trägt die Mannschaft-Sektion das inline FIFA-Karten-Grid
+     (17 Karten) und wird höher als ein Viewport. Sie rastet dann an der
+     OBERKANTE ein (Header sichtbar), Inhalt fliesst von oben nach unten —
+     statt mittig zu snappen (Header wäre off-screen). Passt zum span-like
+     Kamera-Anker (useScrollProgress). Desktop: Karten leben im 3D → Regel
+     greift nicht (kein tall grid). */
+  .section--roster {
+    justify-content: flex-start;
+    scroll-snap-align: start;
+    padding-top: 4.5rem;
+  }
 }
 
 .section__kicker {

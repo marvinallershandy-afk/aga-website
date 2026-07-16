@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { PLAYERS, STAFF } from '../data/players'
 import { CONTACT } from '../data/club'
 import { useStore } from '../store/useStore'
@@ -19,9 +19,27 @@ function TrainingPill() {
   )
 }
 
+// P5-E2 (Katalog #7, Mobil): reaktive „schmaler Viewport"-Erkennung. Auf 375px
+// können 17 FIFA-Karten als 3D-Perspektiv-Formation nicht einzeln lesbar stehen
+// (Physik des Bildausschnitts) — dort zeigen wir das DOM-Grid inline, damit
+// jede Karte/jeder Name lesbar & tappbar ist (Backdrop bleibt die 3D-Bühne).
+function useIsNarrow(): boolean {
+  const [narrow, setNarrow] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(max-width: 640px)').matches,
+  )
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 640px)')
+    const on = () => setNarrow(mq.matches)
+    mq.addEventListener('change', on)
+    return () => mq.removeEventListener('change', on)
+  }, [])
+  return narrow
+}
+
 export function PlayerCardGrid() {
   const setSelected = useStore((s) => s.setSelectedPlayer)
   const fallback = useStore((s) => s.fallback)
+  const isNarrow = useIsNarrow()
   const [galleryOpen, setGalleryOpen] = useState(false)
 
   // v11-E1: Im 3D-Pfad LEBEN die Karten auf dem Platz (PlayerCards3D) —
@@ -29,7 +47,11 @@ export function PlayerCardGrid() {
   // Das DOM-Grid ist dann nur der barrierefreie Fallback (kein WebGL /
   // reduced-motion). So gibt es die Karten genau einmal, nie doppelt.
   // v12-E2: zusätzlich „Alle Spieler anzeigen" → gruppierte Galerie-Ansicht.
-  if (!fallback) {
+  // P5-E2: … UND auf schmalen Viewports (Mobil) — dort liegt die 3D-Formation
+  // als Backdrop hinter dem Text, die einzeln lesbaren Karten kommen aus dem
+  // inline DOM-Grid (kein Doppel-Rendering: PlayerCards3D blendet die Karten
+  // auf Mobil aus).
+  if (!fallback && !isNarrow) {
     return (
       <>
         <p className="card-grid__hint">
