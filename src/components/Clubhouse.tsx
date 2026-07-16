@@ -173,6 +173,11 @@ function DoorDust() {
 
 // v14-E5: Dach als Stehfalz-Blech statt flacher Slab — feine Falz-Linien
 // + leichte Ton-Variation. Eine kleine Textur, beide Dachflächen teilen sie.
+// P5-E7 (Katalog #3): Der Finale-Rauszoom (Vogelperspektive, y≈19.5) sah das
+// Gebäude als „schwarzen Blob", weil die Dachfläche mit #26262a nachts fast
+// schwarz absoff. Grundton deutlich aufgehellt (Zink-Blech-Schiefer) + Quer-
+// Firstlinien, damit die Dachfläche von OBEN als gebautes Dach liest statt als
+// Loch. Material bekommt zusätzlich einen kleinen Emissive-Boden (s.u.).
 let roofTex: THREE.CanvasTexture | null = null
 function getRoofTexture(): THREE.CanvasTexture {
   if (roofTex) return roofTex
@@ -180,16 +185,22 @@ function getRoofTexture(): THREE.CanvasTexture {
   cv.width = 256
   cv.height = 64
   const ctx = cv.getContext('2d')!
-  ctx.fillStyle = '#26262a'
+  ctx.fillStyle = '#565a64'
   ctx.fillRect(0, 0, 256, 64)
   for (let x = 0; x < 256; x += 16) {
     const g = ctx.createLinearGradient(x, 0, x + 16, 0)
-    g.addColorStop(0, 'rgba(255,255,255,0.07)')
-    g.addColorStop(0.12, 'rgba(255,255,255,0.02)')
-    g.addColorStop(0.85, 'rgba(0,0,0,0.12)')
-    g.addColorStop(1, 'rgba(0,0,0,0.28)')
+    g.addColorStop(0, 'rgba(255,255,255,0.14)')
+    g.addColorStop(0.12, 'rgba(255,255,255,0.05)')
+    g.addColorStop(0.85, 'rgba(0,0,0,0.14)')
+    g.addColorStop(1, 'rgba(0,0,0,0.3)')
     ctx.fillStyle = g
     ctx.fillRect(x, 0, 16, 64)
+  }
+  // Quer-Sicken (Traufe→First) — von oben lesbare Dach-Gliederung
+  ctx.strokeStyle = 'rgba(20,22,28,0.5)'
+  ctx.lineWidth = 1
+  for (let y = 6; y < 64; y += 14) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(256, y); ctx.stroke()
   }
   roofTex = new THREE.CanvasTexture(cv)
   roofTex.wrapS = roofTex.wrapT = THREE.RepeatWrapping
@@ -268,7 +279,16 @@ export function Clubhouse() {
           rotation-z={s * roofA}
         >
           <boxGeometry args={[slabLen, 0.05, LEN + 0.25]} />
-          <meshStandardMaterial map={getRoofTexture()} roughness={0.75} metalness={0.15} />
+          {/* P5-E7: Emissive-Boden (kühles Schiefer-Grau) → das Dach fällt im
+              Nacht-/Finale-Licht nie unter eine Mindest-Helligkeit und liest
+              von oben als Fläche statt als schwarzes Loch. */}
+          <meshStandardMaterial
+            map={getRoofTexture()}
+            roughness={0.72}
+            metalness={0.18}
+            emissive="#2a2e38"
+            emissiveIntensity={0.32}
+          />
         </mesh>
       ))}
       {/* First-Kappe + Traufen-Blende West (v14-E5: Dachkanten lesen als
