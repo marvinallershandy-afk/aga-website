@@ -58,9 +58,16 @@ export function PartyDirector() {
       const p = Math.min(pIn, pOut)
       setPartyProgress(p)
 
-      // Warmer Schleier als Hop-Sicherheitsnetz (Dreieck um PARTY_HOP)
+      // P5-E4 (Katalog #5): Warme BLENDE um den Hop. Vorbefund: bei p≈0.46–0.48
+      // (kurz vor dem Welt-Hop) sitzt die Kamera IM winzigen Windfang, die warme
+      // Putzwand füllt den Screen → „durch die Wand"-Barriere. Die alte Blende
+      // (0.75·Dreieck) tönte die ohnehin warme Wand nur, statt sie zu decken.
+      // Jetzt ein PLATEAU nahe HOP (fast deckend, Exponent 1.6 hält die Mitte
+      // hoch, fällt zu den Rändern weich): der Nahflug-Moment liest als warmer
+      // Lichtschwall („ins warme Licht treten"), der Hop bleibt verdeckt — der
+      // schöne Tür-Schwellen-Frame davor (p≈0.30, d groß) bleibt klar/blendfrei.
       const d = Math.abs(p - PARTY_HOP)
-      veil.style.opacity = String(Math.max(0, 0.75 * (1 - d / 0.09)))
+      veil.style.opacity = String(0.97 * (1 - Math.min(1, Math.pow(d / 0.085, 1.6))))
 
       // Audio folgt der Fahrt; Playback-Umschaltung am Hop
       AudioManager.setPartyBlend(p)
@@ -101,7 +108,9 @@ export function PartyDirector() {
         position: 'fixed',
         inset: 0,
         zIndex: 380,
-        background: 'radial-gradient(ellipse at 50% 52%, #3a1f0c 0%, #1c0f06 70%)',
+        // P5-E4: wärmeres Zentrum (Bernstein statt dunkelbraun) → die Blende
+        // liest als Licht, in das man eintritt, nicht als Abdunkeln.
+        background: 'radial-gradient(ellipse at 50% 50%, #8a4c16 0%, #3a1f0c 55%, #1c0f06 78%)',
         opacity: 0,
         pointerEvents: 'none',
       }}
