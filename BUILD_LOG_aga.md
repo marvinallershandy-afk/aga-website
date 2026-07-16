@@ -345,3 +345,174 @@ als Preview-Deploy bauen lassen — ein Push dorthin ist **kein** Prod-Deploy
    (v. a. Reveal-Richtung der Mannschaft), damit E3 in Code gehen kann.
 3. Entscheiden, wie das Mobil-Karten-Layout final aussehen soll (s. offen).
 4. Übernahme nach `release` bleibt **Marvins** Entscheidung (Prod ist live).
+
+---
+
+## 3D-Politur Etappe 2 (16.07.2026)
+
+Auftrag: nächste Politur-Etappe aus Marvins Fehlerkatalog — Türen, Mauern/
+Fassade (schwarzer Blob im Finale), Zaun, Partyraum-Übergang, Mobile FIFA-
+Karten. Additiv auf `feat/3d-politur`, iterativ mit Screenshot-Feedback.
+
+> ## 🚨 NICHTS ÖFFENTLICH GESCHALTET
+> - **Kein Push** (weder `release` noch sonst) — alle Arbeit liegt lokal auf
+>   `feat/3d-politur`. `origin/release` unberührt.
+> - **Kein Netlify-Deploy** (Prod/Preview), kein DNS, kein Launch.
+> - **`main` nicht angefasst.** **`src/camera/CameraPath.ts` NICHT geändert**
+>   (GATE-11, kamera-unabhängige Etappe). Fake-Kader/Legal-Inhalte unberührt.
+> - Preview = lokal: `pnpm build` grün + `vite preview` visuell verifiziert.
+
+### Commits (auf `feat/3d-politur`, nach `3d5a8df`)
+| Commit | Etappe |
+|---|---|
+| `7edf5e3` | **P5-E8** Zaun: alphaTest-Cutout (Katalog #4) |
+| `a5a1e2e` | **P5-E7** Vereinsheim-Dach im Finale lesbar (Katalog #3) |
+| `d4820d2` | **P5-E6** Türen als echte Tür-Elemente (Katalog #2) |
+| `08e25a6` | **P5-E4** Partyraum-Übergang als warme Blende (Katalog #5) |
+| `becf0ad` | **P5-E2** Mobile FIFA-Karten als inline DOM-Grid (Katalog #7) |
+| `89c0765` | chore(ci): postinstall `playwright install chromium` |
+
+### E8 — Zaun / depthWrite-Artefakte (Katalog #4) ✅
+`src/components/BallStopFence.tsx`. Vorbefund (Screenshot Tabelle-/Sponsoren-
+Station): `meshBasicMaterial transparent + depthWrite:false` erzeugte Sortier-/
+Flimmer-Artefakte (Zaun sortierte mal vor, mal hinter Banner/Gebäude) und wirkte
+unter Flutlicht zu hell. **Fix:** Textur-Stränge jetzt OPAK (alpha 0.96) + Ton
+gedämpft, Material auf **`alphaTest:0.5` + `transparent:false`** → der Zaun
+rendert im OPAKEN Pass, schreibt Tiefe und sortiert korrekt (Artefakt an der
+Wurzel weg, nicht kaschiert). **Beleg:** `screenshots-mann/e8-desktop-036.png` —
+Banner sortiert sauber vor dem Gitter, Zaun ruhig.
+
+### E7 — Fassade / „schwarzer Blob" im Finale (Katalog #3) ✅
+`src/components/Clubhouse.tsx`. Vorbefund (Finale-Rauszoom, Vogelperspektive
+y≈19.5): das Vereinsheim war eine schwarze Masse, weil die Dachfläche mit
+`#26262a` nachts fast schwarz absoff. **Fix:** Dach-Grundton auf Schiefer-Grau
+`#565a64` aufgehellt, Quer-Sicken als von-oben-lesbare Dach-Gliederung ergänzt,
++ kleiner Emissive-Boden (`#2a2e38`, Intensität 0.32) → das Dach fällt nie unter
+eine Mindesthelligkeit. **Beleg:** `screenshots-mann/prev-finale.png` (Prod-
+Preview) — Gebäude liest als Gebäude: sichtbares Dach, blaues Fascia-Band,
+Vereins-Schild, warme Fenster, Standort-Pin. Die Flutlicht-Mast-Köpfe von oben
+lesen nach dem Dach-Fix mit ihren Licht-Kegeln/Glow **akzeptabel** — bewusst
+NICHT angefasst (Floodlights.tsx ist in jeder Szene aktiv → höheres Regressions-
+Risiko als Nutzen; Notiz falls Marvin sie später noch feiner will).
+
+### E6 — Türen (Katalog #2) ✅
+`src/components/Clubhouse.tsx` + `BrickHut.tsx`. Vorbefund (Tür-Anflug 0.41):
+das blaue Türblatt war eine flache Box ohne Rahmen/Griff/Glas, die Öffnung ohne
+Zarge. **Fix Clubhouse:** feste **Tür-Zarge** (Sturz + zwei Seitenpfosten, dreht
+NICHT mit dem Blatt mit — gehört zur Wand) rahmt die Windfang-Öffnung; das
+**Türblatt** ist jetzt ein echtes Element (blauer Rahmen + warm durchleuchtetes
+**Glas-Oberfeld** + vertieftes Füllpanel + **Edelstahl-Griff**), bodennah &
+zargen-hoch → kein Durch-die-Wand/kein Schweben. **BrickHut:** dunkle Laibung
+hinter dem warmen Licht-Rechteck → offene Tür im Klinkerbau statt schwebendes
+Glow-Quad. **Beleg:** `screenshots-mann/e6-desktop-041.png`.
+
+### E4 — Partyraum-/Musikraum-Übergang (Katalog #5) ✅ + ⚠️ GATE-12-Frage
+`src/ui/PartyDirector.tsx`. Vorbefund (party-p≈0.46–0.48, gemessen): kurz vor
+dem Welt-Hop sitzt die Kamera IM winzigen Windfang, die warme Putzwand füllt den
+Screen (>50 % unscharfe Nahgeometrie = „durch-die-Wand"-Barriere). Die alte
+Blende (0.75·Dreieck) tönte die ohnehin warme Wand nur, statt sie zu decken.
+**Fix:** die vorhandene warme Blende zu einem **Plateau nahe HOP** verstärkt
+(0.97, Exponent 1.6 hält die Mitte hoch, fällt zu den Rändern weich) + wärmeres
+**Bernstein-Zentrum** → der Nahflug-Moment liest als „ins warme Licht treten",
+der Hop bleibt verdeckt; der schöne Tür-Schwellen-Frame davor (p≈0.30) bleibt
+klar/blendfrei. Rein p-getrieben → Rückwärts-Scrub symmetrisch. **Belege:**
+Serie `screenshots-mann/e4-desktop-041/043/045/046.png` (Schwelle → warmer
+Schwall → verdeckter Hop → Emergenz im Raum mit Wappen/Tresen) + Prod
+`prev-party.png`. Auch der **Zaun-Anflug** davor (0.39) ist durch E8 ruhiger.
+
+> **⚠️ GATE-12-Klasse-Entscheidung (konservativer Default gebaut, Frage an
+> Marvin):** Für den Hop-Moment gibt es drei Gestaltungswege — **(a) harter
+> Schnitt** (schneller Cut, verliert das Kontinuierliche), **(b) Blende**
+> (warmer Lichtschwall deckt den Cut — GEBAUT), **(c) reine Durchfahrt**
+> (Windfang so aufweiten, dass nie Nahgeometrie den Screen füllt — invasiver,
+> Geometrie-/Near-Plane-Umbau). Ich habe **(b) Blende** als sinnvollen, risiko-
+> armen Default gebaut (nutzt die vorhandene Architektur, kein Geometrie-Umbau).
+> **Frage:** Passt die warme Blende, oder willst du Richtung (c) „echte
+> Durchfahrt ohne jede Blende"? Das wäre eine eigene, größere Etappe (Windfang
+> aufweiten + partyPath-Feintuning).
+
+### E2 — Mobile FIFA-Karten (Katalog #7) ✅
+`PlayerCards3D.tsx`, `PlayerCardGrid.tsx`, `useScrollProgress.ts`, `Sections.tsx`,
+`index.css`, `cards.css`. Vorbefund (375px): 17 Karten als 3D-Perspektiv-
+Formation überlappen hinter dem Text, Namen unlesbar. **Fachliche Entscheidung:
+Backdrop + DOM-Grid** (17 Karten können auf 375px physisch nicht als 3D-Formation
+einzeln lesbar stehen — das ist keine Tuning-Frage, sondern Bildausschnitt).
+Umsetzung:
+- **PlayerCardGrid:** auf schmalen Viewports (≤640px, reaktiv via `matchMedia`)
+  ein inline **2-Spalten-DOM-Grid** aller 15 Spieler + 2 Staff (HoloCards) —
+  jede Karte voll lesbar (Rating/Position/Name/Stats/Foto), **tappbar → selbes
+  Detail-Modal** wie auf dem Platz.
+- **PlayerCards3D:** der überlappende 3D-Kartencluster wird auf Mobil
+  unterdrückt (leeres Layout) → Platz/Stadion bleibt atmosphärischer **Backdrop**,
+  kein Doppel-Rendering, kein Text-Overlap.
+- **Grundursache-Fix in `useScrollProgress.ts`:** Nicht-`snap-start`-Sektionen
+  hatten ein Präsenz-Fenster von nur EINEM Punkt (Center) → das hohe Karten-Grid
+  fadete beim Scrollen weg (die unteren Karten verschwanden komplett, obwohl im
+  DOM). Jetzt behandeln **Kamera-Anker UND Präsenz-Fenster jede Sektion höher als
+  der Viewport generisch wie snap-start** (Ruhepunkt/Sichtbarkeit über den ganzen
+  Scroll-Bereich). Desktop-Mannschaft ≈ 1 Viewport → nicht „tall" → **komplett
+  unverändert** (3D-Formation aus E2 bleibt).
+- **CSS:** `.section--roster` mobil `flex-start`/`snap-start`/Kopf-Padding;
+  Grid 2 Spalten; pointer-events für HoloCards in der `passthrough`-Sektion
+  zurück (sonst Tap nicht möglich — die Karten sind `<div role=button>`,
+  keine `<a>/<button>`).
+**Belege:** `screenshots-mann/roster-1-top.png` … `roster-4.png` (alle 15 Spieler
++ Trainerstab einzeln lesbar, 2 Spalten, kein Overlap), `roster-tap.png` (Tap →
+Detail-Modal TINO), Prod `prev-roster.png`. Desktop-Gegencheck:
+`e2desk-desktop-016.png` (volle 3D-Formation unverändert).
+
+### Build / Verifikation
+| Prüfung | Ergebnis |
+|---|---|
+| `npx tsc -b` | **Exit 0** — kein `any`, kein `@ts-ignore` |
+| `npx eslint` (geänderte Dateien) | **0 Fehler** (¹) |
+| `pnpm build` (inkl. Prerender) | **grün** — „Prerender ok: 33.3 kB Inhalts-DOM" |
+| Prod-Preview (`vite preview` auf `dist`) | alle 5 Fixes sichtbar (prev-*.png) |
+
+¹ **Ausnahme, ehrlich:** `Clubhouse.tsx` hat weiterhin **einen vorbestehenden**
+`react-refresh/only-export-components`-Fehler auf dem `CLUBHOUSE_POS`-Export
+(Zeile 97) — **nicht** von dieser Etappe eingeführt (codebase-weites Muster, vgl.
+BUILDSPEC P4: 39 Alt-Errors). Meine geänderten Zeilen sind lint-sauber; ein Fix
+hieße `CLUBHOUSE_POS` in eine eigene Datei auslagern (berührt `partyPath.ts`) —
+bewusst nicht Teil dieser 3D-Politur-Etappe.
+
+### CI-Prerender-Absicherung (aus letzter Etappe offen)
+`package.json`: **`postinstall: "playwright install chromium"`** ergänzt. Der
+Netlify-CI-Chromium-Cache ist leer; `scripts/prerender.mjs` nutzt
+`chromium.launch()` → ohne diesen Schritt scheitert der erste CI-Prerender-Build.
+Bewusst **nur Chromium**, **kein `--with-deps`** (die System-Libs setzt der
+Prerender ohnehin schon voraus → kein neues Deploy-Risiko, keine root/apt-
+Abhängigkeit). Lokal idempotent (Cache). Netto strikt besser/gleich: entweder
+der Build läuft nun durch, oder er scheitert klar am Install mit Playwright-
+Meldung statt still am Prerender.
+
+### Wie Marvin es lokal sieht
+```
+cd /Users/marvinallers/code/sva-fussball
+git checkout feat/3d-politur
+pnpm build           # Chromium liegt im Cache
+npx vite preview     # → angezeigter Port
+```
+- **Finale** (ganz runterscrollen): Vereinsheim rechts liest als Gebäude (E7).
+- **Musik/Partyraum** (Station Musik ansteuern): warmer Blende-Übergang statt
+  Wand-Barriere (E4), Tür mit Rahmen/Griff/Glas beim Anflug (E6).
+- **Tabelle/Sponsoren:** Zaun ruhig, kein Flimmern beim Scrub (E8).
+- **Mobil (375px), Station Mannschaft:** inline Karten-Grid, alle 17 Karten
+  einzeln lesbar & tappbar (E2). Desktop unverändert (3D-Formation).
+Screenshot-Belege liegen unter `screenshots-mann/` (nicht committet, lokal).
+
+### Offen / bewusst nicht angefasst
+- **GATE-12 (E4):** Blende-Default gebaut, Frage an Marvin (harter Schnitt vs.
+  Blende vs. echte Durchfahrt) — s. ⚠️ oben.
+- **Flutlicht-Mast-Köpfe von oben (E9-Teil):** nach dem Dach-Fix akzeptabel,
+  bewusst nicht angefasst (Regressions-Risiko in Floodlights.tsx).
+- **E3 Kamerafahrt:** wartet weiter auf GATE-11 (Konzept-Freigabe).
+- **E5 Spielerfiguren, restliche E9-Kollisionen:** nicht Teil dieser Etappe.
+- Vorbestehender `CLUBHOUSE_POS`-Lint (s. ¹).
+
+### Marvins To-dos (diese Etappe)
+1. **Preview freigeben/justieren:** die 5 Punkte (Türen, Fassade-Finale, Zaun,
+   Party-Blende, Mobile-Karten) auf `vite preview` prüfen.
+2. **GATE-12 beantworten:** Party-Übergang — warme Blende ok, oder echte
+   Durchfahrt (eigene größere Etappe) gewünscht?
+3. Übernahme nach `release` bleibt **Marvins** Entscheidung (Prod ist live).
