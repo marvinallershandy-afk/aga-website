@@ -43,9 +43,15 @@ export function BrickHut() {
           <meshStandardMaterial color="#964a38" roughness={0.9} emissive="#42200f" emissiveIntensity={0.18} />
         </mesh>
       ))}
-      {/* offene blaue Tür (warm erleuchtet) */}
-      <mesh position={[0, 0.11, D / 2 + 0.004]}>
-        <planeGeometry args={[0.14, 0.22]} />
+      {/* P5-E6: Tür-Öffnung mit dunkler Laibung (Tiefe) + warmem Licht-Rechteck
+          statt bemalter Fläche — liest als offene Tür in einem Klinker-Bau,
+          nicht als schwebendes Glow-Quad. */}
+      <mesh position={[0, 0.11, D / 2 + 0.002]}>
+        <planeGeometry args={[0.17, 0.25]} />
+        <meshStandardMaterial color="#241610" roughness={0.9} />
+      </mesh>
+      <mesh position={[0, 0.11, D / 2 + 0.005]}>
+        <planeGeometry args={[0.13, 0.21]} />
         <meshStandardMaterial color="#ffb765" emissive="#ff9d3f" emissiveIntensity={1.2} toneMapped={false} />
       </mesh>
       {/* Bank davor */}

@@ -464,11 +464,51 @@ export function Clubhouse() {
             <meshBasicMaterial color={[1.9, 1.5, 0.95]} toneMapped={false} />
           </mesh>
         ))}
-        {/* offenes Türblatt (~105° aufgeschwungen) */}
-        <group position={[-ANNEX_D / 2 - 0.01, 0, -1.58]} rotation-y={1.83}>
-          <mesh position={[0.08, 0.13, 0]}>
-            <boxGeometry args={[0.16, 0.26, 0.014]} />
-            <meshStandardMaterial color="#2f5d8a" roughness={0.75} />
+        {/* P5-E6 (Katalog #2): Feste Tür-ZARGE an der Öffnung (dreht NICHT mit
+            dem Blatt mit — sie gehört zur Wand). Rahmt die Öffnung in der
+            West-Fassade zwischen den beiden Korpus-Teilen (annex-lokal z=−1.5)
+            und gibt dem Durchgang eine gebaute Kante statt einer nackten Lücke. */}
+        <group position={[-ANNEX_D / 2 + 0.004, 0, -1.5]}>
+          {/* Sturz (oben) */}
+          <mesh position={[0, ANNEX_H - 0.012, 0]}>
+            <boxGeometry args={[0.05, 0.024, 0.24]} />
+            <meshStandardMaterial color="#e4e0d4" roughness={0.85} />
+          </mesh>
+          {/* Seitenpfosten */}
+          {[-1, 1].map((s) => (
+            <mesh key={s} position={[0, (ANNEX_H - 0.012) / 2, s * 0.108]}>
+              <boxGeometry args={[0.05, ANNEX_H - 0.012, 0.024]} />
+              <meshStandardMaterial color="#e4e0d4" roughness={0.85} />
+            </mesh>
+          ))}
+        </group>
+        {/* P5-E6: Offenes Türblatt (~105° aufgeschwungen) — jetzt ein echtes
+            Tür-Element: blauer Rahmen + Ober-Glasfeld (warm durchleuchtet vom
+            Windfang) + Füllung unten + Griff, statt einer flachen Platte.
+            Bodennah (y=0), Höhe = Zargen-Lichte → kein Durch-die-Wand/Schweben. */}
+        <group position={[-ANNEX_D / 2 - 0.008, 0, -1.61]} rotation-y={1.9}>
+          {/* Rahmen (Türblatt-Korpus) */}
+          <mesh position={[0.085, 0.115, 0]}>
+            <boxGeometry args={[0.155, 0.225, 0.012]} />
+            <meshStandardMaterial color="#2f5d8a" roughness={0.7} metalness={0.05} />
+          </mesh>
+          {/* Ober-Glasfeld: warm durchscheinend (Licht aus dem Windfang) */}
+          <mesh position={[0.085, 0.16, -0.008]}>
+            <boxGeometry args={[0.1, 0.09, 0.004]} />
+            <meshStandardMaterial
+              color="#ffd9a0" emissive="#ffb765" emissiveIntensity={0.7}
+              roughness={0.4} toneMapped={false}
+            />
+          </mesh>
+          {/* Füllung unten (leicht vertieftes Panel) */}
+          <mesh position={[0.085, 0.055, -0.008]}>
+            <boxGeometry args={[0.1, 0.075, 0.004]} />
+            <meshStandardMaterial color="#274e74" roughness={0.75} />
+          </mesh>
+          {/* Griff (Edelstahl-Stange) */}
+          <mesh position={[0.03, 0.11, -0.012]}>
+            <boxGeometry args={[0.008, 0.05, 0.008]} />
+            <meshStandardMaterial color="#c8ccd2" metalness={0.75} roughness={0.3} />
           </mesh>
         </group>
         {/* v13-K1: Staub-Motten im Türlicht — die Licht-Schleuse wirkt wie
