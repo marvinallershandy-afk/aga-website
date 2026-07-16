@@ -68,7 +68,12 @@ export function Sections() {
           Kamera-Übergang Hero→Mannschaft. Ein kurzes Scroll-Polster gibt
           dem Sturzflug Weg, ohne Text/Halt. Der Anker wird synthetisch
           zwischen Verein und Mannschaft gesetzt (useScrollProgress.ts). */}
-      <div id="anstoss-gap" aria-hidden="true" style={{ height: '80vh', pointerEvents: 'none' }} />
+      {/* P5-E1 (Katalog #6): Gap 80vh → 40vh verdichtet. Vorher lagen zwei
+          volle Leer-Viewports zwischen Hero-Ende und Karten-Enthüllung — man
+          scrollte „zu weit auf den Platz", bevor die Mannschaft kam. Der
+          Anstoß-/Flutlicht-Beat bleibt erhalten (er hängt an u/kickoffPhase,
+          nicht an dieser Höhe), wird aber dichter erlebbar. */}
+      <div id="anstoss-gap" aria-hidden="true" style={{ height: '40vh', pointerEvents: 'none' }} />
 
       {/* 1 · MANNSCHAFT — im 3D-Pfad LEBEN die Karten auf dem Platz (PlayerCards3D).
           Die Sektion wird dann klick-durchlässig (pointer-events:none), damit Taps
