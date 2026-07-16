@@ -30,7 +30,11 @@ const LINE_X: Record<Player['position'], number> = { TW: -4.0, ABW: -2.3, MIT: -
 const LINE_ORDER: Player['position'][] = ['TW', 'ABW', 'MIT', 'ANG']
 // Staffel-Lift pro Reihe (TW hinten am höchsten): die Kamera schaut von
 // Ost-oben — der Lift übersetzt Feld-Tiefe in Bild-HÖHE statt Verdeckung.
-const LINE_LIFT = [1.55, 1.0, 0.48, 0]
+// P5-E2 (Katalog #7): Lift-Stufen DEUTLICH gespreizt (war [1.55,1.0,0.48,0]).
+// Vorher standen die vier Reihen zu eng übereinander → im Bild schoben sich
+// die Namensplatten ineinander (KÖHLER/WEBER, LENNARD/VOGT, BRAUN/LANG). Mit
+// größerer Höhenstaffelung lesen die Reihen als vier getrennte Bänder.
+const LINE_LIFT = [2.75, 1.85, 0.95, 0]
 
 function smoothstep(a: number, b: number, x: number) {
   const t = THREE.MathUtils.clamp((x - a) / (b - a), 0, 1)
@@ -58,12 +62,18 @@ function useLayout(): Placed[] {
     // Wand-Zentrum nach NORDEN (−z) gerückt: die linke Bildhälfte gehört
     // der DOM-Textspalte — die Karten leben in der rechten.
     const zC = portrait ? -0.7 : -1.0
-    const yLift = portrait ? 0.7 : 0
+    // P5-E2 (Katalog #7, Mobil): Portrait staucht die Reihen-Staffelung
+    // (liftScale) und schiebt den ganzen Cluster nach UNTEN (yLift negativ),
+    // damit die Karten unter Headline + Fließtext liegen statt dahinter zu
+    // schmieren. Desktop unverändert (liftScale 1, yLift 0).
+    const liftScale = portrait ? 0.64 : 1
+    const yLift = portrait ? -0.25 : 0
     const placed: Placed[] = []
     LINE_ORDER.forEach((pos, line) => {
       const inLine = PLAYERS.filter((p) => p.position === pos)
       const n = inLine.length
-      const spacing = Math.min(1.45, n > 1 ? 5.3 / (n - 1) : 0) * zk
+      // P5-E2: etwas mehr Luft zwischen den Karten einer Reihe (war 1.45/5.3)
+      const spacing = Math.min(1.6, n > 1 ? 5.9 / (n - 1) : 0) * zk
       inLine.forEach((p, i) => {
         // TW/ABW-Reihen einen Tick weiter nach Norden — sie ragen sonst
         // links in Headline bzw. Textspalte
@@ -71,7 +81,7 @@ function useLayout(): Placed[] {
         placed.push({
           player: p,
           x: LINE_X[pos],
-          y: CY + LINE_LIFT[line] + yLift,
+          y: CY + LINE_LIFT[line] * liftScale + yLift,
           z,
           line,
           scale: 1,
@@ -80,16 +90,23 @@ function useLayout(): Placed[] {
         })
       })
     })
-    // Trainerstab an der Süd-Seitenlinie, bodennah und klar VOR der Wand —
-    // eigene kleine Reihe, verdeckt nichts.
+    // Trainerstab an der Süd-Seitenlinie, bodennah und klar VOR der Wand.
+    // P5-E2 (Katalog #7): raus aus dem Kader-Cluster — tiefer (kleineres y →
+    // im Bild unten) und weiter zur Süd-Linie (größeres z → Richtung Kamera),
+    // damit CARSTEN/NICO nicht mehr die ANG-Karten (HARTMANN #15) überdecken,
+    // sondern als eigene Vordergrund-Reihe unter der Formation liegen.
+    // Die zweite Staff-Karte (Nico) wird entlang der BILD-Horizontalen neben
+    // die erste (Carsten) gesetzt — Screen-Right ≈ (+x, 0, −z). So steht Nico
+    // rechts NEBEN Carsten auf gleicher Höhe, statt (bei reinem x-Offset) nach
+    // unten aus dem Bild zu driften.
     STAFF.filter((m) => !m.isPlaceholder).forEach((m, i) => {
       placed.push({
         staff: m,
-        x: 1.15 + i * 1.5,
-        y: 1.12 + yLift * 0.5,
-        z: 2.6 * zk,
+        x: 1.5 + i * 1.16,
+        y: 1.0 + (portrait ? -0.14 : 0),
+        z: (3.0 - i * 1.24) * zk,
         line: 4,
-        scale: 0.75,
+        scale: 0.72,
         phase: 9.1 + i * 1.7,
         tex: makeStaffCardTexture(m).texture,
       })
@@ -162,7 +179,11 @@ export function PlayerCards3D() {
 
   useFrame((state) => {
     const u = cameraState.u
-    const rp = smoothstep(0.20, MANN_U, u)
+    // P5-E1 (Katalog #6): Reveal-Fenster minimal früher geöffnet (0.20 → 0.18),
+    // damit die ersten Karten schon im ersten Scroll-Zug nach dem Hero
+    // auftauchen, statt erst wenn die Kamera vollständig an der
+    // Mannschafts-Station ruht.
+    const rp = smoothstep(0.18, MANN_U, u)
     const fo = 1 - smoothstep(0.34, 0.42, u)
     const g = groupRef.current
     if (!g) return
