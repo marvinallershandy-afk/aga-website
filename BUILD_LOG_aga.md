@@ -227,3 +227,121 @@ es musste nichts geladen werden (wichtig bei 96 % voller Platte).
 Nicht angefasst (wie beauftragt): Fake-Kader, 3D-Qualität (P5-E1–E9), Kamerafahrt,
 Instagram/Drive/n8n, `main`, sowie die untracked `BUILDSPEC_aga.md`, `audit-screenshots/`,
 `screenshots-release/`.
+
+---
+
+## 3D-Politur (16.07.2026)
+
+Auftrag: Marvins 8-Punkte-Fehlerkatalog als iterative 3D-Qualitäts-Schleife,
+Priorität auf die eindeutig baubaren Punkte 6/7/8. Deploy-Preview für Marvins
+Freigabe.
+
+> ## 🚨 NICHTS ÖFFENTLICH GESCHALTET
+> - **Kein Push auf `release`/origin.** Alle Arbeit liegt auf dem Nicht-Prod-Branch
+>   **`feat/3d-politur`** (abgezweigt vom lokalen `release`-HEAD `dabc091`).
+>   `origin/release` unberührt.
+> - **Kein Netlify-Prod-Deploy, kein Branch-Deploy, kein DNS.** Preview = lokal
+>   (`pnpm build` grün + `vite preview` auf `dist`).
+> - **Fake-Kader NICHT durch erfundene Namen/Fotos ersetzt** — nur die räumliche
+>   Anordnung der bestehenden Karten geändert.
+> - Zusätzliche Sicherung: Tag `backup/release-politur-20260716-builder` = `dabc091`
+>   (die im Auftrag genannte Remote-Ref `refs/backup/release-politur-20260715` war
+>   lokal nicht vorhanden; die Commits liegen aber im `release`-Branch — Tag zur
+>   Sicherheit gesetzt).
+
+### Branch & Commits
+`feat/3d-politur`, abgezweigt von `dabc091`:
+
+| Commit | Etappe |
+|---|---|
+| `f1384d1` | **P5-E1** Scroll-Anker oben (Katalog #6) |
+| `cdf167b` | **P5-E2** FIFA-Karten-Formation (Katalog #7) |
+| `e117e76` | **P5-E3** Kamerafahrt-Konzept als Dokument (Katalog #8, GATE-11) |
+
+### E1 — Scroll-Anker oben (Katalog #6) ✅ gebaut
+`src/ui/Sections.tsx`: Anstoß-Gap **80vh → 40vh** verdichtet. Vorher lagen zwei
+volle Leer-Viewports zwischen Hero-Ende und Karten-Enthüllung. Der Anstoß-/
+Flutlicht-Beat bleibt erhalten (er hängt an `u`/`kickoffPhase`, nicht an der
+Gap-Höhe) — nur dichter. Ergänzend das Karten-Reveal-Fenster minimal früher
+(`u` 0.20 → 0.18, im E2-Commit).
+**Beleg:** Scroll-Serie (`screenshots-mann/p5e1-10.png`): ~1 Viewport nach Hero
+läuft der Sturzflug + Flutlicht UND die ersten Karten (KÖHLER/TINO) tauchen auf;
+bei 1,5 Viewport steht die volle Formation. Rückwärts-Scrub glitchfrei
+(Reveal = reine Funktion von `u`, kein Animations-State).
+
+### E2 — FIFA-Karten-Formation (Katalog #7) ✅ gebaut (Desktop), mobil verbessert
+`src/components/PlayerCards3D.tsx`. Marvins Befund war: Karten-Chaos, „Carsten"
+überdeckt 16/13, Wolff/Neumann halb versteckt, Namen laufen ineinander.
+- **Reihen-Lift gespreizt** `LINE_LIFT [1.55,1.0,0.48,0] → [2.75,1.85,0.95,0]`:
+  die vier Reihen (TW/ABW/MIT/ANG) lesen als getrennte horizontale Bänder statt
+  als diagonaler Haufen — keine Namensplatte verdeckt mehr eine andere.
+- **Mehr Luft in der Reihe** (Spacing `5.3/1.45 → 5.9/1.6`).
+- **Trainerstab raus aus dem Cluster:** Carsten + Nico als eigene Vordergrund-Reihe
+  am unteren Bildrand, entlang der Bild-Horizontalen verteilt (Screen-Right =
+  `+x/−z`) → beide voll im Bild, überdecken keine Spielerkarte mehr.
+- **Mobil:** Reihen-Staffelung gestaucht (`liftScale 0.64`) + Cluster nach unten
+  (`yLift −0.25`), damit die Karten dem Text ausweichen statt dahinter zu schmieren.
+**Beleg:** `screenshots-mann/prod-desktop.png` (Prod-Build via `vite preview`):
+alle **15 Spielerkarten + 2 Staff einzeln identifizierbar** auf 1440.
+`prod-mobile.png`: deutlich verbessert (Text lesbar, Cluster tiefer) — die volle
+Anforderung „17 Karten einzeln auf 375px" ist mobil **noch nicht** erreicht;
+bleibt iterativ (s. offene Punkte).
+
+### E3 — Kamerafahrt-Konzept (Katalog #8) 📄 Konzept vorgelegt, HALT an GATE-11
+`docs/KAMERA_KONZEPT.md` geschrieben — **kein Code an `CameraPath.ts` geändert**
+(GATE-11: Marvin gibt das Konzept frei/justiert, DANN Umbau).
+**Kernidee:** Leitmotiv „Vom Ankommen zum Dazugehören" mit drei Höhen-Registern
+(Vogelflug / Standpunkt / Augenhöhe). Signature-Reveal der Mannschaft neu als
+**„Aufsteigen über die Karten-Wand"**: Kamera startet tief hinter dem West-Tor
+(aus dem Anstoß-Sturzflug), steigt über die gestaffelte Karten-Wand auf und
+schwenkt in die E2-Endkomposition — Reveal wie eine Stadion-Choreo statt
+statischem Diagonal-Blick. Pro Station Ist-Pose + Absicht + konkreter Vorschlag.
+4 offene Fragen an Marvin am Dokumentende (Reveal-Richtung, Höhen-Dramaturgie,
+Tempo, Fanblock-Drift).
+
+### Build / Verifikation
+| Prüfung | Ergebnis |
+|---|---|
+| `npx tsc -b` | **Exit 0** — kein `any`, kein `@ts-ignore` |
+| `npx eslint` (geänderte Dateien) | sauber |
+| `pnpm build` (inkl. Prerender) | **grün** — „Prerender ok: 33.3 kB Inhalts-DOM" |
+| Prod-Preview (`vite preview` auf `dist`) | Karten-Fix sichtbar (prod-desktop.png) |
+
+Chromium lag im Cache — der Prerender lief durch. **CI-Risiko unverändert:** auf
+Netlify ist der Chromium-Cache leer, es gibt keinen `postinstall`-Schritt mit
+`playwright install`; der erste CI-Build kann daran scheitern (eigenes Paket,
+nicht Teil dieser Runde).
+
+### Wie Marvin es sieht (Preview)
+Kein Netlify-Zugang aus dieser Umgebung → **lokale Preview** statt Branch-Deploy:
+```
+cd /Users/marvinallers/code/sva-fussball
+git checkout feat/3d-politur
+pnpm build          # braucht Chromium (liegt im Cache)
+npx vite preview     # → http://localhost:4173/  (bzw. angezeigter Port)
+```
+Station „Mannschaft" ansteuern (scrollen bis zur Formation) — Desktop zeigt die
+saubere FIFA-Formation, Scrollen ab Hero führt direkt in den Reveal.
+Screenshot-Belege liegen unter `screenshots-mann/` (nicht committet, lokal).
+Falls Branch-Deploys in Netlify aktiv sind, kann Marvin `feat/3d-politur` auch
+als Preview-Deploy bauen lassen — ein Push dorthin ist **kein** Prod-Deploy
+(Prod = `release`).
+
+### Offen / iterativ
+- **E2 mobil:** 17 Karten einzeln auf 375px noch nicht voll erreicht. Vorschlag
+  zum Iterieren: entweder Karten weiter aus dem Text schieben/verkleinern, oder
+  auf Mobil bewusst als Backdrop + DOM-Grid („ALLE SPIELER ANZEIGEN") setzen.
+  Marvin-Feedback auf der Preview holen.
+- **E3 Umsetzung:** wartet auf GATE-11 (Konzept-Freigabe). Danach zuerst Station 2.
+- **E4–E9** (Partyraum-Übergang, Spielerfiguren, Türen, Fassade, Zaun,
+  DOM×3D-Kollisionen): nicht begonnen — Asset-/Shader-Themen, iterativ, nach den
+  Kern-Punkten. Für E5 offen: GATE-12 (prozedural vs. CC0-Modelle).
+
+### Marvins To-dos (diese Runde)
+1. **Preview freigeben oder nachjustieren:** Karten-Formation (Desktop) + Scroll-
+   Anker — passt die Anordnung, oder Feinwünsche (Karten größer/kleiner, andere
+   Staffelung)?
+2. **GATE-11:** `docs/KAMERA_KONZEPT.md` lesen und die 4 Fragen beantworten
+   (v. a. Reveal-Richtung der Mannschaft), damit E3 in Code gehen kann.
+3. Entscheiden, wie das Mobil-Karten-Layout final aussehen soll (s. offen).
+4. Übernahme nach `release` bleibt **Marvins** Entscheidung (Prod ist live).
