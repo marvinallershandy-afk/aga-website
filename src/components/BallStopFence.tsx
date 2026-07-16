@@ -14,15 +14,19 @@ const HEIGHT = 0.55
 let meshTex: THREE.CanvasTexture | null = null
 function getMeshTexture() {
   if (meshTex) return meshTex
-  // v14-E5: Moiré-Fix — die alte 64px-Textur (6px-Zellen, 1.2px-Linien,
-  // 10× getiled) flimmerte im flachen Winkel als Schachbrett. Jetzt:
-  // größere Zellen, DICKERE Stränge (mipmappen sauber), weniger Tiles
-  // + Anisotropie. Stilisiert bleibt's — aber ruhig statt glitzernd.
+  // P5-E8 (Katalog #4): Die alte Textur zeichnete halbtransparente Stränge
+  // (alpha 0.55) auf ein Material mit `transparent + depthWrite:false` — das
+  // erzeugte Sortier-/Flimmer-Artefakte (Zaun schien mal vor, mal hinter dem
+  // Banner/Gebäude) UND unter Flutlicht wirkte das Gitter zu hell/„weiß".
+  // Jetzt: OPAKE Stränge auf hartem Transparenz-Kontrast → das Material kann
+  // per `alphaTest` cutten und normal Tiefe schreiben (kein transparenter
+  // Pass mehr → keine Sortierartefakte). Ton gedämpft (dunkleres Grau), damit
+  // der Maschendraht im Nachtlicht ruhig statt grell liest.
   const cv = document.createElement('canvas')
   cv.width = cv.height = 128
   const ctx = cv.getContext('2d')!
-  ctx.strokeStyle = 'rgba(148,156,166,0.55)'
-  ctx.lineWidth = 3
+  ctx.strokeStyle = 'rgba(104,112,124,0.96)'
+  ctx.lineWidth = 2.4
   for (let i = 0; i <= 128; i += 16) {
     ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 128); ctx.stroke()
     ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(128, i); ctx.stroke()
@@ -75,7 +79,15 @@ function FencePanel({ x, zCenter, width, banner }: { x: number; zCenter: number;
       ))}
       <mesh position={[0, HEIGHT / 2, 0]} rotation-y={Math.PI / 2}>
         <planeGeometry args={[width, HEIGHT]} />
-        <meshBasicMaterial map={tex} transparent side={THREE.DoubleSide} depthWrite={false} />
+        {/* P5-E8: alphaTest-Cutout statt transparent+depthWrite:false → der
+            Zaun rendert im OPAKEN Pass, schreibt Tiefe und sortiert korrekt
+            (kein Flimmern/Durchschein mehr gegen Banner & Gebäude). */}
+        <meshBasicMaterial
+          map={tex}
+          alphaTest={0.5}
+          transparent={false}
+          side={THREE.DoubleSide}
+        />
       </mesh>
       {banner && (
         // v10-E1: klar VOR das Gitter (x=−0.07, Platzseite), größer, leicht
