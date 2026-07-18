@@ -77,13 +77,24 @@ const HALF = ROOM.width / 2
 // STATION 4 (MUSIK) — sonst springt die Kamera beim Eintritt in die Durchfahrt
 // vertikal. Der Anflug SINKT jetzt aus Kopfhöhe weich auf die Tür-Mitte (cy),
 // statt von Anfang an in Zaun-/Sockelnähe zu skimmen (Katalog #5).
+// GATE-12 (Katalog #5, „echte Durchfahrt" fertig): Der letzte Stützpunkt lag bei
+// x=6.5 — nur 0.08 hinter der Türebene (6.42), aber 0.22 VOR der Glow-Rückwand
+// (6.72). Dort füllte die 0.34 breite Öffnung erst ~40 % des Bildes (rechts,
+// H1-Raum links) → der Welt-Hop war ein sichtbarer Schnitt, den nur die Blende
+// deckte. Jetzt TAUCHT die Kamera auf den letzten Metern körperlich in den warm
+// glühenden Windfang (bis x≈6.665, nur ~0.055 vor der Glow-Wand): die warme
+// Rückwand blüht auf und füllt das Bild → der Hop wird von echter Geometrie
+// verdeckt („durch die Tür ins Licht treten"), nicht mehr von einer harten
+// Blende. Die Near-Plane ist im Fenster pp∈(0.3,0.55) bereits auf 0.045 gesenkt
+// (CameraRig), daher kein Clipping an Laibung/Decke/Rückwand beim Eintauchen.
 const approachPos = new THREE.CatmullRomCurve3(
   [
     new THREE.Vector3(4.6, 1.6, 1.5),
     new THREE.Vector3(5.3, 1.02, -0.7),
     new THREE.Vector3(5.85, 0.5, -2.5),
-    new THREE.Vector3(6.3, DOOR.cy + 0.02, DOOR.z),
-    new THREE.Vector3(6.5, DOOR.cy, DOOR.z),
+    new THREE.Vector3(6.32, DOOR.cy + 0.01, DOOR.z),
+    new THREE.Vector3(6.52, DOOR.cy, DOOR.z),
+    new THREE.Vector3(6.665, DOOR.cy, DOOR.z),
   ],
   false,
   'centripetal',
