@@ -58,16 +58,21 @@ export function PartyDirector() {
       const p = Math.min(pIn, pOut)
       setPartyProgress(p)
 
-      // P5-E4 (Katalog #5): Warme BLENDE um den Hop. Vorbefund: bei p≈0.46–0.48
-      // (kurz vor dem Welt-Hop) sitzt die Kamera IM winzigen Windfang, die warme
-      // Putzwand füllt den Screen → „durch die Wand"-Barriere. Die alte Blende
-      // (0.75·Dreieck) tönte die ohnehin warme Wand nur, statt sie zu decken.
-      // Jetzt ein PLATEAU nahe HOP (fast deckend, Exponent 1.6 hält die Mitte
-      // hoch, fällt zu den Rändern weich): der Nahflug-Moment liest als warmer
-      // Lichtschwall („ins warme Licht treten"), der Hop bleibt verdeckt — der
-      // schöne Tür-Schwellen-Frame davor (p≈0.30, d groß) bleibt klar/blendfrei.
+      // GATE-12 (Katalog #5): Zwei Übergangs-Modi um den Welt-Hop.
+      //  • 'veil' (Fallback): warme BLENDE als PLATEAU nahe HOP (fast deckend,
+      //    Exponent 1.6 hält die Mitte hoch) — deckt den Hop klassisch ab.
+      //  • 'drive' (Default, beste Version): der AUFGEWEITETE, warm glühende
+      //    Windfang (Clubhouse.tsx) trägt den Hop selbst; die Blende ist nur
+      //    noch ein DEZENTER warmer Schimmer (Peak 0.34, breiter/weicher), der
+      //    Wärme zugibt statt zu kaschieren — „durch die Tür ins Licht treten".
+      // Beide rein p-getrieben → Rückwärts-Scrub symmetrisch. Der schöne Tür-
+      // Schwellen-Frame davor (p≈0.30, d groß) bleibt in beiden Modi blendfrei.
       const d = Math.abs(p - PARTY_HOP)
-      veil.style.opacity = String(0.97 * (1 - Math.min(1, Math.pow(d / 0.085, 1.6))))
+      const drive = useStore.getState().partyTransition === 'drive'
+      const peak = drive ? 0.34 : 0.97
+      const falloff = drive ? 0.11 : 0.085
+      const expo = drive ? 2 : 1.6
+      veil.style.opacity = String(peak * (1 - Math.min(1, Math.pow(d / falloff, expo))))
 
       // Audio folgt der Fahrt; Playback-Umschaltung am Hop
       AudioManager.setPartyBlend(p)

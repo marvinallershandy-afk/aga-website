@@ -106,6 +106,14 @@ const ANNEX_D = 0.3
 // zentriert bei clubhouse-lokal z=−0.15. Der Eingang sitzt an der hinteren
 // (nördlichen) Hälfte (annex-lokal z=−1.5 → Welt z≈−2.5).
 const ANNEX_LEN = 4.8
+// GATE-12 (Katalog #5, „echte Durchfahrt"): die Windfang-ÖFFNUNG in der West-
+// Fassade (Lücke zwischen den beiden Korpus-Teilen, annex-lokal z=−1.5) von 0.2
+// auf 0.34 aufgeweitet. Der Durchtritt liest damit als lesbares, warm glühendes
+// PORTAL (Boden/Decke/Glow-Rückwand als kleiner Raum sichtbar) statt als
+// formatfüllende Nahwand — Basis für den blende-freien 'drive'-Modus. Zarge,
+// Laibung, Boden/Decke, Glow-Wand und Türblatt-Scharnier sind daraus abgeleitet.
+const OPEN_W = 0.34
+const OPEN_HW = OPEN_W / 2
 
 // v13-K1: 16 träge treibende Staub-Motten im warmen Türlicht (instanziert,
 // additiv). Sie geben dem Tür-Transit physische Tiefe — man fliegt durch
@@ -361,12 +369,14 @@ export function Clubhouse() {
             in einen kleinen Windfang; der Welt-Hop passiert erst drinnen,
             wenn echte Geometrie das Bild rahmt — nicht mehr auf einem
             bemalten Glow-Quad („durch die Wand"-Gefühl, Marvins Kritik). */}
-        <mesh position={[0, ANNEX_H / 2, (-2.4 + -1.6) / 2]}>
-          <boxGeometry args={[ANNEX_D, ANNEX_H, 0.8]} />
+        {/* Nord-Korpus: Südkante = Nordrand der (aufgeweiteten) Öffnung. */}
+        <mesh position={[0, ANNEX_H / 2, (-2.4 + (-1.5 - OPEN_HW)) / 2]}>
+          <boxGeometry args={[ANNEX_D, ANNEX_H, 0.9 - OPEN_HW]} />
           <meshStandardMaterial color="#ccc8bd" roughness={0.92} />
         </mesh>
-        <mesh position={[0, ANNEX_H / 2, (-1.4 + 2.4) / 2]}>
-          <boxGeometry args={[ANNEX_D, ANNEX_H, 3.8]} />
+        {/* Süd-Korpus: Nordkante = Südrand der Öffnung. */}
+        <mesh position={[0, ANNEX_H / 2, ((-1.5 + OPEN_HW) + 2.4) / 2]}>
+          <boxGeometry args={[ANNEX_D, ANNEX_H, 3.9 - OPEN_HW]} />
           <meshStandardMaterial color="#ccc8bd" roughness={0.92} />
         </mesh>
         {/* Windfang-Interieur: Holzboden, Decke, warm glühende Rückwand
@@ -375,15 +385,15 @@ export function Clubhouse() {
             beiden Korpus-Teile. */}
         <group position={[0, 0, -1.5]}>
           <mesh position={[0.01, 0.006, 0]}>
-            <boxGeometry args={[ANNEX_D + 0.05, 0.012, 0.2]} />
+            <boxGeometry args={[ANNEX_D + 0.05, 0.012, OPEN_W]} />
             <meshStandardMaterial color="#6e5137" roughness={0.85} />
           </mesh>
           <mesh position={[0, ANNEX_H - 0.008, 0]}>
-            <boxGeometry args={[ANNEX_D, 0.014, 0.2]} />
+            <boxGeometry args={[ANNEX_D, 0.014, OPEN_W]} />
             <meshStandardMaterial color="#b8b2a4" roughness={0.9} />
           </mesh>
           <mesh position={[ANNEX_D / 2 - 0.006, 0.125, 0]} rotation-y={-Math.PI / 2}>
-            <planeGeometry args={[0.2, 0.245]} />
+            <planeGeometry args={[OPEN_W, 0.245]} />
             <meshBasicMaterial map={getVestibuleWallTexture()} color={[1.35, 1.3, 1.2]} toneMapped={false} />
           </mesh>
           {/* Licht-Spill der inneren Türöffnung auf dem Holzboden */}
@@ -406,7 +416,7 @@ export function Clubhouse() {
           {/* Laibungs-Streifen an der Außenkante — die Öffnung bekommt
               sichtbare Tiefe, bevor man eintritt */}
           {[-1, 1].map((s) => (
-            <mesh key={s} position={[-ANNEX_D / 2 + 0.012, ANNEX_H / 2, s * 0.105]}>
+            <mesh key={s} position={[-ANNEX_D / 2 + 0.012, ANNEX_H / 2, s * (OPEN_HW + 0.005)]}>
               <boxGeometry args={[0.03, ANNEX_H, 0.018]} />
               <meshStandardMaterial color="#2b2119" roughness={0.9} />
             </mesh>
@@ -471,12 +481,12 @@ export function Clubhouse() {
         <group position={[-ANNEX_D / 2 + 0.004, 0, -1.5]}>
           {/* Sturz (oben) */}
           <mesh position={[0, ANNEX_H - 0.012, 0]}>
-            <boxGeometry args={[0.05, 0.024, 0.24]} />
+            <boxGeometry args={[0.05, 0.024, OPEN_W + 0.04]} />
             <meshStandardMaterial color="#e4e0d4" roughness={0.85} />
           </mesh>
           {/* Seitenpfosten */}
           {[-1, 1].map((s) => (
-            <mesh key={s} position={[0, (ANNEX_H - 0.012) / 2, s * 0.108]}>
+            <mesh key={s} position={[0, (ANNEX_H - 0.012) / 2, s * (OPEN_HW + 0.008)]}>
               <boxGeometry args={[0.05, ANNEX_H - 0.012, 0.024]} />
               <meshStandardMaterial color="#e4e0d4" roughness={0.85} />
             </mesh>
@@ -486,7 +496,7 @@ export function Clubhouse() {
             Tür-Element: blauer Rahmen + Ober-Glasfeld (warm durchleuchtet vom
             Windfang) + Füllung unten + Griff, statt einer flachen Platte.
             Bodennah (y=0), Höhe = Zargen-Lichte → kein Durch-die-Wand/Schweben. */}
-        <group position={[-ANNEX_D / 2 - 0.008, 0, -1.61]} rotation-y={1.9}>
+        <group position={[-ANNEX_D / 2 - 0.008, 0, -(1.5 + OPEN_HW + 0.01)]} rotation-y={1.9}>
           {/* Rahmen (Türblatt-Korpus) */}
           <mesh position={[0.085, 0.115, 0]}>
             <boxGeometry args={[0.155, 0.225, 0.012]} />

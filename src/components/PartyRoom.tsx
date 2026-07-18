@@ -601,8 +601,14 @@ export default function PartyRoom() {
 
       {/* v11-E4: echtes AGA-Wappen als beleuchtetes Wandschild über der Bar
           (Ost-Wand), statt „SVA"-Neon (Audit #27). Dunkles Schild + Wappen,
-          leicht selbstleuchtend, damit es im dunklen Saal trägt. */}
-      <group position={[HX - 0.03, 1.06, 0.5]} rotation-y={-Math.PI / 2}>
+          leicht selbstleuchtend, damit es im dunklen Saal trägt.
+          GATE-11 (Wappen-in-H1): am Musik-Ruhepunkt lag das Schild top-left
+          GENAU hinter der H1 „AGA URKNALL". Ohne die Kamera zu reframen (würde
+          die ganze Innen-Durchfahrt verschieben) das Schild an der Ost-Wand
+          etwas nach SÜDEN (z 0.5 → 1.25) und tiefer (y 1.06 → 1.0) gerückt →
+          es sitzt jetzt rechts NEBEN der H1 statt dahinter, bleibt über der
+          Bar und kollidiert nicht mit den Postern weiter südlich (z≥2.15). */}
+      <group position={[HX - 0.03, 1.0, 1.25]} rotation-y={-Math.PI / 2}>
         <mesh position={[0, 0, -0.01]}>
           <planeGeometry args={[0.62, 0.62]} />
           <meshStandardMaterial color="#141013" roughness={0.85} />

@@ -57,6 +57,13 @@ interface AppState {
   partyNear: boolean
   setPartyNear: (v: boolean) => void
 
+  /** GATE-12 (Party-Übergang): 'drive' = echte Durchfahrt (der aufgeweitete,
+   *  warm glühende Windfang trägt den Welt-Hop selbst — beste Version), 'veil'
+   *  = warme Blende deckt den Hop (konservativer Fallback zum Vergleich).
+   *  Default 'drive'; per URL `?party=veil` bzw. `?party=drive` umschaltbar. */
+  partyTransition: PartyTransition
+  setPartyTransition: (t: PartyTransition) => void
+
   /** Sponsoren-Karussell (v12-E6): fokussierte Banden-Tafel 0..N-1.
    *  Die Pfeile in der Sponsoren-Sektion setzen den Fokus; die Kamera
    *  fährt an der 3D-Bande entlang auf die fokussierte Tafel. */
@@ -94,6 +101,18 @@ interface AppState {
 }
 
 export type CinemaTier = 'full' | 'reduced'
+export type PartyTransition = 'drive' | 'veil'
+
+/** Party-Übergang beim Start aus der URL ableiten (`?party=veil|drive`).
+ *  Default = 'drive' (die gebaute beste Version). Prerender-/SSR-sicher. */
+function initialPartyTransition(): PartyTransition {
+  if (typeof window === 'undefined') return 'drive'
+  try {
+    return new URLSearchParams(window.location.search).get('party') === 'veil' ? 'veil' : 'drive'
+  } catch {
+    return 'drive'
+  }
+}
 
 export interface CinemaFx {
   bloom: boolean
@@ -144,6 +163,9 @@ export const useStore = create<AppState>((set) => ({
   setPartyOpen: (v) => set({ partyOpen: v }),
   partyNear: false,
   setPartyNear: (v) => set((s) => (s.partyNear === v ? s : { partyNear: v })),
+
+  partyTransition: initialPartyTransition(),
+  setPartyTransition: (t) => set((s) => (s.partyTransition === t ? s : { partyTransition: t })),
 
   // v12-E6: 4 „dein-Logo"-Tafeln (Banden-Slots) — Fokus wandert per Pfeil.
   sponsorFocus: 0,
