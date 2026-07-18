@@ -661,3 +661,90 @@ Screenshot-Belege lokal unter `screenshots-e9/` (vorher), `screenshots-e9b/`,
 2. **GATE-11:** entscheidet zugleich Hero-Masten-Framing + Wappen-in-H1 (beide
    kamera-/framing-gebunden, bewusst offen gelassen).
 3. Übernahme nach `release` bleibt **Marvins** Entscheidung (Prod ist live).
+
+---
+
+## 3D-Politur Etappe 4 — GATE-11 & GATE-12 fertig (feat/3d-politur)
+
+**Branch:** `feat/3d-politur` · **Ausgangspunkt:** WIP `e7f4f09` (Vorgänger starb am
+Limit, „mitten in echte Durchfahrt"). Diese Etappe schließt GATE-12 ab und
+verifiziert die GATE-11-Reste.
+
+### GATE-12 · echte Durchfahrt (Option c) — FERTIG ✅
+`src/camera/partyPath.ts` (Commit `6beed46`), aufbauend auf WIP `e7f4f09`
+(Windfang aufgeweitet `OPEN_W 0.2→0.34`, `drive`/`veil`-Schalter in `useStore` +
+`PartyDirector`, `?party=drive|veil`).
+
+**Befund (am echten Code/Live gemessen, nicht am Log):** Der Anflug endete bei
+`x=6.5` — nur 0.08 hinter der Türebene (6.42), aber **0.22 VOR der Glow-Rückwand**
+(6.72). Mit einer eigens instrumentierten Kamera-Auslese (`window.__camdbg`,
+danach **wieder entfernt**) an realen Scroll-Positionen belegt: am letzten Außen-
+Frame vor dem Welt-Hop füllte die (aufgeweitete) Öffnung erst **~40 % des Bildes**
+(rechts, weil links der H1-Raum „AGA URKNALL" steht). Der Welt-Hop war damit ein
+**sichtbarer Schnitt**, den im `drive`-Modus nur der dezente 0.34-Schleier deckte —
+also faktisch noch „halbe Blende", nicht die versprochene Durchfahrt.
+
+**Fix:** 6. Stützpunkt in `approachPos` (`x≈6.665`, nur ~0.055 vor der Glow-Wand).
+Die Kamera **taucht auf den letzten Metern körperlich in den warm glühenden
+Windfang** → die Rückwand blüht auf und **füllt das Bild** → der Hop wird jetzt
+von **echter Geometrie** verdeckt („durch die Tür ins Licht treten"), nicht mehr
+von einer Blende. Belegt (Scroll-getrieben, Kamerapose bestätigt):
+- Lead-in bleibt weich: `x 6.16 → 6.65` über `p 0.30..0.47` — **kein Lunge**,
+  kein Clipping (Near-Plane im Fenster `pp∈(0.3,0.55)` bereits auf 0.045 gesenkt).
+- Letzter Außen-Frame: **voller warmer Glow-Wash** statt 40%-Tür rechts.
+- In der **Prod-Preview** (`vite preview` auf `dist`) verifiziert: Anflug → Glow-
+  Bloom → Hop → Innenraum-Totale läuft sauber durch (Screenshots lokal, **nicht
+  committet**).
+
+**(b) warme Blende bleibt als Fallback/Schalter:** `?party=veil` deckt den Hop
+weiterhin klassisch mit fast deckendem 0.97-Schleier — von der tieferen Durchfahrt
+**unberührt** (verifiziert). Marvin kann `drive` (Default) vs `veil` direkt
+vergleichen.
+
+### GATE-11 · Reste — verifiziert
+- **Reveal-Kamerafahrt (E3):** bereits `2316027` — nicht erneut angefasst.
+- **Wappen-in-H1:** im WIP `e7f4f09` gelöst (Wandschild `z 0.5→1.25`, `y 1.06→1.0`).
+  Am gesettelten Musik-Ruhepunkt verifiziert: **H1 sitzt sauber auf dunklem Raum,
+  kein Schild mehr dahinter** (Beleg lokal `screenshots-g11/party-settled.png`).
+- **Hero-Masten-Framing:** am Hero-Ruhepunkt geprüft — Masten sind sauber
+  gerahmt, **kein „weißer Tropfen"-Glitch** sichtbar (`screenshots-g11/hero.png`).
+  Bewusst **NICHT** ins `CameraPath`-Hero-Framing gegriffen: der Vorgänger hatte
+  dokumentiert, dass ein „Fix" die Flutlicht-Atmosphäre **global** riskiert; die
+  aktuelle Rahmung ist tragfähig → subjektive Feinjustage bleibt Marvins Call.
+
+### Gate-freie 3D-Politur — bewusst nichts Neues geöffnet
+Einziger real dokumentierter gate-freier Rest ist **E5 (prozedurale Spielerfiguren-
+Verfeinerung)** — eine **spekulative Aufwertung, kein belegter Defekt**, unbegrenzt
+im Umfang und regressionsanfällig. Kein Blind-Aufmachen (kein Gold-Plating).
+
+### Build / Verifikation
+| Prüfung | Ergebnis |
+|---|---|
+| `npx tsc -b` | **Exit 0** — kein `any`, kein `@ts-ignore` |
+| `npx eslint src/camera/partyPath.ts` | **sauber** (Exit 0) |
+| `pnpm build` (inkl. Prerender) | **grün** — „Prerender ok: 33.1 kB Inhalts-DOM" |
+| Prod-Preview (`vite preview` auf `dist`) | Durchfahrt `drive` + `veil` sichtbar |
+
+### Commits (auf `feat/3d-politur`, nach `e7f4f09`)
+| Commit | Etappe |
+|---|---|
+| `6beed46` | **P5-E4/GATE-12** echte Durchfahrt (Option c) — Kamera taucht in den Windfang |
+
+### ⏳ WARTET AUF MARVIN
+1. **Review Kamera + Party `drive` vs `veil`** in Bewegung (nicht nur Stills):
+   `drive` (Default) = Glow-Bloom trägt den Hop · `veil` (`?party=veil`) = warme
+   Blende. Feinjustage Peak/Falloff bzw. Tauchtiefe `x=6.665` nach Geschmack.
+2. **Hero-Masten-Framing:** falls gewünscht, gemeinsam am `CameraPath`-Hero-Beat
+   nachjustieren (bewusst nicht blind angefasst — Flutlicht-Regressionsrisiko).
+3. **Merge nach `release`** bleibt **Marvins** Entscheidung (Prod ist live; kein
+   Push/Deploy von mir, gemäß Grenzen).
+
+### Wie Marvin es lokal sieht
+```
+cd /Users/marvinallers/code/sva-fussball
+git checkout feat/3d-politur
+pnpm build && npx vite preview     # → angezeigter Port
+# Musik-Sektion runterscrollen: Anflug → in den Windfang tauchen (Glow füllt
+# das Bild) → Innenraum. Vergleich:  …/            (drive, Default)
+#                                    …/?party=veil  (warme Blende)
+```
