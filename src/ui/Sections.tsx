@@ -128,8 +128,13 @@ export function Sections() {
       </section>
 
       {/* 5 · SPONSOREN (die Geld-Station, jetzt direkt vor „Mitmachen") —
-          Banden-Zoom im 3D, hier die Argumente + WhatsApp-CTA + „dein Logo"-Slots. */}
-      <section id={sponsoren.id} className="section section--left">
+          Banden-Zoom im 3D, hier die Argumente + WhatsApp-CTA + „dein Logo"-Slots.
+          P5-E9 (Katalog): section--scrim-dense — an dieser Station kreuzt der
+          3D-Banden-Text („DIESE BANDE SUCHT DICH / WERDE SPONSOR") die DOM-
+          Textspalte und ließ Fließtext + Pill „Kein Preisschild" verwaschen.
+          Der dichtere Links-Scrim trägt die Textspalte sauber; die rechte
+          Banden-Hälfte bleibt bewusst frei sichtbar („schau auf die Bande"). */}
+      <section id={sponsoren.id} className="section section--left section--scrim-dense">
         <div className="section__scrim" />
         <Header kicker={sponsoren.kicker} title={sponsoren.title} body={sponsoren.body} />
         <SponsorPitch />
@@ -236,15 +241,22 @@ export function Sections() {
             unmittelbar erreichbar sein (§ 5 DDG). Bewusst echte <a>-Links auf
             statische HTML-Seiten statt In-App-Routen — die bleiben erreichbar,
             auch wenn WebGL fehlt oder das 3D-Bundle nicht lädt. Sie stehen im
-            prerenderten .scroll-root, also auch ohne JS im Quelltext. */}
-        <p style={{ marginTop: '3rem', fontSize: '0.72rem', letterSpacing: '0.1em' }}>
-          <a href="/impressum.html" style={{ color: 'rgba(255,255,255,0.75)' }}>Impressum</a>
-          <span style={{ color: 'rgba(255,255,255,0.35)', margin: '0 0.6rem' }}>·</span>
-          <a href="/datenschutz.html" style={{ color: 'rgba(255,255,255,0.75)' }}>Datenschutz</a>
-        </p>
-        <p style={{ marginTop: '0.9rem', fontSize: '0.7rem', letterSpacing: '0.1em', color: 'rgba(255,255,255,0.55)' }}>
-          © Seit {CLUB.founded} · {CLUB.name} e.V. · Mit Herz gebaut, Platzhalter ehrlich markiert.
-        </p>
+            prerenderten .scroll-root, also auch ohne JS im Quelltext.
+            P5-E9 (Katalog): eigener Lesbarkeits-Träger (finale-legal) — im
+            Finale-Rauszoom lief diese Zeile bisher über den 3D-Bodentext
+            „Waldsportplatz" und war unlesbar. Der Träger legt einen dezenten
+            dunklen Grund unter die Pflicht-Links, damit sie (auch juristisch
+            gefordert) klar erkennbar bleiben. */}
+        <div className="finale-legal">
+          <p className="finale-legal__links">
+            <a href="/impressum.html">Impressum</a>
+            <span aria-hidden="true">·</span>
+            <a href="/datenschutz.html">Datenschutz</a>
+          </p>
+          <p className="finale-legal__copy">
+            © Seit {CLUB.founded} · {CLUB.name} e.V. · Mit Herz gebaut, Platzhalter ehrlich markiert.
+          </p>
+        </div>
       </section>
     </main>
   )

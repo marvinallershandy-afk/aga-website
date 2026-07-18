@@ -1330,9 +1330,11 @@
 }
 .sponsor-pill {
   font-size: 0.78rem; font-weight: 600; letter-spacing: 0.01em;
-  color: rgba(255,255,255,0.9);
+  color: rgba(255,255,255,0.92);
   padding: 0.4rem 0.8rem; border-radius: 999px;
-  background: rgba(255,255,255,0.06);
+  /* P5-E9: deckender Chip — der 3D-Banden-Text lief bei transparentem
+     Grund (0.06) durch die Pill „Kein Preisschild" durch. */
+  background: rgba(12,9,13,0.62);
   border: 1px solid rgba(233,29,41,0.35);
 }
 .band-nav {

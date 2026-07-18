@@ -172,6 +172,16 @@ body {
 .section--left .section__scrim {
   background: linear-gradient(90deg, rgba(8,7,10,0.66) 0%, rgba(8,7,10,0.36) 36%, rgba(8,7,10,0) 64%);
 }
+/* P5-E9 (Katalog): Stationen, an denen ein 3D-Element (Banden-Text) die
+   DOM-Textspalte kreuzt, brauchen einen dichteren, weiter reichenden
+   Links-Scrim. Die Textspalte (bis ~52% Breite) trägt sauber, ab ~70%
+   ist der Scrim aus → die rechte Bühnen-Hälfte (hier die 3D-Bande selbst)
+   bleibt voll sichtbar. */
+@media (min-width: 641px) {
+  .section--left.section--scrim-dense .section__scrim {
+    background: linear-gradient(90deg, rgba(8,7,10,0.9) 0%, rgba(8,7,10,0.78) 30%, rgba(8,7,10,0.42) 52%, rgba(8,7,10,0.12) 66%, rgba(8,7,10,0) 74%);
+  }
+}
 /* Mobil: der Text steht fast über die volle Breite, deshalb greift der
    horizontale Links-Scrim (oben, fade bei 70% Breite) nicht — die rechte
    Texthälfte + die 3D-Karten dahinter blieben ungeschützt (Mannschaft-Audit).
@@ -197,6 +207,36 @@ body {
 .section--passthrough { pointer-events: none; }
 .section--passthrough a,
 .section--passthrough button { pointer-events: auto; }
+
+/* P5-E9 (Katalog): Pflicht-Links + Copyright im Finale. Der Finale-Rauszoom
+   legt den großen 3D-Bodentext „Waldsportplatz" genau unter diese Zeile —
+   ohne Träger war sie (grau auf hellgrau) unlesbar und die juristisch
+   geforderte Erkennbarkeit der Impressum/Datenschutz-Links dahin. Dezenter
+   dunkler, weich auslaufender Grund als Lesbarkeits-Träger; die Links etwas
+   kontraststärker. */
+.finale-legal {
+  margin-top: 2.6rem;
+  align-self: flex-start;
+  max-width: max-content;
+  padding: 0.7rem 1rem 0.75rem;
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(8,6,9,0.72), rgba(8,6,9,0.62));
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+}
+.finale-legal__links {
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+}
+.finale-legal__links a { color: rgba(255,255,255,0.92); text-decoration: underline; text-underline-offset: 2px; }
+.finale-legal__links a:hover { color: #fff; }
+.finale-legal__links span { color: rgba(255,255,255,0.4); margin: 0 0.6rem; }
+.finale-legal__copy {
+  margin-top: 0.7rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.72);
+}
 
 .section--center { align-items: center; text-align: center; }
 .section--center .section__scrim {
