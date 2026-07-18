@@ -177,10 +177,16 @@ function Mast({ index, x, z }: MastProps) {
             <meshStandardMaterial color="#1a1a1e" metalness={0.6} roughness={0.5} />
           </mesh>
           <group position={[0.22, 0.1, 0]} rotation-z={-0.66}>
-            {/* dunkles Gehäuse */}
+            {/* P5-E9 (Katalog, Hero): Gehäuse-Rückseite las im Hero-Frame als
+                harter schwarzer Kasten gegen den Nachthimmel (der nächste Mast
+                zeigt dem Betrachter die unbeleuchtete Rückseite). Ton leicht
+                angehoben (#101014 → #1e1c22) + minimaler warmer Emissive-Anteil
+                (Lampen-Spill am eigenen Gehäuse) → nie mehr reines Schwarz,
+                liest als Struktur. Global unkritisch: in allen anderen Szenen
+                sind die Masten Hintergrund, der Effekt bleibt dezent. */}
             <mesh>
               <boxGeometry args={[0.07, 0.85, 0.6]} />
-              <meshStandardMaterial color="#101014" metalness={0.5} roughness={0.55} />
+              <meshStandardMaterial color="#1e1c22" emissive="#2a2014" emissiveIntensity={0.32} metalness={0.5} roughness={0.55} />
             </mesh>
             {/* Leuchtfläche nur vorn (zum Platz) */}
             <mesh position={[0.037, 0, 0]} rotation-y={Math.PI / 2}>
