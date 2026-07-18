@@ -43,6 +43,8 @@ export const keys = {
   roster: ['sm_roster'] as const,
   sponsoren: ['sm_sponsoren'] as const,
   insights: ['sm_insights'] as const,
+  webhooks: ['sm_webhooks'] as const,
+  deliveries: ['sm_webhook_deliveries'] as const,
 }
 
 export function useContent() {
@@ -265,6 +267,32 @@ export function useSponsorenMutations() {
     onSuccess: invalidate,
   })
   return { create, update, remove }
+}
+
+// P2: Automationen. `retry: false`, damit ein fehlender Tabellen-Zustand
+// (Migration noch nicht angewandt) sofort in den Fallback läuft statt zu warten.
+export function useWebhooks() {
+  return useQuery({ queryKey: keys.webhooks, queryFn: db.fetchWebhooks, retry: false })
+}
+export function useDeliveries() {
+  return useQuery({ queryKey: keys.deliveries, queryFn: () => db.fetchRecentDeliveries(20), retry: false })
+}
+
+export function useWebhookMutations() {
+  const qc = useQueryClient()
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: keys.webhooks })
+    qc.invalidateQueries({ queryKey: keys.deliveries })
+  }
+  const save = useMutation({
+    mutationFn: (input: db.WebhookInput & { event: string }) => db.upsertWebhook(input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: keys.webhooks }),
+  })
+  const record = useMutation({
+    mutationFn: (args: Parameters<typeof db.recordDelivery>[0]) => db.recordDelivery(args),
+    onSuccess: invalidate,
+  })
+  return { save, record }
 }
 
 export function useInsightsMutations() {

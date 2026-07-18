@@ -287,3 +287,75 @@ export async function deleteInsight(id: string): Promise<void> {
   const { error } = await supabase.from('sm_insights').delete().eq('id', id)
   if (error) throw error
 }
+
+// ── sm_webhooks (P2: Automationen produktiv) ────────────────────────────────
+export type WebhookRow = Tables<'sm_webhooks'>
+export type WebhookInput = Partial<Omit<TablesInsert<'sm_webhooks'>, 'id' | 'created_at' | 'updated_at'>>
+
+export type DeliveryRow = Tables<'sm_webhook_deliveries'>
+export type DeliveryInput = Partial<Omit<TablesInsert<'sm_webhook_deliveries'>, 'id' | 'gesendet_at'>>
+
+// Postgres meldet eine fehlende Tabelle mit SQLSTATE 42P01. Solange die
+// Migration 20260719090000_sm_webhooks.sql noch nicht angewandt ist, degradiert
+// die UI darauf sauber (localStorage-Fallback) statt hart zu crashen.
+export function isMissingTable(err: unknown): boolean {
+  return !!err && typeof err === 'object' && 'code' in err && (err as { code?: string }).code === '42P01'
+}
+
+export async function fetchWebhooks(): Promise<WebhookRow[]> {
+  const { data, error } = await supabase
+    .from('sm_webhooks')
+    .select('*')
+    .order('event', { ascending: true })
+  if (error) throw error
+  return data ?? []
+}
+
+// Upsert je Event (event ist unique). Legt den Andockpunkt an oder aktualisiert URL/aktiv.
+export async function upsertWebhook(input: WebhookInput & { event: string }): Promise<WebhookRow> {
+  const { data, error } = await supabase
+    .from('sm_webhooks')
+    .upsert({ ...(input as TablesInsert<'sm_webhooks'>), updated_at: new Date().toISOString() }, { onConflict: 'event' })
+    .select('*')
+    .single()
+  if (error) throw error
+  return data
+}
+
+// Nach einem Versand: letzten Status/Zeitpunkt an der Registry festhalten
+// und eine Zeile ins Zustell-Log schreiben (Grundgerüst der Beobachtbarkeit).
+export async function recordDelivery(args: {
+  webhookId: string | null
+  event: string
+  status: 'ok' | 'fehler'
+  httpCode?: number | null
+  payloadExcerpt?: string | null
+}): Promise<void> {
+  const now = new Date().toISOString()
+  const { error: delErr } = await supabase.from('sm_webhook_deliveries').insert({
+    webhook_id: args.webhookId,
+    event: args.event,
+    status: args.status,
+    http_code: args.httpCode ?? null,
+    payload_excerpt: args.payloadExcerpt ?? null,
+  })
+  if (delErr) throw delErr
+  if (args.webhookId) {
+    const { error: upErr } = await supabase
+      .from('sm_webhooks')
+      .update({ letzter_versand: now, letzter_status: args.status, updated_at: now })
+      .eq('id', args.webhookId)
+    if (upErr) throw upErr
+  }
+}
+
+// Letzte Zustellungen je Event (für die "letzter Versand/Status"-Anzeige).
+export async function fetchRecentDeliveries(limit = 20): Promise<DeliveryRow[]> {
+  const { data, error } = await supabase
+    .from('sm_webhook_deliveries')
+    .select('*')
+    .order('gesendet_at', { ascending: false })
+    .limit(limit)
+  if (error) throw error
+  return data ?? []
+}

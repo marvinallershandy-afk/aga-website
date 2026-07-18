@@ -735,6 +735,77 @@ export type Database = {
         }
         Relationships: []
       }
+      sm_webhooks: {
+        Row: {
+          aktiv: boolean
+          created_at: string
+          event: string
+          id: string
+          letzter_status: string | null
+          letzter_versand: string | null
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          aktiv?: boolean
+          created_at?: string
+          event: string
+          id?: string
+          letzter_status?: string | null
+          letzter_versand?: string | null
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          aktiv?: boolean
+          created_at?: string
+          event?: string
+          id?: string
+          letzter_status?: string | null
+          letzter_versand?: string | null
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
+      sm_webhook_deliveries: {
+        Row: {
+          event: string
+          gesendet_at: string
+          http_code: number | null
+          id: string
+          payload_excerpt: string | null
+          status: string
+          webhook_id: string | null
+        }
+        Insert: {
+          event: string
+          gesendet_at?: string
+          http_code?: number | null
+          id?: string
+          payload_excerpt?: string | null
+          status: string
+          webhook_id?: string | null
+        }
+        Update: {
+          event?: string
+          gesendet_at?: string
+          http_code?: number | null
+          id?: string
+          payload_excerpt?: string | null
+          status?: string
+          webhook_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sm_webhook_deliveries_webhook_id_fkey"
+            columns: ["webhook_id"]
+            isOneToOne: false
+            referencedRelation: "sm_webhooks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wochenplan: {
         Row: {
           datum: string
