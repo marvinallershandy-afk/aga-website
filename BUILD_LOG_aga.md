@@ -516,3 +516,148 @@ Screenshot-Belege liegen unter `screenshots-mann/` (nicht committet, lokal).
 2. **GATE-12 beantworten:** Party-Übergang — warme Blende ok, oder echte
    Durchfahrt (eigene größere Etappe) gewünscht?
 3. Übernahme nach `release` bleibt **Marvins** Entscheidung (Prod ist live).
+
+---
+
+## 3D-Politur Etappe 3 (18.07.2026)
+
+Auftrag: gate-freie Weiterarbeit an der 3D-Politur — den **E9-Kollisions-Sweep
+DOM×3D** aus dem Fehlerkatalog abarbeiten, soweit ohne GATE-11/12 baubar.
+Additiv auf `feat/3d-politur`, iterativ mit Screenshot-Belegen.
+
+> ## 🚨 NICHTS ÖFFENTLICH GESCHALTET
+> - **Kein Push** (weder `release`=Prod noch origin), kein Deploy, kein DNS,
+>   kein Launch. Alle Arbeit lokal auf `feat/3d-politur`.
+> - **`main` nicht angefasst.** **`src/camera/CameraPath.ts` NICHT geändert**
+>   (GATE-11). **Party-/Musikraum-Übergang: Default (b) warme Blende
+>   unangetastet** (GATE-12 nicht vorgegriffen). Fake-Kader/Legal-Inhalte
+>   unberührt.
+> - Preview = lokal: `pnpm build` grün + `vite preview` visuell verifiziert.
+
+### Vorgehen: erst Ist-Stand des BRANCHES verifiziert
+Die `audit-screenshots/` sind der **Vor-Politur-Baustand** und wurden mit dem
+alten Review-Skript per *Zentrieren* der Sektionen erstellt. Für den aktuellen
+Branch habe ich die betroffenen Stationen an ihren **echten Ruhepunkten**
+gescreenshottet (`section--snap-start` → `offsetTop`, sonst Mitte; lokal in
+`screenshots-e9*`, **nicht committet**). Daraus zwei ehrliche Befunde:
+
+- **H2-unter-Logo (Tabelle/Kontakt) ist am realen Snap-Ruhepunkt NICHT defekt.**
+  Der Überlapp im Audit (`desktop-14`, `desktop-16`) war ein **Artefakt der
+  Screenshot-Methode**: das alte Skript *zentriert* die Sektion, und weil
+  Tabelle/Kontakt höher als der Viewport sind, schob das Zentrieren den
+  riesigen Titel nach oben unters Logo. Beim tatsächlichen Snap (Start =
+  `offsetTop`, Padding-Top trägt) steht der Kicker sauber unter dem Logo.
+  → **Bewusst NICHT „gefixt"** (kein erfundener Fix an einem Nicht-Bug).
+- **Fanblock-Kachel-Captions** sind aktuell **nicht** abgeschnitten (2 Zeilen,
+  voll lesbar) → nicht angefasst.
+
+### Gebaut (2 reale, aktuelle Kollisionen + 1 Hero-Mitigation)
+
+**E9-1 · Finale: Copyright/Pflicht-Links über 3D-Bodentext** ✅
+`src/ui/Sections.tsx`, `src/index.css`. Befund (aktuell, `screenshots-e9/desktop-finale`):
+im Finale-Rauszoom liegt der große 3D-Bodentext „Waldsportplatz" **genau unter**
+der Impressum/Datenschutz- + Copyright-Zeile (grau auf hellgrau = unlesbar) —
+und die **juristisch geforderte Erkennbarkeit** (§ 5 DDG) der Pflicht-Links war
+dahin. **Fix:** eigener Lesbarkeits-Träger `.finale-legal` (dezenter dunkler,
+weich auslaufender Grund + leichter Blur), Pflicht-Links kontraststärker
+(unterstrichen, 0.92 statt 0.75). **Beleg:** `screenshots-e9b/desktop-finale.png`
+(Desktop) + `screenshots-e9b-mob/finale.png` (Mobil) — Zeile klar lesbar über
+dem Bodentext. Prerender enthält die echten `<a>`-Links weiterhin (kein JS nötig).
+
+**E9-2 · Sponsoren: DOM-Textspalte × 3D-Banden-Text** ✅
+`src/ui/Sections.tsx`, `src/index.css`, `src/ui/cards.css`. Befund (aktuell,
+`screenshots-e9/desktop-sponsoren`): der 3D-Banden-Text „DIESE BANDE SUCHT DICH /
+WERDE SPONSOR" kreuzt diagonal die DOM-Textspalte; Fließtext („…freigelassen.")
+und die Pill **„Kein Preisschild — einfach fragen"** verwaschen mit dem
+3D-Text. **Fix:** neue Modifier-Klasse `section--scrim-dense` (nur Desktop,
+`min-width:641px`) — dichterer, weiter reichender Links-Scrim trägt die
+Textspalte (bis ~52 % Breite), ab ~70 % aus → die **rechte Banden-Hälfte bleibt
+bewusst voll sichtbar** („schau auf die Bande" bleibt intakt). Zusätzlich
+`.sponsor-pill`-Chips deckend (`rgba(12,9,13,0.62)` statt `0.06`). Mobil
+unverändert (dort greift der bestehende vertikale Scrim; per Media-Query
+abgegrenzt, damit die dichtere Regel nicht in Mobil leakt). **Belege:**
+`screenshots-e9b/desktop-sponsoren.png`, `screenshots-e9b-mob/sponsoren.png`.
+
+**E9-3 · Hero-Flutlichtmast: „schwarzer Kasten"** ✅ (Mitigation)
+`src/components/Floodlights.tsx`. Befund (aktuell, `screenshots-e9/desktop-01-hero`):
+der kamera-nächste Rand-Mast zeigt dem Betrachter die **unbeleuchtete
+Gehäuse-Rückseite**, die gegen den Nachthimmel als harter schwarzer Kasten las.
+**Fix (isoliert auf das Gehäuse-Material):** Ton `#101014 → #1e1c22` + minimaler
+warmer Emissive-Anteil (`#2a2014`, Intensität 0.32) = „Lampen-Spill am eigenen
+Gehäuse" → nie mehr reines Schwarz, liest als Struktur. **Panel/Kegel/Glow der
+leuchtenden Masten unverändert.** An den lit stations (Tabelle/Finale, wo die
+Masten Hintergrund sind) **regressionsfrei verifiziert** (`screenshots-e9c/`).
+
+> ⚠️ **Ehrlich abgegrenzt — NICHT blind ins Kamera-Framing gegriffen:** Der
+> **weiße „Tropfen"/Häkchen-Glitch** am linken Rand-Mast ist der **gecroppte
+> helle Panel-Front** des nächsten Masts — die Kamera schneidet den Mast so an,
+> dass nur der leuchtende Kopf „schwebt". Das ist ein **Framing-Problem** und
+> hängt an `CameraPath.ts` = **GATE-11** (nicht angefasst). Ihn ohne Kamera zu
+> „beheben" hieße das Panel/Glow **global** zu dimmen → würde die Flutlicht-
+> Atmosphäre („Flutlicht an") an allen Stationen beschädigen. Die vorherige
+> Etappe hatte Floodlights.tsx aus genau diesem Regressions-Grund gemieden;
+> ich habe daher nur den isoliert-sicheren Gehäuse-Ton angehoben.
+
+### Nicht gebaut — bewusst, mit Begründung (kein Blind-Fix)
+- **Wappen-in-H1 (Musik):** das 3D-Wappen (Wandschild im Partyraum,
+  `PartyRoom.tsx`, Weltposition) ragt am Musik-Kamera-Ruhepunkt in die H1
+  „AGA URKNALL". Die H1 selbst bleibt **lesbar** (weiß, fett, Text-Shadow) —
+  es ist ein **Kompositions-**, kein Lesbarkeits-Defekt. Es sauber zu lösen
+  heißt entweder die Kamera reframen (**GATE-11**, gesperrt) oder das Wandschild
+  in der Welt verschieben — was die Partyraum-Innenkomposition über die ganze
+  Durchfahrt riskiert. → **Empfehlung: gemeinsam mit der Kamera-Etappe (E3/
+  GATE-11) angehen**, nicht blind nudgen.
+- **Nav-Konfetti-Punkte (Fanblock):** ein paar rote/weiße Feier-Partikel
+  (Meisterfeier-Konfetti) treiben nahe der Nav-Zeile. Sie sind **gewollte
+  Atmosphäre**; ein stärkerer Top-Scrim würde global (auch Hero) eingreifen.
+  Nutzen/Risiko zu gering → nicht angefasst.
+- **H2-unter-Logo:** siehe oben — am realen Ruhepunkt kein Bug.
+
+### Build / Verifikation
+| Prüfung | Ergebnis |
+|---|---|
+| `npx tsc -b` | **Exit 0** — kein `any`, kein `@ts-ignore` |
+| `npx eslint` (geänderte Zeilen) | **sauber** — `Sections.tsx` 0 Probleme (¹) |
+| `pnpm build` (inkl. Prerender) | **grün** — „Prerender ok: 33.1 kB Inhalts-DOM" |
+| Prod-Preview (`vite preview` auf `dist`) | alle 3 Fixes sichtbar, Desktop+Mobil |
+
+¹ `Floodlights.tsx` trägt weiterhin **2 vorbestehende** `react-hooks/immutability`-
+Errors auf den `useFrame`-Mutationen (Z. 148/157) — per `git stash` gegen die
+committed HEAD-Version verifiziert: **existierten schon vorher**, nicht von dieser
+Etappe (Klasse der im BUILDSPEC dokumentierten Alt-Errors). Meine geänderten
+Zeilen (Gehäuse-Material) sind sauber. CSS wird von eslint nicht geprüft.
+
+### Commits (auf `feat/3d-politur`, nach `d0728d0`)
+| Commit | Etappe |
+|---|---|
+| `cbfc222` | **P5-E9** DOM×3D: Finale-Footer-Träger + Sponsoren-Banden-Scrim |
+| `2b9cda2` | **P5-E9** Hero-Flutlichtmast-Gehäuse (kein schwarzer Kasten mehr) |
+
+### Wie Marvin es lokal sieht
+```
+cd /Users/marvinallers/code/sva-fussball
+git checkout feat/3d-politur
+pnpm build           # Chromium liegt im Cache
+npx vite preview     # → angezeigter Port
+```
+- **Finale** (ganz runterscrollen): Impressum/Datenschutz + Copyright lesbar auf
+  eigenem Träger über dem „Waldsportplatz"-Bodentext.
+- **Sponsoren:** Fließtext + Pills tragen sauber über der 3D-Bande; Bande rechts
+  bleibt sichtbar.
+- **Hero:** der rechte Rand-Mast liest als dunkle Struktur statt schwarzer Kasten.
+Screenshot-Belege lokal unter `screenshots-e9/` (vorher), `screenshots-e9b/`,
+`screenshots-e9b-mob/`, `screenshots-e9c/` (nachher) — **nicht committet**.
+
+### Offen / hängt an Gates
+- **GATE-11 (CameraPath):** Hero-Masten-Framing (schwebende Köpfe / weißer
+  Tropfen), Reveal-Kamerafahrt (E3), Wappen-in-H1-Framing.
+- **GATE-12 (Party-Übergang):** Default (b) warme Blende bleibt (unangetastet).
+- **E5 Spielerfiguren:** prozedurale Verfeinerung wäre gate-frei, CC0-Modelle
+  nicht (GATE-12-Klasse) — in dieser Etappe nicht begonnen (Fokus E9).
+
+### Marvins To-dos (diese Etappe)
+1. **Preview freigeben/justieren:** die 3 E9-Fixes (Finale-Footer, Sponsoren-
+   Bande, Hero-Mast) prüfen.
+2. **GATE-11:** entscheidet zugleich Hero-Masten-Framing + Wappen-in-H1 (beide
+   kamera-/framing-gebunden, bewusst offen gelassen).
+3. Übernahme nach `release` bleibt **Marvins** Entscheidung (Prod ist live).
