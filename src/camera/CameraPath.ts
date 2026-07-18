@@ -14,49 +14,69 @@ export interface Station {
 }
 
 const STATIONS: Station[] = [
-  // 0 · VEREIN — Establishing. v6-E1: Startwinkel deutlich gesenkt
-  //     (y 12.5 → 7.0), schräger/immersiver statt Vogelperspektive —
-  //     nimmt den „Tischmodell"-Eindruck (Marvin) und verkürzt zugleich
-  //     das überlange erste Bein (Tempo-Spitze beim Swoop).
-  { pos: new THREE.Vector3(4.2, 7.0, 15.2), look: new THREE.Vector3(0, 0.5, 0.6) },
-  // 1 · ANSTOSS (Signature-Beat, keine eigene Sektion) — Sturzflug hinter
-  //     den Anstoßkreis, endet kontrolliert ÜBER dem Rasen. v9-E1: Blick-
-  //     Ziel näher herangeholt (z −3.6 → −1.9), damit der Look-Bogen
-  //     Hero(0.6)→Anstoß→Mannschaft(−0.5) nicht mehr weit „durchwhippt" —
-  //     der Übergang wird ein Fluss statt eines sichtbaren Schwenks.
-  { pos: new THREE.Vector3(0.35, 0.62, 2.75), look: new THREE.Vector3(-2.6, 1.15, -1.9) },
-  // 2 · MANNSCHAFT — v12-E2: Blick schräg von oben, zentral von hinter dem
-  //     gegnerischen Tor (Ost, +x) über die GANZE Aufstellung. Höher & weiter
-  //     als vorher (war y=2.6, zu tief → halbe Elf abgeschnitten). Von Ost
-  //     nach West gesehen liegt der Sturm (ANG, +x) VORNE Richtung Kamera und
-  //     der Torwart (TW, −x) HINTEN — Aufstellung korrekt gestaffelt. Der
-  //     Trainerstab an der Süd-Seitenlinie (z≈4.35) bleibt mit im Bild.
+  // 0 · VEREIN — Establishing. P5-E3/GATE-11 (docs/KAMERA_KONZEPT §Station 0):
+  //     Register VOGELFLUG bleibt, aber etwas TIEFER & frontaler (y 7.0 → 6.2,
+  //     z 15.2 → 14.0) → der Horizont/Vereinsschild trägt, die Flutlicht-Masten
+  //     stechen nicht mehr frei in den Himmel. Look leicht angehoben (y 0.5 →
+  //     0.9) → weniger „Tischmodell", mehr „vor seinem Verein stehen".
+  { pos: new THREE.Vector3(4.2, 6.2, 14.0), look: new THREE.Vector3(0, 0.9, 0.6) },
+  // 1 · ANSTOSS (Signature-Beat, keine eigene Sektion) — GATE-11 KERNUMBAU
+  //     (KAMERA_KONZEPT §Station 1+2, „Aufsteigen über die Karten-Wand"): der
+  //     Sturzflug endet NEU tief hinter dem West-Tor / hinter dem Torwart
+  //     (TW-Seite, −x), Blick nach OSTEN die noch leere Aufstellung entlang.
+  //     Das ist die STARTRAMPE des Mannschafts-Reveals: von hier steigt die
+  //     Kamera über das Segment 1→2 auf und schwenkt herum, bis die volle
+  //     Formation im Präsentationsblick steht — die Karten „wachsen" dem
+  //     Besucher entgegen (Reveal steigt, Grammatik-Regel 4). Der Blick liegt
+  //     tief am West-Ende der Formation (x≈−2.5) → die TW-Reihe steht nah/
+  //     unten, die Wand staffelt sich nach hinten/oben hoch (passt zur E2-
+  //     Lift-Staffelung). Ball rollt weiter aus dem Bild, Flutlicht steht dann
+  //     voll. y=1.55 > FIELD_FLOOR (1.45) → Boden-Clamp greift nicht.
+  { pos: new THREE.Vector3(-4.6, 1.55, 0.5), look: new THREE.Vector3(-2.5, 1.05, 0.4) },
+  // 2 · MANNSCHAFT — Zielpose des Reveals = die komponierte E2-Endpose
+  //     (4 Bänder + Staff-Reihe). BEWUSST UNVERÄNDERT (KAMERA_KONZEPT §Station 2
+  //     Punkt 3 + §2): der Reveal führt von Station 1 GENAU hierher, damit die
+  //     E2-Komposition & die Tap-Ziele der 3D-Karten erhalten bleiben. Marvin
+  //     kann die Endpose später tiefer/näher ziehen (Konzept-Vorschlag
+  //     ~(3.2,4.6,7.6)/look(−1.4,1.4,0.4)) — hier konservativ gehalten, damit
+  //     der Reveal-Umbau die Kader-Interaktion nicht regressiert.
   { pos: new THREE.Vector3(5.6, 5.5, 7.2), look: new THREE.Vector3(-1.6, 0.75, 0.4) },
   // 3 · FANBLOCK (v9-E2, zurückgeholt) — Schwenk in die Süd-/SO-Kurve:
   //     Blick von der Platzmitte auf die Fans + wehendes AGA-URKNALL-
   //     Banner (FanBlock.tsx, CX=3.6 / z≈+3.95). Emotionaler Beat. y knapp
-  //     über FIELD_FLOOR (1.45), damit der Boden-Clamp die Pose nicht hebt
-  //     — robust auch wenn spätere Stationen die u-Lage verschieben.
-  { pos: new THREE.Vector3(2.9, 1.55, 2.3), look: new THREE.Vector3(3.7, 0.55, 4.0) },
-  // 4 · MUSIK — Anflug aufs Vereinsheim: die Kamera schwenkt zur Tür,
-  //     dann schneidet der PartyDirector in den Partyraum (Dip-to-Black)
-  { pos: new THREE.Vector3(4.6, 0.9, 1.5), look: new THREE.Vector3(7.1, 0.5, -0.35) },
+  //     über FIELD_FLOOR (1.45), damit der Boden-Clamp die Pose nicht hebt.
+  //     GATE-11 (§Station 3): minimaler Seitwärts-Drift näher heran (z 2.3 →
+  //     2.7) → das Banner „weht", Leben statt Standbild.
+  { pos: new THREE.Vector3(2.9, 1.55, 2.7), look: new THREE.Vector3(3.7, 0.55, 4.0) },
+  // 4 · MUSIK — Anflug aufs Vereinsheim: die Kamera schwenkt zur Tür, dann
+  //     übernimmt der partyPath die DURCHFAHRT. GATE-11 (§Station 4): Anflug
+  //     jetzt in KOPFHÖHE (y 0.9 → 1.6) statt in Zaun-/Sockelnähe zu skimmen —
+  //     die 0.9 ließ die Kamera an der Nahgeometrie entlangschaben (Katalog #5).
+  //     ⚠️ partyPath.ts (approachPos[0]) ist synchron auf y=1.6 nachgezogen,
+  //     damit der Übergang Flug→Durchfahrt nahtlos bleibt.
+  { pos: new THREE.Vector3(4.6, 1.6, 1.5), look: new THREE.Vector3(7.1, 0.5, -0.35) },
   // 5 · TABELLE (v11-E5: Reihenfolge getauscht — Tabelle jetzt VOR Sponsoren) —
   //     Schwenk zum echten Vereinsheim hinter dem Ost-Tor (ruhiger Ergebnis-Beat).
-  { pos: new THREE.Vector3(4.0, 0.95, 3.1), look: new THREE.Vector3(7.15, 0.32, -0.5) },
+  //     GATE-11 (§Station 5): Register STANDPUNKT leicht angehoben (y 0.95 → 1.8,
+  //     look.y 0.32 → 0.5) → der Blick „steht drüber", die H2 „DIE WAHRHEIT"
+  //     läuft nicht mehr unters SVA-Logo. y=1.8 > CLUB_FLOOR (0.85) → clampfrei.
+  { pos: new THREE.Vector3(4.0, 1.8, 3.1), look: new THREE.Vector3(7.15, 0.5, -0.5) },
   // 6 · SPONSOREN (die Geld-Station, jetzt direkt vor „Mitmachen") — BANDEN-
   //     ZOOM auf die Süd-Bande (Barrier.tsx, z≈3.99). y knapp über CLUB_FLOOR
-  //     (0.85), damit der Boden-Clamp die tiefe Pose nicht hebt.
+  //     (0.85), damit der Boden-Clamp die tiefe Pose nicht hebt. BEWUSST
+  //     UNVERÄNDERT: das v12-E6-Sponsoren-Karussell (CameraRig) übersteuert
+  //     pos.x/look.x nahe dieser Station — ein „Parallelstand" (Konzept
+  //     §Station 6) würde gegen das Karussell arbeiten. → Marvins Feintuning.
   { pos: new THREE.Vector3(-0.5, 0.86, 3.05), look: new THREE.Vector3(-0.6, 0.12, 3.985) },
   // 7 · KONTAKT/FINALE — RAUSZOOM in die Vogelperspektive (v8-E4): die
   //     Kamera steigt aus der Platznähe auf und macht die ganze Welt zur
   //     Standort-Karte. Blick von oben-Süd auf Platz + Vereinsheim (+x),
   //     der LocationMarker („Hier sind wir") blendet über dem Vereinsheim
-  //     ein, der Route-Button lebt im DOM (PlatzFinden). Höhe s.
-  //     maxFlightYAt() — die globale Y-Decke wird zum Finale angehoben.
-  // v11-E8: WEITER rauszoomen — der Platz + Vereinsheim werden zum kleinen
-  //     Solitär auf der flachen 2D-Karte (y 13.5 → 19.5, etwas weiter weg).
-  { pos: new THREE.Vector3(2.2, 19.5, 8.4), look: new THREE.Vector3(1.2, 0, -0.4) },
+  //     ein, der Route-Button lebt im DOM (PlatzFinden). Höhe s. maxFlightYAt().
+  // v11-E8: WEITER rauszoomen (y 19.5). GATE-11 (§Station 7): Look leicht auf
+  //     das Vereinsheim (+x) gewichtet (x 1.2 → 1.7 = zum LocationMarker) →
+  //     der Abschied „lädt ein", statt neutral auf die Platzmitte zu zielen.
+  { pos: new THREE.Vector3(2.2, 19.5, 8.4), look: new THREE.Vector3(1.7, 0, -0.45) },
 ]
 
 export const STATION_COUNT = STATIONS.length

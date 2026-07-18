@@ -73,13 +73,17 @@ const HALF = ROOM.width / 2
 // der Türrahmen streift den Bildrand (Parallaxe verkauft den Durchtritt),
 // und der Welt-Hop bei p=PARTY_HOP passiert erst, wenn echte Geometrie
 // (Windfang-Wände + Glow-Rückwand) das Bild komplett rahmt.
+// GATE-11: Startpunkt auf Kopfhöhe (y 0.9 → 1.6), synchron mit CameraPath
+// STATION 4 (MUSIK) — sonst springt die Kamera beim Eintritt in die Durchfahrt
+// vertikal. Der Anflug SINKT jetzt aus Kopfhöhe weich auf die Tür-Mitte (cy),
+// statt von Anfang an in Zaun-/Sockelnähe zu skimmen (Katalog #5).
 const approachPos = new THREE.CatmullRomCurve3(
   [
-    new THREE.Vector3(4.6, 0.9, 1.5),
-    new THREE.Vector3(5.25, 0.62, -0.7),
-    new THREE.Vector3(5.8, 0.34, -2.55),
-    new THREE.Vector3(6.3, DOOR.cy + 0.01, DOOR.z),
-    new THREE.Vector3(6.58, DOOR.cy, DOOR.z),
+    new THREE.Vector3(4.6, 1.6, 1.5),
+    new THREE.Vector3(5.3, 1.02, -0.7),
+    new THREE.Vector3(5.85, 0.5, -2.5),
+    new THREE.Vector3(6.3, DOOR.cy + 0.02, DOOR.z),
+    new THREE.Vector3(6.5, DOOR.cy, DOOR.z),
   ],
   false,
   'centripetal',
