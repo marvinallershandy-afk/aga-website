@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Download, UploadCloud, Loader2, CalendarClock, Users } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
+import { Download, UploadCloud, Loader2, CalendarClock, Users, Link2 } from 'lucide-react'
 import { PageHeader } from './Placeholder'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
@@ -8,8 +9,9 @@ import { Label } from '../components/ui/label'
 import { Textarea } from '../components/ui/textarea'
 import { Select } from '../components/ui/select'
 import { useToast } from '../components/ui/toast'
-import { useRoster, useSpiele } from '../lib/queries'
+import { useRoster, useSpiele, useContent, keys } from '../lib/queries'
 import type { SpielRow } from '../lib/db'
+import { linkContentAsset, fireWebhook } from '../lib/db'
 import { SVA_NAME, STECKBRIEF_FELDER } from '../lib/constants'
 import { formatAnstoss } from '../lib/format'
 import { cn } from '../lib/utils'
@@ -22,7 +24,15 @@ import {
   type TemplateKey,
   type FormatKey,
 } from '../matchday/types'
-import { nodeToPngBlob, downloadBlob, uploadGrafik, buildFilename } from '../matchday/export'
+import {
+  nodeToPngBlob,
+  downloadBlob,
+  uploadGrafik,
+  buildFilename,
+  isBucketMissing,
+  driveTargetFolder,
+  currentSaison,
+} from '../matchday/export'
 
 const PREVIEW_W = 440
 
@@ -44,14 +54,25 @@ export function Matchday() {
   const [data, setData] = useState<MatchdayData>(DEFAULT_DATA)
   const [busy, setBusy] = useState<null | 'download' | 'upload'>(null)
 
-  // Prefill aus Spiele & Kader (P2): ?spiel=<id> oder Auswahl im Dropdown.
+  // Prefill aus Spiele & Kader: ?spiel=<id> oder Auswahl im Dropdown.
+  // ADAPTER-HINWEIS (SME): Die Prefill-Quelle ist aktuell die eingefrorene
+  // Tabelle sm_spiele. Beim SME-Backfill (Stage 1) hier auf die kanonische
+  // Tabelle `matches` umstellen — die Feld-Zuordnung in applySpiel bleibt gleich.
   const [searchParams] = useSearchParams()
   const spieleQ = useSpiele()
   const rosterQ = useRoster()
+  const contentQ = useContent()
+  const qc = useQueryClient()
   const [spielId, setSpielId] = useState('')
+  const [contentId, setContentId] = useState('') // Ziel-Beitrag für die Verknüpfung
+
+  const selectedSpiel = spieleQ.data?.find((s) => s.id === spielId) ?? null
+  // Spieltagspaket-Beiträge tragen spiel_id → passende Beiträge zum gewählten Spiel.
+  const relatedContent = (contentQ.data ?? []).filter((c) => c.spiel_id === spielId)
 
   const applySpiel = (s: SpielRow) => {
     setSpielId(s.id)
+    setContentId('')
     setData((d) => ({
       ...d,
       wettbewerb: [s.wettbewerb, s.spieltag_nr ? `${s.spieltag_nr}. Spieltag` : null]
@@ -130,13 +151,62 @@ export function Matchday() {
     }
   }
 
+  // P4-Durchstich: Grafik erzeugen → in sm_grafiken ablegen (Default) →
+  // (optional) am zugehörigen Redaktionsplan-Beitrag verankern + „fertig" →
+  // n8n-Flow „grafik.gerendert" feuern (Drive-Ablage). Fehlt der Bucket, wird
+  // sauber auf den reinen PNG-Download zurückgefallen.
   const handleUpload = async () => {
     setBusy('upload')
     try {
       const blob = await capture()
-      const path = `${template}/${buildFilename(template, format, data.heim, data.gast)}`
-      await uploadGrafik(blob, path)
-      toast.success(`In Storage gespeichert: ${path}`)
+      const filename = buildFilename(template, format, data.heim, data.gast)
+      const path = `${template}/${filename}`
+      try {
+        await uploadGrafik(blob, path)
+      } catch (e) {
+        if (isBucketMissing(e)) {
+          // Bucket nicht angelegt (Migration wartet auf Marvin) → Fallback.
+          downloadBlob(blob, filename)
+          toast.info(
+            'Storage-Bucket „sm_grafiken" fehlt noch — PNG wurde stattdessen heruntergeladen. ' +
+              '(Migration 20260719091000 anwenden, um den Durchstich zu aktivieren.)',
+          )
+          return
+        }
+        throw e
+      }
+
+      // Verknüpfung mit dem Redaktionsplan-Beitrag (falls gewählt).
+      let verknuepft = false
+      if (contentId) {
+        try {
+          await linkContentAsset(contentId, path)
+          qc.invalidateQueries({ queryKey: keys.content })
+          verknuepft = true
+        } catch {
+          toast.error('Grafik gespeichert, aber Beitrag-Verknüpfung fehlgeschlagen.')
+        }
+      }
+
+      // n8n-Flow „grafik.gerendert" auslösen (Drive-Ablage im Spieltagsordner).
+      const ziel = driveTargetFolder(currentSaison(), selectedSpiel?.spieltag_nr ?? null)
+      const flow = await fireWebhook('grafik.gerendert', {
+        event: 'grafik.gerendert',
+        quelle: 'sva-admin',
+        bucket: 'sm_grafiken',
+        path,
+        template,
+        format,
+        spiel_id: spielId || null,
+        content_id: contentId || null,
+        drive_zielordner: ziel,
+        ts: new Date().toISOString(),
+      })
+
+      const teile = [`In Storage gespeichert: ${path}`]
+      if (verknuepft) teile.push('Beitrag auf „fertig" gesetzt')
+      if (flow === 'gesendet') teile.push('Drive-Flow ausgelöst')
+      toast.success(teile.join(' · '))
     } catch (e) {
       toast.error(
         (e instanceof Error ? e.message : 'Upload fehlgeschlagen.') +
@@ -180,6 +250,32 @@ export function Matchday() {
           </Select>
           <span className="text-xs text-muted-foreground">
             füllt Wettbewerb, Teams, Anstoß, Ort & Ergebnis
+          </span>
+        </div>
+      )}
+
+      {/* P4-Durchstich: Grafik mit einem Redaktionsplan-Beitrag verknüpfen */}
+      {spielId && relatedContent.length > 0 && (
+        <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-border bg-muted/20 p-3">
+          <Link2 className="h-4 w-4 text-primary" />
+          <Label htmlFor="md-content" className="shrink-0">
+            Beitrag verknüpfen
+          </Label>
+          <Select
+            id="md-content"
+            className="h-9 w-auto min-w-[260px]"
+            value={contentId}
+            onChange={(e) => setContentId(e.target.value)}
+          >
+            <option value="">— nicht verknüpfen —</option>
+            {relatedContent.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.titel} · {c.status}
+              </option>
+            ))}
+          </Select>
+          <span className="text-xs text-muted-foreground">
+            „In Storage speichern" setzt den Beitrag auf „fertig" &amp; verankert die Grafik
           </span>
         </div>
       )}
@@ -404,13 +500,13 @@ export function Matchday() {
           )}
 
           <div className="flex flex-wrap gap-2 pt-2">
-            <Button onClick={handleDownload} disabled={busy !== null}>
-              {busy === 'download' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-              PNG herunterladen
-            </Button>
-            <Button variant="outline" onClick={handleUpload} disabled={busy !== null}>
+            <Button onClick={handleUpload} disabled={busy !== null}>
               {busy === 'upload' ? <Loader2 className="h-4 w-4 animate-spin" /> : <UploadCloud className="h-4 w-4" />}
-              In Storage speichern
+              {contentId ? 'In Storage speichern & verknüpfen' : 'In Storage speichern'}
+            </Button>
+            <Button variant="outline" onClick={handleDownload} disabled={busy !== null}>
+              {busy === 'download' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              Nur PNG herunterladen
             </Button>
           </div>
         </div>

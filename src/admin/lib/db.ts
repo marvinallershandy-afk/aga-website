@@ -359,3 +359,60 @@ export async function fetchRecentDeliveries(limit = 20): Promise<DeliveryRow[]> 
   if (error) throw error
   return data ?? []
 }
+
+// P4-Durchstich: Feuert den n8n-Andockpunkt für ein Event, sofern in
+// sm_webhooks eine aktive URL hinterlegt ist, und protokolliert den Versand.
+// Fehlt die Tabelle oder die URL, passiert nichts (kein Fehler nach außen) —
+// so bleibt der Grafik-Export unabhängig vom Automations-Zustand lauffähig.
+export async function fireWebhook(
+  event: string,
+  payload: Record<string, unknown>,
+): Promise<'gesendet' | 'keine-url' | 'nicht-verfuegbar'> {
+  const { data: hook, error } = await supabase
+    .from('sm_webhooks')
+    .select('*')
+    .eq('event', event)
+    .maybeSingle()
+  if (error) {
+    if (isMissingTable(error)) return 'nicht-verfuegbar'
+    throw error
+  }
+  if (!hook || !hook.aktiv || !hook.url?.trim()) return 'keine-url'
+
+  let ok = true
+  try {
+    await fetch(hook.url, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+  } catch {
+    ok = false
+  }
+  try {
+    await recordDelivery({
+      webhookId: hook.id,
+      event,
+      status: ok ? 'ok' : 'fehler',
+      httpCode: null,
+      payloadExcerpt: JSON.stringify(payload).slice(0, 200),
+    })
+  } catch {
+    /* Log-Fehler nicht eskalieren */
+  }
+  return 'gesendet'
+}
+
+// P4-Durchstich: fertige Grafik am zugehörigen Redaktionsplan-Beitrag
+// verankern (drive_asset_url) und den Beitrag auf „fertig" setzen.
+export async function linkContentAsset(contentId: string, assetUrl: string): Promise<ContentRow> {
+  const { data, error } = await supabase
+    .from('sm_content')
+    .update({ drive_asset_url: assetUrl, status: 'fertig', updated_at: new Date().toISOString() })
+    .eq('id', contentId)
+    .select('*')
+    .single()
+  if (error) throw error
+  return data as ContentRow
+}
