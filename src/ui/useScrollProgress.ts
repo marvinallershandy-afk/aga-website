@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useStore } from '../store/useStore'
-import { SECTIONS } from '../data/club'
+// P1: Sektionstexte aus der Fassade (sm_website_content-Overlay → sonst Seed).
+import { SECTIONS } from '../data/content'
 import { setAnchors } from '../camera/anchors'
 
 // ECHTE DOM-Sektionen (v8: anstoss ist KEINE eigene Sektion mehr).

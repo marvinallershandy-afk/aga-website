@@ -131,6 +131,22 @@ async function main() {
     if (error) throw error
     return data || []
   })
+  const sections = await safe(async () => {
+    const { data, error } = await supabase
+      .from('sm_website_content')
+      .select('*')
+      .eq('aktiv', true)
+      .order('sortierung', { ascending: true })
+    if (error) throw error
+    return (data || []).map((r) => {
+      const o = { id: r.section_key }
+      if (r.label != null) o.label = r.label
+      if (r.kicker != null) o.kicker = r.kicker
+      if (r.titel != null) o.title = r.titel
+      if (r.body != null) o.body = r.body
+      return o
+    })
+  })
 
   // matches → nächstes (ohne Ergebnis, frühestes künftiges) & letztes (mit Ergebnis).
   let nextMatch = null
@@ -165,11 +181,13 @@ async function main() {
   if (players.length) overlay.players = players
   if (sponsors.length) overlay.sponsors = sponsors
   if (tabelle.length) overlay.table = tabelle
+  if (sections.length) overlay.sections = sections
   if (nextMatch) overlay.nextMatch = nextMatch
   if (lastMatch) overlay.lastMatch = lastMatch
 
   // Nur wenn tatsächlich Daten vorliegen, ein Overlay schreiben — sonst Fallback.
-  const hasData = players.length || sponsors.length || tabelle.length || nextMatch || lastMatch
+  const hasData =
+    players.length || sponsors.length || tabelle.length || sections.length || nextMatch || lastMatch
   if (!hasData) {
     writeOverlay(null)
     console.log('fetch-content: Tabellen leer → Overlay=null (statischer Fallback greift).')
@@ -177,7 +195,7 @@ async function main() {
   }
   writeOverlay(overlay)
   console.log(
-    `fetch-content: Overlay geschrieben (players=${players.length}, sponsors=${sponsors.length}, table=${tabelle.length}, nextMatch=${!!nextMatch}, lastMatch=${!!lastMatch}).`,
+    `fetch-content: Overlay geschrieben (players=${players.length}, sponsors=${sponsors.length}, table=${tabelle.length}, sections=${sections.length}, nextMatch=${!!nextMatch}, lastMatch=${!!lastMatch}).`,
   )
 }
 

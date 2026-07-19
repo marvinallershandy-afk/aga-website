@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { useStore } from '../store/useStore'
-import { SECTIONS, CONTACT, CLUB, TEAM_PHOTO, whatsappUrl, whatsappReady } from '../data/club'
+// P1: Sektionstexte/Website-Daten aus der Fassade (Overlay → sonst Seed).
+import { SECTIONS, CONTACT, CLUB, TEAM_PHOTO, whatsappUrl, whatsappReady } from '../data/content'
 import { PlayerCardGrid } from './PlayerCardGrid'
 import { MusicSectionPlayer } from './MusicSection'
 import { FussballWidget } from './FussballWidget'

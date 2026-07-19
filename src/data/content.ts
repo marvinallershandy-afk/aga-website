@@ -26,10 +26,11 @@ import {
   LAST_MATCH as STATIC_LAST_MATCH,
   TABLE_PREVIEW as STATIC_TABLE,
   FORM as STATIC_FORM,
+  SECTIONS as STATIC_SECTIONS,
 } from './club'
 import { WEBSITE_CONTENT_OVERLAY } from './generated/website-content.generated'
 import type { Player, Staff } from './players'
-import type { Sponsor, Match, PlayedMatch, TableRow, FormResult } from './club'
+import type { Sponsor, Match, PlayedMatch, TableRow, FormResult, Section } from './club'
 
 // ── Unveränderte Durchreiche der Nicht-DB-Inhalte (Fallback-Quellen) ────────
 export { POSITION_LABEL, ROLE_LABEL } from './players'
@@ -37,7 +38,6 @@ export type { Position, Player, StaffRole, Staff } from './players'
 export {
   CLUB,
   fussballDeTeamUrl,
-  SECTIONS,
   SPONSOR_PLACEHOLDER_SLOTS,
   nextKickoff,
   TEAM_PHOTO,
@@ -62,6 +62,24 @@ export const TABLE_PREVIEW: TableRow[] = pick(ov?.table, STATIC_TABLE)
 export const FORM: FormResult[] = pick(ov?.form, STATIC_FORM)
 export const NEXT_MATCH: Match = ov?.nextMatch ?? STATIC_NEXT_MATCH
 export const LAST_MATCH: PlayedMatch = ov?.lastMatch ?? STATIC_LAST_MATCH
+
+// Sektionstexte: konservativ mergen — Reihenfolge und Abschnitts-IDs
+// (Kamera-Stationen) bleiben aus dem statischen Seed; das Overlay überschreibt
+// pro Abschnitt nur vorhandene Textfelder. Unvollständige Pflege kann die
+// 3D-Fahrt so nicht brechen.
+export const SECTIONS: Section[] = ov?.sections?.length
+  ? STATIC_SECTIONS.map((s) => {
+      const o = ov.sections!.find((x) => x.id === s.id)
+      if (!o) return s
+      return {
+        ...s,
+        ...(o.label != null ? { label: o.label } : {}),
+        ...(o.kicker != null ? { kicker: o.kicker } : {}),
+        ...(o.title != null ? { title: o.title } : {}),
+        ...(o.body != null ? { body: o.body } : {}),
+      }
+    })
+  : STATIC_SECTIONS
 
 // Herkunfts-Flag (für Build-Log/Debug): 'db', sobald ein Overlay geladen wurde.
 export const CONTENT_SOURCE: 'db' | 'static' = ov ? 'db' : 'static'

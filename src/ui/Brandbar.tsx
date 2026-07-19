@@ -1,5 +1,6 @@
 import { useStore } from '../store/useStore'
-import { SECTIONS } from '../data/club'
+// P1: Sektionstexte aus der Fassade (sm_website_content-Overlay → sonst Seed).
+import { SECTIONS } from '../data/content'
 
 // v10-E4: Ton-Steuerung als eigenes, dezentes Fixed-Control unten rechts —
 // NICHT mehr als Emoji in der Nav-Zeile (die unter mix-blend-mode:difference

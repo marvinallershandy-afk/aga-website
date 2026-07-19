@@ -10,6 +10,15 @@
 import type { Player, Staff } from './players'
 import type { Sponsor, Match, PlayedMatch, TableRow, FormResult } from './club'
 
+/** Textüberschreibung eines Abschnitts (nur Textfelder; id ordnet zu). */
+export interface SectionCopyOverride {
+  id: string
+  label?: string
+  kicker?: string
+  title?: string
+  body?: string
+}
+
 export interface WebsiteContentOverlay {
   /** Herkunft, für Build-Log/Debug. */
   source: 'db'
@@ -22,4 +31,6 @@ export interface WebsiteContentOverlay {
   lastMatch?: PlayedMatch | null
   table?: TableRow[]
   form?: FormResult[]
+  /** Copy-Overrides je Abschnitt (aus sm_website_content). */
+  sections?: SectionCopyOverride[]
 }
