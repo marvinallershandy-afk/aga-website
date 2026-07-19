@@ -4,7 +4,14 @@
 # einen absoluten publish-Pfad — diese Datei hier ist die verbindliche Config.
 
 [build]
-  command = "pnpm build"
+  # P0 (Admin-Ausbau): scripts/prerender.mjs startet Playwright-Chromium beim
+  # Build. Im Netlify-CI ist der Chromium-Cache leer → der erste Build würde am
+  # fehlenden Browser scheitern (BUILD_LOG_aga §4). Deshalb wird Chromium (inkl.
+  # System-Libs) VOR pnpm build im CI installiert. Bewusst NUR hier im
+  # netlify.toml-Command, nicht in package.json — so bleibt der lokale
+  # `pnpm build` unverändert (lokal liegt Chromium bereits im Cache) und der
+  # 3D-Onepager-Prerender ist unberührt.
+  command = "pnpm exec playwright install --with-deps chromium && pnpm build"
   publish = "dist"
 
 # Rechtsseiten als eigenständige statische HTML-Dateien (public/).
