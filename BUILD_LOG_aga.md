@@ -1,5 +1,136 @@
 # BUILD_LOG — AGA (SV Agathenburg-Dollern 1949)
 
+## Admin-Ausbau 19.07.2026 (Branch `feat/admin-ausbau`)
+
+Autonomer Wochenend-Push auf Basis von `docs/ADMIN_AUSBAU_VORSCHLAG.md`. Alle
+risikoarmen Punkte gebaut (Marvin wählt beim Review). Branch von `release`, kein
+Push/Deploy/DB-Apply. Migrationen liegen als DATEIEN vor, NICHT angewandt. Die
+untracked 3D-Artefakte (`BUILDSPEC_aga.md`, `screenshots-*/`, `audit-screenshots/`)
+wurden nie ge-add-et (immer gezielt `git add <pfad>`).
+
+### Definition of Done (Belege)
+
+| Prüfung | Ergebnis |
+|---|---|
+| `npx tsc -b` | **Exit 0** — 0 Fehler, kein `any`, kein `@ts-ignore` |
+| `pnpm build` inkl. Prerender | **grün** (Exit 0) — „Prerender ok: 33.3 kB Inhalts-DOM" (byte-identisch zum Vor-Stand → 3D-Seite unverändert) |
+| `fetch-content.mjs` (env-los) | „Overlay=null (statischer Fallback greift)" — deterministisch, kein git-Diff am generierten File |
+| eslint auf allen geänderten Dateien | Alle **von mir neu geschriebenen** Dateien sauber. Verbleibend nur **3 vorbestehende** Fehler + 1 Warnung in Dateien, die ich nur an der Import-Zeile berührt habe (per `git stash` als vor-bestehend verifiziert): `Matchday.tsx:99` set-state-in-effect (Deep-Link-Prefill, war schon da), `Scoreboard.tsx:77` use-memo, `Brandbar.tsx:28` only-export-components. **Nicht durch diesen Ausbau eingeführt.** |
+
+### P2 — Automationen produktiv (VOLL gebaut)
+
+- **Migration-DATEI** `supabase/migrations/20260719090000_sm_webhooks.sql`:
+  `sm_webhooks` (Registry je Event: url, aktiv, letzter_versand, letzter_status)
+  + `sm_webhook_deliveries` (Zustell-Log: webhook_id FK, event, status, http_code,
+  payload_excerpt, gesendet_at). RLS 1:1 nach `sm_insights`-Muster (nur
+  `is_sm_admin`). Seed der 4 Andockpunkte.
+- **Code:** `database.types.ts` (Typen), `db.ts` (CRUD + `recordDelivery` +
+  `isMissingTable`-Helfer SQLSTATE 42P01), `queries.ts` (Hooks, `retry:false`).
+  `pages/Automationen.tsx` von localStorage auf `sm_webhooks` umgestellt: URLs
+  team-weit, Test-Button nutzt gespeicherte URL und protokolliert Versand, „letzter
+  Versand/Status" je Event + Zustell-Log-Tabelle in der UI.
+- **Graceful degradation:** Fehlt die (noch nicht angewandte) Tabelle, zeigt die
+  Seite einen sichtbaren Hinweis und fällt auf localStorage zurück — kein Crash.
+- **Grenze eingehalten:** `spiel.angelegt` NICHT auf `sm_spiele` INSERT verdrahtet
+  (eingefroren) — Doku-Platzhalter, Kommentar „nach SME Stage 1 auf `matches`".
+
+### P4 — Matchday-Stills-Durchstich (VOLL gebaut, Bucket env-gatet)
+
+- **Migration-DATEI** `supabase/migrations/20260719091000_sm_grafiken_bucket.sql`:
+  privater Storage-Bucket `sm_grafiken` (public=false, nur image/png) + RLS auf
+  `storage.objects` (nur `is_sm_admin`). Deckt zugleich P0-Bucket ab (eine Datei).
+- **Code:** `matchday/export.ts` (Drive-Zielordner-Helfer `SVA Media / Saison /
+  Spieltag`, `currentSaison`, `isBucketMissing`), `db.ts` (`fireWebhook` löst
+  n8n-Andockpunkt `grafik.gerendert` aus + protokolliert, `linkContentAsset` setzt
+  `drive_asset_url` + Status „fertig"). `pages/Matchday.tsx`: „In Storage speichern"
+  ist jetzt der Durchstich (Upload-Default → Beitrag verknüpfen → Drive-Flow).
+  Beitrag-Auswahl aus Spieltagspaket (`spiel_id`).
+- **Sauberer Fallback:** Fehlt der Bucket, lädt der Generator das PNG herunter und
+  meldet es klar — kein Hard-Crash.
+- **Adapter-Hinweis:** Prefill-Quelle `sm_spiele` mit Kommentar „beim SME-Backfill
+  auf `matches` umstellen".
+
+### P0 — Cockpit-v2-Vorbereitung (die baubaren Teile)
+
+- **Netlify-CI-Prerender-Fix** in `netlify.toml`: Build-Command auf
+  `pnpm exec playwright install --with-deps chromium && pnpm build`. CI-scoped —
+  lokaler `pnpm build`/`package.json` unverändert, 3D-Onepager-Prerender unberührt.
+  Lokal belegt: `pnpm build` inkl. Prerender grün (33.3 kB).
+  *Hinweis:* Der eigentliche CI-Lauf auf Netlify ist von hier aus nicht testbar
+  (kein Deploy erlaubt). `--with-deps` ist der von Playwright empfohlene Weg; sollte
+  die Netlify-Umgebung `--with-deps` (apt) verweigern, ist der Fallback
+  `playwright install chromium` (ohne deps) in einer Zeile ersetzbar.
+- **`sm_grafiken`-Bucket-Migration:** = P4-Datei (nicht doppelt).
+- **NICHT gebaut** (bewusst, = Marvin/GATE): GATE-1/„live schalten"/Deploy.
+
+### P1 — Website an DB anschließen (ENV-GATED, sauberer Fallback)
+
+- **Build-time Fetch** `scripts/fetch-content.mjs`: liest — NUR wenn Build-Env
+  (`SUPABASE_URL`+`SUPABASE_READ_KEY`, Fallback `VITE_*`) gesetzt — Kader/Spiele/
+  Sponsoren/Tabelle aus den kanonischen Tabellen `players`/`matches`/`sponsors` +
+  `sm_tabelle` und backt sie als statisches Overlay ins Bundle. Node-Env, **nicht**
+  `VITE_`-prefixed → **kein Supabase im Client-Bundle** (3D-Seite bleibt
+  Supabase-frei, 0-externe-Requests-Befund erhalten). Jede Teilabfrage einzeln
+  abgesichert; der Build kippt **nie** am Fetch (Fallback Overlay=null).
+- **Resolver** `src/data/content.ts` (Fassade): Overlay bevorzugen, sonst
+  statischer Seed. `players.ts`/`club.ts` **unverändert**, nur lesend als Fallback.
+- **Konsumenten umgezogen** auf die Fassade: Kader (PlayerCardGrid, PlayerGallery,
+  PlayerCards3D, FussballWidget), Sponsoren (SponsorsStrip, Barrier), Spiel/Tabelle
+  (Scoreboard, FussballWidget). Tabellen aktuell leer → Overlay=null → Ausgabe
+  byte-identisch (Prerender unverändert 33.3 kB).
+- **Copy-Teil (optional, gebaut):** Migration-DATEI
+  `supabase/migrations/20260719092000_sm_website_content.sql` (Sektionstexte je
+  Abschnitt, RLS wie oben). Fassade merged Copy **konservativ** — Reihenfolge/IDs
+  (Kamera-Stationen) bleiben aus dem Seed, Overlay überschreibt pro Abschnitt nur
+  vorhandene Textfelder. SECTIONS-Konsumenten (Brandbar, useScrollProgress,
+  Sections) umgezogen.
+- **NICHT gebaut** (= Marvin/Deploy): echter Netlify-Build-Hook. Der
+  „Veröffentlichen"-Auslöser bleibt Doku/Platzhalter.
+
+### P3 — fussball.de-Seite vorbereitet (Quelle = GATE-D, nicht geraten)
+
+- **Migration-DATEI** `supabase/migrations/20260719093000_sm_tabelle.sql`:
+  Ligatabelle (Cockpit-Hoheit), `diff` als generierte Spalte, `self`-Flag, RLS wie
+  oben. Ergebnis-Schreibpfad auf `matches` NICHT gebaut (SME Stage 1).
+- **Admin-Handeingabe:** neue Seite `pages/Tabelle.tsx` (Add/Edit/Delete, eigene
+  Mannschaft hervorgehoben), Route `/tabelle` + Nav „Ligatabelle". `db.ts`/
+  `queries.ts` CRUD.
+- **Website-Anbindung** über den P1-Mechanismus (fetch-content liest `sm_tabelle`,
+  `content.ts` overlayed `TABLE_PREVIEW`, Fallback statisch).
+- **GATE-D offen gelassen:** fussball.de→`sm_tabelle`-Auslesepfad NICHT verdrahtet;
+  in der Admin-UI + im Migration-Kommentar als 3 Optionen (DFB-Widget / n8n /
+  Handeingabe) dokumentiert.
+
+### Migrations-DATEIEN dieses Ausbaus (alle NICHT angewandt)
+
+| Datei | Inhalt |
+|---|---|
+| `20260719090000_sm_webhooks.sql` | P2: `sm_webhooks` + `sm_webhook_deliveries` + RLS |
+| `20260719091000_sm_grafiken_bucket.sql` | P0/P4: Storage-Bucket `sm_grafiken` + RLS |
+| `20260719092000_sm_website_content.sql` | P1-Copy: `sm_website_content` + RLS |
+| `20260719093000_sm_tabelle.sql` | P3: `sm_tabelle` + RLS |
+
+### WARTET-AUF-MARVIN (env-geparkte Handgriffe / Gates)
+
+- **Migrationen anwenden** (in dieser Reihenfolge, nach Review): `20260719090000`,
+  `20260719091000`, `20260719092000`, `20260719093000`. Erst danach greifen
+  `sm_webhooks`/Zustell-Log, der Grafik-Durchstich, die Copy-Pflege und die
+  Ligatabelle produktiv.
+- **`sm_grafiken`-Bucket anlegen** (via Migration `20260719091000` oder Dashboard).
+- **n8n-Flows aktivieren** und URLs in `/admin/automationen` eintragen
+  (`beitrag.fertig`, `insights.faellig`, `grafik.gerendert`).
+- **GATE-D entscheiden** (fussball.de-Quelle: DFB-Widget / n8n / Handeingabe) —
+  bis dahin ist die Handeingabe unter `/admin/tabelle` die Quelle.
+- **Supabase-Build-Env für P1 setzen** (`SUPABASE_URL` + `SUPABASE_READ_KEY` im
+  Netlify-Build) — sonst bleibt der statische Fallback aktiv (aktuell erwünscht,
+  da die kanonischen Tabellen leer sind → wartet auf SME Stage 1 + Backfill).
+- **Netlify-Build-Hook** für „Veröffentlichen" real einrichten (Deploy-Sache).
+- **GATE-1 / GATE-A** (Branch-Wahrheit `release`→`main`, Deploy-Zeitpunkt mit
+  3D-Builder) — unverändert offen, nicht Teil dieses Ausbaus.
+- **Netlify-CI-Prerender:** erster echter CI-Build beobachten (Playwright-Install).
+
+---
+
 ## Safe-Blocker + Sicherung 15.07.2026
 
 Auftrag: die Blocker bauen, die **keinen Content von Marvin brauchen**, und die
