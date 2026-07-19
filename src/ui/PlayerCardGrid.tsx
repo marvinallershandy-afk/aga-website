@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { PLAYERS, STAFF } from '../data/players'
-import { CONTACT } from '../data/club'
+// P1: Website-Daten aus der Fassade (Overlay/DB → sonst statischer Seed).
+import { PLAYERS, STAFF, CONTACT } from '../data/content'
 import { useStore } from '../store/useStore'
 import { HoloCard } from './HoloCard'
 import { StaffCard } from './StaffCard'

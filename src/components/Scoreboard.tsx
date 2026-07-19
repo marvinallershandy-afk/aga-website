@@ -1,7 +1,8 @@
 import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import { TABLE_PREVIEW, NEXT_MATCH } from '../data/club'
+// P1: Website-Daten aus der Fassade (Overlay/DB → sonst statischer Seed).
+import { TABLE_PREVIEW, NEXT_MATCH } from '../data/content'
 import { PITCH } from '../utils/constants'
 
 // ─────────────────────────────────────────────────────────────

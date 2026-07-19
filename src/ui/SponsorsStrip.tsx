@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { motion } from 'framer-motion'
-import { SPONSORS, SPONSOR_PLACEHOLDER_SLOTS, NEXT_MATCH, CONTACT, whatsappUrl, whatsappReady } from '../data/club'
+// P1: Website-Daten aus der Fassade (Overlay/DB → sonst statischer Seed).
+import { SPONSORS, SPONSOR_PLACEHOLDER_SLOTS, NEXT_MATCH, CONTACT, whatsappUrl, whatsappReady } from '../data/content'
 import { useStore } from '../store/useStore'
 
 // ─────────────────────────────────────────────────────────────

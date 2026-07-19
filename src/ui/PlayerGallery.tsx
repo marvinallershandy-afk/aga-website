@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { PLAYERS, STAFF, POSITION_LABEL, type Position, type Player } from '../data/players'
+// P1: Website-Daten aus der Fassade (Overlay/DB → sonst statischer Seed).
+import { PLAYERS, STAFF, POSITION_LABEL, type Position, type Player } from '../data/content'
 import { useStore } from '../store/useStore'
 import { HoloCard } from './HoloCard'
 import { StaffCard } from './StaffCard'

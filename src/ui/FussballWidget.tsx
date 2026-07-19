@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { CLUB, CONTACT, fussballDeTeamUrl, FORM, LAST_MATCH, NEXT_MATCH, nextKickoff, TABLE_PREVIEW, type FormResult } from '../data/club'
-import { PLAYERS } from '../data/players'
+// P1: Website-Daten aus der Fassade (Overlay/DB → sonst statischer Seed).
+import { CLUB, CONTACT, fussballDeTeamUrl, FORM, LAST_MATCH, NEXT_MATCH, nextKickoff, TABLE_PREVIEW, PLAYERS, type FormResult } from '../data/content'
 
 // ─────────────────────────────────────────────────────────────
 // v11-E5: SAISON-COCKPIT (löst die reine Tabelle ab).

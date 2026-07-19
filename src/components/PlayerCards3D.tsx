@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
-import { PLAYERS, STAFF, type Player, type Staff } from '../data/players'
+// P1: Website-Daten aus der Fassade (Overlay/DB → sonst statischer Seed).
+import { PLAYERS, STAFF, whatsappUrl, whatsappReady, type Player, type Staff } from '../data/content'
 import { useStore } from '../store/useStore'
-import { whatsappUrl, whatsappReady } from '../data/club'
 import { cameraState } from '../camera/CameraPath'
 import { makePlayerCardTexture, makeStaffCardTexture } from '../three/playerCardTexture'
 

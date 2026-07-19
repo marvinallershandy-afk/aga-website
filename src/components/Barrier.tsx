@@ -1,7 +1,8 @@
 import { useMemo, useRef, useEffect } from 'react'
 import * as THREE from 'three'
 import { PITCH, COLORS } from '../utils/constants'
-import { SPONSORS, SPONSOR_PLACEHOLDER_SLOTS, type Sponsor } from '../data/club'
+// P1: Website-Daten aus der Fassade (Overlay/DB → sonst statischer Seed).
+import { SPONSORS, SPONSOR_PLACEHOLDER_SLOTS, type Sponsor } from '../data/content'
 import { AOBlob } from './AOBlob'
 import { useStore } from '../store/useStore'
 
