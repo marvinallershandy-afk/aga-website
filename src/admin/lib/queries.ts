@@ -45,6 +45,7 @@ export const keys = {
   insights: ['sm_insights'] as const,
   webhooks: ['sm_webhooks'] as const,
   deliveries: ['sm_webhook_deliveries'] as const,
+  tabelle: ['sm_tabelle'] as const,
 }
 
 export function useContent() {
@@ -264,6 +265,28 @@ export function useSponsorenMutations() {
   })
   const remove = useMutation({
     mutationFn: (id: string) => db.deleteSponsor(id),
+    onSuccess: invalidate,
+  })
+  return { create, update, remove }
+}
+
+// P3: Ligatabelle (Handeingabe-Maske). retry:false → fehlende Tabelle degradiert schnell.
+export function useTabelle() {
+  return useQuery({ queryKey: keys.tabelle, queryFn: db.fetchTabelle, retry: false })
+}
+export function useTabelleMutations() {
+  const qc = useQueryClient()
+  const invalidate = () => qc.invalidateQueries({ queryKey: keys.tabelle })
+  const create = useMutation({
+    mutationFn: (input: db.TabelleInput & { platz: number; team: string }) => db.createTabelleZeile(input),
+    onSuccess: invalidate,
+  })
+  const update = useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: db.TabelleInput }) => db.updateTabelleZeile(id, patch),
+    onSuccess: invalidate,
+  })
+  const remove = useMutation({
+    mutationFn: (id: string) => db.deleteTabelleZeile(id),
     onSuccess: invalidate,
   })
   return { create, update, remove }

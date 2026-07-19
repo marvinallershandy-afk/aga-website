@@ -16,6 +16,7 @@ import { Produktion } from './pages/Produktion'
 import { Matchday } from './pages/Matchday'
 import { Sponsoren } from './pages/Sponsoren'
 import { Insights } from './pages/Insights'
+import { Tabelle } from './pages/Tabelle'
 import { Automationen } from './pages/Automationen'
 
 export function AdminApp() {
@@ -44,6 +45,7 @@ export function AdminApp() {
                   <Route path="matchday" element={<Matchday />} />
                   <Route path="sponsoren" element={<Sponsoren />} />
                   <Route path="insights" element={<Insights />} />
+                  <Route path="tabelle" element={<Tabelle />} />
                   <Route path="automationen" element={<Automationen />} />
                 </Route>
                 <Route path="*" element={<Navigate to="/" replace />} />

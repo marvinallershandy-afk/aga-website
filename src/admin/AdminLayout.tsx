@@ -9,6 +9,7 @@ import {
   Image as ImageIcon,
   Handshake,
   BarChart3,
+  ListOrdered,
   Zap,
   LogOut,
   Menu,
@@ -38,6 +39,8 @@ const NAV: NavItem[] = [
   { to: '/matchday', label: 'Matchday-Grafiken', icon: ImageIcon },
   { to: '/sponsoren', label: 'Sponsoren', icon: Handshake },
   { to: '/insights', label: 'Insights', icon: BarChart3 },
+  // P3: Ligatabelle (Handeingabe → Website)
+  { to: '/tabelle', label: 'Ligatabelle', icon: ListOrdered },
   // v13-K9: n8n-Andockpunkte (Webhook-Registry + Rezepte)
   { to: '/automationen', label: 'Automationen', icon: Zap },
 ]

@@ -735,6 +735,58 @@ export type Database = {
         }
         Relationships: []
       }
+      sm_tabelle: {
+        Row: {
+          created_at: string
+          diff: number
+          gegentore: number
+          id: string
+          niederlagen: number
+          platz: number
+          punkte: number
+          saison: string | null
+          self: boolean
+          siege: number
+          spiele: number
+          team: string
+          tore: number
+          unentschieden: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          gegentore?: number
+          id?: string
+          niederlagen?: number
+          platz: number
+          punkte?: number
+          saison?: string | null
+          self?: boolean
+          siege?: number
+          spiele?: number
+          team: string
+          tore?: number
+          unentschieden?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          gegentore?: number
+          id?: string
+          niederlagen?: number
+          platz?: number
+          punkte?: number
+          saison?: string | null
+          self?: boolean
+          siege?: number
+          spiele?: number
+          team?: string
+          tore?: number
+          unentschieden?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       sm_webhooks: {
         Row: {
           aktiv: boolean

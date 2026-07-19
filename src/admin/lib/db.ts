@@ -288,6 +288,46 @@ export async function deleteInsight(id: string): Promise<void> {
   if (error) throw error
 }
 
+// ── sm_tabelle (P3: Ligatabelle, Cockpit-Hoheit) ────────────────────────────
+export type TabelleRow = Tables<'sm_tabelle'>
+// diff ist eine generierte Spalte → nicht schreibbar; aus dem Input ausschließen.
+export type TabelleInput = Partial<Omit<TablesInsert<'sm_tabelle'>, 'id' | 'created_at' | 'updated_at'>>
+
+export async function fetchTabelle(): Promise<TabelleRow[]> {
+  const { data, error } = await supabase
+    .from('sm_tabelle')
+    .select('*')
+    .order('platz', { ascending: true })
+  if (error) throw error
+  return data ?? []
+}
+
+export async function createTabelleZeile(input: TabelleInput & { platz: number; team: string }): Promise<TabelleRow> {
+  const { data, error } = await supabase
+    .from('sm_tabelle')
+    .insert(input as TablesInsert<'sm_tabelle'>)
+    .select('*')
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function updateTabelleZeile(id: string, patch: TabelleInput): Promise<TabelleRow> {
+  const { data, error } = await supabase
+    .from('sm_tabelle')
+    .update({ ...patch, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select('*')
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function deleteTabelleZeile(id: string): Promise<void> {
+  const { error } = await supabase.from('sm_tabelle').delete().eq('id', id)
+  if (error) throw error
+}
+
 // ── sm_webhooks (P2: Automationen produktiv) ────────────────────────────────
 export type WebhookRow = Tables<'sm_webhooks'>
 export type WebhookInput = Partial<Omit<TablesInsert<'sm_webhooks'>, 'id' | 'created_at' | 'updated_at'>>
