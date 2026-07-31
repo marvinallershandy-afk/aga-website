@@ -7,6 +7,13 @@ Quellmaterial: 2 DJI-Videos in `REFERENZ/`
 Alle Standbilder in voller 4K-Auflösung (3840×2160, JPEG q=2). Kein Video verändert,
 bestehende Ordner (`Spielerfotos/`, `frames/`, `higgsfield/`, Logos) unangetastet.
 
+> 🔒 **GESPERRTER ABSCHNITT (Datenschutz, Marvin-Freigabe 31.07.2026):** Im Hauptvideo
+> `dji_fly_20260726_142818_0271` ist der Zeitbereich **t = 83–100 s** eine ungewollte
+> Zuschauer-Nahaufnahme mit erkennbaren Gesichtern (inkl. einem Kind). Die 18 extrahierten
+> Frames (`geb_raw_083–100`) wurden **gelöscht**. Dieser Zeitbereich ist für **jede
+> öffentliche Verwendung gesperrt** — er darf in keinem Reel, keiner Website-Sequenz und
+> keinem Schnitt auftauchen. Registry: `REFERENZ/GESPERRTE_ABSCHNITTE.md`.
+
 ---
 
 ## 1. Erzeugte Standbilder + Verteilung
