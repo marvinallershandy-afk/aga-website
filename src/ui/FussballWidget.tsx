@@ -90,6 +90,11 @@ function downloadICS(start: Date, opponent: string) {
 
 export function FussballWidget() {
   const topScorers = [...PLAYERS].sort((a, b) => b.stats.goals - a.stats.goals).slice(0, 3)
+  // v14-M6: Der Torschützen-Block blendet sich aus, solange keine Saisonzahlen
+  // erfasst sind — sonst stünden dort drei Spieler mit 0 Toren. Bewusst an die
+  // DATEN geknüpft und nicht hart entfernt: sobald der erste Treffer gepflegt
+  // ist, kommt der Block von allein zurück.
+  const hasGoals = topScorers.some((p) => p.stats.goals > 0)
   // null = kein echter Termin hinterlegt → Countdown/ICS bleiben aus.
   const kickoff = nextKickoff()
   const opponent = NEXT_MATCH.home ? NEXT_MATCH.opponent : 'SVA'
@@ -126,20 +131,22 @@ export function FussballWidget() {
           </p>
         </div>
 
-        {/* Top-Torschützen mit Gesichtern — prominent */}
-        <div className="cockpit__panel cockpit__scorers">
-          <span className="cockpit__label">Top-Torschützen</span>
-          <ul className="scorer-list">
-            {topScorers.map((p, i) => (
-              <li key={p.id} className={`scorer${i === 0 ? ' scorer--lead' : ''}`}>
-                <span className="scorer__rank">{i + 1}</span>
-                <ScorerFace name={p.name} photoUrl={p.photoUrl} />
-                <span className="scorer__name">{p.name}</span>
-                <span className="scorer__goals"><b>{p.stats.goals}</b>Tore</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        {/* Top-Torschützen mit Gesichtern — prominent. Nur mit echten Zahlen. */}
+        {hasGoals && (
+          <div className="cockpit__panel cockpit__scorers">
+            <span className="cockpit__label">Top-Torschützen</span>
+            <ul className="scorer-list">
+              {topScorers.map((p, i) => (
+                <li key={p.id} className={`scorer${i === 0 ? ' scorer--lead' : ''}`}>
+                  <span className="scorer__rank">{i + 1}</span>
+                  <ScorerFace name={p.name} photoUrl={p.photoUrl} />
+                  <span className="scorer__name">{p.name}</span>
+                  <span className="scorer__goals"><b>{p.stats.goals}</b>Tore</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
 
       {/* ── Seitenspalte: Form, Spiele ──────────────────────────── */}
