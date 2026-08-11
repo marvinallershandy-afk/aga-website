@@ -35,10 +35,10 @@ const CARD_Y = 0.05 // knapp über der Grasnarbe (kein Z-Fighting mit der Pitch-
 // x=−5.25), Angriffsrichtung Osten. Alle Werte liegen INNERHALB des
 // Spielfelds (x ∈ ±5.25, z ∈ ±3.4) — dadurch der sichtbare Rasenbezug.
 // TW steht im eigenen Strafraum (der reicht bis x=−3.6).
-// v14-M2: Bandabstand auf 1.95 vergrößert. Der echte Kader hat 9 Abwehr- und
-// 10 Mittelfeldspieler statt je 5 — die Reihen werden deshalb versetzt
-// gestaffelt (siehe STAGGER), und dafür braucht jedes Band mehr Tiefe.
-const LINE_X: Record<Player['position'], number> = { TW: -3.9, ABW: -1.95, MIT: 0, ANG: 1.95 }
+// Bandabstaende sind ungleich: die gestaffelten Reihen (ABW/MIT) brauchen
+// Zickzack-Versatz + Kartenhoehe Abstand, die flachen (TW/ANG) nur die halbe
+// Kartenhoehe. v14-M3 nutzt das aus, um unten Flaeche fuer den Stab zu sparen.
+const LINE_X: Record<Player['position'], number> = { TW: -3.7, ABW: -2.2, MIT: -0.24, ANG: 1.26 }
 const LINE_ORDER: Player['position'][] = ['TW', 'ABW', 'MIT', 'ANG']
 
 function smoothstep(a: number, b: number, x: number) {
@@ -81,10 +81,15 @@ function useLayout(): Placed[] {
       // Deckel 1.2: bei nur zwei Torhütern sollen die beiden nebeneinander
       // stehen und nicht über die ganze Breite auseinandergezogen werden.
       const spacing = Math.min(1.2, n > 1 ? zSpan / (n - 1) : 0)
+      // v14-M3: Zickzack NUR, wo er gebraucht wird — wenn der Abstand in der
+      // Reihe schmaler ist als eine Karte breit. Torwart- (2) und Sturmreihe
+      // (3) stehen ohnehin weit genug auseinander; ohne Versatz werden sie
+      // flacher und geben unten die Fläche für den Trainerstab frei.
+      const needsStagger = n > 1 && spacing < CARD_W * cardScale
       inLine.forEach((p, i) => {
         placed.push({
           player: p,
-          x: LINE_X[pos] + (i % 2 === 0 ? -stagger / 2 : stagger / 2),
+          x: LINE_X[pos] + (needsStagger ? (i % 2 === 0 ? -stagger / 2 : stagger / 2) : 0),
           y: CARD_Y,
           z: (i - (n - 1) / 2) * spacing,
           line,
@@ -94,27 +99,29 @@ function useLayout(): Placed[] {
         })
       })
     })
-    // Trainerstab: NORD-Seitenlinie (−z), außerhalb des Spielfelds — das Feld
-    // endet bei z=−3.4, der Auslauf reicht bis −3.8. Bewusst Nord und nicht
-    // Süd: Bildschirm-rechts entspricht −z, der Stab steht damit am rechten
-    // Bildrand statt hinter der DOM-Textspalte links.
-    // Portrait zeigt die Seitenlinie nicht (siehe zSpan oben); dort bleibt der
-    // Stab der Galerie „Alle Spieler anzeigen" vorbehalten, in der er ohnehin
-    // vollständig gelistet ist (PlayerGallery.tsx:87).
-    if (!portrait) {
-      STAFF.filter((m) => !m.isPlaceholder).forEach((m, i) => {
-        placed.push({
-          staff: m,
-          x: -1.6 + i * 1.6,
-          y: CARD_Y,
-          z: -3.45,
-          line: 4,
-          scale: 0.7,
-          phase: 9.1 + i * 1.7,
-          tex: makeStaffCardTexture(m).texture,
-        })
+    // v14-M3: Trainerstab an die UNTERE GRUNDLINIE statt an die Seitenlinie.
+    // Vorher stand er bei z=−3.45 auf der Nord-Seitenlinie und hing damit am
+    // rechten Bildrand halb außerhalb. Die Seitenlinien liegen in dieser
+    // Draufsicht schlicht außerhalb des Bildausschnitts — sie wären nur durch
+    // Rauszoomen hereinzuholen, und das hätte die Formation verkleinert.
+    // Jetzt hinter der Sturmreihe quer zur Blickrichtung, also am unteren
+    // Bildrand: dort ist Fläche frei, seit Torwart- und Sturmreihe ohne
+    // Zickzack auskommen. Der Stab steht damit vor dem Feld statt daneben —
+    // in der Draufsicht liest sich das wie die Bank hinter der Linie.
+    const staff = STAFF.filter((m) => !m.isPlaceholder)
+    const staffSpacing = portrait ? 0.72 : 1.25
+    staff.forEach((m, i) => {
+      placed.push({
+        staff: m,
+        x: portrait ? 1.95 : 2.15,
+        y: CARD_Y,
+        z: (i - (staff.length - 1) / 2) * staffSpacing,
+        line: 4,
+        scale: portrait ? 0.4 : 0.5,
+        phase: 9.1 + i * 1.7,
+        tex: makeStaffCardTexture(m).texture,
       })
-    }
+    })
     return placed
   }, [])
 }

@@ -41,7 +41,7 @@ const STATIONS: Station[] = [
   //     abgebildet und bräuchte sonst mehr Platz am unteren Bildrand.
   //     Die seitliche Versetzung für die DOM-Textspalte macht der CameraRig
   //     (nur Landscape), damit die Karten selbst mittig auf dem Rasen bleiben.
-  { pos: new THREE.Vector3(2.2, 10.9, 0), look: new THREE.Vector3(-0.9, 0, 0) },
+  { pos: new THREE.Vector3(2.2, 10.9, 0), look: new THREE.Vector3(-1.0, 0, 0) },
   // 3 · FANBLOCK (v9-E2, zurückgeholt) — Schwenk in die Süd-/SO-Kurve:
   //     Blick von der Platzmitte auf die Fans + wehendes AGA-URKNALL-
   //     Banner (FanBlock.tsx, CX=3.6 / z≈+3.95). Emotionaler Beat. y knapp
