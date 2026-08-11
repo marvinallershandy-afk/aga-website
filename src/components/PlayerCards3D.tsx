@@ -24,13 +24,19 @@ import { makePlayerCardTexture, makeStaffCardTexture } from '../three/playerCard
 const MANN_U = 2 / 7 // ≈0.286 (Kamera-Station Mannschaft)
 const CARD_W = 0.92
 const CARD_H = 1.29
-const CY = 0.86 // Karten-Mittenhöhe der VORDEREN Reihe (knapp überm Rasen)
+// v14-M1: Die Karten LIEGEN auf dem Rasen statt in der Luft zu stehen.
+// Vorher hob LINE_LIFT jede Reihe um bis zu 1.55 Einheiten an, damit sich die
+// Reihen im Schrägblick nicht verdeckten — von oben gesehen entstand daraus
+// eine schwebende Wand ohne Bezug zum Boden. Die Draufsicht (Station 2)
+// braucht keinen Lift mehr: Tiefe wird durch die Feldposition erzählt.
+const CARD_Y = 0.05 // knapp über der Grasnarbe (kein Z-Fighting mit der Pitch-Plane)
 
-const LINE_X: Record<Player['position'], number> = { TW: -4.0, ABW: -2.3, MIT: -0.4, ANG: 1.6 }
+// Formationstiefe entlang der Platzachse. Eigenes Tor im Westen (−x, bei
+// x=−5.25), Angriffsrichtung Osten. Alle Werte liegen INNERHALB des
+// Spielfelds (x ∈ ±5.25, z ∈ ±3.4) — dadurch der sichtbare Rasenbezug.
+// TW steht im eigenen Strafraum (der reicht bis x=−3.6).
+const LINE_X: Record<Player['position'], number> = { TW: -3.9, ABW: -2.35, MIT: -0.5, ANG: 1.4 }
 const LINE_ORDER: Player['position'][] = ['TW', 'ABW', 'MIT', 'ANG']
-// Staffel-Lift pro Reihe (TW hinten am höchsten): die Kamera schaut von
-// Ost-oben — der Lift übersetzt Feld-Tiefe in Bild-HÖHE statt Verdeckung.
-const LINE_LIFT = [1.55, 1.0, 0.48, 0]
 
 function smoothstep(a: number, b: number, x: number) {
   const t = THREE.MathUtils.clamp((x - a) / (b - a), 0, 1)
@@ -51,49 +57,56 @@ interface Placed {
 
 function useLayout(): Placed[] {
   return useMemo(() => {
-    // Portrait: engere z-Spreizung, damit die Reihen in den schmalen
-    // Bildausschnitt passen (der Rig zieht zusätzlich zurück).
     const portrait = typeof window !== 'undefined' && window.innerHeight > window.innerWidth
-    const zk = portrait ? 0.72 : 1
-    // Wand-Zentrum nach NORDEN (−z) gerückt: die linke Bildhälfte gehört
-    // der DOM-Textspalte — die Karten leben in der rechten.
-    const zC = portrait ? -0.7 : -1.0
-    const yLift = portrait ? 0.7 : 0
+    // Portrait hat bei fov=46 nur ~22° horizontales Sichtfeld — eine über die
+    // volle Platzbreite gezogene Reihe stünde zur Hälfte außerhalb des Bildes.
+    // Deshalb rückt die Formation quer enger zusammen und die Karten werden
+    // kleiner, damit sie sich trotz geringerem Abstand nicht überlappen.
+    const zSpan = portrait ? 2.8 : 4.2 // Gesamtbreite der breitesten Reihe
+    const cardScale = portrait ? 0.72 : 0.92
+    // Tiefe (Torwart→Sturm) passt nach der Deckel-Anhebung in beide Formate
+    // ohne Stauchung — daher kein Portrait-Sonderfall mehr.
     const placed: Placed[] = []
     LINE_ORDER.forEach((pos, line) => {
       const inLine = PLAYERS.filter((p) => p.position === pos)
       const n = inLine.length
-      const spacing = Math.min(1.45, n > 1 ? 5.3 / (n - 1) : 0) * zk
+      // Deckel 1.45: bei nur zwei Torhütern sollen die beiden nebeneinander
+      // stehen und nicht über die ganze Breite auseinandergezogen werden.
+      const spacing = Math.min(1.45, n > 1 ? zSpan / (n - 1) : 0)
       inLine.forEach((p, i) => {
-        // TW/ABW-Reihen einen Tick weiter nach Norden — sie ragen sonst
-        // links in Headline bzw. Textspalte
-        const z = (i - (n - 1) / 2) * spacing + zC + (line === 0 ? -0.35 : line === 1 ? -0.55 : 0)
         placed.push({
           player: p,
           x: LINE_X[pos],
-          y: CY + LINE_LIFT[line] + yLift,
-          z,
+          y: CARD_Y,
+          z: (i - (n - 1) / 2) * spacing,
           line,
-          scale: 1,
+          scale: cardScale,
           phase: (line * 2.1 + i) * 1.37,
           tex: makePlayerCardTexture(p, !!p.isPlayerOfMonth).texture,
         })
       })
     })
-    // Trainerstab an der Süd-Seitenlinie, bodennah und klar VOR der Wand —
-    // eigene kleine Reihe, verdeckt nichts.
-    STAFF.filter((m) => !m.isPlaceholder).forEach((m, i) => {
-      placed.push({
-        staff: m,
-        x: 1.15 + i * 1.5,
-        y: 1.12 + yLift * 0.5,
-        z: 2.6 * zk,
-        line: 4,
-        scale: 0.75,
-        phase: 9.1 + i * 1.7,
-        tex: makeStaffCardTexture(m).texture,
+    // Trainerstab: NORD-Seitenlinie (−z), außerhalb des Spielfelds — das Feld
+    // endet bei z=−3.4, der Auslauf reicht bis −3.8. Bewusst Nord und nicht
+    // Süd: Bildschirm-rechts entspricht −z, der Stab steht damit am rechten
+    // Bildrand statt hinter der DOM-Textspalte links.
+    // Portrait zeigt die Seitenlinie nicht (siehe zSpan oben); dort bleibt der
+    // Stab der Galerie „Alle Spieler anzeigen" vorbehalten, in der er ohnehin
+    // vollständig gelistet ist (PlayerGallery.tsx:87).
+    if (!portrait) {
+      STAFF.filter((m) => !m.isPlaceholder).forEach((m, i) => {
+        placed.push({
+          staff: m,
+          x: -1.6 + i * 1.6,
+          y: CARD_Y,
+          z: -3.45,
+          line: 4,
+          scale: 0.7,
+          phase: 9.1 + i * 1.7,
+          tex: makeStaffCardTexture(m).texture,
+        })
       })
-    })
+    }
     return placed
   }, [])
 }
@@ -130,12 +143,9 @@ export function PlayerCards3D() {
   const launch = useRef<{ i: number; t0: number } | null>(null)
   // v13-K4: gemeinsame Glint-Zeit für den Foil-Sweep aller Karten.
   const glintT = useRef({ value: 0 })
-  // Wand-Zentrum (für den gemeinsamen Yaw)
-  const wallCenter = useMemo(() => {
-    const c = new THREE.Vector3()
-    layout.forEach((p) => c.add(_dummy.position.set(p.x, p.y, p.z)))
-    return c.divideScalar(layout.length)
-  }, [layout])
+  // v14-M1: Der gemeinsame „Wand-Yaw" ist entfallen — liegende Karten richten
+  // sich nicht mehr zur Kamera aus, sondern nach der Platzachse (feste Euler
+  // im useFrame). Damit fällt auch die Berechnung des Wand-Zentrums weg.
 
   // Foil-Glint in die Basic-Materialien injizieren (einmalig, dann recompile).
   useEffect(() => {
@@ -168,8 +178,6 @@ export function PlayerCards3D() {
     if (!g) return
     glintT.current.value = state.clock.elapsedTime
     const t = state.clock.elapsedTime
-    // EIN Wand-Yaw für alle Karten (koherente Wand statt Fächer) + Rücklage
-    const wallYaw = Math.atan2(camera.position.x - wallCenter.x, camera.position.z - wallCenter.z)
     const shadows = shadowRef.current
     let anyVisible = false
     for (let i = 0; i < layout.length; i++) {
@@ -189,10 +197,17 @@ export function PlayerCards3D() {
       m.visible = alpha > 0.02
       if (m.visible) {
         anyVisible = true
-        // dezentes Schweben (individuelle Phase) + gemeinsame Orientierung
-        const bob = Math.sin(t * 0.65 + item.phase) * 0.02
-        m.position.set(item.x, item.y + bob - (1 - ease) * 0.3, item.z)
-        _euler.set(-0.1, wallYaw, Math.sin(t * 0.4 + item.phase) * 0.014)
+        // v14-M1: Karten liegen flach auf dem Rasen. Kein Schweben mehr —
+        // beim Reveal sinken sie von oben auf ihre Position statt darunter
+        // hervorzusteigen (vorher −0.3, was sie jetzt unter die Grasnarbe
+        // gezogen hätte).
+        m.position.set(item.x, item.y + (1 - ease) * 0.45, item.z)
+        // Euler-Reihenfolge 'YXZ': X=−90° kippt die Kartenfläche nach oben,
+        // Y=+90° dreht die Kartenoberkante nach −x (im Bild oben, Richtung
+        // eigenes Tor) → die Karte liest sich aus der Draufsicht aufrecht.
+        // Z bleibt ein minimales Wackeln in der Ebene, damit die Formation
+        // nicht wie gestempelt wirkt.
+        _euler.set(-Math.PI / 2, Math.PI / 2, Math.sin(t * 0.4 + item.phase) * 0.012)
         m.quaternion.setFromEuler(_euler)
       }
       // v13-K4: Launch-Animation überlagert Reveal-Pose
@@ -211,14 +226,18 @@ export function PlayerCards3D() {
         anyVisible = true
         if (k >= 1) launch.current = null
       }
-      // Schatten-Blob: skaliert mit dem Reveal (Scale 0 = aus)
+      // Schatten-Blob: erdet die liegende Karte. v14-M1: etwas GRÖSSER als die
+      // Karte selbst (spread > 1), sonst verdeckt die Karte ihren eigenen
+      // Schatten vollständig — der weiche Rand schaut jetzt ringsum hervor und
+      // bindet die Karte sichtbar an den Rasen.
       if (shadows) {
         const sh = ease * fo * item.scale
         _dummy.position.set(item.x, 0.012, item.z)
         _dummy.rotation.set(-Math.PI / 2, 0, 0)
-        // höhere Karten → größerer, weicherer (per Scale) Schatten
-        const spread = 0.62 + LINE_LIFT[Math.min(item.line, 3)] * 0.1
-        _dummy.scale.set(sh * spread * 1.5, sh * spread, 1)
+        const spread = 1.3
+        // Nach der −90°-Kippung entspricht die lokale x-Achse der Welt-x
+        // (Kartenhöhe) und die lokale y-Achse der Welt-z (Kartenbreite).
+        _dummy.scale.set(CARD_H * sh * spread, CARD_W * sh * spread, 1)
         _dummy.updateMatrix()
         shadows.setMatrixAt(i, _dummy.matrix)
       }

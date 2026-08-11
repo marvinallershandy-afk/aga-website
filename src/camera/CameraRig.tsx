@@ -30,6 +30,12 @@ const devCam = (() => {
 const SP_BOARD_W = PITCH.width * 0.86
 const SP_PANELS = 6
 const SP_U = 6 / (STATION_COUNT - 1) // Scroll-Param der Sponsoren-Station
+// v14-M1: Mannschafts-Station (Draufsicht auf die Aufstellung).
+const MANN_U = 2 / (STATION_COUNT - 1) // ≈0.286
+// Querversatz der Kamera in Landscape, damit die Formation rechts neben der
+// DOM-Textspalte steht. Bildschirm-rechts entspricht bei dieser Draufsicht
+// −z, ein positiver Versatz schiebt die Karten also nach rechts.
+const MANN_SIDE_SHIFT_Z = 2.4
 function sponsorBoardX(focus: number): number {
   const panelW = SP_BOARD_W / SP_PANELS
   const boardIndex = 1 + THREE.MathUtils.clamp(focus, 0, 3) // Slot-Tafeln = Board 1..4
@@ -121,14 +127,35 @@ export function CameraRig() {
 
     sampleFlight(smoothed.current, pos.current, look.current)
 
+    const aspect = state.size.width / state.size.height
+
+    // v14-M1: Nähe zur Mannschafts-Station (Draufsicht auf die Aufstellung).
+    // 1 an der Station, 0 außerhalb des Fensters.
+    const wMann = smoothstep(0.10, 0.03, Math.abs(smoothed.current - MANN_U))
+
+    // Landscape: die linke Bildhälfte gehört der DOM-Textspalte
+    // („UNSERE MANNSCHAFT" + Fließtext). Statt die Karten vom Rasenzentrum
+    // wegzuschieben (dann lägen die Außenreihen im Auslauf), versetzt sich
+    // die KAMERA quer — die Formation bleibt mittig auf dem Feld und rückt
+    // im Bild nach rechts.
+    if (wMann > 0.001 && aspect >= 1) {
+      pos.current.z += MANN_SIDE_SHIFT_Z * wMann
+      look.current.z += MANN_SIDE_SHIFT_Z * wMann
+    }
+
     // Portrait-Anpassung (v4-Audit): die Stationen sind für 16:9
     // komponiert — auf schmalen Viewports zieht die Kamera vom
     // Blickpunkt zurück, damit die Komposition erhalten bleibt.
-    const aspect = state.size.width / state.size.height
     if (aspect < 1) {
-      const k = Math.min(1.75, 1 + (1 - aspect) * 1.1)
+      // v14-M1: An der Mannschafts-Station wird dieses Zurückziehen fast
+      // vollständig zurückgenommen. Sonst schrumpft genau die Formation, die
+      // dort gelesen werden soll — auf 390x844 wäre sie sonst winzig. Die
+      // Breitenanpassung übernimmt stattdessen das Layout (zSpan in
+      // PlayerCards3D), die Formation rückt quer zusammen statt wegzurücken.
+      const kFull = Math.min(1.75, 1 + (1 - aspect) * 1.1)
+      const k = THREE.MathUtils.lerp(kFull, 1.04, wMann)
       pos.current.sub(look.current).multiplyScalar(k).add(look.current)
-      pos.current.y += (1 - aspect) * 0.5 // leicht höher für mehr Kontext
+      pos.current.y += (1 - aspect) * 0.5 * (1 - wMann * 0.85) // leicht höher für mehr Kontext
     }
 
     // dezenter Idle-Sway für Lebendigkeit
