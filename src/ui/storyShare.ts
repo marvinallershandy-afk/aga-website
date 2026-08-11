@@ -122,7 +122,7 @@ export function renderStoryCanvas(player: Player): HTMLCanvasElement {
   ctx.fillStyle = 'rgba(232,193,90,0.10)'
   ctx.font = '400 360px Anton, system-ui'
   ctx.textAlign = 'right'
-  ctx.fillText(String(player.number), cx + cw - 40, cy + 560)
+  ctx.fillText(player.number === null ? '' : String(player.number), cx + cw - 40, cy + 560)
 
   // Silhouette (Kopf + Schulter-Büste)
   ctx.fillStyle = 'rgba(255,255,255,0.12)'
@@ -169,7 +169,11 @@ export function renderStoryCanvas(player: Player): HTMLCanvasElement {
   // Fuß-Branding
   ctx.fillStyle = 'rgba(255,255,255,0.55)'
   ctx.font = '700 26px Archivo, system-ui'
-  ctx.fillText(POSITION_LABEL[player.position].toUpperCase() + ' · #' + player.number, W / 2, cy + ch + 90)
+  ctx.fillText(
+    POSITION_LABEL[player.position].toUpperCase() + (player.number === null ? '' : ' · #' + player.number),
+    W / 2,
+    cy + ch + 90,
+  )
   ctx.fillStyle = 'rgba(255,255,255,0.35)'
   ctx.font = '600 22px Archivo, system-ui'
   ctx.fillText(CONTACT_INSTA, W / 2, cy + ch + 130)
@@ -201,7 +205,9 @@ export async function shareStory(player: Player): Promise<ShareResult> {
       await navAny.share({
         files: [file],
         title: `${player.name} · ${CLUB.shortName}`,
-        text: `${player.name} #${player.number} — ${CLUB.name}`,
+        text: player.number === null
+          ? `${player.name} — ${CLUB.name}`
+          : `${player.name} #${player.number} — ${CLUB.name}`,
       })
       return 'shared'
     }

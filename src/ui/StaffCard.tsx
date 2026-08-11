@@ -24,7 +24,9 @@ export function StaffCard({ member }: { member: Staff }) {
       <div className="staff-card__body">
         <span className="staff-card__role">{ROLE_LABEL[member.role]}</span>
         <h4 className="staff-card__name">{member.name}</h4>
-        <span className="staff-card__since">im Verein seit {member.since}</span>
+        {member.since !== null && (
+          <span className="staff-card__since">im Verein seit {member.since}</span>
+        )}
         {member.role === 'teammanager' && member.contactMessage && (
           <a
             className={`btn staff-card__contact ${whatsappReady ? 'btn--wa' : 'btn--primary'}`}

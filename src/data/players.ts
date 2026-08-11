@@ -1,8 +1,15 @@
 // ─────────────────────────────────────────────────────────────
-// Seed-Daten Kader. v2-ready: dieses Interface ist bewusst so
-// getypt, dass ein Umzug nach Supabase ein reines Mapping ist
-// (id als string/uuid, alle Felder flach, optionale Foto-URL).
-// PLATZHALTER — echte Namen/Fotos trägt Marvin nach.
+// Kader SV Agathenburg-Dollern, 1. Herren.
+// Stand: Kreisliga Stade, Saison 26/27. Quelle: fupa.net (von Marvin
+// übermittelt, 11.08.2026). Namen und Rückennummern sind ECHT.
+//
+// Was hier bewusst NICHT steht (siehe Kommentare an den Feldern):
+// Spielstatistiken, Ratings und Vereinszugehörigkeit. Für diese Angaben
+// liegen keine Daten vor. Sie werden NICHT geschätzt, weil sie öffentlich
+// sichtbar an namentlich genannten realen Personen hängen.
+//
+// v2-ready: das Interface ist so getypt, dass ein Umzug nach Supabase ein
+// reines Mapping ist (id als string/uuid, alle Felder flach).
 // ─────────────────────────────────────────────────────────────
 
 export type Position = 'TW' | 'ABW' | 'MIT' | 'ANG'
@@ -10,21 +17,26 @@ export type Position = 'TW' | 'ABW' | 'MIT' | 'ANG'
 export interface Player {
   id: string
   name: string
-  number: number
+  /** Rückennummer. null = im Kader ohne feste Nummer geführt. */
+  number: number | null
   position: Position
-  /** Foto-URL (v2). null → generische Silhouette. */
+  /** Foto-URL. null → Fallback: Wappen-Wasserzeichen + große Nummer. */
   photoUrl: string | null
   stats: {
     games: number
     goals: number
     assists: number
   }
-  /** UT-Style Gesamtrating 0–99 (aus Stats abgeleitet oder gepflegt). */
+  /** UT-Style Gesamtrating 0–99. */
   rating: number
-  /** Optional: Nationalitäts-/Herkunfts-Flag (v2). */
-  since: number // Jahr im Verein seit
+  /** Jahr im Verein seit. null = nicht bekannt. */
+  since: number | null
   /** Team-des-Monats: hebt die Karte auf das Spezial-Level. */
   isPlayerOfMonth?: boolean
+  /** Mannschaftskapitän. */
+  isCaptain?: boolean
+  /** Neuzugang zur laufenden Saison — für spätere visuelle Hervorhebung. */
+  isNewSigning?: boolean
 }
 
 export const POSITION_LABEL: Record<Position, string> = {
@@ -34,68 +46,95 @@ export const POSITION_LABEL: Record<Position, string> = {
   ANG: 'Angriff',
 }
 
-// ── Trainerstab (v10-E2) ─────────────────────────────────────
+// ── Trainerstab ──────────────────────────────────────────────
 // Eigene Kategorie — KEINE Spieler-Stats (Rating/Tore/Assists), sondern
-// Rolle + „seit im Verein". Carsten ist TRAINER (im Foto Trainer-Polo),
-// war fälschlich als Angreifer im Kader. Co-Trainer/Teammanager als Slots
-// vorbereitet (Marvin trägt echte Namen/Fotos nach, s. README).
-export type StaffRole = 'trainer' | 'co-trainer' | 'teammanager'
+// Rolle + „seit im Verein".
+export type StaffRole = 'trainer' | 'co-trainer' | 'torwart-trainer' | 'teammanager'
 
 export interface Staff {
   id: string
   name: string
   role: StaffRole
-  since: number
+  since: number | null
   photoUrl: string | null
   /** Nur Teammanager: vorformulierte WhatsApp-Nachricht für „Schreib mir". */
   contactMessage?: string
   /** v13-E6: true → Slot ohne echten Namen. Bleibt im DOM-Stab-Block
    *  (ehrlich markiert), fliegt aber von der prominenten 3D-Seitenlinie. */
   isPlaceholder?: boolean
+  /** Neu im Amt zur laufenden Saison. */
+  isNewSigning?: boolean
 }
 
 export const ROLE_LABEL: Record<StaffRole, string> = {
   trainer: 'Trainer',
   'co-trainer': 'Co-Trainer',
+  'torwart-trainer': 'Torwart-Trainer',
   teammanager: 'Teammanager',
 }
 
 export const STAFF: Staff[] = [
-  { id: 's1', name: 'Carsten', role: 'trainer', since: 2016, photoUrl: '/players/carsten.webp' },
-  { id: 's2', name: 'Name folgt', role: 'co-trainer', since: 2020, photoUrl: null, isPlaceholder: true },
+  { id: 's-junge', name: 'Carsten Junge', role: 'trainer', since: 2016, photoUrl: '/players/carsten.webp' },
+  { id: 's-ebeling-a', name: 'Adolf Ebeling', role: 'co-trainer', since: null, photoUrl: null },
+  { id: 's-duda', name: 'Torsten Duda', role: 'torwart-trainer', since: null, photoUrl: null },
   {
-    id: 's3',
-    // v11-E9: echter Teammanager. Foto ist Marvins CI-Porträt (rot, Wappen, #30);
-    // ein „freigestelltes" Cutout kann es später ersetzen (Bild-Tool nötig).
-    name: 'Nico Hause',
+    id: 's-hause',
+    // Foto ist Marvins CI-Porträt (rot, Wappen, #30); ein freigestelltes
+    // Cutout kann es später ersetzen.
+    name: 'Niko Hause',
     role: 'teammanager',
     since: 2018,
     photoUrl: '/players/nico-hause.webp',
-    contactMessage: 'Hallo Nico! Ich habe eine Frage zum SV Agathenburg-Dollern.',
+    contactMessage: 'Hallo Niko! Ich habe eine Frage zum SV Agathenburg-Dollern.',
+    isNewSigning: true,
   },
 ]
 
-// 16 Kader-Slots. FOTO-PIPELINE (v5): Datei nach Schema
-// public/players/<vorname-klein>.webp (Hochformat, Kopf im oberen
-// Drittel — Rest macht die Duotone-CSS-Behandlung + Focal oben).
-// 5 echte Beispiel-Spieler (Vorname = Dateiname aus
-// REFERENZ/Spielerfotos/); Nachnamen bewusst weggelassen, bis
-// Marvin sie freigibt. Rest: generische Platzhalter.
+// ── Platzhalter-Werte ────────────────────────────────────────
+// EIN neutraler Rating-Wert für alle. Bewusst kein je Spieler erfundener
+// Wert: das wäre eine öffentlich sichtbare Leistungsbewertung realer,
+// namentlich genannter Personen. Marvins Rating-Entscheidung steht aus.
+const RATING_TBD = 70
+// Keine Saisonzahlen vorhanden → alles 0 statt geschätzt. Wirkt sich auf den
+// Top-Torschützen-Block im Saison-Cockpit aus (FussballWidget.tsx:92).
+const STATS_TBD = { games: 0, goals: 0, assists: 0 }
+
+// FOTO-PIPELINE: Datei nach Schema public/players/<vorname-klein>.webp
+// (Hochformat, Kopf im oberen Drittel). Vorhanden sind bisher 4 Spielerfotos
+// aus der Zuordnung der alten Kurznamen — die restlichen Karten laufen auf
+// den Wappen+Nummer-Fallback.
 export const PLAYERS: Player[] = [
-  { id: 'p01', name: 'Tino', number: 1, position: 'TW', photoUrl: '/players/tino.webp', stats: { games: 22, goals: 0, assists: 1 }, rating: 82, since: 2016 },
-  { id: 'p02', name: 'Jonas Berger', number: 2, position: 'ABW', photoUrl: null, stats: { games: 20, goals: 1, assists: 3 }, rating: 74, since: 2019 },
-  { id: 'p03', name: 'Lukas Vogt', number: 3, position: 'ABW', photoUrl: null, stats: { games: 24, goals: 0, assists: 2 }, rating: 76, since: 2018 },
-  { id: 'p04', name: 'Lennard', number: 4, position: 'ABW', photoUrl: '/players/lennard.webp', stats: { games: 23, goals: 3, assists: 1 }, rating: 78, since: 2017 },
-  { id: 'p05', name: 'Erik Hansen', number: 5, position: 'ABW', photoUrl: null, stats: { games: 21, goals: 2, assists: 0 }, rating: 75, since: 2020 },
-  { id: 'p06', name: 'Nico Wolff', number: 6, position: 'MIT', photoUrl: null, stats: { games: 25, goals: 4, assists: 7 }, rating: 83, since: 2015 },
-  { id: 'p07', name: 'Julio', number: 7, position: 'MIT', photoUrl: '/players/julio.webp', stats: { games: 24, goals: 6, assists: 9 }, rating: 85, since: 2018 },
-  { id: 'p08', name: 'Felix Braun', number: 8, position: 'MIT', photoUrl: null, stats: { games: 22, goals: 5, assists: 6 }, rating: 81, since: 2019 },
-  // Carsten (ehem. #9) ist Trainer → jetzt im Trainerstab (STAFF), nicht im Kader.
-  { id: 'p10', name: 'Eli', number: 10, position: 'ANG', photoUrl: '/players/eli.webp', stats: { games: 24, goals: 14, assists: 11 }, rating: 89, since: 2014, isPlayerOfMonth: true },
-  { id: 'p11', name: 'Paul Neumann', number: 11, position: 'ANG', photoUrl: null, stats: { games: 23, goals: 12, assists: 5 }, rating: 84, since: 2021 },
-  { id: 'p12', name: 'Jan Köhler', number: 12, position: 'TW', photoUrl: null, stats: { games: 6, goals: 0, assists: 0 }, rating: 70, since: 2022 },
-  { id: 'p13', name: 'Moritz Lang', number: 13, position: 'MIT', photoUrl: null, stats: { games: 18, goals: 2, assists: 4 }, rating: 73, since: 2020 },
-  { id: 'p14', name: 'Simon Weber', number: 14, position: 'ABW', photoUrl: null, stats: { games: 19, goals: 1, assists: 2 }, rating: 72, since: 2021 },
-  { id: 'p15', name: 'Tom Hartmann', number: 15, position: 'ANG', photoUrl: null, stats: { games: 20, goals: 9, assists: 3 }, rating: 79, since: 2019 },
-  { id: 'p16', name: 'Kevin Sommer', number: 16, position: 'MIT', photoUrl: null, stats: { games: 21, goals: 3, assists: 8 }, rating: 80, since: 2017 },
+  // ── Torwart ────────────────────────────────────────────────
+  { id: 'p-pils', name: 'Malte Pils', number: 1, position: 'TW', photoUrl: null, stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
+  { id: 'p-ebeling-t', name: 'Tino Ebeling', number: 38, position: 'TW', photoUrl: '/players/tino.webp', stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
+
+  // ── Abwehr ─────────────────────────────────────────────────
+  { id: 'p-huettry', name: 'Justin Hüttry', number: 3, position: 'ABW', photoUrl: null, stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
+  { id: 'p-brettschneider', name: 'Lennard Brettschneider', number: 4, position: 'ABW', photoUrl: '/players/lennard.webp', stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
+  { id: 'p-sladek', name: 'Justin Sladek', number: 11, position: 'ABW', photoUrl: null, stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
+  { id: 'p-neuber-m', name: 'Marcel Neuber', number: 14, position: 'ABW', photoUrl: null, stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
+  { id: 'p-nauerz', name: 'Noel Nauerz', number: 15, position: 'ABW', photoUrl: null, stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
+  { id: 'p-neuber-d', name: 'Dawid Neuber', number: 21, position: 'ABW', photoUrl: null, stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
+  { id: 'p-marchel', name: 'Oliver Marchel', number: 29, position: 'ABW', photoUrl: null, stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
+  { id: 'p-elsen', name: 'Joshua Elsen', number: 32, position: 'ABW', photoUrl: null, stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
+  // Im Kader ohne feste Rückennummer geführt.
+  { id: 'p-warkehr-i', name: 'Isaak Warkehr', number: null, position: 'ABW', photoUrl: null, stats: { ...STATS_TBD }, rating: RATING_TBD, since: null, isNewSigning: true },
+
+  // ── Mittelfeld ─────────────────────────────────────────────
+  { id: 'p-litwitz', name: 'Lukas-Alexander Litwitz', number: 5, position: 'MIT', photoUrl: null, stats: { ...STATS_TBD }, rating: RATING_TBD, since: null, isNewSigning: true },
+  { id: 'p-paruzel', name: 'Julio Paruzel', number: 7, position: 'MIT', photoUrl: '/players/julio.webp', stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
+  { id: 'p-becker', name: 'Niclas Becker', number: 8, position: 'MIT', photoUrl: null, stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
+  { id: 'p-kalwa', name: 'Justin Kalwa', number: 13, position: 'MIT', photoUrl: null, stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
+  { id: 'p-jochim', name: 'Sam Luca Jochim', number: 17, position: 'MIT', photoUrl: null, stats: { ...STATS_TBD }, rating: RATING_TBD, since: null, isNewSigning: true },
+  { id: 'p-pejas-n', name: 'Noah Pejas', number: 20, position: 'MIT', photoUrl: null, stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
+  // Foto-Zuordnung aus dem alten Kurznamen „Eli" — bitte bestätigen.
+  { id: 'p-pejas-e', name: 'Elias Pejas', number: 22, position: 'MIT', photoUrl: '/players/eli.webp', stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
+  { id: 'p-helck', name: 'Tobias Helck', number: 24, position: 'MIT', photoUrl: null, stats: { ...STATS_TBD }, rating: RATING_TBD, since: null, isCaptain: true },
+  { id: 'p-bruenjes', name: 'Janek Brünjes', number: 33, position: 'MIT', photoUrl: null, stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
+  { id: 'p-matthes', name: 'Paul Matthes', number: 44, position: 'MIT', photoUrl: null, stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
+
+  // ── Angriff ────────────────────────────────────────────────
+  { id: 'p-warkehr-a', name: 'Aaron Warkehr', number: 6, position: 'ANG', photoUrl: null, stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
+  { id: 'p-viedts', name: 'Lennox Viedts', number: 10, position: 'ANG', photoUrl: null, stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
+  { id: 'p-biedermann', name: 'Marc Kevin Biedermann', number: 37, position: 'ANG', photoUrl: null, stats: { ...STATS_TBD }, rating: RATING_TBD, since: null, isNewSigning: true },
 ]

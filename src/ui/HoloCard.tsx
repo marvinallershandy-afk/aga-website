@@ -50,7 +50,11 @@ export function HoloCard({ player, onClick, large }: Props) {
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
       onKeyDown={onClick ? (e) => (e.key === 'Enter' || e.key === ' ') && onClick(player) : undefined}
-      aria-label={`${player.name}, Nummer ${player.number}, ${POSITION_LABEL[player.position]}`}
+      aria-label={
+        player.number === null
+          ? `${player.name}, ${POSITION_LABEL[player.position]}`
+          : `${player.name}, Nummer ${player.number}, ${POSITION_LABEL[player.position]}`
+      }
     >
       <div className="holo__body" />
       <div className="holo__watermark">{player.number}</div>

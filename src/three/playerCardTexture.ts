@@ -157,9 +157,13 @@ export function makePlayerCardTexture(player: Player, isTOTM = false): CardTex {
         ctx.drawImage(crest, W / 2 - cw / 2, by + bh / 2 - ch / 2 - 26, cw, ch)
         ctx.globalAlpha = 1
       }
-      ctx.font = `170px Anton, system-ui, sans-serif`
-      ctx.fillStyle = 'rgba(232,193,90,0.85)'
-      ctx.fillText(String(player.number), W / 2, by + bh * 0.62)
+      // Ohne Rückennummer bleibt der Fallback beim Wappen allein — sonst
+      // stünde hier „null" auf der Karte.
+      if (player.number !== null) {
+        ctx.font = `170px Anton, system-ui, sans-serif`
+        ctx.fillStyle = 'rgba(232,193,90,0.85)'
+        ctx.fillText(String(player.number), W / 2, by + bh * 0.62)
+      }
     }
 
     // dunkler Kontrast-Anker hinter Rating & Wappen (Lesbarkeit auf Foto)
@@ -221,7 +225,13 @@ export function makePlayerCardTexture(player: Player, isTOTM = false): CardTex {
     // Stats leben im Modal, hier wäre es unlesbarer Pixelbrei)
     ctx.font = `800 30px Archivo, system-ui, sans-serif`
     ctx.fillStyle = 'rgba(255,255,255,0.78)'
-    ctx.fillText(`${POSITION_LABEL[player.position].toUpperCase()}  ·  #${player.number}`, W / 2, H * 0.945)
+    ctx.fillText(
+      player.number === null
+        ? POSITION_LABEL[player.position].toUpperCase()
+        : `${POSITION_LABEL[player.position].toUpperCase()}  ·  #${player.number}`,
+      W / 2,
+      H * 0.945,
+    )
 
     ctx.restore()
 
@@ -288,8 +298,10 @@ export function makeStaffCardTexture(member: Staff): CardTex {
     ctx.font = `800 38px Archivo, system-ui, sans-serif`; ctx.fillStyle = RED
     ctx.fillText(ROLE_LABEL[member.role].toUpperCase(), W / 2, H * 0.745)
     fitText(ctx, member.name.toUpperCase(), W / 2, H * 0.838, W * 0.85, 84, 'Anton, system-ui, sans-serif', '#ffffff')
-    ctx.font = `600 28px Archivo, system-ui, sans-serif`; ctx.fillStyle = 'rgba(255,255,255,0.58)'
-    ctx.fillText(`im Verein seit ${member.since}`, W / 2, H * 0.94)
+    if (member.since !== null) {
+      ctx.font = `600 28px Archivo, system-ui, sans-serif`; ctx.fillStyle = 'rgba(255,255,255,0.58)'
+      ctx.fillText(`im Verein seit ${member.since}`, W / 2, H * 0.94)
+    }
     ctx.restore()
     paintCardEdge(ctx, 0.3)
     tex.needsUpdate = true

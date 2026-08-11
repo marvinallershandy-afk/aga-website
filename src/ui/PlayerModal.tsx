@@ -63,7 +63,10 @@ function ModalContent({ player }: { player: Player }) {
         <div className="flip-hint">{flipped ? 'Nochmal tippen: Vorderseite' : 'Karte antippen zum Drehen'}</div>
       </div>
       <div className="modal-info">
-        <div className="modal-sub">#{player.number} · {POSITION_LABEL[player.position]}</div>
+        <div className="modal-sub">
+          {player.number !== null && <>#{player.number} · </>}
+          {POSITION_LABEL[player.position]}
+        </div>
         <h3>{player.name}</h3>
         <div className="modal-statgrid">
           <div><b>{player.stats.games}</b><span>Spiele</span></div>
@@ -71,7 +74,7 @@ function ModalContent({ player }: { player: Player }) {
           <div><b>{player.stats.assists}</b><span>Assists</span></div>
           <div><b>{player.rating}</b><span>Rating</span></div>
           <div><b>{player.position}</b><span>Position</span></div>
-          <div><b>{player.since}</b><span>im Verein</span></div>
+          <div><b>{player.since ?? '—'}</b><span>im Verein</span></div>
         </div>
         <div className="modal-actions">
           <button className="btn btn--primary" onClick={onShare} disabled={sharing}>
