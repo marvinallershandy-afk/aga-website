@@ -101,6 +101,31 @@ body {
   .section--snap-start { padding-top: 4.5rem; }
 }
 
+/* v14-M2: Mannschaft im Hochformat NACHEINANDER statt übereinander.
+   Bildschirm 1 trägt den Text, Bildschirm 2 ist leer — dort steht die
+   Aufstellung frei. Ohne Scrim, ohne Transparenz: der Text ist an seinem
+   Ruhepunkt voll deckend und zum zweiten Ruhepunkt hin komplett ausgefahren
+   (Präsenz-Fenster in useScrollProgress.ts).
+   Der Ruhepunkt des zweiten Bildschirms ist ein eigenes Snap-Ziel, sonst
+   gäbe es dort nichts, woran der Scroll einrastet. */
+.section__formation-stop { display: none; }
+@media (max-width: 640px) {
+  .section--stack-mobile {
+    min-height: 200svh;
+    justify-content: flex-start;
+    padding-top: 5rem;
+    /* Ruhepunkt 1 = Sektionsanfang (Textbildschirm) statt Sektionsmitte —
+       die läge bei doppelter Höhe genau auf der Kante zwischen beidem. */
+    scroll-snap-align: start;
+  }
+  .section__formation-stop {
+    display: block;
+    height: 100svh;
+    scroll-snap-align: center;
+    pointer-events: none;
+  }
+}
+
 .section__kicker {
   font-family: var(--font-body);
   font-weight: 700;

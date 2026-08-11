@@ -30,18 +30,18 @@ const STATIONS: Station[] = [
   //     schräge Wand, nicht als Aufstellung (Marvin: „hängen halb in der Luft,
   //     die Kamera zeigt die Aufstellung nicht").
   //     Jetzt nahezu senkrecht über dem Platz, leicht aus Richtung des
-  //     gegnerischen Tors (+x) geneigt: dx=−2.95 zu dy=−9.5 ⇒ ~17,3° aus der
+  //     gegnerischen Tors (+x) geneigt: dx=−3.05 zu dy=−10.9 ⇒ ~15,6° aus der
   //     Senkrechten. Die Formation liest sich von oben, Blickachse liegt auf
   //     der Tor-zu-Tor-Linie (z=0) — Torwart (−x) oben im Bild, Sturm (+x)
   //     unten, wie bei einer TV-Kamera hinter dem Tor.
-  //     y=9.5: dafür hebt maxFlightYAt() den Höhendeckel in einem schmalen
+  //     y=10.9: dafür hebt maxFlightYAt() den Höhendeckel in einem schmalen
   //     Fenster um diese Station (gleiches Muster wie beim Finale).
   //     look.x = −0.95 liegt bewusst etwas VOR der geometrischen Mitte
   //     (−1.25): die kameranahe Sturmreihe wird perspektivisch größer
   //     abgebildet und bräuchte sonst mehr Platz am unteren Bildrand.
   //     Die seitliche Versetzung für die DOM-Textspalte macht der CameraRig
   //     (nur Landscape), damit die Karten selbst mittig auf dem Rasen bleiben.
-  { pos: new THREE.Vector3(2.0, 9.5, 0), look: new THREE.Vector3(-0.95, 0, 0) },
+  { pos: new THREE.Vector3(2.2, 10.9, 0), look: new THREE.Vector3(-0.9, 0, 0) },
   // 3 · FANBLOCK (v9-E2, zurückgeholt) — Schwenk in die Süd-/SO-Kurve:
   //     Blick von der Platzmitte auf die Fans + wehendes AGA-URKNALL-
   //     Banner (FanBlock.tsx, CX=3.6 / z≈+3.95). Emotionaler Beat. y knapp
@@ -203,7 +203,7 @@ const FINALE_MAX_Y = 21 // v11-E8: höhere Decke → der Finale-Rauszoom trägt 
 // Gleiches Muster wie beim Finale: nur ein schmales Fenster um die Station
 // herum, der Rest der Fahrt bleibt unverändert gedeckelt.
 const MANN_U = 2 / (STATIONS.length - 1) // ≈0.286
-const MANN_MAX_Y = 9.6
+const MANN_MAX_Y = 11.3
 const MANN_HALF_WIDTH = 0.09
 function maxFlightYAt(u: number): number {
   if (u > FINALE_U) {

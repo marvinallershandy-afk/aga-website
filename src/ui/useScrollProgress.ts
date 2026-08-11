@@ -13,6 +13,19 @@ const SECTION_IDS = ['verein', 'mannschaft', 'fanblock', 'musik', 'tabelle', 'sp
 // gemessen werden statt auf die Sektions-Mitte, sonst ruht der Scroll
 // an einer anderen Stelle als die komponierte Kamera-Pose.
 const SNAP_START_IDS = new Set(['tabelle', 'kontakt'])
+// v14-M2: Sektionen, die im HOCHFORMAT zwei Bildschirme hoch sind
+// (.section--stack-mobile): oben der Text, unten der freie Blick auf die
+// 3D-Szene. Der Kamera-Anker sitzt dann im ZWEITEN Bildschirm, das
+// Präsenz-Fenster des Textes im ERSTEN — so steht nie beides übereinander.
+const STACK_MOBILE_IDS = new Set(['mannschaft'])
+const STACK_MOBILE_QUERY = '(max-width: 640px)'
+function isStacked(id: string): boolean {
+  return (
+    STACK_MOBILE_IDS.has(id) &&
+    typeof window !== 'undefined' &&
+    window.matchMedia(STACK_MOBILE_QUERY).matches
+  )
+}
 // Anteil des Wegs Verein→Mannschaft, an dem der Anstoß-Dive (Kamera-
 // Station 1) liegt — als nahtloser Übergang, ohne eigene Sektion.
 const ANSTOSS_FRAC = 0.55
@@ -41,9 +54,12 @@ export function useScrollProgress(enabled: boolean) {
       const secP = SECTION_IDS.map((id) => {
         const el = document.getElementById(id)
         if (!el) return 0
-        const rest = SNAP_START_IDS.has(id)
-          ? el.offsetTop
-          : el.offsetTop + el.offsetHeight / 2 - window.innerHeight / 2
+        const rest = isStacked(id)
+          ? // Station erst im zweiten Bildschirm, wenn der Text raus ist
+            el.offsetTop + Math.max(0, el.offsetHeight - window.innerHeight)
+          : SNAP_START_IDS.has(id)
+            ? el.offsetTop
+            : el.offsetTop + el.offsetHeight / 2 - window.innerHeight / 2
         return Math.min(1, Math.max(0, rest / max))
       })
       // Erste Station: schon bei Scroll 0 im Hero-Frame stehen
@@ -65,6 +81,10 @@ export function useScrollProgress(enabled: boolean) {
         if (!el) return []
         const vh = window.innerHeight
         const center = el.offsetTop + el.offsetHeight / 2 - vh / 2
+        // Gestapelte Sektionen: Text lebt am Sektionsanfang (Bildschirm 1) und
+        // ist eine halbe Viewport-Höhe später vollständig ausgeblendet — lange
+        // bevor der Kamera-Anker im zweiten Bildschirm erreicht ist.
+        if (isStacked(id)) return [{ el, w0: el.offsetTop, w1: el.offsetTop }]
         const w0 = id === 'verein' ? 0 : SNAP_START_IDS.has(id) ? el.offsetTop : center
         const w1 = SNAP_START_IDS.has(id)
           ? el.offsetTop + Math.max(0, el.offsetHeight - vh)

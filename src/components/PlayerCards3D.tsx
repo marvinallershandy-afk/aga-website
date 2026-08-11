@@ -35,7 +35,10 @@ const CARD_Y = 0.05 // knapp über der Grasnarbe (kein Z-Fighting mit der Pitch-
 // x=−5.25), Angriffsrichtung Osten. Alle Werte liegen INNERHALB des
 // Spielfelds (x ∈ ±5.25, z ∈ ±3.4) — dadurch der sichtbare Rasenbezug.
 // TW steht im eigenen Strafraum (der reicht bis x=−3.6).
-const LINE_X: Record<Player['position'], number> = { TW: -3.9, ABW: -2.35, MIT: -0.5, ANG: 1.4 }
+// v14-M2: Bandabstand auf 1.95 vergrößert. Der echte Kader hat 9 Abwehr- und
+// 10 Mittelfeldspieler statt je 5 — die Reihen werden deshalb versetzt
+// gestaffelt (siehe STAGGER), und dafür braucht jedes Band mehr Tiefe.
+const LINE_X: Record<Player['position'], number> = { TW: -3.9, ABW: -1.95, MIT: 0, ANG: 1.95 }
 const LINE_ORDER: Player['position'][] = ['TW', 'ABW', 'MIT', 'ANG']
 
 function smoothstep(a: number, b: number, x: number) {
@@ -63,20 +66,25 @@ function useLayout(): Placed[] {
     // Deshalb rückt die Formation quer enger zusammen und die Karten werden
     // kleiner, damit sie sich trotz geringerem Abstand nicht überlappen.
     const zSpan = portrait ? 2.8 : 4.2 // Gesamtbreite der breitesten Reihe
-    const cardScale = portrait ? 0.72 : 0.92
-    // Tiefe (Torwart→Sturm) passt nach der Deckel-Anhebung in beide Formate
-    // ohne Stauchung — daher kein Portrait-Sonderfall mehr.
+    const cardScale = portrait ? 0.56 : 0.74
+    // v14-M2: ZICKZACK. Bei 9–10 Spielern pro Reihe reicht die Platzbreite für
+    // eine gerade Linie nicht — die Karten würden sich überlappen. Jede zweite
+    // Karte rückt deshalb in der Tiefe vor bzw. zurück. Dadurch verdoppelt
+    // sich der Abstand zwischen Karten auf gleicher Höhe, ohne dass die Reihe
+    // als Reihe verlorengeht. Der Versatz muss größer sein als die Kartenhöhe,
+    // sonst überlappen die beiden Staffeln einander.
+    const stagger = portrait ? 0.8 : 1.0
     const placed: Placed[] = []
     LINE_ORDER.forEach((pos, line) => {
       const inLine = PLAYERS.filter((p) => p.position === pos)
       const n = inLine.length
-      // Deckel 1.45: bei nur zwei Torhütern sollen die beiden nebeneinander
+      // Deckel 1.2: bei nur zwei Torhütern sollen die beiden nebeneinander
       // stehen und nicht über die ganze Breite auseinandergezogen werden.
-      const spacing = Math.min(1.45, n > 1 ? zSpan / (n - 1) : 0)
+      const spacing = Math.min(1.2, n > 1 ? zSpan / (n - 1) : 0)
       inLine.forEach((p, i) => {
         placed.push({
           player: p,
-          x: LINE_X[pos],
+          x: LINE_X[pos] + (i % 2 === 0 ? -stagger / 2 : stagger / 2),
           y: CARD_Y,
           z: (i - (n - 1) / 2) * spacing,
           line,

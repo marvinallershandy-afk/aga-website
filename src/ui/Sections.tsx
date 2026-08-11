@@ -74,13 +74,22 @@ export function Sections() {
       {/* 1 · MANNSCHAFT — im 3D-Pfad LEBEN die Karten auf dem Platz (PlayerCards3D).
           Die Sektion wird dann klick-durchlässig (pointer-events:none), damit Taps
           die 3D-Karten unter der Sektion erreichen; Text bleibt sichtbar & lesbar. */}
+      {/* v14-M2: Im Hochformat lag der Textblock mitten auf Abwehr- und
+          Mittelfeldreihe. Statt Scrim/Transparenz jetzt NACHEINANDER: die
+          Sektion ist mobil zwei Bildschirme hoch — oben der Text, darunter ein
+          leerer Ruhepunkt, an dem die Formation frei im Bild steht. Der
+          Kamera-Anker und das Präsenz-Fenster des Textes ziehen mit
+          (useScrollProgress.ts). Am Desktop unverändert. */}
       <section
         id={mannschaft.id}
-        className={`section section--left${fallback ? '' : ' section--passthrough'}`}
+        className={`section section--left section--stack-mobile${fallback ? '' : ' section--passthrough'}`}
       >
         <div className="section__scrim" />
         <Header kicker={mannschaft.kicker} title={mannschaft.title} body={mannschaft.body} />
         <PlayerCardGrid />
+        {/* Zweiter Bildschirm: reiner Ruhepunkt für die freie Aufstellung.
+            Nur im Hochformat sichtbar (CSS), sonst display:none. */}
+        <div className="section__formation-stop" aria-hidden="true" />
       </section>
 
       {/* 2 · FANBLOCK (v9-E2, zurückgeholt) — die Südkurve, emotionaler
