@@ -74,17 +74,14 @@ export const ROLE_LABEL: Record<StaffRole, string> = {
 }
 
 export const STAFF: Staff[] = [
-  { id: 's-junge', name: 'Carsten Junge', role: 'trainer', since: 2016, photoUrl: '/players/carsten.webp' },
-  { id: 's-ebeling-a', name: 'Adolf Ebeling', role: 'co-trainer', since: null, photoUrl: null },
-  { id: 's-duda', name: 'Torsten Duda', role: 'torwart-trainer', since: null, photoUrl: null },
+  { id: 's-junge', name: 'Carsten Junge', role: 'trainer', since: 2016, photoUrl: '/players/carsten-junge.webp' },
+  { id: 's-ebeling-a', name: 'Adolf Ebeling', role: 'co-trainer', since: null, photoUrl: '/players/adolf-ebeling.webp' },
   {
     id: 's-hause',
-    // Foto ist Marvins CI-Porträt (rot, Wappen, #30); ein freigestelltes
-    // Cutout kann es später ersetzen.
     name: 'Niko Hause',
     role: 'teammanager',
     since: 2018,
-    photoUrl: '/players/nico-hause.webp',
+    photoUrl: '/players/niko-hause.webp',
     contactMessage: 'Hallo Niko! Ich habe eine Frage zum SV Agathenburg-Dollern.',
     isNewSigning: true,
   },
@@ -99,42 +96,43 @@ const RATING_TBD = 70
 // Top-Torschützen-Block im Saison-Cockpit aus (FussballWidget.tsx:92).
 const STATS_TBD = { games: 0, goals: 0, assists: 0 }
 
-// FOTO-PIPELINE: Datei nach Schema public/players/<vorname-klein>.webp
-// (Hochformat, Kopf im oberen Drittel). Vorhanden sind bisher 4 Spielerfotos
-// aus der Zuordnung der alten Kurznamen — die restlichen Karten laufen auf
-// den Wappen+Nummer-Fallback.
+// FOTOS: public/players/<vorname-nachname>.webp aus AGA_FOTOS_FERTIG.zip
+// (11.08.2026). Die Zuordnung stammt ausschließlich aus der mitgelieferten
+// zuordnung.json und wurde über den NAMEN abgeglichen, nicht über Dateinamen
+// abgeleitet — die alten Kurznamen-Dateien waren teils falsch zugeordnet.
+// 21 Spieler haben ein Foto, drei bewusst nicht (Litwitz, Jochim, Viedts);
+// dort ist der Wappen-Fallback richtig.
 export const PLAYERS: Player[] = [
   // ── Torwart ────────────────────────────────────────────────
-  { id: 'p-pils', name: 'Malte Pils', number: 1, position: 'TW', photoUrl: null, stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
-  { id: 'p-ebeling-t', name: 'Tino Ebeling', number: 38, position: 'TW', photoUrl: '/players/tino.webp', stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
+  { id: 'p-pils', name: 'Malte Pils', number: 1, position: 'TW', photoUrl: '/players/malte-pils.webp', stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
+  { id: 'p-ebeling-t', name: 'Tino Ebeling', number: 38, position: 'TW', photoUrl: '/players/tino-ebeling.webp', stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
 
   // ── Abwehr ─────────────────────────────────────────────────
-  { id: 'p-huettry', name: 'Justin Hüttry', number: 3, position: 'ABW', photoUrl: null, stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
-  { id: 'p-brettschneider', name: 'Lennard Brettschneider', number: 4, position: 'ABW', photoUrl: '/players/lennard.webp', stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
-  { id: 'p-sladek', name: 'Justin Sladek', number: 11, position: 'ABW', photoUrl: null, stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
-  { id: 'p-neuber-m', name: 'Marcel Neuber', number: 14, position: 'ABW', photoUrl: null, stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
-  { id: 'p-nauerz', name: 'Noel Nauerz', number: 15, position: 'ABW', photoUrl: null, stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
-  { id: 'p-neuber-d', name: 'Dawid Neuber', number: 21, position: 'ABW', photoUrl: null, stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
-  { id: 'p-marchel', name: 'Oliver Marchel', number: 29, position: 'ABW', photoUrl: null, stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
-  { id: 'p-elsen', name: 'Joshua Elsen', number: 32, position: 'ABW', photoUrl: null, stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
+  { id: 'p-huettry', name: 'Justin Hüttry', number: 3, position: 'ABW', photoUrl: '/players/justin-huettry.webp', stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
+  { id: 'p-brettschneider', name: 'Lennard Brettschneider', number: 4, position: 'ABW', photoUrl: '/players/lennard-brettschneider.webp', stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
+  { id: 'p-sladek', name: 'Justin Sladek', number: 11, position: 'ABW', photoUrl: '/players/justin-sladek.webp', stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
+  { id: 'p-neuber-m', name: 'Marcel Neuber', number: 14, position: 'ABW', photoUrl: '/players/marcel-neuber.webp', stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
+  { id: 'p-nauerz', name: 'Noel Nauerz', number: 15, position: 'ABW', photoUrl: '/players/noel-nauerz.webp', stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
+  { id: 'p-neuber-d', name: 'Dawid Neuber', number: 21, position: 'ABW', photoUrl: '/players/dawid-neuber.webp', stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
+  { id: 'p-marchel', name: 'Oliver Marchel', number: 29, position: 'ABW', photoUrl: '/players/oliver-marchel.webp', stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
+  { id: 'p-elsen', name: 'Joshua Elsen', number: 32, position: 'ABW', photoUrl: '/players/joshua-elsen.webp', stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
   // Im Kader ohne feste Rückennummer geführt.
-  { id: 'p-warkehr-i', name: 'Isaak Warkehr', number: null, position: 'ABW', photoUrl: null, stats: { ...STATS_TBD }, rating: RATING_TBD, since: null, isNewSigning: true },
+  { id: 'p-warkehr-i', name: 'Isaak Warkehr', number: null, position: 'ABW', photoUrl: '/players/isaak-warkehr.webp', stats: { ...STATS_TBD }, rating: RATING_TBD, since: null, isNewSigning: true },
 
   // ── Mittelfeld ─────────────────────────────────────────────
   { id: 'p-litwitz', name: 'Lukas-Alexander Litwitz', number: 5, position: 'MIT', photoUrl: null, stats: { ...STATS_TBD }, rating: RATING_TBD, since: null, isNewSigning: true },
-  { id: 'p-paruzel', name: 'Julio Paruzel', number: 7, position: 'MIT', photoUrl: '/players/julio.webp', stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
-  { id: 'p-becker', name: 'Niclas Becker', number: 8, position: 'MIT', photoUrl: null, stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
-  { id: 'p-kalwa', name: 'Justin Kalwa', number: 13, position: 'MIT', photoUrl: null, stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
+  { id: 'p-paruzel', name: 'Julio Paruzel', number: 7, position: 'MIT', photoUrl: '/players/julio-paruzel.webp', stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
+  { id: 'p-becker', name: 'Niclas Becker', number: 8, position: 'MIT', photoUrl: '/players/niclas-becker.webp', stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
+  { id: 'p-kalwa', name: 'Justin Kalwa', number: 13, position: 'MIT', photoUrl: '/players/justin-kalwa.webp', stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
   { id: 'p-jochim', name: 'Sam Luca Jochim', number: 17, position: 'MIT', photoUrl: null, stats: { ...STATS_TBD }, rating: RATING_TBD, since: null, isNewSigning: true },
-  { id: 'p-pejas-n', name: 'Noah Pejas', number: 20, position: 'MIT', photoUrl: null, stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
-  // Foto-Zuordnung aus dem alten Kurznamen „Eli" — bitte bestätigen.
-  { id: 'p-pejas-e', name: 'Elias Pejas', number: 22, position: 'MIT', photoUrl: '/players/eli.webp', stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
-  { id: 'p-helck', name: 'Tobias Helck', number: 24, position: 'MIT', photoUrl: null, stats: { ...STATS_TBD }, rating: RATING_TBD, since: null, isCaptain: true },
-  { id: 'p-bruenjes', name: 'Janek Brünjes', number: 33, position: 'MIT', photoUrl: null, stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
-  { id: 'p-matthes', name: 'Paul Matthes', number: 44, position: 'MIT', photoUrl: null, stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
+  { id: 'p-pejas-n', name: 'Noah Pejas', number: 20, position: 'MIT', photoUrl: '/players/noah-pejas.webp', stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
+  { id: 'p-pejas-e', name: 'Elias Pejas', number: 22, position: 'MIT', photoUrl: '/players/elias-pejas.webp', stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
+  { id: 'p-helck', name: 'Tobias Helck', number: 24, position: 'MIT', photoUrl: '/players/tobias-helck.webp', stats: { ...STATS_TBD }, rating: RATING_TBD, since: null, isCaptain: true },
+  { id: 'p-bruenjes', name: 'Janek Brünjes', number: 33, position: 'MIT', photoUrl: '/players/janek-bruenjes.webp', stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
+  { id: 'p-matthes', name: 'Paul Matthes', number: 44, position: 'MIT', photoUrl: '/players/paul-matthes.webp', stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
 
   // ── Angriff ────────────────────────────────────────────────
-  { id: 'p-warkehr-a', name: 'Aaron Warkehr', number: 6, position: 'ANG', photoUrl: null, stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
+  { id: 'p-warkehr-a', name: 'Aaron Warkehr', number: 6, position: 'ANG', photoUrl: '/players/aaron-warkehr.webp', stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
   { id: 'p-viedts', name: 'Lennox Viedts', number: 10, position: 'ANG', photoUrl: null, stats: { ...STATS_TBD }, rating: RATING_TBD, since: null },
-  { id: 'p-biedermann', name: 'Marc Kevin Biedermann', number: 37, position: 'ANG', photoUrl: null, stats: { ...STATS_TBD }, rating: RATING_TBD, since: null, isNewSigning: true },
+  { id: 'p-biedermann', name: 'Marc Kevin Biedermann', number: 37, position: 'ANG', photoUrl: '/players/marc-kevin-biedermann.webp', stats: { ...STATS_TBD }, rating: RATING_TBD, since: null, isNewSigning: true },
 ]

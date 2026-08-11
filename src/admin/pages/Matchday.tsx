@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { Download, UploadCloud, Loader2, CalendarClock, Users, Link2 } from 'lucide-react'
 import { PageHeader } from './Placeholder'
+import { PLAYERS, STAFF } from '../../data/players'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
@@ -36,15 +37,15 @@ import {
 
 const PREVIEW_W = 440
 
-// Auswahl vorhandener Spielerfotos (aus /public/players).
+// Auswahl vorhandener Fotos — v14-M4 aus den Kaderdaten ABGELEITET statt
+// hartcodiert. Die vorherige Liste zeigte auf sechs Dateien mit alten
+// Kurznamen; beim Fototausch wären daraus tote Pfade geworden. So zieht die
+// Auswahl automatisch mit, sobald sich der Kader ändert.
 const FOTOS = [
   { value: '', label: 'Kein Foto (Initiale)' },
-  { value: '/players/carsten.webp', label: 'Carsten' },
-  { value: '/players/eli.webp', label: 'Eli' },
-  { value: '/players/julio.webp', label: 'Julio' },
-  { value: '/players/lennard.webp', label: 'Lennard' },
-  { value: '/players/nico-hause.webp', label: 'Nico' },
-  { value: '/players/tino.webp', label: 'Tino' },
+  ...[...PLAYERS, ...STAFF]
+    .filter((p) => !!p.photoUrl)
+    .map((p) => ({ value: p.photoUrl as string, label: p.name })),
 ]
 
 export function Matchday() {
