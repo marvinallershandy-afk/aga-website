@@ -87,6 +87,16 @@ export const STAFF: Staff[] = [
   },
 ]
 
+// ── Anzeige-Schalter ─────────────────────────────────────────
+/**
+ * v14-M5: Die Rating-Anzeige ist ausgeblendet, solange es keine echten Werte
+ * gibt — sonst stünde auf allen 24 Karten dieselbe 70. Das FELD und die Daten
+ * bleiben unverändert, nur die Darstellung entfällt (Kartentextur, Holo-Karte,
+ * Detail-Modal, Story-Export). Sobald die Mannschaftsabstimmung echte Werte
+ * liefert: hier auf true — mehr ist nicht nötig.
+ */
+export const SHOW_RATING = false
+
 // ── Platzhalter-Werte ────────────────────────────────────────
 // EIN neutraler Rating-Wert für alle. Bewusst kein je Spieler erfundener
 // Wert: das wäre eine öffentlich sichtbare Leistungsbewertung realer,

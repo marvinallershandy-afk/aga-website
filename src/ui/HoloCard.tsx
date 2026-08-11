@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import type { Player } from '../data/players'
-import { POSITION_LABEL } from '../data/players'
+import { POSITION_LABEL, SHOW_RATING } from '../data/players'
 import { CLUB } from '../data/club'
 import { PORTRAIT_STYLE } from './cardConfig'
 
@@ -60,7 +60,8 @@ export function HoloCard({ player, onClick, large }: Props) {
       <div className="holo__watermark">{player.number}</div>
 
       <div className="holo__top">
-        <span className="holo__rating">{player.rating}</span>
+        {/* v14-M5: Rating erst wieder, wenn echte Werte vorliegen */}
+        {SHOW_RATING && <span className="holo__rating">{player.rating}</span>}
         <span className="holo__pos">{player.position}</span>
       </div>
       <img className="holo__crest" src="/brand/wappen.png" alt={CLUB.name} title={CLUB.shortName} />

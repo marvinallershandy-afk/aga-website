@@ -1,5 +1,5 @@
 import type { Player } from '../data/players'
-import { POSITION_LABEL } from '../data/players'
+import { POSITION_LABEL, SHOW_RATING } from '../data/players'
 import { CLUB } from '../data/club'
 
 // ─────────────────────────────────────────────────────────────
@@ -102,11 +102,13 @@ export function renderStoryCanvas(player: Player): HTMLCanvasElement {
   }
   ctx.restore()
 
-  // Rating + Position
+  // Rating + Position — v14-M5: Rating nur bei echten Werten (SHOW_RATING)
   ctx.textAlign = 'left'
-  ctx.fillStyle = '#E8C15A'
-  ctx.font = '400 110px Anton, system-ui'
-  ctx.fillText(String(player.rating), cx + 60, cy + 150)
+  if (SHOW_RATING) {
+    ctx.fillStyle = '#E8C15A'
+    ctx.font = '400 110px Anton, system-ui'
+    ctx.fillText(String(player.rating), cx + 60, cy + 150)
+  }
   ctx.fillStyle = 'rgba(255,255,255,0.9)'
   ctx.font = '800 34px Archivo, system-ui'
   ctx.fillText(player.position, cx + 70, cy + 200)

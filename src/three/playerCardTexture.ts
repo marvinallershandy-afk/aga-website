@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import type { Player, Staff } from '../data/players'
-import { ROLE_LABEL, POSITION_LABEL } from '../data/players'
+import { ROLE_LABEL, POSITION_LABEL, SHOW_RATING } from '../data/players'
 
 // ─────────────────────────────────────────────────────────────
 // v14-E1 „Karten-Wand": Die 3D-Karte bekommt eine Inhalts-Diät.
@@ -174,10 +174,14 @@ export function makePlayerCardTexture(player: Player, isTOTM = false): CardTex {
     cg.addColorStop(0, 'rgba(8,5,6,0.6)'); cg.addColorStop(1, 'rgba(8,5,6,0)')
     ctx.fillStyle = cg; ctx.fillRect(W - 250, 0, 250, 260)
 
-    // Rating + Position (oben links) — GROSS, das trägt aus der Distanz
-    ctx.font = `150px Anton, system-ui, sans-serif`
-    ctx.fillStyle = isTOTM ? '#ffe9a3' : GOLD
-    ctx.fillText(String(player.rating), 82, 104)
+    // Rating + Position (oben links) — GROSS, das trägt aus der Distanz.
+    // v14-M5: Rating nur, wenn echte Werte vorliegen (SHOW_RATING). Position
+    // bleibt an ihrem Platz — Größe und Setzung der Karte sind unverändert.
+    if (SHOW_RATING) {
+      ctx.font = `150px Anton, system-ui, sans-serif`
+      ctx.fillStyle = isTOTM ? '#ffe9a3' : GOLD
+      ctx.fillText(String(player.rating), 82, 104)
+    }
     ctx.font = `700 38px Archivo, system-ui, sans-serif`
     ctx.fillStyle = 'rgba(255,255,255,0.92)'
     ctx.fillText(player.position, 82, 172)

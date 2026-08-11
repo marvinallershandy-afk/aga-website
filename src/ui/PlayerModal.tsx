@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useStore } from '../store/useStore'
-import { POSITION_LABEL, type Player } from '../data/players'
+import { POSITION_LABEL, SHOW_RATING, type Player } from '../data/players'
 import { HoloCard } from './HoloCard'
 import { shareStory, type ShareResult } from './storyShare'
 
@@ -54,7 +54,7 @@ function ModalContent({ player }: { player: Player }) {
                 <span><b>{player.stats.games}</b>Spiele</span>
                 <span><b>{player.stats.goals}</b>Tore</span>
                 <span><b>{player.stats.assists}</b>Assists</span>
-                <span><b>{player.rating}</b>Rating</span>
+                {SHOW_RATING && <span><b>{player.rating}</b>Rating</span>}
               </div>
               <div className="flip-back__quote">„Platz für deinen Spruch." — {player.name.split(' ').slice(-1)[0]}</div>
             </div>
@@ -72,7 +72,7 @@ function ModalContent({ player }: { player: Player }) {
           <div><b>{player.stats.games}</b><span>Spiele</span></div>
           <div><b>{player.stats.goals}</b><span>Tore</span></div>
           <div><b>{player.stats.assists}</b><span>Assists</span></div>
-          <div><b>{player.rating}</b><span>Rating</span></div>
+          {SHOW_RATING && <div><b>{player.rating}</b><span>Rating</span></div>}
           <div><b>{player.position}</b><span>Position</span></div>
           <div><b>{player.since ?? '—'}</b><span>im Verein</span></div>
         </div>
