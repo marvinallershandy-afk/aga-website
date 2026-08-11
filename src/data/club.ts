@@ -215,7 +215,7 @@ export const CONTACT = {
   address: 'Waldsportplatz Agathenburg, Zur Mehrzweckhalle, 21684 Agathenburg',
   // Route-Ziel (Kurzform reicht Apple/Google Maps als Suchziel)
   mapsQuery: 'Waldsportplatz Agathenburg, Zur Mehrzweckhalle, 21684 Agathenburg',
-  email: 'info@sv-agathenburg-dollern.de',
+  email: 'info@aga-erste.de',
   // PLATZHALTER (Marvin bestätigen): Trainingszeit gegen die offizielle
   // Vereinsseite prüfen. Aktuell plausibler Herren-Abendslot.
   training: 'Di & Do, ab 19:00 Uhr',

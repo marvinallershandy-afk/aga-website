@@ -70,7 +70,7 @@ export function Login() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="du@sv-agathenburg-dollern.de"
+                  placeholder="du@aga-erste.de"
                 />
               </div>
 
