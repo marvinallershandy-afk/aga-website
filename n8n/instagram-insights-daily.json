@@ -1,0 +1,865 @@
+{
+  "name": "SVA — Instagram Insights Daily",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "15 3 * * *"
+            }
+          ]
+        }
+      },
+      "id": "sched-daily",
+      "name": "Schedule: Taeglich 03:15",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1200,
+        -200
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "manual-backfill",
+      "name": "Manuell: Backfill (60 Tage, einmalig)",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1200,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a0",
+              "name": "ig_user_id",
+              "value": "__IG_USER_ID__",
+              "type": "string"
+            },
+            {
+              "id": "a1",
+              "name": "graph_base",
+              "value": "https://graph.facebook.com",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "graph_version",
+              "value": "v21.0",
+              "type": "string"
+            },
+            {
+              "id": "a3",
+              "name": "supabase_url",
+              "value": "https://__PROJECT_REF__.supabase.co",
+              "type": "string"
+            },
+            {
+              "id": "a4",
+              "name": "since",
+              "value": "={{ Math.floor(Date.now()/1000) - 60*24*60*60 }}",
+              "type": "string"
+            },
+            {
+              "id": "a5",
+              "name": "until",
+              "value": "={{ Math.floor(Date.now()/1000) }}",
+              "type": "string"
+            },
+            {
+              "id": "a6",
+              "name": "snapshot_date",
+              "value": "={{ $today.toISODate() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "config-konto+beitrag",
+      "name": "Config: Konto+Beitrag",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -940,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Config: Konto+Beitrag').first().json.graph_base }}/{{ $('Config: Konto+Beitrag').first().json.graph_version }}/{{ $('Config: Konto+Beitrag').first().json.ig_user_id }}/insights?metric=reach,follower_count&period=day&since={{ $('Config: Konto+Beitrag').first().json.since }}&until={{ $('Config: Konto+Beitrag').first().json.until }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "get-konto-insights",
+      "name": "Get Konto Insights",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -680,
+        -260
+      ],
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "PLACEHOLDER_SVA_META_TOKEN",
+          "name": "SVA Meta Graph Token (access_token)"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Config: Konto+Beitrag').first().json.graph_base }}/{{ $('Config: Konto+Beitrag').first().json.graph_version }}/{{ $('Config: Konto+Beitrag').first().json.ig_user_id }}/insights?metric=follower_demographics&period=lifetime&metric_type=total_value&breakdown=country&timeframe=this_month",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "get-konto-demographics",
+      "name": "Get Konto Demographics",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -680,
+        -420
+      ],
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "PLACEHOLDER_SVA_META_TOKEN",
+          "name": "SVA Meta Graph Token (access_token)"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Konto-Zeitreihe (period=day) in eine Rohzeile je Tag zerlegen. APPEND-ONLY:\n// snapshot_date kommt aus dem API-end_time jedes Datenpunkts (nicht \"heute\").\nconst cfg = $('Config: Konto+Beitrag').first().json;\nconst igUserId = cfg.ig_user_id;\nconst body = $input.first().json || {};\nconst series = {};\nfor (const m of (body.data || [])) {\n  for (const v of (m.values || [])) {\n    const d = (v.end_time || '').slice(0, 10);\n    if (!d) continue;\n    (series[d] = series[d] || {})[m.name] = v.value;\n  }\n}\nlet audience = null;\ntry {\n  const demo = $('Get Konto Demographics').first().json;\n  if (demo && demo.data) audience = demo.data;\n} catch (e) {}\nconst dates = Object.keys(series);\nconst rows = dates.map((d) => ({\n  ebene: 'konto',\n  object_id: String(igUserId),\n  snapshot_date: d,\n  period: 'day',\n  reach: series[d].reach ?? null,\n  follower_count: series[d].follower_count ?? null,\n  audience: audience,\n  raw: { insights: body, demographics: audience },\n}));\nreturn rows.map((r) => ({ json: r }));"
+      },
+      "id": "build-konto-rows",
+      "name": "Build Konto Rows",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -420,
+        -340
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Config: Konto+Beitrag').first().json.graph_base }}/{{ $('Config: Konto+Beitrag').first().json.graph_version }}/{{ $('Config: Konto+Beitrag').first().json.ig_user_id }}/media?fields=id,caption,media_type,media_product_type,permalink,timestamp,like_count,comments_count&since={{ $('Config: Konto+Beitrag').first().json.since }}&until={{ $('Config: Konto+Beitrag').first().json.until }}&limit=50",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "options": {
+          "timeout": 30000,
+          "pagination": {
+            "pagination": {
+              "parameters": {
+                "parameters": []
+              },
+              "paginationMode": "responseContainsNextURL",
+              "nextURL": "={{ $response.body.paging ? $response.body.paging.next : '' }}",
+              "paginationCompleteWhen": "other",
+              "completeExpression": "={{ !$response.body.paging || !$response.body.paging.next }}",
+              "limitPagesFetched": true,
+              "maxRequestsPerPagination": 20,
+              "requestInterval": 700
+            }
+          }
+        }
+      },
+      "id": "get-media-list",
+      "name": "Get Media List",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -680,
+        100
+      ],
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "PLACEHOLDER_SVA_META_TOKEN",
+          "name": "SVA Meta Graph Token (access_token)"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Alle Medien (ueber alle Seiten) flach ausrollen; Metric-Set je Medientyp\n// tailoren (unsupported Metrik => Meta 400 fuer den ganzen Call).\nconst out = [];\nfor (const it of $input.all()) {\n  const data = (it.json && it.json.data) ? it.json.data : (Array.isArray(it.json) ? it.json : []);\n  for (const m of data) {\n    const isVideo = m.media_type === 'VIDEO' || m.media_product_type === 'REELS';\n    const metric = isVideo\n      ? 'reach,saved,likes,comments,shares,total_interactions,views'\n      : 'reach,saved,likes,comments,shares,total_interactions';\n    out.push({ json: { ...m, __metric: metric } });\n  }\n}\nreturn out;"
+      },
+      "id": "fan-out-media",
+      "name": "Fan Out Media",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -420,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Config: Konto+Beitrag').first().json.graph_base }}/{{ $('Config: Konto+Beitrag').first().json.graph_version }}/{{ $json.id }}/insights?metric={{ $json.__metric }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "options": {
+          "timeout": 30000,
+          "batching": {
+            "batch": {
+              "batchSize": 30,
+              "batchInterval": 1200
+            }
+          }
+        }
+      },
+      "id": "get-media-insights",
+      "name": "Get Media Insights",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -160,
+        100
+      ],
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "PLACEHOLDER_SVA_META_TOKEN",
+          "name": "SVA Meta Graph Token (access_token)"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {},
+      "id": "skip-failed-media",
+      "name": "Skip Failed Media",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -160,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Ein Beitrags-Insights-Response + zugehoerige Media-Metadaten -> eine Rohzeile.\nconst cfg = $('Config: Konto+Beitrag').first().json;\nconst media = $('Fan Out Media').item.json;\nconst resp = $json || {};\nconst vals = {};\nfor (const m of (resp.data || [])) {\n  const v = (m.values && m.values[0]) ? m.values[0].value\n          : (m.total_value ? m.total_value.value : null);\n  vals[m.name] = v;\n}\nreturn { json: {\n  ebene: 'beitrag',\n  object_id: String(media.id),\n  snapshot_date: cfg.snapshot_date,\n  period: 'lifetime',\n  media_type: media.media_type ?? null,\n  media_product_type: media.media_product_type ?? null,\n  permalink: media.permalink ?? null,\n  caption: media.caption ?? null,\n  media_published_at: media.timestamp ?? null,\n  reach: vals.reach ?? null,\n  saved: vals.saved ?? null,\n  likes: vals.likes ?? (media.like_count ?? null),\n  comments: vals.comments ?? (media.comments_count ?? null),\n  shares: vals.shares ?? null,\n  total_interactions: vals.total_interactions ?? null,\n  views: vals.views ?? null,\n  raw: { media, insights: resp },\n} };"
+      },
+      "id": "build-media-rows",
+      "name": "Build Media Rows",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        100,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "append"
+      },
+      "id": "merge-kb",
+      "name": "Merge Konto+Beitrag",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        360,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Alle Zeilen zu EINEM Batch-Array fuer die Append-RPC buendeln.\nconst rows = $input.all().map((i) => i.json).filter(Boolean);\nreturn [{ json: { p_rows: rows, count: rows.length } }];"
+      },
+      "id": "assemble-batch-(kb)",
+      "name": "Assemble Batch (KB)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        620,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config: Konto+Beitrag').first().json.supabase_url }}/rest/v1/rpc/sm_insert_insights_daily",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"p_rows\": $json.p_rows } }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "append-via-rpc-(kb)",
+      "name": "Append via RPC (KB)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        -120
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "PLACEHOLDER_SVA_SUPABASE",
+          "name": "SVA Supabase (service_role)"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {},
+      "id": "fertig-konto+beitrag",
+      "name": "Fertig: Konto+Beitrag",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1140,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 3
+            }
+          ]
+        }
+      },
+      "id": "sched-stories",
+      "name": "Schedule: Alle 3h (Stories)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1200,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a0",
+              "name": "ig_user_id",
+              "value": "__IG_USER_ID__",
+              "type": "string"
+            },
+            {
+              "id": "a1",
+              "name": "graph_base",
+              "value": "https://graph.facebook.com",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "graph_version",
+              "value": "v21.0",
+              "type": "string"
+            },
+            {
+              "id": "a3",
+              "name": "supabase_url",
+              "value": "https://__PROJECT_REF__.supabase.co",
+              "type": "string"
+            },
+            {
+              "id": "a4",
+              "name": "snapshot_date",
+              "value": "={{ $today.toISODate() }}",
+              "type": "string"
+            },
+            {
+              "id": "a5",
+              "name": "captured_at",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "config-stories",
+      "name": "Config: Stories",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -940,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Config: Stories').first().json.graph_base }}/{{ $('Config: Stories').first().json.graph_version }}/{{ $('Config: Stories').first().json.ig_user_id }}/stories?fields=id,media_type,media_product_type,permalink,timestamp",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "get-active-stories",
+      "name": "Get Active Stories",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -680,
+        700
+      ],
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "PLACEHOLDER_SVA_META_TOKEN",
+          "name": "SVA Meta Graph Token (access_token)"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Aktive Stories ausrollen; Story-Metriken sind nach 24h endgueltig weg.\nconst out = [];\nfor (const it of $input.all()) {\n  const data = (it.json && it.json.data) ? it.json.data : (Array.isArray(it.json) ? it.json : []);\n  for (const s of data) {\n    out.push({ json: { ...s, __metric: 'reach,replies,exits,taps_forward,taps_back,shares' } });\n  }\n}\nreturn out;"
+      },
+      "id": "fan-out-stories",
+      "name": "Fan Out Stories",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -420,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Config: Stories').first().json.graph_base }}/{{ $('Config: Stories').first().json.graph_version }}/{{ $json.id }}/insights?metric={{ $json.__metric }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "options": {
+          "timeout": 30000,
+          "batching": {
+            "batch": {
+              "batchSize": 20,
+              "batchInterval": 1200
+            }
+          }
+        }
+      },
+      "id": "get-story-insights",
+      "name": "Get Story Insights",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -160,
+        700
+      ],
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "PLACEHOLDER_SVA_META_TOKEN",
+          "name": "SVA Meta Graph Token (access_token)"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {},
+      "id": "skip-failed-stories",
+      "name": "Skip Failed Stories",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -160,
+        900
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Story-Insights -> Rohzeile. captured_at aus Config = Verlaufsachse innerhalb 24h;\n// mehrere Zeilen/Tag/Story sind gewollt (DB-Index erlaubt es).\nconst cfg = $('Config: Stories').first().json;\nconst story = $('Fan Out Stories').item.json;\nconst resp = $json || {};\nconst vals = {};\nfor (const m of (resp.data || [])) {\n  const v = (m.values && m.values[0]) ? m.values[0].value : null;\n  vals[m.name] = v;\n}\nreturn { json: {\n  ebene: 'story',\n  object_id: String(story.id),\n  snapshot_date: cfg.snapshot_date,\n  captured_at: cfg.captured_at,\n  period: 'story',\n  media_type: story.media_type ?? null,\n  media_product_type: story.media_product_type ?? null,\n  permalink: story.permalink ?? null,\n  media_published_at: story.timestamp ?? null,\n  reach: vals.reach ?? null,\n  replies: vals.replies ?? null,\n  exits: vals.exits ?? null,\n  taps_forward: vals.taps_forward ?? null,\n  taps_back: vals.taps_back ?? null,\n  shares: vals.shares ?? null,\n  raw: { story, insights: resp },\n} };"
+      },
+      "id": "build-story-rows",
+      "name": "Build Story Rows",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        100,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Alle Zeilen zu EINEM Batch-Array fuer die Append-RPC buendeln.\nconst rows = $input.all().map((i) => i.json).filter(Boolean);\nreturn [{ json: { p_rows: rows, count: rows.length } }];"
+      },
+      "id": "assemble-batch-(stories)",
+      "name": "Assemble Batch (Stories)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        360,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config: Stories').first().json.supabase_url }}/rest/v1/rpc/sm_insert_insights_daily",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"p_rows\": $json.p_rows } }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "append-via-rpc-(stories)",
+      "name": "Append via RPC (Stories)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        620,
+        700
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "PLACEHOLDER_SVA_SUPABASE",
+          "name": "SVA Supabase (service_role)"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {},
+      "id": "fertig-stories",
+      "name": "Fertig: Stories",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        880,
+        700
+      ]
+    }
+  ],
+  "connections": {
+    "Schedule: Taeglich 03:15": {
+      "main": [
+        [
+          {
+            "node": "Config: Konto+Beitrag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manuell: Backfill (60 Tage, einmalig)": {
+      "main": [
+        [
+          {
+            "node": "Config: Konto+Beitrag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config: Konto+Beitrag": {
+      "main": [
+        [
+          {
+            "node": "Get Konto Insights",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Media List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Konto Insights": {
+      "main": [
+        [
+          {
+            "node": "Get Konto Demographics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Konto Demographics": {
+      "main": [
+        [
+          {
+            "node": "Build Konto Rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Media List": {
+      "main": [
+        [
+          {
+            "node": "Fan Out Media",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fan Out Media": {
+      "main": [
+        [
+          {
+            "node": "Get Media Insights",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Media Insights": {
+      "main": [
+        [
+          {
+            "node": "Build Media Rows",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Skip Failed Media",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Konto Rows": {
+      "main": [
+        [
+          {
+            "node": "Merge Konto+Beitrag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Media Rows": {
+      "main": [
+        [
+          {
+            "node": "Merge Konto+Beitrag",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Konto+Beitrag": {
+      "main": [
+        [
+          {
+            "node": "Assemble Batch (KB)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assemble Batch (KB)": {
+      "main": [
+        [
+          {
+            "node": "Append via RPC (KB)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append via RPC (KB)": {
+      "main": [
+        [
+          {
+            "node": "Fertig: Konto+Beitrag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule: Alle 3h (Stories)": {
+      "main": [
+        [
+          {
+            "node": "Config: Stories",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config: Stories": {
+      "main": [
+        [
+          {
+            "node": "Get Active Stories",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Active Stories": {
+      "main": [
+        [
+          {
+            "node": "Fan Out Stories",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fan Out Stories": {
+      "main": [
+        [
+          {
+            "node": "Get Story Insights",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Story Insights": {
+      "main": [
+        [
+          {
+            "node": "Build Story Rows",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Skip Failed Stories",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Story Rows": {
+      "main": [
+        [
+          {
+            "node": "Assemble Batch (Stories)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assemble Batch (Stories)": {
+      "main": [
+        [
+          {
+            "node": "Append via RPC (Stories)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append via RPC (Stories)": {
+      "main": [
+        [
+          {
+            "node": "Fertig: Stories",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": [
+    {
+      "name": "sva-fussball"
+    },
+    {
+      "name": "instagram-insights"
+    }
+  ]
+}
