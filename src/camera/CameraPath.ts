@@ -77,7 +77,7 @@ export const STATION_COUNT = STATIONS.length
 export const cameraState = { u: 0 }
 
 // Kurven-Parameter der Anstoß-Station
-const KICKOFF_U = 1 / (STATIONS.length - 1) // 0.25
+export const KICKOFF_U = 1 / (STATIONS.length - 1) // = 1/7 bei 8 Stationen
 
 /** Anstoß-Phase 0..1 (rein aus u abgeleitet → scroll-reversibel). */
 export function kickoffPhase(u: number): number {

@@ -8,6 +8,7 @@
 // Supabase-frei; das Overlay ist reines, zur Build-Zeit erzeugtes Daten-TS).
 
 import type { Player, Staff } from './players'
+import type { Lineup } from './lineup'
 import type { Sponsor, Match, PlayedMatch, TableRow, FormResult } from './club'
 
 /** Textüberschreibung eines Abschnitts (nur Textfelder; id ordnet zu). */
@@ -25,6 +26,8 @@ export interface WebsiteContentOverlay {
   /** Zeitpunkt des Build-Fetches (ISO). */
   generatedAt: string
   players?: Player[]
+  /** v14: Startelf + Bank aus dem Admin (Vereins-Pflege → Aufstellung). */
+  lineup?: Lineup | null
   staff?: Staff[]
   sponsors?: Sponsor[]
   nextMatch?: Match | null

@@ -28,6 +28,8 @@ import {
   FORM as STATIC_FORM,
   SECTIONS as STATIC_SECTIONS,
 } from './club'
+import { LINEUP as STATIC_LINEUP } from './lineup'
+import type { Lineup } from './lineup'
 import { WEBSITE_CONTENT_OVERLAY } from './generated/website-content.generated'
 import type { Player, Staff } from './players'
 import type { Sponsor, Match, PlayedMatch, TableRow, FormResult, Section } from './club'
@@ -62,6 +64,10 @@ export const TABLE_PREVIEW: TableRow[] = pick(ov?.table, STATIC_TABLE)
 export const FORM: FormResult[] = pick(ov?.form, STATIC_FORM)
 export const NEXT_MATCH: Match = ov?.nextMatch ?? STATIC_NEXT_MATCH
 export const LAST_MATCH: PlayedMatch = ov?.lastMatch ?? STATIC_LAST_MATCH
+// v14: Aufstellung — Overlay nur, wenn es eine vollständige Elf trägt.
+export const LINEUP: Lineup = ov?.lineup && ov.lineup.startelf.length === 11 ? ov.lineup : STATIC_LINEUP
+export { FORMATION_SLOTS } from './lineup'
+export type { Lineup, Formation, Slot } from './lineup'
 
 // Sektionstexte: konservativ mergen — Reihenfolge und Abschnitts-IDs
 // (Kamera-Stationen) bleiben aus dem statischen Seed; das Overlay überschreibt

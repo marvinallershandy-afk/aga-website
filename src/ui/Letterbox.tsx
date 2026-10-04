@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useStore } from '../store/useStore'
-import { cameraState } from '../camera/CameraPath'
+import { cameraState, KICKOFF_U } from '../camera/CameraPath'
 
 // ─────────────────────────────────────────────────────────────
 // Letterbox-Balken (21:9) für den Anstoß-Beat (v5 Kino-Ebene):
@@ -27,8 +27,10 @@ export function Letterbox() {
     let raf = 0
     const tick = () => {
       const u = cameraState.u
-      // Fenster um den Anstoß-Beat (KICKOFF_U = 0.25)
-      const presence = smoothstep(0.13, 0.2, u) * (1 - smoothstep(0.3, 0.37, u))
+      // Fenster um den Anstoß-Beat. v14: aus KICKOFF_U abgeleitet — vorher hart
+      // auf 0.25 verdrahtet (real 1/7), dadurch lagen die Balken über der
+      // Mannschafts-Station statt über dem Anstoß.
+      const presence = smoothstep(KICKOFF_U - 0.07, KICKOFF_U - 0.02, u) * (1 - smoothstep(KICKOFF_U + 0.01, KICKOFF_U + 0.05, u))
       if (topRef.current && botRef.current) {
         topRef.current.style.transform = `translateY(${(presence - 1) * 100}%)`
         botRef.current.style.transform = `translateY(${(1 - presence) * 100}%)`
