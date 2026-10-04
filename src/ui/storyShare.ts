@@ -1,189 +1,144 @@
 import type { Player } from '../data/players'
-import { POSITION_LABEL, SHOW_RATING } from '../data/players'
-import { CLUB } from '../data/club'
+import { POSITION_LABEL } from '../data/players'
+import { CLUB, NEXT_MATCH } from '../data/content'
+import { CARD_RATIO, POP_RATIO, FONT_BODY, FONT_DISPLAY, drawPlayerCard, loadCardAssets } from './cardArt'
 
 // ─────────────────────────────────────────────────────────────
-// One-Tap Instagram-Story-Share. Rendert die Karte clientseitig als
-// 1080×1920-PNG (Canvas) und teilt via navigator.share({files}) mit
-// Feature-Detection; Fallback: Download.
+// One-Tap Instagram-Story-Share. v14-D: das Story-Bild (1080×1920)
+// zeigt die Karte 2.0 MIT Freisteller (gemeinsamer Renderer cardArt.ts),
+// rot-schwarz statt Gold, ohne Stats. Im Fuß „aga-erste.de · @sva_fussball";
+// hat das nächste Spiel einen echten Anstoß, steht er darüber.
+// Teilen via navigator.share({files}) mit Feature-Detection, sonst Download.
 // ─────────────────────────────────────────────────────────────
 
 const W = 1080
 const H = 1920
+const SITE = 'aga-erste.de'
+const INSTA = '@sva_fussball'
 
-// Vereinswappen einmal vorladen (fürs Story-Bild)
-const crestImage = typeof Image !== 'undefined' ? new Image() : null
-if (crestImage) crestImage.src = '/brand/wappen.png'
+/** „Nächstes Spiel: So 16.08. · 15:00 · vs TuS X" — nur mit echtem Anstoß. */
+export function nextMatchLine(now = new Date()): string | null {
+  const m = NEXT_MATCH
+  if (!m.kickoff || m.isPlaceholder) return null
+  const d = new Date(m.kickoff)
+  if (Number.isNaN(d.getTime()) || d.getTime() < now.getTime()) return null
+  const day = new Intl.DateTimeFormat('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', timeZone: 'Europe/Berlin' }).format(d)
+  const time = new Intl.DateTimeFormat('de-DE', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Berlin' }).format(d)
+  return `Nächstes Spiel: ${day.replace(',', '')} · ${time} · ${m.home ? 'vs' : 'bei'} ${m.opponent}`
+}
 
-function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
-  ctx.beginPath()
-  ctx.moveTo(x + r, y)
-  ctx.arcTo(x + w, y, x + w, y + h, r)
-  ctx.arcTo(x + w, y + h, x, y + h, r)
-  ctx.arcTo(x, y + h, x, y, r)
-  ctx.arcTo(x, y, x + w, y, r)
-  ctx.closePath()
+function setSpacing(ctx: CanvasRenderingContext2D, px: number) {
+  const c = ctx as CanvasRenderingContext2D & { letterSpacing?: string }
+  if ('letterSpacing' in c) c.letterSpacing = `${px}px`
 }
 
 /** Zeichnet das Story-Bild und liefert den Canvas zurück. */
-export function renderStoryCanvas(player: Player): HTMLCanvasElement {
+export async function renderStoryCanvas(player: Player): Promise<HTMLCanvasElement> {
+  const assets = await loadCardAssets(player.cutoutUrl ?? null)
   const canvas = document.createElement('canvas')
   canvas.width = W
   canvas.height = H
   const ctx = canvas.getContext('2d')!
 
-  // Hintergrund: dunkler Verlauf
-  const bg = ctx.createRadialGradient(W / 2, H * 0.42, 100, W / 2, H * 0.5, H * 0.75)
-  bg.addColorStop(0, '#241a2c')
-  bg.addColorStop(0.5, '#141019')
-  bg.addColorStop(1, '#08070a')
-  ctx.fillStyle = bg
+  // Hintergrund: Schwarz mit rotem Flutlicht-Schein von oben
+  ctx.fillStyle = '#070506'
   ctx.fillRect(0, 0, W, H)
-
-  // diffuser roter Glow oben
-  const glow = ctx.createRadialGradient(W / 2, 260, 40, W / 2, 260, 520)
-  glow.addColorStop(0, 'rgba(233,29,41,0.35)')
-  glow.addColorStop(1, 'rgba(233,29,41,0)')
+  const glow = ctx.createRadialGradient(W / 2, 520, 60, W / 2, 700, 1100)
+  glow.addColorStop(0, 'rgba(233,29,41,0.55)')
+  glow.addColorStop(0.45, 'rgba(120,12,20,0.35)')
+  glow.addColorStop(1, 'rgba(0,0,0,0)')
   ctx.fillStyle = glow
-  ctx.fillRect(0, 0, W, 700)
+  ctx.fillRect(0, 0, W, H)
+  // diagonale CI-Streifen
+  ctx.save()
+  ctx.globalAlpha = 0.07
+  ctx.fillStyle = '#E91D29'
+  for (let i = -H; i < W + H; i += 120) {
+    ctx.beginPath()
+    ctx.moveTo(i, H)
+    ctx.lineTo(i + 46, H)
+    ctx.lineTo(i + 46 + H * 0.6, 0)
+    ctx.lineTo(i + H * 0.6, 0)
+    ctx.closePath()
+    ctx.fill()
+  }
+  ctx.restore()
+  // Bürstung
+  for (let y = 0; y < H; y += 3) {
+    ctx.fillStyle = (y / 3) % 2 ? 'rgba(255,255,255,0.012)' : 'rgba(0,0,0,0.05)'
+    ctx.fillRect(0, y, W, 1)
+  }
 
-  // Kopf-Branding — "SVA" mittig, A in Rot
-  ctx.font = '400 52px Anton, system-ui'
+  // Kopf: SVA-Wortmarke + Vereinsname
   ctx.textAlign = 'left'
+  ctx.textBaseline = 'alphabetic'
+  ctx.font = `64px ${FONT_DISPLAY}`
   const svW = ctx.measureText('SV').width
   const aW = ctx.measureText('A').width
-  const startX = W / 2 - (svW + aW) / 2
+  const sx = W / 2 - (svW + aW) / 2
   ctx.fillStyle = '#fff'
-  ctx.fillText('SV', startX, 150)
+  ctx.fillText('SV', sx, 150)
   ctx.fillStyle = '#E91D29'
-  ctx.fillText('A', startX + svW, 150)
+  ctx.fillText('A', sx + svW, 150)
   ctx.textAlign = 'center'
-  ctx.fillStyle = 'rgba(255,255,255,0.6)'
-  ctx.font = '600 22px Archivo, system-ui'
-  ctx.fillText(CLUB.name.toUpperCase(), W / 2, 195)
+  ctx.font = `700 24px ${FONT_BODY}`
+  setSpacing(ctx, 7)
+  ctx.fillStyle = 'rgba(255,255,255,0.7)'
+  ctx.fillText(`${CLUB.name.toUpperCase()} · 1. HERREN`, W / 2 + 3.5, 198)
+  setSpacing(ctx, 0)
 
-  // Karte
-  const cw = 640
-  const ch = 900
+  // Karte (mit Freisteller, Kopf ragt über die Kante)
+  const cw = 760
+  const ch = cw * CARD_RATIO
   const cx = (W - cw) / 2
-  const cy = 300
-
+  const cy = 300 + POP_RATIO * cw
   ctx.save()
-  ctx.shadowColor = 'rgba(0,0,0,0.6)'
-  ctx.shadowBlur = 60
-  ctx.shadowOffsetY = 30
-  const cardGrad = ctx.createRadialGradient(W / 2, cy, 80, W / 2, cy + ch, ch)
-  cardGrad.addColorStop(0, '#3a2c14')
-  cardGrad.addColorStop(0.4, '#231f20')
-  cardGrad.addColorStop(1, '#14100f')
-  ctx.fillStyle = cardGrad
-  roundRect(ctx, cx, cy, cw, ch, 40)
+  ctx.shadowColor = 'rgba(0,0,0,0.7)'
+  ctx.shadowBlur = 80
+  ctx.shadowOffsetY = 40
+  ctx.fillStyle = '#000'
+  ctx.beginPath()
+  ctx.roundRect(cx + 10, cy + 10, cw - 20, ch - 20, 36)
   ctx.fill()
   ctx.restore()
+  drawPlayerCard(ctx, cx, cy, cw, player, assets, { hero: true })
 
-  // Goldrahmen
-  ctx.strokeStyle = 'rgba(232,193,90,0.7)'
-  ctx.lineWidth = 3
-  roundRect(ctx, cx + 16, cy + 16, cw - 32, ch - 32, 28)
-  ctx.stroke()
-
-  // Holo-Diagonalstreifen (dezent)
-  ctx.save()
-  roundRect(ctx, cx + 8, cy + 8, cw - 16, ch - 16, 32)
-  ctx.clip()
-  const holo = ctx.createLinearGradient(cx, cy, cx + cw, cy + ch)
-  holo.addColorStop(0, 'rgba(255,0,200,0.10)')
-  holo.addColorStop(0.3, 'rgba(0,229,255,0.10)')
-  holo.addColorStop(0.6, 'rgba(124,255,0,0.08)')
-  holo.addColorStop(1, 'rgba(255,212,0,0.10)')
-  ctx.fillStyle = holo
-  for (let i = -ch; i < cw + ch; i += 90) {
-    ctx.fillRect(cx + i, cy, 34, ch)
-  }
-  ctx.restore()
-
-  // Rating + Position — v14-M5: Rating nur bei echten Werten (SHOW_RATING)
-  ctx.textAlign = 'left'
-  if (SHOW_RATING) {
-    ctx.fillStyle = '#E8C15A'
-    ctx.font = '400 110px Anton, system-ui'
-    ctx.fillText(String(player.rating), cx + 60, cy + 150)
-  }
-  ctx.fillStyle = 'rgba(255,255,255,0.9)'
-  ctx.font = '800 34px Archivo, system-ui'
-  ctx.fillText(player.position, cx + 70, cy + 200)
-
-  // Echtes Vereinswappen (falls geladen — sonst leer lassen)
-  if (crestImage?.complete && crestImage.naturalWidth > 0) {
-    const crw = 82
-    const crh = crw * (crestImage.naturalHeight / crestImage.naturalWidth)
-    ctx.drawImage(crestImage, cx + cw - crw - 52, cy + 48, crw, crh)
-  }
-
-  // Nummer-Wasserzeichen
-  ctx.fillStyle = 'rgba(232,193,90,0.10)'
-  ctx.font = '400 360px Anton, system-ui'
-  ctx.textAlign = 'right'
-  ctx.fillText(player.number === null ? '' : String(player.number), cx + cw - 40, cy + 560)
-
-  // Silhouette (Kopf + Schulter-Büste)
-  ctx.fillStyle = 'rgba(255,255,255,0.12)'
-  const sx = W / 2
-  const sy = cy + 300
-  ctx.beginPath()
-  ctx.arc(sx, sy, 88, 0, Math.PI * 2) // Kopf
-  ctx.fill()
-  ctx.beginPath()
-  ctx.ellipse(sx, cy + 640, 190, 150, 0, Math.PI, Math.PI * 2, false) // Schultern (obere Hälfte)
-  ctx.fill()
-
-  // Name
+  // Unter der Karte: Position · Nummer
+  let y = cy + ch + 96
   ctx.textAlign = 'center'
-  ctx.fillStyle = '#fff'
-  ctx.font = '400 66px Anton, system-ui'
-  ctx.fillText(player.name.toUpperCase(), W / 2, cy + 730)
-
-  // goldene Trennlinie
-  const lg = ctx.createLinearGradient(cx + 120, 0, cx + cw - 120, 0)
-  lg.addColorStop(0, 'rgba(232,193,90,0)')
-  lg.addColorStop(0.5, 'rgba(232,193,90,0.8)')
-  lg.addColorStop(1, 'rgba(232,193,90,0)')
-  ctx.fillStyle = lg
-  ctx.fillRect(cx + 120, cy + 755, cw - 240, 2)
-
-  // Stats
-  const stats = [
-    [player.stats.games, 'SPIELE'],
-    [player.stats.goals, 'TORE'],
-    [player.stats.assists, 'ASSISTS'],
-  ] as const
-  const colW = (cw - 120) / 3
-  stats.forEach(([val, label], i) => {
-    const x = cx + 60 + colW * i + colW / 2
-    ctx.fillStyle = '#E8C15A'
-    ctx.font = '400 62px Anton, system-ui'
-    ctx.fillText(String(val), x, cy + 835)
-    ctx.fillStyle = 'rgba(255,255,255,0.6)'
-    ctx.font = '700 22px Archivo, system-ui'
-    ctx.fillText(label, x, cy + 872)
-  })
-
-  // Fuß-Branding
-  ctx.fillStyle = 'rgba(255,255,255,0.55)'
-  ctx.font = '700 26px Archivo, system-ui'
+  ctx.font = `800 30px ${FONT_BODY}`
+  setSpacing(ctx, 8)
+  ctx.fillStyle = 'rgba(255,255,255,0.88)'
   ctx.fillText(
-    POSITION_LABEL[player.position].toUpperCase() + (player.number === null ? '' : ' · #' + player.number),
-    W / 2,
-    cy + ch + 90,
+    POSITION_LABEL[player.position].toUpperCase() + (player.number === null ? '' : `  ·  #${player.number}`),
+    W / 2 + 4,
+    y,
   )
-  ctx.fillStyle = 'rgba(255,255,255,0.35)'
-  ctx.font = '600 22px Archivo, system-ui'
-  ctx.fillText(CONTACT_INSTA, W / 2, cy + ch + 130)
+  setSpacing(ctx, 0)
 
+  // Nächstes Spiel (nur mit echtem Anstoß)
+  const nm = nextMatchLine()
+  if (nm) {
+    y += 70
+    ctx.font = `700 30px ${FONT_BODY}`
+    const tw = ctx.measureText(nm).width + 64
+    ctx.fillStyle = '#E91D29'
+    ctx.beginPath()
+    ctx.roundRect(W / 2 - tw / 2, y - 44, tw, 64, 32)
+    ctx.fill()
+    ctx.fillStyle = '#fff'
+    ctx.fillText(nm, W / 2, y)
+  }
+
+  // Fuß
+  ctx.font = `700 28px ${FONT_BODY}`
+  setSpacing(ctx, 4)
+  ctx.fillStyle = 'rgba(255,255,255,0.62)'
+  ctx.fillText(`${SITE}  ·  ${INSTA}`, W / 2 + 2, H - 110)
+  ctx.fillStyle = '#E91D29'
+  ctx.fillRect(W / 2 - 60, H - 80, 120, 4)
   return canvas
 }
-
-const CONTACT_INSTA = '@sva_fussball'
 
 function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
   return new Promise((resolve, reject) => {
@@ -195,9 +150,7 @@ export type ShareResult = 'shared' | 'downloaded' | 'error'
 
 export async function shareStory(player: Player): Promise<ShareResult> {
   try {
-    // Fonts sicher geladen, bevor gezeichnet wird
-    if (document.fonts?.ready) await document.fonts.ready
-    const canvas = renderStoryCanvas(player)
+    const canvas = await renderStoryCanvas(player)
     const blob = await canvasToBlob(canvas)
     const file = new File([blob], `sva-${player.name.replace(/\s+/g, '-').toLowerCase()}.png`, { type: 'image/png' })
 
@@ -208,8 +161,8 @@ export async function shareStory(player: Player): Promise<ShareResult> {
         files: [file],
         title: `${player.name} · ${CLUB.shortName}`,
         text: player.number === null
-          ? `${player.name} — ${CLUB.name}`
-          : `${player.name} #${player.number} — ${CLUB.name}`,
+          ? `${player.name} — ${CLUB.name} · ${SITE}`
+          : `${player.name} #${player.number} — ${CLUB.name} · ${SITE}`,
       })
       return 'shared'
     }
