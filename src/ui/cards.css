@@ -7,6 +7,9 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
   gap: clamp(1rem, 2.5vw, 2rem);
+  /* v14-D: Luft für den über die Kante ragenden Kopf */
+  row-gap: clamp(2rem, 4vw, 3rem);
+  padding-top: 1rem;
   width: 100%;
   margin-top: clamp(2rem, 5vw, 3.5rem);
 }
@@ -22,326 +25,289 @@
   padding-left: 0.85rem;
 }
 
+/* ═══ v14-D „Karten 2.0" ════════════════════════════════════════════
+   Gleiches Design wie 3D-Textur und Story (ui/cardArt.ts). Alle Maße in
+   cqw → die Karte skaliert als Ganzes (Deck 72vw, Galerie, Modal). Der
+   Freisteller ragt über die Oberkante (overflow sichtbar), deshalb
+   brauchen Raster/Decks oben etwas Luft. */
 .holo {
   --tiltX: 0deg;
   --tiltY: 0deg;
   --px: 50%;
-  --py: 50%;
+  --py: 30%;
   --glow: 0;
+  --edge0: #ff5560;
+  --edge1: #8e0f17;
+  --accent: #E91D29;
   position: relative;
-  aspect-ratio: 3 / 4.2;
-  border-radius: 14px;
+  container-type: inline-size;
+  aspect-ratio: 1 / 1.4;
+  border-radius: 5cqw;
   cursor: pointer;
-  transform: perspective(760px) rotateX(var(--tiltX)) rotateY(var(--tiltY));
+  transform: perspective(900px)
+    rotateX(calc(var(--tiltX) + var(--gyroX, 0deg)))
+    rotateY(calc(var(--tiltY) + var(--gyroY, 0deg)));
   transform-style: preserve-3d;
-  transition: transform .45s cubic-bezier(.16,1.2,.3,1), box-shadow .3s ease;
+  transition: transform .45s cubic-bezier(.16,1.2,.3,1), filter .3s ease;
   will-change: transform;
-  box-shadow: 0 12px 34px rgba(0,0,0,.55);
-  isolation: isolate;
-  contain: layout paint;
+  filter: drop-shadow(0 12px 22px rgba(0,0,0,.55));
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
-.holo:hover { box-shadow: 0 22px 60px rgba(0,0,0,.7), 0 0 40px rgba(233,29,41,.25); }
+.holo:hover { filter: drop-shadow(0 20px 34px rgba(0,0,0,.7)) drop-shadow(0 0 22px rgba(233,29,41,.25)); }
+.holo:focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; }
+.holo--neu { --edge0: #f2f4f7; --edge1: #868d96; --accent: #dfe3e8; }
+.holo--kapitaen { --edge0: #ffe39a; --edge1: #b8912f; --accent: #E8C15A; }
+.holo--potm { --edge0: #fff1c2; --edge1: #c79a35; --accent: #ffe39a; }
 
-/* Kartenkorpus — angularer Verlauf in SVA-Farben */
+/* Kartenkörper: rot-schwarzer gebürsteter Foil */
 .holo__body {
   position: absolute;
   inset: 0;
-  border-radius: 14px;
+  border-radius: 5cqw;
   overflow: hidden;
   background:
-    repeating-linear-gradient(115deg, rgba(255,255,255,.015) 0 2px, rgba(0,0,0,.02) 2px 4px),
-    radial-gradient(120% 80% at 50% 0%, #431418 0%, #201618 42%, #0f0c0d 100%);
-  border: 1px solid rgba(232,193,90,.55);
-  box-shadow: inset 0 0 0 1px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.08);
+    /* Bürstung */
+    repeating-linear-gradient(180deg, rgba(255,255,255,.035) 0 .25cqw, rgba(0,0,0,.07) .25cqw .6cqw, transparent .6cqw 1cqw),
+    /* Bühnenlicht */
+    radial-gradient(70% 40% at 50% 26%, rgba(255,226,200,.18), transparent 70%),
+    /* Foil-Band rot, darunter Schwarz */
+    linear-gradient(125deg, transparent 30%, rgba(233,29,41,.25) 42%, rgba(255,140,140,.23) 48%, rgba(233,29,41,.42) 53%, transparent 64%, rgba(0,0,0,.38) 72%, rgba(0,0,0,.1) 86%, transparent),
+    radial-gradient(120% 75% at 50% 18%, #5a1219 0%, #230b0e 50%, #0b0607 100%);
+  box-shadow: inset 0 0 0 .55cqw var(--edge1), inset 0 0 0 1.1cqw rgba(0,0,0,.35);
 }
-
-/* Gold-Rahmen-Innenlinie */
+/* Außenkante als Metall-Verlauf */
+.holo__body::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.1cqw;
+  background: linear-gradient(135deg, var(--edge0), var(--edge1) 50%, var(--edge0) 75%, var(--edge1));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  pointer-events: none;
+}
+/* Wappen-Prägung: helle Kante oben links, dunkle unten rechts */
+.holo__emboss,
+.holo__emboss::before {
+  position: absolute;
+  left: 13%;
+  width: 74%;
+  top: 9%;
+  aspect-ratio: 512 / 582;
+  -webkit-mask: url(/brand/wappen.png) center / contain no-repeat;
+  mask: url(/brand/wappen.png) center / contain no-repeat;
+}
+.holo__emboss { background: rgba(0,0,0,.42); transform: translate(.6cqw, .6cqw); opacity: .8; }
+.holo__emboss::before {
+  content: "";
+  left: 0; top: 0; width: 100%;
+  transform: translate(-1.2cqw, -1.2cqw);
+  background: linear-gradient(135deg, rgba(255,255,255,.2), rgba(255,255,255,.04));
+}
+.holo__watermark {
+  position: absolute;
+  left: 0; right: 0; top: 4%;
+  text-align: center;
+  padding-left: 12%;
+  font-family: var(--font-display);
+  font-size: 66cqw;
+  line-height: 1;
+  color: rgba(232,193,90,.07);
+  -webkit-text-stroke: .45cqw rgba(232,193,90,.3);
+  pointer-events: none;
+}
 .holo__frame {
   position: absolute;
-  inset: 6px;
-  border-radius: 10px;
-  border: 1px solid rgba(232,193,90,.35);
+  inset: 3.4cqw;
+  border-radius: 3.2cqw;
+  border: .55cqw solid var(--edge0);
+  opacity: .6;
   pointer-events: none;
-  z-index: 4;
 }
-
-/* Kopfzeile: Rating + Position + Wappen */
+.holo__plate {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 42%;
+  background: linear-gradient(180deg, rgba(8,5,6,0) 0%, rgba(8,5,6,.94) 52%);
+}
+/* Freisteller: Kopf über der Oberkante, Auslauf in die Namensplatte */
+.holo__figure {
+  position: absolute;
+  left: 1%;
+  width: 98%;
+  top: -31.7cqw;
+  height: auto;
+  aspect-ratio: 2 / 3;
+  object-fit: contain;
+  object-position: top;
+  -webkit-mask-image: linear-gradient(180deg, #000 0, #000 124cqw, transparent 146cqw);
+  mask-image: linear-gradient(180deg, #000 0, #000 124cqw, transparent 146cqw);
+  filter: drop-shadow(0 1.2cqw 2.4cqw rgba(0,0,0,.6)) drop-shadow(0 0 3.5cqw rgba(233,29,41,.35));
+  pointer-events: none;
+}
+.holo__nophoto { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; }
+.holo__nophoto img { position: absolute; width: 50%; top: 22%; left: 25%; opacity: .5; filter: drop-shadow(0 3cqw 6cqw rgba(0,0,0,.55)); }
+.holo__nophoto span {
+  position: absolute; top: 46%; left: 0; right: 0; text-align: center;
+  font-family: var(--font-display); font-size: 34cqw; line-height: 1; color: rgba(232,193,90,.85);
+  text-shadow: 0 1cqw 4cqw rgba(0,0,0,.6);
+}
+/* Kopfzeile: Nummer (Gold) + Position */
 .holo__top {
   position: absolute;
-  top: 12px; left: 14px;
-  z-index: 3;
+  top: 4cqw; left: 6cqw;
+  width: 18cqw;
   display: flex;
   flex-direction: column;
   align-items: center;
   line-height: 1;
+  pointer-events: none;
 }
-.holo__rating {
+.holo__num {
   font-family: var(--font-display);
-  font-size: 2.1rem;
-  color: var(--gold);
-  text-shadow: 0 2px 6px rgba(0,0,0,.6);
+  font-size: 17.5cqw;
+  background: linear-gradient(180deg, #fff0b8 0%, #E8C15A 55%, #b8912f 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 .4cqw 1.2cqw rgba(0,0,0,.7));
 }
 .holo__pos {
-  font-size: .62rem;
+  margin-top: 1.2cqw;
   font-weight: 800;
+  font-size: 5.4cqw;
   letter-spacing: .12em;
-  color: rgba(255,255,255,.85);
-  margin-top: 2px;
+  color: rgba(255,255,255,.94);
+  text-shadow: 0 0 2cqw rgba(0,0,0,.8);
 }
 .holo__crest {
   position: absolute;
-  top: 11px; right: 11px;
-  z-index: 3;
-  width: 40px;
+  top: 6.5cqw; right: 7.5cqw;
+  width: 15cqw;
   height: auto;
-  filter: drop-shadow(0 2px 5px rgba(0,0,0,.65));
+  filter: drop-shadow(0 .6cqw 1.4cqw rgba(0,0,0,.6));
+  pointer-events: none;
 }
-
-/* Spielerbild / Silhouette — v5.5: etwas größer, Spieler dominiert */
-.holo__portrait {
+.holo__badges {
   position: absolute;
-  top: 6.5%; left: 0; right: 0;
-  height: 61%;
-  z-index: 2;
+  top: 25.5cqw; right: 8cqw;
+  width: 14cqw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2cqw;
+  pointer-events: none;
+}
+.holo__badge {
   display: grid;
-  place-items: end center;
-  overflow: hidden;
+  place-items: center;
+  font-weight: 800;
+  color: #16120a;
+  box-shadow: 0 .6cqw 1.6cqw rgba(0,0,0,.5);
 }
-.holo__portrait img { height: 100%; object-fit: contain; }
-
-/* ── Portrait-Pipeline (Variante per cardConfig.ts) ─────────── */
-.holo__photo {
-  height: 96%;
-  width: 78%;
-  border-radius: 6px 6px 0 0;
-  overflow: hidden;
-  position: relative;
+.holo__badge--c {
+  width: 8.8cqw; height: 8.8cqw; border-radius: 50%;
+  font-family: var(--font-display); font-weight: 400; font-size: 5.6cqw;
+  background: linear-gradient(135deg, #ffe9a3, #b8912f);
 }
-/* absolut → Prozent-Höhe löst zuverlässig auf (Grid-%-Kette tut es nicht) */
-.holo__photo img {
+.holo__badge--neu {
+  padding: .9cqw 2cqw; border-radius: 99px;
+  font-size: 2.9cqw; letter-spacing: .12em;
+  background: linear-gradient(90deg, #9aa1aa, #f4f6f8 50%, #9aa1aa);
+  color: #16181b;
+}
+.holo__potm {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-position: bottom;
-}
-/* A · Duotone: Graustufen-Foto + Team-Farbverlauf via luminosity */
-.holo__photo--duotone {
-  background: linear-gradient(168deg, #E91D29 0%, #6e1218 45%, #231F20 82%);
-}
-.holo__photo--duotone img {
-  object-fit: cover;
-  /* Focal oben: Kopf sitzt im oberen Drittel der Fotos (v5-Pipeline) —
-     bei jedem Seitenverhältnis bleibt das Gesicht im Ausschnitt */
-  object-position: 50% 14%;
-  /* v5-Perf: Graustufen+Kontrast sind in die WebP-Dateien GEBAKED
-     (Pipeline s. README) — der CSS-filter entfällt, nur der
-     luminosity-Blend färbt gegen den Team-Verlauf ein */
-  mix-blend-mode: luminosity;
-}
-/* B · Freisteller (v5.5 „Staunen"): der Spieler steht auf einer
-   Bühne — Spotlight von oben, SVA-roter Rim-Glow, Boden-Schatten.
-   Fotos sind echte Higgsfield-Freisteller (Alpha-WebP). */
-.holo__photo--cutout {
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-  border-radius: 0;
-  background: none;
-}
-.holo__photo--cutout::before {
-  content: "";
-  position: absolute;
-  inset: 2% 5% 0 5%;
-  background:
-    radial-gradient(75% 60% at 50% 26%, rgba(233, 29, 41, 0.32), transparent 70%),
-    radial-gradient(95% 65% at 50% 8%, rgba(255, 226, 170, 0.2), transparent 62%);
-  pointer-events: none;
-}
-.holo__photo--cutout img {
-  object-fit: contain;
-  object-position: bottom;
-  filter: contrast(1.07) saturate(1.05) brightness(1.03)
-    drop-shadow(0 0 16px rgba(233, 29, 41, 0.38))
-    drop-shadow(0 14px 16px rgba(0, 0, 0, 0.6));
-}
-.holo__photo--cutout::after {
-  /* Boden-Ellipse: erdet den Freisteller auf der Karte */
-  content: "";
-  position: absolute;
-  left: 16%;
-  right: 16%;
-  bottom: -2.5%;
-  height: 6%;
-  background: radial-gradient(50% 50% at 50% 50%, rgba(0, 0, 0, 0.6), transparent 72%);
-  filter: blur(2px);
-  pointer-events: none;
-}
-
-/* Platzhalter-Silhouette im CI-Duotone (echo der Foto-Karten) —
-   Platzhalter-Karten lesen als gestaltet, nicht als leer */
-/* v10-E3: edler „Foto folgt"-Zustand — großes Wappen zentriert + große
-   Rückennummer dahinter. Kein schwebender Kopf-Kreis mehr; liest als Design. */
-.holo__nophoto {
-  position: absolute; inset: 0; display: grid; place-items: center;
-}
-.holo__nophoto-num {
-  position: absolute; z-index: 0;
-  font-family: var(--font-display); font-size: 10rem; line-height: 1;
-  color: rgba(255,255,255,.055); letter-spacing: .02em;
-}
-.holo__nophoto-crest {
-  position: relative; z-index: 1; width: 46%; max-width: 120px;
-  opacity: .5; filter: grayscale(.15) drop-shadow(0 12px 26px rgba(0,0,0,.55));
-}
-
-/* Nummer als großes Wasserzeichen */
-.holo__watermark {
-  position: absolute;
-  right: 10px; top: 30%;
-  z-index: 1;
-  font-family: var(--font-display);
-  font-size: 6rem;
-  color: rgba(232,193,90,.08);
-  line-height: 1;
-  pointer-events: none;
-}
-
-/* Untere Info-Platte */
-.holo__plate {
-  position: absolute;
-  left: 0; right: 0; bottom: 0;
-  z-index: 3;
-  padding: 10px 12px 12px;
+  top: 61%; left: 19%; right: 19%;
+  padding: 1.4cqw 0;
   text-align: center;
-  background: linear-gradient(180deg, transparent, rgba(10,8,8,.75) 30%);
+  font-size: 3.1cqw; font-weight: 800; letter-spacing: .14em; text-transform: uppercase;
+  color: #1a1408;
+  background: linear-gradient(90deg, #b8912f, #ffe9a3 50%, #b8912f);
+  border-radius: 1.2cqw;
 }
 .holo__name {
+  position: absolute;
+  left: 0; right: 0;
+  top: 73%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
   color: #fff;
   text-transform: uppercase;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  line-height: 1.05;
+  pointer-events: none;
 }
 .holo__name small {
-  display: block;
-  font-family: var(--font-body);
   font-weight: 700;
-  font-size: .58rem;
-  letter-spacing: .3em;
-  color: rgba(255,255,255,.55);
+  font-size: 4.4cqw;
+  letter-spacing: .22em;
+  color: rgba(255,255,255,.72);
+  white-space: nowrap;
 }
 .holo__name b {
   font-family: var(--font-display);
   font-weight: 400;
-  font-size: 1.15rem;
-  letter-spacing: .03em;
+  line-height: 1.02;
+  letter-spacing: .01em;
+  white-space: nowrap;
+  margin-top: .4cqw;
+  text-shadow: 0 0 2cqw rgba(0,0,0,.6);
 }
-.holo__rule {
-  height: 1px;
-  margin: 6px auto;
-  width: 80%;
-  background: linear-gradient(90deg, transparent, rgba(232,193,90,.6), transparent);
-}
-.holo__stats {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  font-size: .64rem;
-  letter-spacing: .04em;
-  color: rgba(255,255,255,.82);
-}
-.holo__stats b {
+.holo__name i {
   display: block;
-  font-family: var(--font-display);
-  font-size: .9rem;
-  color: rgba(232,193,90,.85);
-  letter-spacing: .02em;
+  width: 60%;
+  height: .45cqw;
+  margin: 1.6cqw 0 1.2cqw;
+  background: linear-gradient(90deg, transparent, var(--edge0), transparent);
 }
-.holo__stats span:nth-child(2) b {
-  font-size: 1.2rem;
-  color: var(--gold);
+.holo__name span {
+  font-weight: 700;
+  font-size: 2.6cqw;
+  letter-spacing: .3em;
+  color: rgba(255,255,255,.5);
+  white-space: nowrap;
 }
-
-/* ── Edle Sheen-Schicht (v11-E2) ────────────────────────────────
-   Kein Arcade-Holo mehr (color-dodge-Foil + Regenbogen-Drift raus).
-   Stattdessen EINE ruhige Schicht: ein weicher, statischer Glanz-
-   verlauf von oben + ein dezenter Licht-Kegel, der dem Zeiger folgt
-   (soft-light, niedrige Deckkraft). Wirkt wie mattes Metall/Karton,
-   nicht wie Spielhalle. */
+/* Glanz: folgt dem Zeiger (Desktop) bzw. dem Gyro (mobil) */
 .holo__sheen {
   position: absolute;
   inset: 0;
-  z-index: 5;
-  border-radius: 14px;
+  border-radius: 5cqw;
   pointer-events: none;
   mix-blend-mode: soft-light;
-  opacity: calc(.5 + var(--glow) * .5);
+  opacity: calc(.55 + var(--glow) * .45);
   background:
-    radial-gradient(60% 40% at var(--px) var(--py),
-      rgba(255,255,255,.5) 0%, rgba(255,255,255,.12) 30%, transparent 60%),
-    linear-gradient(160deg,
-      rgba(255,255,255,.14) 0%, rgba(255,255,255,0) 34%,
-      rgba(0,0,0,.1) 100%);
+    radial-gradient(55% 38% at var(--px) var(--py), rgba(255,255,255,.55) 0%, rgba(255,255,255,.12) 32%, transparent 62%),
+    linear-gradient(115deg, transparent calc(var(--gyroPx, var(--px)) - 22%), rgba(255,255,255,.22) var(--gyroPx, var(--px)), transparent calc(var(--gyroPx, var(--px)) + 22%));
   transition: opacity .25s ease;
 }
-
-/* ── Team-des-Monats — ein Rahmen-Level über normal ─────────── */
-.holo--totm .holo__body {
-  background:
-    radial-gradient(120% 80% at 50% 0%, #52400f 0%, #2b2413 45%, #171208 100%);
-  border-color: var(--gold);
-  box-shadow: inset 0 0 24px rgba(232,193,90,.18);
-}
-.holo--totm .holo__frame {
-  border-color: rgba(232,193,90,.75);
-  box-shadow: 0 0 0 1px rgba(232,193,90,.25);
-}
-.holo--totm { box-shadow: 0 12px 34px rgba(0,0,0,.55), 0 0 26px rgba(232,193,90,.22); }
-.holo--totm:hover { box-shadow: 0 22px 60px rgba(0,0,0,.7), 0 0 46px rgba(232,193,90,.4); }
-/* TOTM: wärmerer, goldener Sheen — bleibt ruhig (kein Regenbogen) */
-.holo--totm .holo__sheen {
-  background:
-    radial-gradient(60% 40% at var(--px) var(--py),
-      rgba(255,238,180,.55) 0%, rgba(255,230,150,.14) 30%, transparent 60%),
-    linear-gradient(160deg,
-      rgba(255,240,190,.16) 0%, rgba(255,240,190,0) 34%,
-      rgba(0,0,0,.1) 100%);
-}
-.holo--totm .holo__rating { color: #ffe9a3; }
-.holo__totm-banner {
+/* Holo-Spezial (Spieler des Monats): irisierender Foil über dem Körper */
+.holo--potm .holo__body::before {
+  content: "";
   position: absolute;
-  top: 55%;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 4;
-  padding: .28em .9em;
-  font-size: .56rem;
-  font-weight: 800;
-  letter-spacing: .22em;
-  text-transform: uppercase;
-  color: #1a1408;
-  background: linear-gradient(90deg, #b8912f, #ffe9a3 50%, #b8912f);
-  clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 50%, calc(100% - 6px) 100%, 6px 100%, 0 50%);
-  white-space: nowrap;
-  pointer-events: none;
+  inset: 0;
+  z-index: 1;
+  mix-blend-mode: color-dodge;
+  opacity: .45;
+  background: linear-gradient(115deg, #ff50c8 0%, #50dcff 25%, #a0ff78 45%, #ffd75a 65%, #ff50c8 85%);
+  background-size: 220% 220%;
+  background-position: var(--px) var(--py);
 }
-
-/* v11-E2: kein laufender Holo-Drift mehr (Arcade-Effekt raus). Die Sheen-
-   Schicht ist statisch; nur der Zeiger-Lichtkegel bewegt sich leicht — das
-   ist compositor-günstig und ruhig. IntersectionObserver-„is-live" bleibt
-   ungenutzt für den Glanz, schadet aber nicht. */
+.holo--large { cursor: default; }
 @media (prefers-reduced-motion: reduce) {
   .holo { transition: none; transform: none !important; }
-  .holo__sheen { opacity: .4; }
+  .holo__sheen { opacity: .45; }
 }
 
 /* ── Detail-Modal ───────────────────────────────────────────── */
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 300;
+  /* v14-D: über Galerie (370) und Letterbox (360) */
+  z-index: 385;
   display: grid;
   place-items: center;
   padding: 1.2rem;
@@ -357,7 +323,21 @@
   max-width: 760px;
   width: 100%;
 }
-.modal-card { width: min(74vw, 300px); flex: 0 0 auto; }
+.modal-card { width: min(70vw, 360px, calc((100svh - 9rem) / 1.5)); flex: 0 0 auto; padding-top: 1.4rem; }
+.modal-chips { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: .9rem; }
+.modal-chips span {
+  font-size: .62rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase;
+  padding: .35em .75em; border-radius: 999px;
+  border: 1px solid rgba(232,193,90,.55); color: var(--gold);
+}
+.modal-lead { margin: 1.1rem 0 1.2rem; max-width: 34ch; font-size: .9rem; line-height: 1.5; color: rgba(255,255,255,.7); }
+@media (max-width: 640px) {
+  .modal-panel { gap: 1rem; }
+  .modal-card { width: min(66vw, calc((100svh - 17rem) / 1.5)); }
+  .modal-info { text-align: center; }
+  .modal-chips, .modal-actions { justify-content: center; }
+  .modal-lead { display: none; }
+}
 .modal-info { flex: 1 1 240px; min-width: 240px; }
 .modal-info h3 {
   font-family: var(--font-display);
@@ -365,7 +345,7 @@
   line-height: .95;
   text-transform: uppercase;
 }
-.modal-info .modal-sub { color: var(--gold); letter-spacing: .18em; text-transform: uppercase; font-size: .74rem; font-weight: 800; margin-top: .4rem; }
+.modal-info .modal-sub { margin-bottom: .45rem; color: var(--gold); letter-spacing: .18em; text-transform: uppercase; font-size: .74rem; font-weight: 800; margin-top: .4rem; }
 .modal-statgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .6rem; margin: 1.4rem 0; }
 .modal-statgrid > div { background: rgba(255,255,255,.05); border: 1px solid rgba(232,193,90,.25); border-radius: 8px; padding: .7rem; text-align: center; }
 .modal-statgrid b { display: block; font-family: var(--font-display); font-size: 1.7rem; color: var(--gold); }
@@ -395,7 +375,7 @@
 .modal-close {
   position: fixed;
   top: 1.2rem; right: 1.2rem;
-  z-index: 310;
+  z-index: 390;
   width: 44px; height: 44px;
   border-radius: 50%;
   background: rgba(255,255,255,.1);
@@ -949,47 +929,30 @@
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   transform: rotateY(180deg);
-  border-radius: 14px;
-  overflow: hidden;
-  background:
-    repeating-linear-gradient(115deg, rgba(255,255,255,.015) 0 2px, rgba(0,0,0,.02) 2px 4px),
-    radial-gradient(120% 90% at 50% 15%, #2c2320 0%, #1a1515 55%, #100d0d 100%);
-  border: 1px solid rgba(232,193,90,.55);
+  cursor: pointer;
+}
+.flip-back.holo { aspect-ratio: auto; filter: none; }
+.flip-back__content {
+  position: absolute;
+  inset: 8cqw 8cqw 9cqw;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: .9rem;
-  padding: 1.2rem;
+  gap: 2.4cqw;
   text-align: center;
 }
-.flip-back img { width: 38%; filter: drop-shadow(0 6px 14px rgba(0,0,0,.6)); }
-.flip-back__season {
-  font-size: .6rem;
-  letter-spacing: .28em;
-  text-transform: uppercase;
-  color: rgba(232,193,90,.8);
+.flip-back__crest { width: 30cqw; filter: drop-shadow(0 1.5cqw 3cqw rgba(0,0,0,.6)); margin-bottom: 2cqw; }
+.flip-back__num {
+  font-family: var(--font-display); font-size: 26cqw; line-height: .95;
+  background: linear-gradient(180deg, #fff0b8, #E8C15A 55%, #b8912f);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
 }
-.flip-back__row {
-  display: flex;
-  gap: 1.1rem;
-  font-size: .66rem;
-  color: rgba(255,255,255,.75);
-}
-.flip-back__row b {
-  display: block;
-  font-family: var(--font-display);
-  font-size: 1.15rem;
-  color: var(--gold);
-}
-.flip-back__quote {
-  font-size: .78rem;
-  font-style: italic;
-  color: rgba(255,255,255,.68);
-  max-width: 22ch;
-  border-top: 1px solid rgba(232,193,90,.25);
-  padding-top: .7rem;
-}
+.flip-back__name { font-family: var(--font-display); font-size: 10cqw; line-height: 1; text-transform: uppercase; }
+.flip-back__pos { font-size: 4.6cqw; font-weight: 800; letter-spacing: .24em; text-transform: uppercase; color: rgba(255,255,255,.8); }
+.flip-back__since { font-size: 4.2cqw; color: rgba(255,255,255,.62); }
+.flip-back__flags { font-size: 3.8cqw; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
+.flip-back__share { margin-top: 3cqw; font-size: .7rem; padding: .7rem 1rem; }
 .flip-hint {
   margin-top: .6rem;
   font-size: .62rem;
@@ -1080,39 +1043,33 @@
 }
 .staff-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-  gap: clamp(1rem, 2.5vw, 2rem); width: 100%;
+  gap: clamp(1rem, 2.5vw, 2rem); width: 100%; padding-top: 1rem;
 }
-.staff-card {
-  position: relative; border-radius: 14px; overflow: hidden;
-  background: linear-gradient(160deg, #201a1b 0%, #17130f 100%);
-  border: 1px solid rgba(255,255,255,.10);
-  box-shadow: 0 12px 34px rgba(0,0,0,.5);
-  display: flex; flex-direction: column;
+/* v14-D: Stab im Karten-2.0-System — Graphit statt Rot-Foil */
+.staff-card2 { display: flex; flex-direction: column; align-items: center; gap: .7rem; }
+.staff-card2 > .holo { width: 100%; cursor: default; }
+.holo--stab { --edge0: #d9d4d4; --edge1: #5d5657; --accent: #E91D29; }
+.holo--stab .holo__body {
+  background:
+    repeating-linear-gradient(180deg, rgba(255,255,255,.03) 0 .25cqw, rgba(0,0,0,.07) .25cqw .6cqw, transparent .6cqw 1cqw),
+    radial-gradient(70% 40% at 50% 26%, rgba(255,226,200,.16), transparent 70%),
+    linear-gradient(180deg, var(--red) 0 2.2cqw, transparent 2.2cqw),
+    radial-gradient(120% 75% at 50% 18%, #3a2a2c 0%, #1c1617 50%, #0b090a 100%);
 }
-.staff-card::before {
-  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px;
-  background: var(--red); z-index: 2;
+.holo__role {
+  position: absolute;
+  top: 6cqw; left: 7.5cqw;
+  max-width: 60cqw;
+  font-weight: 800;
+  font-size: 4.2cqw;
+  line-height: 1.25;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: #ff3b47;
+  text-shadow: 0 0 2cqw rgba(0,0,0,.85);
+  pointer-events: none;
 }
-.staff-card__media {
-  aspect-ratio: 4 / 3.4; position: relative; overflow: hidden;
-  background: radial-gradient(120% 90% at 50% 0%, #2a2320 0%, #14100e 100%);
-}
-.staff-card__photo, .staff-card__placeholder { position: absolute; inset: 0; display: grid; place-items: center; }
-.staff-card__photo img {
-  width: 100%; height: 100%; object-fit: cover; object-position: 50% 22%;
-  filter: grayscale(1) contrast(1.08) brightness(.96);
-}
-.staff-card__media::after {
-  /* Rot-Duotone-Hauch, damit Trainerfotos zum Kader-Look passen */
-  content: ""; position: absolute; inset: 0; mix-blend-mode: color;
-  background: rgba(233,29,41,.16); pointer-events: none;
-}
-.staff-card__placeholder img { width: 52%; opacity: .9; filter: drop-shadow(0 8px 18px rgba(0,0,0,.5)); }
-.staff-card__body { padding: .85rem 1rem 1.05rem; display: flex; flex-direction: column; gap: .18rem; }
-.staff-card__role { font-size: .62rem; letter-spacing: .16em; text-transform: uppercase; color: var(--red); font-weight: 800; }
-.staff-card__name { font-family: var(--font-display); font-size: 1.3rem; line-height: 1; letter-spacing: .01em; margin: .1rem 0; }
-.staff-card__since { font-size: .74rem; color: rgba(255,255,255,.5); }
-.staff-card__contact { margin-top: .7rem; align-self: flex-start; font-size: .72rem; padding: .5rem .9rem; }
+.staff-card__contact { font-size: .72rem; padding: .5rem .9rem; pointer-events: auto; }
 
 /* ── v13-E9: Probetraining-Pill an der Mannschafts-Station ──────── */
 .training-pill {
@@ -1166,7 +1123,7 @@
 
 /* Overlay unter dem Detail-Modal (z 300) → Kartenklick öffnet Detail obendrauf */
 .pgal {
-  position: fixed; inset: 0; z-index: 290;
+  position: fixed; inset: 0; z-index: 370;
   display: grid; place-items: center;
   padding: clamp(0.6rem, 3vw, 2rem);
   background: rgba(6,5,8,.86); backdrop-filter: blur(9px);
@@ -1213,9 +1170,12 @@
 .pgal__grouplabel::before {
   content: ""; width: 26px; height: 2px; background: var(--red);
 }
+.pgal__grouplabel em { font-style: normal; color: var(--gold); letter-spacing: .1em; }
 .pgal__grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
   gap: clamp(.9rem, 2vw, 1.6rem);
+  row-gap: clamp(1.6rem, 3vw, 2.4rem);
+  padding-top: .9rem; /* Kopf-Freiraum (Freisteller ragt über die Kante) */
 }
 
 /* v13-K4: Karte + Story-Share als Einheit */
@@ -1244,8 +1204,8 @@
     padding: .2rem .4rem 1rem;
     -webkit-overflow-scrolling: touch;
   }
-  .pgal__grid > * { flex: 0 0 72vw; scroll-snap-align: center; }
-  .pgal__grid--staff > * { flex-basis: 82vw; }
+  .pgal__grid { padding-top: 1.4rem; scrollbar-width: none; }
+  .pgal__grid > * { flex: 0 0 64vw; scroll-snap-align: center; }
 }
 
 /* ── v13-K5: „Deine Bande"-Moment ───────────────────────────── */
@@ -1457,7 +1417,7 @@
 /* ═══ v14-D: Mobil — horizontales Swipe-Deck ═════════════════════════ */
 .team-deck { margin-top: .9rem; pointer-events: auto; }
 .team-deck__track {
-  --deck-w: min(72vw, calc((100svh - 290px) / 1.5), 340px);
+  --deck-w: min(72vw, calc((100svh - 330px) / 1.48), 340px);
   display: flex;
   gap: 14px;
   overflow-x: auto;
@@ -1472,6 +1432,12 @@
 }
 .team-deck__track::-webkit-scrollbar { display: none; }
 .team-deck__item { flex: 0 0 var(--deck-w); scroll-snap-align: center; scroll-snap-stop: always; }
+/* Stab-Kontakt im Deck als Plakette auf der Karte — sonst wächst die Spur */
+.team-deck__item .staff-card2 { position: relative; }
+.team-deck__item .staff-card__contact {
+  position: absolute; left: 50%; bottom: 12%; transform: translateX(-50%);
+  white-space: nowrap; box-shadow: 0 6px 18px rgba(0,0,0,.45);
+}
 .team-deck__counter {
   display: flex;
   justify-content: center;
