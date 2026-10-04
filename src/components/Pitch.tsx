@@ -304,8 +304,19 @@ const FRAG_MAP = /* glsl */ `
 }
 `
 
-export function Pitch() {
-  const { map, roughnessMap, bump } = useMemo(() => {
+// v14: Modul-Cache statt useMemo. Solange irgendein Geschwister in der
+// Haupt-Suspense noch lädt, verwirft React den nicht committeten Baum und
+// rendert neu — useMemo zählt dann nicht. paintGrass (~0,6 s) lief so beim
+// Laden ~11× (gemessen 5,5 s CPU vor dem Tor). Jetzt genau einmal.
+let pitchTexCache: { map: THREE.CanvasTexture; roughnessMap: THREE.CanvasTexture; bump: THREE.Texture } | null = null
+function getPitchTextures() {
+  if (pitchTexCache) return pitchTexCache
+  pitchTexCache = buildPitchTextures()
+  return pitchTexCache
+}
+
+function buildPitchTextures() {
+  {
     const cv = document.createElement('canvas')
     cv.width = TEX_W; cv.height = TEX_H
     const ctx = cv.getContext('2d')!
@@ -336,7 +347,11 @@ export function Pitch() {
     bump.repeat.set(MESH_W * 2.9, MESH_H * 2.9)
     bump.needsUpdate = true
     return { map, roughnessMap, bump }
-  }, [])
+  }
+}
+
+export function Pitch() {
+  const { map, roughnessMap, bump } = getPitchTextures()
 
   const onBeforeCompile = useMemo(
     () => (shader: THREE.WebGLProgramParametersWithUniforms) => {

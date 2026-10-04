@@ -21,7 +21,17 @@ import { getWorldTier } from '../three/qualityTier'
 
 const EXTENT = GROUND_SIZE // gebackener Bereich ±30, dahinter Fog
 
+// v14: Cache je Auflösung — Suspense-Retries beim Laden malten sonst mehrfach.
+const groundCache = new Map<number, HTMLCanvasElement>()
 function paintGround(res: number): HTMLCanvasElement {
+  const hit = groundCache.get(res)
+  if (hit) return hit
+  const cv = paintGroundUncached(res)
+  groundCache.set(res, cv)
+  return cv
+}
+
+function paintGroundUncached(res: number): HTMLCanvasElement {
   const cv = document.createElement('canvas')
   cv.width = cv.height = res
   const ctx = cv.getContext('2d')!

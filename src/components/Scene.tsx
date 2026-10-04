@@ -1,4 +1,6 @@
 import { lazy, Suspense } from 'react'
+import { createPortal } from '@react-three/fiber'
+import { partyScene } from '../three/partyScene'
 import { Ground } from './Ground'
 import { Pitch } from './Pitch'
 import { Goals } from './Goals'
@@ -97,7 +99,8 @@ export function Scene() {
       <ConeDust />
       <GroundMist />
       <KickoffDirector />
-      <PartyRoom />
+      {/* v14: eigene Szene → eigene Lichter (siehe three/partyScene.ts) */}
+      {createPortal(<PartyRoom />, partyScene)}
     </group>
   )
 }

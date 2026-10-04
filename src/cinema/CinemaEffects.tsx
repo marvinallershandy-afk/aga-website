@@ -9,7 +9,8 @@ import {
   ToneMapping,
   SMAA,
 } from '@react-three/postprocessing'
-import { ToneMappingMode, BlendFunction } from 'postprocessing'
+import { ToneMappingMode, BlendFunction, RenderPass, type EffectComposer as EffectComposerImpl } from 'postprocessing'
+import { partyScene } from '../three/partyScene'
 import { useStore } from '../store/useStore'
 import { GradeEffect } from './GradeEffect'
 
@@ -93,8 +94,32 @@ export function CinemaEffects() {
   // MSAA, ohne diese Pass flimmerten Linien/Banden. Mobil günstig.
   chain.push(<SMAA key="smaa" />)
 
+  // v14: zweite RenderPass für die Partyraum-Szene (eigene Lichter), ohne
+  // Clear und ohne Hintergrund → landet tiefenkorrekt im selben Puffer.
+  const composerRef = useRef<EffectComposerImpl>(null)
+  const camera = useThree((s) => s.camera)
+  const scene = useThree((s) => s.scene)
+  useEffect(() => {
+    const composer = composerRef.current
+    if (!composer) return
+    const pass = new RenderPass(partyScene, camera)
+    pass.clearPass.enabled = false
+    pass.ignoreBackground = true
+    pass.skipShadowMapUpdate = true
+    composer.addPass(pass, 1)
+    return () => {
+      composer.removePass(pass)
+      pass.dispose()
+    }
+  }, [camera])
+  useFrame(() => {
+    // gleiche Nacht-IBL wie draußen (NightEnvironment setzt sie auf scene)
+    partyScene.environment = scene.environment
+    partyScene.environmentIntensity = scene.environmentIntensity
+  })
+
   return (
-    <EffectComposer multisampling={0} enableNormalPass={false}>
+    <EffectComposer ref={composerRef} multisampling={0} enableNormalPass={false}>
       {chain}
     </EffectComposer>
   )
