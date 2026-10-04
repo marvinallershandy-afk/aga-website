@@ -1,16 +1,26 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 // P1: Website-Daten aus der Fassade (Overlay/DB → sonst statischer Seed).
-import { PLAYERS, STAFF, CONTACT } from '../data/content'
+import { PLAYERS, STAFF, CONTACT, POSITION_LABEL, ROLE_LABEL, type Player, type Staff } from '../data/content'
 import { useStore } from '../store/useStore'
 import { HoloCard } from './HoloCard'
 import { StaffCard } from './StaffCard'
 import { PlayerGallery } from './PlayerGallery'
 import { jumpToSection } from './Brandbar'
+import {
+  TEAM_CARDS,
+  STARTELF,
+  BANK,
+  STAB,
+  FORMATION_LABEL,
+  MATCH_LABEL,
+  FOCUS_ORDER,
+  teamState,
+  focusCardAt,
+  teamPhaseAt,
+} from '../camera/teamLayout'
 
 // v13-E9: Der Spieler-Funnel beginnt HIER (FIFA-Karten = „da will ich
-// spielen") — aber der Probetraining-Termin stand bisher erst ganz am
-// Ende der Reise. Die Pill bringt den Termin an die Mannschafts-Station
-// und springt direkt zum Mitmachen-Beat.
+// spielen") — die Pill bringt den Probetraining-Termin an die Mannschaft.
 function TrainingPill() {
   return (
     <button className="training-pill" onClick={() => jumpToSection('kontakt')}>
@@ -19,31 +29,210 @@ function TrainingPill() {
   )
 }
 
+const NARROW_QUERY = '(max-width: 640px)'
+function useNarrow(): boolean {
+  const [narrow, setNarrow] = useState(() => typeof window !== 'undefined' && window.matchMedia(NARROW_QUERY).matches)
+  useEffect(() => {
+    const mq = window.matchMedia(NARROW_QUERY)
+    const on = () => setNarrow(mq.matches)
+    mq.addEventListener('change', on)
+    return () => mq.removeEventListener('change', on)
+  }, [])
+  return narrow
+}
+
+function lastName(name: string) {
+  return name.trim().split(/\s+/).slice(-1)[0]
+}
+
+/** Kennzeichen hinter der Position — nur echte Flags. */
+function flagsOf(p: Player): string[] {
+  const f: string[] = []
+  if (p.isCaptain) f.push('Kapitän')
+  if (p.isNewSigning) f.push('Neuzugang')
+  if (p.isPlayerOfMonth) f.push('Spieler des Monats')
+  return f
+}
+
+// ─── Desktop/Tablet: Fokus-Text synchron zum Flyover ─────────
+// Liest teamState (vom CameraRig pro Frame geschrieben) per rAF und
+// rendert nur bei Wechsel der Fokus-Karte neu → ruhig, kein Flackern.
+function TeamFocus() {
+  const setSelected = useStore((s) => s.setSelectedPlayer)
+  const [view, setView] = useState<{ phase: 'intro' | 'focus' | 'outro'; idx: number }>({ phase: 'intro', idx: -1 })
+  useEffect(() => {
+    let raf = 0
+    let last = ''
+    const tick = () => {
+      raf = requestAnimationFrame(tick)
+      if (teamState.w < 0.02) return
+      const phase = teamPhaseAt(teamState.s)
+      const idx = phase === 'focus' ? focusCardAt(teamState.s) : -1
+      const key = `${phase}:${idx}`
+      if (key !== last) {
+        last = key
+        setView({ phase, idx })
+      }
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [])
+
+  const card = view.idx >= 0 ? TEAM_CARDS[view.idx] : null
+  const p = card?.player
+  const order = FOCUS_ORDER.indexOf(view.idx)
+  const label = MATCH_LABEL ? `Aufstellung ${MATCH_LABEL}` : `Unsere Elf · ${FORMATION_LABEL}`
+
+  return (
+    <div className="team-focus">
+      <div className="team-focus__meta">{label}</div>
+      {view.phase === 'focus' && p ? (
+        <button key={p.id} className="team-focus__card" onClick={() => setSelected(p)} aria-label={`${p.name} öffnen`}>
+          <span className="team-focus__num">{p.number ?? '–'}</span>
+          <span className="team-focus__txt">
+            <span className="team-focus__pos">
+              {POSITION_LABEL[p.position]}
+              {flagsOf(p).map((f) => (
+                <em key={f}>{f}</em>
+              ))}
+            </span>
+            <b className="team-focus__name">
+              <small>{p.name.split(' ').slice(0, -1).join(' ')}</small>
+              {lastName(p.name)}
+            </b>
+          </span>
+        </button>
+      ) : view.phase === 'outro' ? (
+        <div key="outro" className="team-focus__outro">
+          {BANK.length > 0 && (
+            <p>
+              <span>Auf der Bank</span>
+              {BANK.map((b) => lastName(b.name)).join(' · ')}
+            </p>
+          )}
+          {STAB.length > 0 && (
+            <p>
+              <span>An der Linie</span>
+              {STAB.map((m) => `${m.name} (${ROLE_LABEL[m.role]})`).join(' · ')}
+            </p>
+          )}
+        </div>
+      ) : (
+        <p key="intro" className="team-focus__intro">
+          Scroll über den Platz: Wir fliegen einmal über die Elf. Tipp eine Karte an, dann dreht sie sich.
+        </p>
+      )}
+      <div className="team-focus__dots">
+        {FOCUS_ORDER.map((ci, i) => (
+          <i key={ci} data-on={i === order ? 'true' : undefined} data-done={order >= 0 && i < order ? 'true' : undefined} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── Mobil: horizontales Swipe-Deck ──────────────────────────
+// Startelf → Bank → Trainerstab. Scroll-Snap, ~72vw Karten, Zähler
+// „3/11". Vertikales Scrollen bleibt beim Dokument (kein Kapern):
+// das Deck scrollt nur horizontal.
+type DeckItem = { group: 'Startelf' | 'Bank' | 'Trainerstab'; player?: Player; staff?: Staff }
+const DECK: DeckItem[] = [
+  ...STARTELF.map(({ player }) => ({ group: 'Startelf' as const, player })),
+  ...BANK.map((player) => ({ group: 'Bank' as const, player })),
+  ...STAB.map((staff) => ({ group: 'Trainerstab' as const, staff })),
+]
+const GROUP_SIZE: Record<DeckItem['group'], number> = {
+  Startelf: STARTELF.length,
+  Bank: BANK.length,
+  Trainerstab: STAB.length,
+}
+
+function TeamDeck() {
+  const setSelected = useStore((s) => s.setSelectedPlayer)
+  const trackRef = useRef<HTMLDivElement>(null)
+  const [active, setActive] = useState(0)
+
+  useEffect(() => {
+    const el = trackRef.current
+    if (!el) return
+    let raf = 0
+    const measure = () => {
+      raf = 0
+      const first = el.children[0] as HTMLElement | undefined
+      const second = el.children[1] as HTMLElement | undefined
+      if (!first) return
+      const stride = second ? second.offsetLeft - first.offsetLeft : first.offsetWidth
+      const i = Math.round(el.scrollLeft / Math.max(1, stride))
+      setActive(Math.min(DECK.length - 1, Math.max(0, i)))
+    }
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(measure)
+    }
+    el.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      el.removeEventListener('scroll', onScroll)
+      if (raf) cancelAnimationFrame(raf)
+    }
+  }, [])
+
+  const cur = DECK[active]
+  const posInGroup = DECK.slice(0, active + 1).filter((d) => d.group === cur.group).length
+
+  return (
+    <div className="team-deck">
+      <div className="team-deck__track" ref={trackRef} role="list" aria-label="Kader zum Durchwischen">
+        {DECK.map((d) => (
+          <div className="team-deck__item" role="listitem" key={d.player?.id ?? d.staff?.id}>
+            {d.player ? <HoloCard player={d.player} onClick={setSelected} /> : <StaffCard member={d.staff!} />}
+          </div>
+        ))}
+      </div>
+      <div className="team-deck__counter" aria-live="polite">
+        <span>{cur.group}</span>
+        <b>{posInGroup}</b>/{GROUP_SIZE[cur.group]}
+      </div>
+    </div>
+  )
+}
+
 export function PlayerCardGrid() {
   const setSelected = useStore((s) => s.setSelectedPlayer)
   const fallback = useStore((s) => s.fallback)
+  const narrow = useNarrow()
   const [galleryOpen, setGalleryOpen] = useState(false)
+  const gallery = (
+    <PlayerGallery open={galleryOpen} onClose={() => setGalleryOpen(false)} />
+  )
+  const allBtn = (
+    <button className="btn btn--primary card-grid__all" onClick={() => setGalleryOpen(true)}>
+      Alle Spieler anzeigen
+    </button>
+  )
 
-  // v11-E1: Im 3D-Pfad LEBEN die Karten auf dem Platz (PlayerCards3D) —
-  // Aufstellung, gestaffelter Reveal, Tap → dasselbe Flip-Detail-Modal.
-  // Das DOM-Grid ist dann nur der barrierefreie Fallback (kein WebGL /
-  // reduced-motion). So gibt es die Karten genau einmal, nie doppelt.
-  // v12-E2: zusätzlich „Alle Spieler anzeigen" → gruppierte Galerie-Ansicht.
+  // 3D-Pfad: Karten leben auf dem Platz (Desktop/Tablet) bzw. im Deck (mobil).
   if (!fallback) {
+    if (narrow) {
+      return (
+        <>
+          <TeamDeck />
+          <div className="team-deck__actions">{allBtn}</div>
+          {gallery}
+        </>
+      )
+    }
     return (
       <>
-        <p className="card-grid__hint">
-          Tippe eine Karte auf dem Platz an — sie dreht sich und zeigt dir Saison &amp; Stats.
-        </p>
-        <button className="btn btn--primary card-grid__all" onClick={() => setGalleryOpen(true)}>
-          Alle Spieler anzeigen
-        </button>
-        <TrainingPill />
-        <PlayerGallery open={galleryOpen} onClose={() => setGalleryOpen(false)} />
+        <TeamFocus />
+        <div className="team-actions">
+          {allBtn}
+          <TrainingPill />
+        </div>
+        {gallery}
       </>
     )
   }
 
+  // Fallback (kein WebGL / reduced-motion): statisches Karten-Raster.
   return (
     <>
       <div className="card-grid">

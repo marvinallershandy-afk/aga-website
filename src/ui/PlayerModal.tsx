@@ -1,39 +1,66 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useStore } from '../store/useStore'
-import { POSITION_LABEL, SHOW_RATING, type Player } from '../data/players'
+import { POSITION_LABEL, type Player } from '../data/players'
 import { HoloCard } from './HoloCard'
+import { tierOf, loadCardAssets } from './cardArt'
 import { shareStory, type ShareResult } from './storyShare'
+import { IgIcon } from './Icons'
+import { lockScroll, unlockScroll } from './PlayerGallery'
 
 const close = () => useStore.getState().setSelectedPlayer(null)
 
-// Inhalt ist ein eigenes, per player.id gekeyetes Kind → sharing/result
-// setzen sich beim Kartenwechsel natürlich zurück (kein setState-in-Effect).
+// v14-D: Detail-Modal mit Karten 2.0. Vorderseite = HoloCard, Rückseite
+// (Flip) zeigt NUR echte Angaben: Name, Nummer, Position, „im Verein seit"
+// (nur wenn bekannt) und den Story-Teilen-Button. Keine 0/0/0-Stats, kein
+// Platzhalter-Spruch.
 function ModalContent({ player }: { player: Player }) {
   const [sharing, setSharing] = useState(false)
   const [result, setResult] = useState<ShareResult | null>(null)
   const [flipped, setFlipped] = useState(false)
+  const panelRef = useRef<HTMLDivElement>(null)
+  const tier = tierOf(player)
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && close()
-    window.addEventListener('keydown', onKey)
-    document.body.style.overflow = 'hidden'
-    return () => {
-      window.removeEventListener('keydown', onKey)
-      document.body.style.overflow = ''
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation()
+        close()
+      }
     }
-  }, [])
+    window.addEventListener('keydown', onKey, true)
+    lockScroll()
+    // Story-Assets vorladen → beim Teilen bleibt die Nutzergeste „frisch"
+    void loadCardAssets(player.cutoutUrl ?? null)
+    const prev = document.activeElement as HTMLElement | null
+    panelRef.current?.querySelector<HTMLElement>('.flip-scene')?.focus()
+    return () => {
+      window.removeEventListener('keydown', onKey, true)
+      unlockScroll()
+      prev?.focus?.()
+    }
+  }, [player.cutoutUrl])
 
-  async function onShare() {
+  async function onShare(e?: React.MouseEvent) {
+    e?.stopPropagation()
     setSharing(true)
     const r = await shareStory(player)
     setResult(r)
     setSharing(false)
   }
 
+  const flags: string[] = []
+  if (player.isCaptain) flags.push('Kapitän')
+  if (player.isNewSigning) flags.push('Neuzugang')
+  if (player.isPlayerOfMonth) flags.push('Spieler des Monats')
+
   return (
     <motion.div
+      ref={panelRef}
       className="modal-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-label={player.name}
       initial={{ scale: 0.9, y: 20, opacity: 0 }}
       animate={{ scale: 1, y: 0, opacity: 1 }}
       exit={{ scale: 0.92, opacity: 0 }}
@@ -41,22 +68,40 @@ function ModalContent({ player }: { player: Player }) {
       onClick={(e) => e.stopPropagation()}
     >
       <div className="modal-card">
-        <div className="flip-scene" onClick={() => setFlipped(!flipped)} role="button" tabIndex={0}
-          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setFlipped(!flipped)}>
+        <div
+          className="flip-scene"
+          onClick={() => setFlipped(!flipped)}
+          role="button"
+          tabIndex={0}
+          aria-label={flipped ? 'Karte zurückdrehen' : 'Karte umdrehen'}
+          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), setFlipped(!flipped))}
+        >
           <div className={`flip-inner${flipped ? ' is-flipped' : ''}`}>
             <div className="flip-face">
               <HoloCard player={player} large />
             </div>
-            <div className="flip-back" aria-hidden={!flipped}>
-              <img src="/brand/wappen.png" alt="" />
-              <div className="flip-back__season">Saison-Stats · [Platzhalter]</div>
-              <div className="flip-back__row">
-                <span><b>{player.stats.games}</b>Spiele</span>
-                <span><b>{player.stats.goals}</b>Tore</span>
-                <span><b>{player.stats.assists}</b>Assists</span>
-                {SHOW_RATING && <span><b>{player.rating}</b>Rating</span>}
+            <div className={`flip-back holo holo--${tier}`} aria-hidden={!flipped}>
+              <div className="holo__body">
+                <div className="holo__emboss" />
+                <div className="holo__frame" />
               </div>
-              <div className="flip-back__quote">„Platz für deinen Spruch." — {player.name.split(' ').slice(-1)[0]}</div>
+              <div className="flip-back__content">
+                <img className="flip-back__crest" src="/brand/aga-logo.png" alt="" />
+                {player.number !== null && <div className="flip-back__num">{player.number}</div>}
+                <div className="flip-back__name">{player.name}</div>
+                <div className="flip-back__pos">{POSITION_LABEL[player.position]}</div>
+                {player.since !== null && <div className="flip-back__since">im Verein seit {player.since}</div>}
+                {flags.length > 0 && <div className="flip-back__flags">{flags.join(' · ')}</div>}
+                <button
+                  className="btn btn--ig flip-back__share"
+                  onClick={(e) => void onShare(e)}
+                  disabled={sharing}
+                  tabIndex={flipped ? 0 : -1}
+                >
+                  <IgIcon size={16} />
+                  {sharing ? 'Erstelle …' : 'In Story teilen'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -68,17 +113,19 @@ function ModalContent({ player }: { player: Player }) {
           {POSITION_LABEL[player.position]}
         </div>
         <h3>{player.name}</h3>
-        <div className="modal-statgrid">
-          <div><b>{player.stats.games}</b><span>Spiele</span></div>
-          <div><b>{player.stats.goals}</b><span>Tore</span></div>
-          <div><b>{player.stats.assists}</b><span>Assists</span></div>
-          {SHOW_RATING && <div><b>{player.rating}</b><span>Rating</span></div>}
-          <div><b>{player.position}</b><span>Position</span></div>
-          <div><b>{player.since ?? '—'}</b><span>im Verein</span></div>
-        </div>
+        {(flags.length > 0 || player.since !== null) && (
+          <div className="modal-chips">
+            {flags.map((f) => (
+              <span key={f}>{f}</span>
+            ))}
+            {player.since !== null && <span>im Verein seit {player.since}</span>}
+          </div>
+        )}
+        <p className="modal-lead">Teil die Karte in deiner Instagram-Story — mit Wappen, Nummer und allem Drum und Dran.</p>
         <div className="modal-actions">
-          <button className="btn btn--primary" onClick={onShare} disabled={sharing}>
-            {sharing ? 'Erstelle …' : '📲 Als Story teilen'}
+          <button className="btn btn--primary" onClick={() => void onShare()} disabled={sharing}>
+            <IgIcon size={16} />
+            {sharing ? 'Erstelle …' : 'Als Story teilen'}
           </button>
           <button className="btn btn--ghost" onClick={close}>Zurück</button>
         </div>

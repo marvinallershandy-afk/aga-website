@@ -13,18 +13,15 @@ const SECTION_IDS = ['verein', 'mannschaft', 'fanblock', 'musik', 'tabelle', 'sp
 // gemessen werden statt auf die Sektions-Mitte, sonst ruht der Scroll
 // an einer anderen Stelle als die komponierte Kamera-Pose.
 const SNAP_START_IDS = new Set(['tabelle', 'kontakt'])
-// v14-M2: Sektionen, die im HOCHFORMAT zwei Bildschirme hoch sind
-// (.section--stack-mobile): oben der Text, unten der freie Blick auf die
-// 3D-Szene. Der Kamera-Anker sitzt dann im ZWEITEN Bildschirm, das
-// Präsenz-Fenster des Textes im ERSTEN — so steht nie beides übereinander.
-const STACK_MOBILE_IDS = new Set(['mannschaft'])
-const STACK_MOBILE_QUERY = '(max-width: 640px)'
-function isStacked(id: string): boolean {
-  return (
-    STACK_MOBILE_IDS.has(id) &&
-    typeof window !== 'undefined' &&
-    window.matchMedia(STACK_MOBILE_QUERY).matches
-  )
+// v14-D: Die Mannschaft ist eine FLYOVER-Sektion (Desktop ~250vh, mobil
+// ~210svh, Sticky-Text). Sie trägt ZWEI Kamera-Anker: Anfang der Strecke
+// (Sektion oben bündig = Establishing-Shot) und Ende (Sektion unten bündig =
+// Totale). Dazwischen hält die Kamera-Station, und der CameraRig fährt die
+// eigene Flyover-Unterkurve. Die Gesamt-Ankunft (Anstoß → Mannschaft) und
+// der Ausflug (Mannschaft → Fanblock) bleiben gleich lang wie zuvor.
+const FLYOVER_ID = 'mannschaft'
+function isFlyover(el: HTMLElement): boolean {
+  return el.classList.contains('section--team-fly')
 }
 // Anteil des Wegs Verein→Mannschaft, an dem der Anstoß-Dive (Kamera-
 // Station 1) liegt — als nahtloser Übergang, ohne eigene Sektion.
@@ -40,7 +37,7 @@ export function useScrollProgress(enabled: boolean) {
     const setScroll = useStore.getState().setScrollProgress
     const setActive = useStore.getState().setActiveSection
     let raf = 0
-    let sectionAnchors: { id: string; p: number }[] = []
+    let sectionAnchors: { id: string; p0: number; p1: number }[] = []
     // v13-K1: Präsenz-Fenster pro Sektion — der DOM-Text lebt nur rund um
     // seinen Snap-Ruhepunkt (bzw. innerhalb des Inhalts bei Start-Snap-
     // Sektionen) und blendet auf den Reise-Etappen aus. Vorher standen im
@@ -51,29 +48,36 @@ export function useScrollProgress(enabled: boolean) {
       const doc = document.documentElement
       const max = doc.scrollHeight - window.innerHeight
       if (max <= 0) return
+      // Ruhepunkt (scrollY) je Sektion. Flyover: Anfang der Strecke.
+      let flyEnd = -1
       const secP = SECTION_IDS.map((id) => {
         const el = document.getElementById(id)
         if (!el) return 0
-        const rest = isStacked(id)
-          ? // Station erst im zweiten Bildschirm, wenn der Text raus ist
-            el.offsetTop + Math.max(0, el.offsetHeight - window.innerHeight)
-          : SNAP_START_IDS.has(id)
+        let rest: number
+        if (id === FLYOVER_ID && isFlyover(el)) {
+          rest = el.offsetTop
+          flyEnd = Math.min(1, Math.max(0, (el.offsetTop + Math.max(0, el.offsetHeight - window.innerHeight)) / max))
+        } else {
+          rest = SNAP_START_IDS.has(id)
             ? el.offsetTop
             : el.offsetTop + el.offsetHeight / 2 - window.innerHeight / 2
+        }
         return Math.min(1, Math.max(0, rest / max))
       })
       // Erste Station: schon bei Scroll 0 im Hero-Frame stehen
       secP[0] = Math.min(secP[0], 0.12)
       secP[secP.length - 1] = 1
-      // 7 Kamera-Anker: der synthetische Anstoß-Dive liegt zwischen
+      // 9 Kamera-Anker: der synthetische Anstoß-Dive liegt zwischen
       // Verein (secP[0]) und Mannschaft (secP[1]) — Übergang, keine Sektion.
-      // Danach je ein Anker pro echter Sektion (fanblock, musik, tabelle,
-      // kontakt).
+      // Die Mannschaft trägt Anfang UND Ende ihres Flyovers (ohne Flyover,
+      // z. B. Fallback: beide gleich → Station ohne Haltestrecke).
       const anstoss = secP[0] + (secP[1] - secP[0]) * ANSTOSS_FRAC
-      setAnchors([secP[0], anstoss, secP[1], secP[2], secP[3], secP[4], secP[5], secP[6]])
+      const mEnd = flyEnd >= 0 ? Math.max(secP[1], flyEnd) : secP[1]
+      setAnchors([secP[0], anstoss, secP[1], mEnd, secP[2], secP[3], secP[4], secP[5], secP[6]])
       // Nav-Highlight nur für echte Sektionen
       sectionAnchors = SECTION_IDS
-        .map((id, i) => ({ id, p: secP[i] }))
+        // Flyover: Highlight über die ganze Strecke (Intervall statt Punkt)
+        .map((id, i) => ({ id, p0: secP[i], p1: i === 1 ? mEnd : secP[i] }))
         .filter((a) => SECTIONS.some((s) => s.id === a.id))
       // v13-K1: Präsenz-Fenster messen (in scrollY-Pixeln, nicht normiert).
       presenceZones = SECTION_IDS.flatMap((id) => {
@@ -81,10 +85,10 @@ export function useScrollProgress(enabled: boolean) {
         if (!el) return []
         const vh = window.innerHeight
         const center = el.offsetTop + el.offsetHeight / 2 - vh / 2
-        // Gestapelte Sektionen: Text lebt am Sektionsanfang (Bildschirm 1) und
-        // ist eine halbe Viewport-Höhe später vollständig ausgeblendet — lange
-        // bevor der Kamera-Anker im zweiten Bildschirm erreicht ist.
-        if (isStacked(id)) return [{ el, w0: el.offsetTop, w1: el.offsetTop }]
+        // Flyover: der Sticky-Text lebt über die ganze Strecke.
+        if (id === FLYOVER_ID && isFlyover(el)) {
+          return [{ el, w0: el.offsetTop, w1: el.offsetTop + Math.max(0, el.offsetHeight - vh) }]
+        }
         const w0 = id === 'verein' ? 0 : SNAP_START_IDS.has(id) ? el.offsetTop : center
         const w1 = SNAP_START_IDS.has(id)
           ? el.offsetTop + Math.max(0, el.offsetHeight - vh)
@@ -117,7 +121,7 @@ export function useScrollProgress(enabled: boolean) {
         let best = 0
         let bestDist = Infinity
         sectionAnchors.forEach((a, i) => {
-          const d = Math.abs(a.p - p)
+          const d = p < a.p0 ? a.p0 - p : p > a.p1 ? p - a.p1 : 0
           if (d < bestDist) { bestDist = d; best = i }
         })
         setActive(best)
@@ -147,6 +151,13 @@ export function useScrollProgress(enabled: boolean) {
     return () => {
       clearTimeout(t)
       ro.disconnect()
+      // v14-D: Präsenz-Stile zurücksetzen. Schaltet die Seite nach dem Start
+      // in den Fallback (reduced-motion / kein WebGL), blieben die Sektionen
+      // sonst mit opacity:0 unsichtbar — auch die statischen Karten.
+      for (const z of presenceZones) {
+        z.el.style.opacity = ''
+        z.el.style.pointerEvents = ''
+      }
       window.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', onResize)
       if (raf) cancelAnimationFrame(raf)

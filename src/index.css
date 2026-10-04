@@ -101,28 +101,73 @@ body {
   .section--snap-start { padding-top: 4.5rem; }
 }
 
-/* v14-M2: Mannschaft im Hochformat NACHEINANDER statt übereinander.
-   Bildschirm 1 trägt den Text, Bildschirm 2 ist leer — dort steht die
-   Aufstellung frei. Ohne Scrim, ohne Transparenz: der Text ist an seinem
-   Ruhepunkt voll deckend und zum zweiten Ruhepunkt hin komplett ausgefahren
-   (Präsenz-Fenster in useScrollProgress.ts).
-   Der Ruhepunkt des zweiten Bildschirms ist ein eigenes Snap-Ziel, sonst
-   gäbe es dort nichts, woran der Scroll einrastet. */
-.section__formation-stop { display: none; }
-@media (max-width: 640px) {
-  .section--stack-mobile {
-    min-height: 200svh;
-    justify-content: flex-start;
-    padding-top: 5rem;
-    /* Ruhepunkt 1 = Sektionsanfang (Textbildschirm) statt Sektionsmitte —
-       die läge bei doppelter Höhe genau auf der Kante zwischen beidem. */
-    scroll-snap-align: start;
+/* v14-D „Startelf-Flyover": Die Mannschaft ist im 3D-Pfad eine lange
+   Strecke — der Text klebt (Sticky), die Kamera gleitet über die Elf.
+   Ruhepunkte: Anfang (Establishing-Shot, .section--snap-start) und Ende
+   (Totale, .team-endstop). Die Kamera-Anker misst useScrollProgress.ts
+   genau an diesen beiden Stellen. Ausflug/Ankunft bleiben 100vh lang. */
+.section.section--team-fly {
+  min-height: 0;
+  height: 250vh;
+  height: 250svh;
+  padding: 0;
+  display: block;
+  justify-content: initial;
+}
+.team-sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(1.5rem, 6vw, 6rem);
+  /* Die linke Textspalte; rechts lebt die 3D-Bühne */
+  max-width: min(100%, 720px);
+}
+.team-sticky > .section__scrim {
+  /* volle Bildbreite, auch wenn die Textspalte schmaler ist */
+  right: auto;
+  width: 100vw;
+  -webkit-mask-image: none;
+  mask-image: none;
+  /* Desktop: etwas dichter als die übrigen Stationen — im Flyover laufen
+     Karten unter der Textspalte hindurch. */
+  background: linear-gradient(90deg, rgba(8,7,10,0.84) 0%, rgba(8,7,10,0.62) 30%, rgba(8,7,10,0.18) 46%, rgba(8,7,10,0) 58%);
+}
+.team-endstop {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 100vh;
+  height: 100svh;
+  scroll-snap-align: start;
+  pointer-events: none;
+}
+/* Tablet hochkant: Text oben, Formation darunter frei im Bild */
+@media (min-width: 641px) and (orientation: portrait) {
+  .team-sticky { justify-content: flex-start; padding-top: 6rem; }
+  .team-sticky > .section__scrim {
+    background: linear-gradient(180deg, rgba(8,7,10,0.85) 0%, rgba(8,7,10,0.6) 34%, rgba(8,7,10,0.1) 56%, rgba(8,7,10,0) 70%);
   }
-  .section__formation-stop {
-    display: block;
-    height: 100svh;
-    scroll-snap-align: center;
-    pointer-events: none;
+}
+@media (max-width: 640px) {
+  .section.section--team-fly { height: 210svh; padding: 0; }
+  .team-sticky {
+    max-width: none;
+    justify-content: flex-start;
+    padding: 4.4rem 0 0;
+  }
+  .team-sticky > .section__kicker,
+  .team-sticky > div > .section__kicker { margin-bottom: 0.5rem; }
+  .team-sticky .section__title { font-size: 2.15rem; white-space: normal; padding: 0 1.25rem; }
+  .team-sticky .section__kicker { padding: 0 1.25rem; }
+  /* Fließtext weicht dem Deck — die Karten SIND hier der Inhalt */
+  .team-sticky .section__body { display: none; }
+  .team-sticky > .section__scrim {
+    background: linear-gradient(180deg, rgba(8,7,10,0.78) 0%, rgba(8,7,10,0.35) 26%, rgba(8,7,10,0) 48%, rgba(8,7,10,0.2) 100%);
   }
 }
 

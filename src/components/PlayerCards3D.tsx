@@ -1,303 +1,294 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
-// P1: Website-Daten aus der Fassade (Overlay/DB → sonst statischer Seed).
-import { PLAYERS, STAFF, whatsappUrl, whatsappReady, type Player, type Staff } from '../data/content'
+import { whatsappUrl, whatsappReady } from '../data/content'
 import { useStore } from '../store/useStore'
 import { cameraState } from '../camera/CameraPath'
-import { makePlayerCardTexture, makeStaffCardTexture } from '../three/playerCardTexture'
+import { TEAM_CARDS, TEAM_CENTER, teamState, focusCardAt, type TeamCard } from '../camera/teamLayout'
+import { makePlayerCardTexture, makeStaffCardTexture, CARD_TEX_ASPECT } from '../three/playerCardTexture'
 
 // ─────────────────────────────────────────────────────────────
-// v14-E1 „Karten-Wand": Die Karten stehen weiter in Formation auf
-// dem Platz (TW→ABW→MIT→ANG über x), aber die PRÄSENTATION ist im
-// Bildraum komponiert:
-//  · hintere Reihen SCHWEBEN gestaffelt höher → im Bild stapeln
-//    sich die Reihen ÜBEREINANDER statt sich zu verdecken
-//  · EINE gemeinsame Orientierung für alle Karten (Wand-Yaw zur
-//    Kamera + leichte Rücklage) statt 16 zufälliger Einzelwinkel
-//  · saubere Verdeckung: depthWrite an, sobald eine Karte deckend
-//    ist (Fade nur während des Reveals)
-//  · instanzierte Schatten-Blobs erden jede Karte auf dem Rasen
-// Klick → Tap-Launch → Flip-Detail-Modal (unverändert).
+// v14-D „Startelf-Flyover": Die Startelf steht in echter Formation
+// (LINEUP + FORMATION_SLOTS) als GROSSE, AUFRECHTE Karten in der
+// eigenen Hälfte, die Bank als Reihe kleinerer Karten an der Süd-
+// Seitenlinie (Coaching-Zone), der Trainerstab daneben.
+//  · Karten drehen sich leicht zur Kamera: gemeinsamer Team-Yaw
+//    (Blick vom Formations-Schwerpunkt zur Kamera) + begrenzter
+//    Einzel-Yaw je Karte (±0.45 rad), weich gedämpft
+//  · Fokus-Karte (teamLayout.focusCardAt) hebt sich leicht, wird
+//    etwas größer und bekommt Glanz; ein Licht-Teller am Boden folgt
+//  · Kontaktschatten (instanziert) erden jede Karte
+// Klick → Tap-Launch (Karte fliegt zur Kamera) → Flip-Detail-Modal.
+// Mobil (≤640px) gibt es KEIN 3D-Kartenfeld — dort trägt das DOM-Deck.
 // ─────────────────────────────────────────────────────────────
 
-const MANN_U = 2 / 7 // ≈0.286 (Kamera-Station Mannschaft)
-const CARD_W = 0.92
-const CARD_H = 1.29
-// v14-M1: Die Karten LIEGEN auf dem Rasen statt in der Luft zu stehen.
-// Vorher hob LINE_LIFT jede Reihe um bis zu 1.55 Einheiten an, damit sich die
-// Reihen im Schrägblick nicht verdeckten — von oben gesehen entstand daraus
-// eine schwebende Wand ohne Bezug zum Boden. Die Draufsicht (Station 2)
-// braucht keinen Lift mehr: Tiefe wird durch die Feldposition erzählt.
-const CARD_Y = 0.05 // knapp über der Grasnarbe (kein Z-Fighting mit der Pitch-Plane)
-
-// Formationstiefe entlang der Platzachse. Eigenes Tor im Westen (−x, bei
-// x=−5.25), Angriffsrichtung Osten. Alle Werte liegen INNERHALB des
-// Spielfelds (x ∈ ±5.25, z ∈ ±3.4) — dadurch der sichtbare Rasenbezug.
-// TW steht im eigenen Strafraum (der reicht bis x=−3.6).
-// Bandabstaende sind ungleich: die gestaffelten Reihen (ABW/MIT) brauchen
-// Zickzack-Versatz + Kartenhoehe Abstand, die flachen (TW/ANG) nur die halbe
-// Kartenhoehe. v14-M3 nutzt das aus, um unten Flaeche fuer den Stab zu sparen.
-const LINE_X: Record<Player['position'], number> = { TW: -3.7, ABW: -2.2, MIT: -0.24, ANG: 1.26 }
-const LINE_ORDER: Player['position'][] = ['TW', 'ABW', 'MIT', 'ANG']
+const MANN_U = 2 / 7
+const NARROW_QUERY = '(max-width: 640px)'
+const START_YAW_LIMIT = 0.45
+const BENCH_YAW_LIMIT = 0.9
+const LEAN = -0.07 // leichte Rücklage → Karte „schaut" zur erhöhten Kamera
 
 function smoothstep(a: number, b: number, x: number) {
   const t = THREE.MathUtils.clamp((x - a) / (b - a), 0, 1)
   return t * t * (3 - 2 * t)
 }
-
-interface Placed {
-  player?: Player
-  staff?: Staff
-  x: number
-  y: number
-  z: number
-  line: number
-  tex: THREE.CanvasTexture
-  scale: number
-  phase: number
+function wrapAngle(a: number) {
+  return Math.atan2(Math.sin(a), Math.cos(a))
 }
 
-function useLayout(): Placed[] {
-  return useMemo(() => {
-    const portrait = typeof window !== 'undefined' && window.innerHeight > window.innerWidth
-    // Portrait hat bei fov=46 nur ~22° horizontales Sichtfeld — eine über die
-    // volle Platzbreite gezogene Reihe stünde zur Hälfte außerhalb des Bildes.
-    // Deshalb rückt die Formation quer enger zusammen und die Karten werden
-    // kleiner, damit sie sich trotz geringerem Abstand nicht überlappen.
-    const zSpan = portrait ? 2.8 : 4.2 // Gesamtbreite der breitesten Reihe
-    const cardScale = portrait ? 0.56 : 0.74
-    // v14-M2: ZICKZACK. Bei 9–10 Spielern pro Reihe reicht die Platzbreite für
-    // eine gerade Linie nicht — die Karten würden sich überlappen. Jede zweite
-    // Karte rückt deshalb in der Tiefe vor bzw. zurück. Dadurch verdoppelt
-    // sich der Abstand zwischen Karten auf gleicher Höhe, ohne dass die Reihe
-    // als Reihe verlorengeht. Der Versatz muss größer sein als die Kartenhöhe,
-    // sonst überlappen die beiden Staffeln einander.
-    const stagger = portrait ? 0.8 : 1.0
-    const placed: Placed[] = []
-    LINE_ORDER.forEach((pos, line) => {
-      const inLine = PLAYERS.filter((p) => p.position === pos)
-      const n = inLine.length
-      // Deckel 1.2: bei nur zwei Torhütern sollen die beiden nebeneinander
-      // stehen und nicht über die ganze Breite auseinandergezogen werden.
-      const spacing = Math.min(1.2, n > 1 ? zSpan / (n - 1) : 0)
-      // v14-M3: Zickzack NUR, wo er gebraucht wird — wenn der Abstand in der
-      // Reihe schmaler ist als eine Karte breit. Torwart- (2) und Sturmreihe
-      // (3) stehen ohnehin weit genug auseinander; ohne Versatz werden sie
-      // flacher und geben unten die Fläche für den Trainerstab frei.
-      const needsStagger = n > 1 && spacing < CARD_W * cardScale
-      inLine.forEach((p, i) => {
-        placed.push({
-          player: p,
-          x: LINE_X[pos] + (needsStagger ? (i % 2 === 0 ? -stagger / 2 : stagger / 2) : 0),
-          y: CARD_Y,
-          z: (i - (n - 1) / 2) * spacing,
-          line,
-          scale: cardScale,
-          phase: (line * 2.1 + i) * 1.37,
-          tex: makePlayerCardTexture(p, !!p.isPlayerOfMonth).texture,
-        })
-      })
-    })
-    // v14-M3: Trainerstab an die UNTERE GRUNDLINIE statt an die Seitenlinie.
-    // Vorher stand er bei z=−3.45 auf der Nord-Seitenlinie und hing damit am
-    // rechten Bildrand halb außerhalb. Die Seitenlinien liegen in dieser
-    // Draufsicht schlicht außerhalb des Bildausschnitts — sie wären nur durch
-    // Rauszoomen hereinzuholen, und das hätte die Formation verkleinert.
-    // Jetzt hinter der Sturmreihe quer zur Blickrichtung, also am unteren
-    // Bildrand: dort ist Fläche frei, seit Torwart- und Sturmreihe ohne
-    // Zickzack auskommen. Der Stab steht damit vor dem Feld statt daneben —
-    // in der Draufsicht liest sich das wie die Bank hinter der Linie.
-    const staff = STAFF.filter((m) => !m.isPlaceholder)
-    const staffSpacing = portrait ? 0.72 : 1.25
-    staff.forEach((m, i) => {
-      placed.push({
-        staff: m,
-        x: portrait ? 1.95 : 2.15,
-        y: CARD_Y,
-        z: (i - (staff.length - 1) / 2) * staffSpacing,
-        line: 4,
-        scale: portrait ? 0.4 : 0.5,
-        phase: 9.1 + i * 1.7,
-        tex: makeStaffCardTexture(m).texture,
-      })
-    })
-    return placed
+function useNarrow(): boolean {
+  const [narrow, setNarrow] = useState(() => typeof window !== 'undefined' && window.matchMedia(NARROW_QUERY).matches)
+  useEffect(() => {
+    const mq = window.matchMedia(NARROW_QUERY)
+    const on = () => setNarrow(mq.matches)
+    mq.addEventListener('change', on)
+    return () => mq.removeEventListener('change', on)
   }, [])
+  return narrow
 }
 
-function makeShadowTexture(): THREE.CanvasTexture {
+function makeBlobTexture(inner: string, outer: string): THREE.CanvasTexture {
   const cv = document.createElement('canvas')
   cv.width = cv.height = 128
   const ctx = cv.getContext('2d')!
-  const g = ctx.createRadialGradient(64, 64, 6, 64, 64, 62)
-  g.addColorStop(0, 'rgba(0,0,0,0.55)')
-  g.addColorStop(0.6, 'rgba(0,0,0,0.22)')
+  const g = ctx.createRadialGradient(64, 64, 4, 64, 64, 62)
+  g.addColorStop(0, inner)
+  g.addColorStop(0.55, outer)
   g.addColorStop(1, 'rgba(0,0,0,0)')
   ctx.fillStyle = g
   ctx.fillRect(0, 0, 128, 128)
   return new THREE.CanvasTexture(cv)
 }
 
+interface Placed extends TeamCard {
+  tex: THREE.CanvasTexture
+  phase: number
+}
+
 const _launchTarget = new THREE.Vector3()
-const _launchBase = new THREE.Vector3()
 const _camDir = new THREE.Vector3()
 const _euler = new THREE.Euler(0, 0, 0, 'YXZ')
 const _dummy = new THREE.Object3D()
 
 export function PlayerCards3D() {
-  const layout = useLayout()
-  const { camera } = useThree()
+  const narrow = useNarrow()
+  if (narrow) return null
+  return <CardField />
+}
+
+function CardField() {
+  const { camera, gl } = useThree()
   const setSelected = useStore((s) => s.setSelectedPlayer)
+  const aniso = Math.min(8, gl.capabilities.getMaxAnisotropy())
+  const layout: Placed[] = useMemo(
+    () =>
+      TEAM_CARDS.map((c, i) => ({
+        ...c,
+        phase: i * 1.37,
+        tex: c.player
+          ? makePlayerCardTexture(c.player, c.kind === 'start' ? 640 : 384, aniso).texture
+          : makeStaffCardTexture(c.staff!, 384, aniso).texture,
+      })),
+    [aniso],
+  )
+  // Geometrie mit Ursprung an der Unterkante → Karte steht auf dem Rasen.
+  const geom = useMemo(() => {
+    const g = new THREE.PlaneGeometry(1, CARD_TEX_ASPECT)
+    g.translate(0, CARD_TEX_ASPECT / 2, 0)
+    return g
+  }, [])
   const groupRef = useRef<THREE.Group>(null)
   const meshes = useRef<(THREE.Mesh | null)[]>([])
   const shadowRef = useRef<THREE.InstancedMesh>(null)
-  const shadowTex = useMemo(() => makeShadowTexture(), [])
-  // v13-K4: Tap-Launch — die angetippte Karte fliegt der Kamera entgegen,
-  // DANN öffnet das Flip-Modal. Verkauft Kontinuität statt DOM-Bruch.
-  const launch = useRef<{ i: number; t0: number } | null>(null)
-  // v13-K4: gemeinsame Glint-Zeit für den Foil-Sweep aller Karten.
+  const ringRef = useRef<THREE.Mesh>(null)
+  const shadowTex = useMemo(() => makeBlobTexture('rgba(0,0,0,0.62)', 'rgba(0,0,0,0.25)'), [])
+  const ringTex = useMemo(() => makeBlobTexture('rgba(255,215,190,0.55)', 'rgba(233,29,41,0.22)'), [])
+  const yaw = useRef<number[]>(layout.map(() => 0))
+  const focusW = useRef<number[]>(layout.map(() => 0))
+  const uniforms = useRef(layout.map(() => ({ uFocus: { value: 0 } })))
   const glintT = useRef({ value: 0 })
-  // v14-M1: Der gemeinsame „Wand-Yaw" ist entfallen — liegende Karten richten
-  // sich nicht mehr zur Kamera aus, sondern nach der Platzachse (feste Euler
-  // im useFrame). Damit fällt auch die Berechnung des Wand-Zentrums weg.
+  const ring = useRef({ x: 0, z: 0, a: 0 })
+  // v13-K4: Tap-Launch — die angetippte Karte fliegt der Kamera entgegen,
+  // DANN öffnet das Flip-Modal.
+  const launch = useRef<{ i: number; t0: number } | null>(null)
 
-  // Foil-Glint in die Basic-Materialien injizieren (einmalig, dann recompile).
+  // Glanz + Fokus in die Basic-Materialien injizieren (einmalig).
   useEffect(() => {
-    meshes.current.forEach((m) => {
+    meshes.current.forEach((m, i) => {
       if (!m) return
       const mat = m.material as THREE.MeshBasicMaterial
       mat.onBeforeCompile = (shader) => {
         shader.uniforms.uGlintT = glintT.current
+        shader.uniforms.uFocus = uniforms.current[i].uFocus
         shader.fragmentShader = shader.fragmentShader
-          .replace('void main() {', 'uniform float uGlintT;\nvoid main() {')
+          .replace('void main() {', 'uniform float uGlintT;\nuniform float uFocus;\nvoid main() {')
           .replace(
             '#include <map_fragment>',
             `#include <map_fragment>
-#ifdef USE_UV
-  float glintBand = abs(fract(vUv.x * 0.9 - vUv.y * 0.38 + uGlintT * 0.05) - 0.5) - 0.055;
+#ifdef USE_MAP
+  float glintBand = abs(fract(vMapUv.x * 0.8 - vMapUv.y * 0.42 + uGlintT * (0.035 + uFocus * 0.05)) - 0.5) - 0.05;
   float glint = smoothstep(0.05, 0.0, glintBand);
-  diffuseColor.rgb += glint * vec3(1.0, 0.93, 0.72) * 0.10;
+  diffuseColor.rgb += glint * vec3(1.0, 0.92, 0.8) * (0.06 + uFocus * 0.2) * diffuseColor.a;
+  diffuseColor.rgb *= 1.0 + uFocus * 0.12;
 #endif`,
           )
       }
+      mat.customProgramCacheKey = () => 'sva-card-v14d'
       mat.needsUpdate = true
     })
   }, [layout])
 
-  useFrame((state) => {
-    const u = cameraState.u
-    const rp = smoothstep(0.20, MANN_U, u)
-    const fo = 1 - smoothstep(0.34, 0.42, u)
+  useFrame((state, delta) => {
     const g = groupRef.current
     if (!g) return
-    glintT.current.value = state.clock.elapsedTime
+    const u = cameraState.u
+    // Ankunft aus dem Anstoß: Reihen wachsen nacheinander aus dem Rasen
+    // (Sturm zuerst — die Kamera kommt von dort). Ausflug Richtung Fanblock:
+    // die Karten tauchen zurück in den Rasen, bevor die Kamera sie kreuzt.
+    const rp = smoothstep(0.19, MANN_U, u)
+    const fo = 1 - smoothstep(MANN_U + 0.006, MANN_U + 0.05, u)
+    if (rp <= 0 || fo <= 0) {
+      g.visible = false
+      return
+    }
+    g.visible = true
     const t = state.clock.elapsedTime
+    glintT.current.value = t
+    const camX = camera.position.x
+    const camZ = camera.position.z
+    const teamYaw = Math.atan2(camX - TEAM_CENTER.x, camZ - TEAM_CENTER.z)
+    const fi = teamState.w > 0.5 ? focusCardAt(teamState.s) : -1
     const shadows = shadowRef.current
-    let anyVisible = false
+    const k = 1 - Math.exp(-8 * delta)
+    const kf = 1 - Math.exp(-6 * delta)
+
     for (let i = 0; i < layout.length; i++) {
       const m = meshes.current[i]
       if (!m) continue
       const item = layout[i]
-      const lineReveal = THREE.MathUtils.clamp((rp - item.line * 0.1) / 0.3, 0, 1)
-      const alpha = lineReveal * fo
+      const lineReveal = THREE.MathUtils.clamp((rp - item.line * 0.12) / 0.4, 0, 1)
+      const ease = lineReveal * lineReveal * (3 - 2 * lineReveal)
+      const alpha = ease * fo
       const mat = m.material as THREE.MeshBasicMaterial
       mat.opacity = alpha
-      // Fade nur solange nötig — deckende Karten schreiben Tiefe → saubere
-      // Verdeckung ohne Geister-Durchschein.
-      mat.depthWrite = alpha > 0.55
-      const ease = lineReveal * lineReveal * (3 - 2 * lineReveal)
-      const s = (0.72 + 0.28 * ease) * item.scale
-      m.scale.set(CARD_W * s, CARD_H * s, 1)
-      m.visible = alpha > 0.02
-      if (m.visible) {
-        anyVisible = true
-        // v14-M1: Karten liegen flach auf dem Rasen. Kein Schweben mehr —
-        // beim Reveal sinken sie von oben auf ihre Position statt darunter
-        // hervorzusteigen (vorher −0.3, was sie jetzt unter die Grasnarbe
-        // gezogen hätte).
-        m.position.set(item.x, item.y + (1 - ease) * 0.45, item.z)
-        // Euler-Reihenfolge 'YXZ': X=−90° kippt die Kartenfläche nach oben,
-        // Y=+90° dreht die Kartenoberkante nach −x (im Bild oben, Richtung
-        // eigenes Tor) → die Karte liest sich aus der Draufsicht aufrecht.
-        // Z bleibt ein minimales Wackeln in der Ebene, damit die Formation
-        // nicht wie gestempelt wirkt.
-        _euler.set(-Math.PI / 2, Math.PI / 2, Math.sin(t * 0.4 + item.phase) * 0.012)
-        m.quaternion.setFromEuler(_euler)
+      mat.depthWrite = alpha > 0.9
+      m.visible = alpha > 0.01
+
+      // Yaw: Team-Yaw + begrenzter Einzel-Yaw (Startelf) bzw. Blick
+      // Richtung Platz mit Spielraum (Bank/Stab an der Südlinie).
+      const az = Math.atan2(camX - item.x, camZ - item.z)
+      const base = item.kind === 'start' ? teamYaw : Math.PI
+      const lim = item.kind === 'start' ? START_YAW_LIMIT : BENCH_YAW_LIMIT
+      const target = base + THREE.MathUtils.clamp(wrapAngle(az - base), -lim, lim)
+      if (!m.userData.yawInit) {
+        yaw.current[i] = target
+        m.userData.yawInit = true
       }
-      // v13-K4: Launch-Animation überlagert Reveal-Pose
+      yaw.current[i] += wrapAngle(target - yaw.current[i]) * k
+
+      // Fokus
+      focusW.current[i] += ((i === fi ? 1 : 0) - focusW.current[i]) * kf
+      const fw = focusW.current[i]
+      uniforms.current[i].uFocus.value = fw
+
+      const sc = item.w * (0.7 + 0.3 * ease) * (1 + 0.07 * fw)
+      const bob = Math.sin(t * 0.7 + item.phase) * 0.012
+      m.position.set(item.x, -(1 - ease) * 0.25 + 0.16 * fw + bob * fw, item.z)
+      m.scale.set(sc, sc, sc)
+      _euler.set(LEAN, yaw.current[i], 0)
+      m.quaternion.setFromEuler(_euler)
+      m.renderOrder = fw > 0.5 ? 2 : 1
+
+      // Tap-Launch überlagert die Pose
       const L = launch.current
       if (L && L.i === i) {
-        const k = Math.min(1, (performance.now() - L.t0) / 240)
-        const e2 = k * k * (3 - 2 * k)
+        const lk = Math.min(1, (performance.now() - L.t0) / 240)
+        const e2 = lk * lk * (3 - 2 * lk)
         camera.getWorldDirection(_camDir)
-        _launchTarget.copy(camera.position).addScaledVector(_camDir, 1.15)
-        _launchBase.set(item.x, item.y, item.z)
-        m.position.lerpVectors(_launchBase, _launchTarget, e2)
-        const ls = s * (1 + 0.55 * e2)
-        m.scale.set(CARD_W * ls, CARD_H * ls, 1)
-        m.rotation.y += e2 * 0.35
+        _launchTarget.copy(camera.position).addScaledVector(_camDir, 1.4)
+        _launchTarget.y -= 0.5
+        m.position.lerp(_launchTarget, e2)
+        m.quaternion.slerp(camera.quaternion, e2)
         m.visible = true
-        anyVisible = true
-        if (k >= 1) launch.current = null
+        if (lk >= 1) launch.current = null
       }
-      // Schatten-Blob: erdet die liegende Karte. v14-M1: etwas GRÖSSER als die
-      // Karte selbst (spread > 1), sonst verdeckt die Karte ihren eigenen
-      // Schatten vollständig — der weiche Rand schaut jetzt ringsum hervor und
-      // bindet die Karte sichtbar an den Rasen.
+
       if (shadows) {
-        const sh = ease * fo * item.scale
+        const sh = ease * fo
         _dummy.position.set(item.x, 0.012, item.z)
-        _dummy.rotation.set(-Math.PI / 2, 0, 0)
-        const spread = 1.3
-        // Nach der −90°-Kippung entspricht die lokale x-Achse der Welt-x
-        // (Kartenhöhe) und die lokale y-Achse der Welt-z (Kartenbreite).
-        _dummy.scale.set(CARD_H * sh * spread, CARD_W * sh * spread, 1)
+        _dummy.rotation.set(-Math.PI / 2, 0, -yaw.current[i])
+        _dummy.scale.set(item.w * 1.35 * sh, item.w * 0.5 * sh, 1)
         _dummy.updateMatrix()
         shadows.setMatrixAt(i, _dummy.matrix)
       }
     }
     if (shadows) shadows.instanceMatrix.needsUpdate = true
-    g.visible = anyVisible
+
+    // Licht-Teller unter der Fokus-Karte
+    const r = ringRef.current
+    if (r) {
+      const R = ring.current
+      if (fi >= 0) {
+        const c = layout[fi]
+        if (R.a < 0.02) { R.x = c.x; R.z = c.z }
+        R.x += (c.x - R.x) * kf
+        R.z += (c.z - R.z) * kf
+      }
+      R.a += ((fi >= 0 ? 1 : 0) * fo - R.a) * kf
+      r.position.set(R.x, 0.016, R.z)
+      ;(r.material as THREE.MeshBasicMaterial).opacity = R.a * 0.9
+      r.visible = R.a > 0.01
+    }
   })
 
   return (
-    <group ref={groupRef}>
+    <group ref={groupRef} visible={false}>
       {layout.map((item, i) => (
         <mesh
           key={item.player?.id ?? item.staff?.id ?? i}
           ref={(el) => (meshes.current[i] = el)}
-          position={[item.x, item.y, item.z]}
+          geometry={geom}
+          position={[item.x, 0, item.z]}
           visible={false}
           onClick={(e) => {
             e.stopPropagation()
             if (item.player) {
-              // v13-K4: erst der 240ms-Flug zur Kamera, dann das Modal
               launch.current = { i, t0: performance.now() }
               const p = item.player
               setTimeout(() => setSelected(p), 230)
-            }
-            // v13-E4: mailto-Fallback darf nicht in einen Blank-Tab
-            // (window.open(mailto,'_blank') öffnet in Chromium einen leeren Tab)
-            else if (item.staff?.contactMessage) {
+            } else if (item.staff?.contactMessage) {
+              // v13-E4: mailto-Fallback darf nicht in einen Blank-Tab
               const url = whatsappUrl(item.staff.contactMessage)
               if (whatsappReady) window.open(url, '_blank')
               else window.location.href = url
             }
           }}
-          onPointerOver={() => { if (item.player || item.staff?.contactMessage) document.body.style.cursor = 'pointer' }}
+          onPointerOver={() => {
+            if (item.player || item.staff?.contactMessage) document.body.style.cursor = 'pointer'
+          }}
           onPointerOut={() => (document.body.style.cursor = '')}
         >
-          <planeGeometry args={[1, 1]} />
-          {/* fog=false → Karten bleiben auch in der Tiefe scharf lesbar (kein Absaufen). */}
-          <meshBasicMaterial map={item.tex} transparent opacity={0} side={THREE.DoubleSide} depthWrite={false} toneMapped={false} fog={false} />
+          {/* fog=false → Karten bleiben auch in der Tiefe scharf lesbar. */}
+          <meshBasicMaterial
+            map={item.tex}
+            transparent
+            alphaTest={0.04}
+            opacity={0}
+            side={THREE.DoubleSide}
+            depthWrite={false}
+            toneMapped={false}
+            fog={false}
+          />
         </mesh>
       ))}
-      {/* Erdung: EIN instanzierter Schatten-Blob-Satz für alle Karten */}
-      <instancedMesh ref={shadowRef} args={[undefined, undefined, layout.length]} frustumCulled={false} renderOrder={1}>
+      <instancedMesh ref={shadowRef} args={[undefined, undefined, layout.length]} frustumCulled={false} renderOrder={0}>
         <planeGeometry args={[1, 1]} />
         <meshBasicMaterial map={shadowTex} transparent depthWrite={false} toneMapped={false} />
       </instancedMesh>
+      <mesh ref={ringRef} rotation-x={-Math.PI / 2} scale={[1.9, 1.9, 1]} visible={false}>
+        <planeGeometry args={[1, 1]} />
+        <meshBasicMaterial map={ringTex} transparent depthWrite={false} toneMapped={false} blending={THREE.AdditiveBlending} opacity={0} />
+      </mesh>
     </group>
   )
 }
