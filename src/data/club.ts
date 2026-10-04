@@ -42,7 +42,7 @@ export const SECTIONS: Section[] = [
     kicker: '1. Herren',
     title: 'Unsere\nMannschaft',
     // v13-F2: verdichtet — 2–3 Zeilen pro Station, Luft statt Textwand.
-    body: 'Eine Truppe, die montags humpelt und sonntags fliegt — jeder als Sammelkarte mit echten Zahlen. Tipp eine Karte an und teil deinen Spieler in der Story.',
+    body: 'Eine Truppe, die montags humpelt und sonntags fliegt — jeder als eigene Sammelkarte. Tipp eine Karte an und teil deinen Spieler in der Story.',
   },
   {
     id: 'fanblock',

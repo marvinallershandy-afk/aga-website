@@ -71,26 +71,35 @@ export function Sections() {
           zwischen Verein und Mannschaft gesetzt (useScrollProgress.ts). */}
       <div id="anstoss-gap" aria-hidden="true" style={{ height: '80vh', pointerEvents: 'none' }} />
 
-      {/* 1 · MANNSCHAFT — im 3D-Pfad LEBEN die Karten auf dem Platz (PlayerCards3D).
-          Die Sektion wird dann klick-durchlässig (pointer-events:none), damit Taps
-          die 3D-Karten unter der Sektion erreichen; Text bleibt sichtbar & lesbar. */}
-      {/* v14-M2: Im Hochformat lag der Textblock mitten auf Abwehr- und
-          Mittelfeldreihe. Statt Scrim/Transparenz jetzt NACHEINANDER: die
-          Sektion ist mobil zwei Bildschirme hoch — oben der Text, darunter ein
-          leerer Ruhepunkt, an dem die Formation frei im Bild steht. Der
-          Kamera-Anker und das Präsenz-Fenster des Textes ziehen mit
-          (useScrollProgress.ts). Am Desktop unverändert. */}
-      <section
-        id={mannschaft.id}
-        className={`section section--left section--stack-mobile${fallback ? '' : ' section--passthrough'}`}
-      >
-        <div className="section__scrim" />
-        <Header kicker={mannschaft.kicker} title={mannschaft.title} body={mannschaft.body} />
-        <PlayerCardGrid />
-        {/* Zweiter Bildschirm: reiner Ruhepunkt für die freie Aufstellung.
-            Nur im Hochformat sichtbar (CSS), sonst display:none. */}
-        <div className="section__formation-stop" aria-hidden="true" />
-      </section>
+      {/* 1 · MANNSCHAFT — v14-D „Startelf-Flyover". Im 3D-Pfad ist die
+          Sektion eine lange Flyover-Strecke (Desktop 250vh, mobil 210svh):
+          der Text klebt (Sticky), die Kamera gleitet über die Elf, der DOM-
+          Text zeigt synchron die Fokus-Karte. Klick-durchlässig
+          (passthrough), damit Taps die 3D-Karten erreichen. Kamera-Anker
+          (Anfang/Ende der Strecke) misst useScrollProgress.ts.
+          Mobil trägt ein horizontales Swipe-Deck die Karten.
+          Fallback (kein WebGL / reduced-motion): normale Sektion mit
+          statischem Karten-Raster. */}
+      {fallback ? (
+        <section id={mannschaft.id} className="section section--left">
+          <div className="section__scrim" />
+          <Header kicker={mannschaft.kicker} title={mannschaft.title} body={mannschaft.body} />
+          <PlayerCardGrid />
+        </section>
+      ) : (
+        <section
+          id={mannschaft.id}
+          className="section section--left section--snap-start section--team-fly section--passthrough"
+        >
+          <div className="team-sticky">
+            <div className="section__scrim" />
+            <Header kicker={mannschaft.kicker} title={mannschaft.title} body={mannschaft.body} />
+            <PlayerCardGrid />
+          </div>
+          {/* Zweiter Ruhepunkt: die Totale am Ende der Strecke */}
+          <div className="team-endstop" aria-hidden="true" />
+        </section>
+      )}
 
       {/* 2 · FANBLOCK (v9-E2, zurückgeholt) — die Südkurve, emotionaler
           Beat. Kamera-Station 3 schwenkt in die SO-Ecke auf die Fans +

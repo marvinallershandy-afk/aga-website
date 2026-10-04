@@ -1336,3 +1336,160 @@
 .band-nav__claim { font-family: var(--font-display); font-weight: 400; text-transform: uppercase; font-size: clamp(1rem, 2.4vw, 1.4rem); color: #fff; line-height: 1; }
 .band-nav__count { font-size: 0.66rem; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.55); }
 .band-nav__dots { display: flex; gap: 0.4rem; justify-content: center; margin-top: 0.35rem; }
+
+/* ═══ v14-D: Mannschafts-Flyover — Fokus-Text (Desktop/Tablet) ═══════ */
+.team-focus {
+  margin-top: clamp(1.2rem, 2.6vh, 2rem);
+  min-height: 9.5rem;
+  max-width: 34rem;
+  display: flex;
+  flex-direction: column;
+  gap: .7rem;
+}
+.team-focus__meta {
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .26em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.team-focus__intro {
+  max-width: 34ch;
+  font-size: .95rem;
+  line-height: 1.5;
+  color: rgba(255,255,255,.74);
+  animation: team-fade .5s cubic-bezier(.22,1,.36,1) both;
+}
+.team-focus__card {
+  appearance: none;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  animation: team-fade .5s cubic-bezier(.22,1,.36,1) both;
+}
+.team-focus__num {
+  min-width: 2.2ch;
+  font-family: var(--font-display);
+  font-size: clamp(3.4rem, 5.4vw, 4.8rem);
+  line-height: .9;
+  text-align: right;
+  background: linear-gradient(180deg, #fff0b8 0%, #E8C15A 55%, #b8912f 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 4px 14px rgba(0,0,0,.6));
+}
+.team-focus__txt { display: flex; flex-direction: column; gap: .35rem; min-width: 0; }
+.team-focus__pos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .5rem;
+  font-size: .7rem;
+  font-weight: 800;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.8);
+}
+.team-focus__pos em {
+  font-style: normal;
+  font-size: .58rem;
+  letter-spacing: .16em;
+  padding: .25em .6em;
+  border-radius: 999px;
+  border: 1px solid rgba(232,193,90,.6);
+  color: var(--gold);
+}
+.team-focus__name {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(2rem, 3.4vw, 3rem);
+  line-height: .95;
+  text-transform: uppercase;
+  letter-spacing: .01em;
+  text-shadow: 0 4px 30px rgba(0,0,0,.7);
+}
+.team-focus__name small {
+  display: block;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: .72rem;
+  letter-spacing: .3em;
+  color: rgba(255,255,255,.62);
+  margin-bottom: .25rem;
+}
+.team-focus__outro { display: flex; flex-direction: column; gap: .6rem; animation: team-fade .5s cubic-bezier(.22,1,.36,1) both; }
+.team-focus__outro p { font-size: .9rem; line-height: 1.5; color: rgba(255,255,255,.82); max-width: 40ch; }
+.team-focus__outro span {
+  display: block;
+  font-size: .62rem;
+  font-weight: 800;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  color: var(--red);
+  margin-bottom: .15rem;
+}
+.team-focus__dots { display: flex; gap: 5px; margin-top: .2rem; }
+.team-focus__dots i {
+  width: 14px; height: 3px; border-radius: 2px;
+  background: rgba(255,255,255,.22);
+  transition: background .3s ease, width .3s ease;
+}
+.team-focus__dots i[data-done] { background: rgba(232,193,90,.55); }
+.team-focus__dots i[data-on] { width: 26px; background: var(--gold); }
+@keyframes team-fade {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .team-focus__card, .team-focus__intro, .team-focus__outro { animation: none; }
+}
+.team-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .8rem 1rem; margin-top: 1.2rem; }
+.team-actions .card-grid__all, .team-actions .training-pill { margin-top: 0; align-self: center; }
+
+/* ═══ v14-D: Mobil — horizontales Swipe-Deck ═════════════════════════ */
+.team-deck { margin-top: .9rem; pointer-events: auto; }
+.team-deck__track {
+  --deck-w: min(72vw, calc((100svh - 290px) / 1.5), 340px);
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  /* Kopf-Freiraum für den herausragenden Freisteller */
+  padding: calc(var(--deck-w) * .09) calc((100vw - var(--deck-w)) / 2) .6rem;
+  touch-action: pan-x pan-y;
+}
+.team-deck__track::-webkit-scrollbar { display: none; }
+.team-deck__item { flex: 0 0 var(--deck-w); scroll-snap-align: center; scroll-snap-stop: always; }
+.team-deck__counter {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: .35rem;
+  margin-top: .35rem;
+  font-size: .78rem;
+  color: rgba(255,255,255,.6);
+  font-variant-numeric: tabular-nums;
+}
+.team-deck__counter span {
+  font-size: .62rem;
+  font-weight: 800;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-right: .3rem;
+}
+.team-deck__counter b { font-family: var(--font-display); font-weight: 400; font-size: 1.15rem; color: #fff; }
+.team-deck__actions { display: flex; justify-content: center; margin-top: .5rem; }
+.team-deck__actions .card-grid__all { margin-top: 0; align-self: center; padding: .7rem 1.1rem; }

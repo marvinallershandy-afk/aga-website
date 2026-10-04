@@ -2,8 +2,9 @@ import { useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useStore } from '../store/useStore'
-import { sampleFlight, cameraState, STATION_COUNT } from './CameraPath'
-import { scrollToU } from './anchors'
+import { sampleFlightG, cameraState, STATION_COUNT } from './CameraPath'
+import { scrollToG, gToU, gToTeam } from './anchors'
+import { teamState, focusLookAt } from './teamLayout'
 import { PITCH } from '../utils/constants'
 import {
   PARTY_HOP,
@@ -30,12 +31,18 @@ const devCam = (() => {
 const SP_BOARD_W = PITCH.width * 0.86
 const SP_PANELS = 6
 const SP_U = 6 / (STATION_COUNT - 1) // Scroll-Param der Sponsoren-Station
-// v14-M1: Mannschafts-Station (Draufsicht auf die Aufstellung).
-const MANN_U = 2 / (STATION_COUNT - 1) // ≈0.286
-// Querversatz der Kamera in Landscape, damit die Formation rechts neben der
-// DOM-Textspalte steht. Bildschirm-rechts entspricht bei dieser Draufsicht
-// −z, ein positiver Versatz schiebt die Karten also nach rechts.
-const MANN_SIDE_SHIFT_Z = 2.4
+// v14-D: Mannschafts-Flyover. Präsenz der Station in Stations-Einheiten g
+// (anchors.ts): Ankunft g 1.55→2, Flyover g 2→3, Ausflug g 3→3.45.
+function teamPresence(g: number): number {
+  if (g >= 2 && g <= 3) return 1
+  const d = g < 2 ? 2 - g : g - 3
+  return 1 - smoothstep(0.08, 0.45, d)
+}
+// Landscape: Die linke Bildseite gehört der Sticky-Textspalte. Statt die
+// Kamera quer zu versetzen, verschiebt eine View-Offset-Projektion das Bild
+// nach rechts — die Komposition der Keyframes bleibt erhalten, der Fokus-
+// punkt rückt nur aus der Bildmitte in die rechte Bühnenhälfte.
+const TEAM_VIEW_SHIFT = 0.15 // Anteil der Bildbreite
 function sponsorBoardX(focus: number): number {
   const panelW = SP_BOARD_W / SP_PANELS
   const boardIndex = 1 + THREE.MathUtils.clamp(focus, 0, 3) // Slot-Tafeln = Board 1..4
@@ -48,7 +55,9 @@ function smoothstep(a: number, b: number, x: number) {
 
 export function CameraRig() {
   const camera = useThree((s) => s.camera)
-  const smoothed = useRef(0)
+  const smoothed = useRef(0) // g (Stations-Einheiten inkl. Flyover)
+  const viewShift = useRef(0)
+  const focusPt = useRef({ x: 0, y: 0, z: 0 })
   const smoothedParty = useRef(0)
   const smoothedSponsorX = useRef(sponsorBoardX(0))
   const pos = useRef(new THREE.Vector3())
@@ -64,11 +73,17 @@ export function CameraRig() {
       cameraState.u = 1 // Flutlicht voll an für Vergleichsbilder
       return
     }
-    const target = scrollToU(useStore.getState().scrollProgress)
+    const target = scrollToG(useStore.getState().scrollProgress)
     // zeitbasierte Dämpfung (frameratenunabhängig) — läuft auch im
     // Partyraum weiter, damit die Fahrt beim Austritt schon stimmt.
+    // v14-D: gedämpft wird g (Stations-Einheiten inkl. Flyover-Strecke);
+    // u bleibt für alle anderen Leser exakt das alte 8-Stationen-Raster.
     smoothed.current = THREE.MathUtils.damp(smoothed.current, target, 4, delta)
-    cameraState.u = smoothed.current // für Flutlicht/Ball/Staub (Anstoß)
+    const g = smoothed.current
+    const uNow = gToU(g)
+    cameraState.u = uNow // für Flutlicht/Ball/Staub (Anstoß)
+    teamState.s = gToTeam(g)
+    teamState.w = teamPresence(g)
 
     // Partyraum-DURCHFAHRT (v5): gedämpfter Fortschritt — die Kamera
     // fährt kontinuierlich zur Tür, der Welt-Hop passiert genau beim
@@ -87,10 +102,11 @@ export function CameraRig() {
       persp.updateProjectionMatrix()
     }
     if (pp > 0.005) {
+      if (persp.view && persp.view.enabled) persp.clearViewOffset()
       const aspect = state.size.width / state.size.height
       if (pp < PARTY_HOP) {
         // Anflug außen: weich aus der laufenden Fahrt in die Tür-Kurve
-        sampleFlight(smoothed.current, flightPos.current, flightLook.current)
+        sampleFlightG(g, flightPos.current, flightLook.current)
         samplePartyApproach(pp, pos.current, look.current)
         const w = THREE.MathUtils.clamp(pp / 0.1, 0, 1) // Einblendung
         pos.current.lerpVectors(flightPos.current, pos.current, w)
@@ -125,49 +141,59 @@ export function CameraRig() {
       return
     }
 
-    sampleFlight(smoothed.current, pos.current, look.current)
+    sampleFlightG(g, pos.current, look.current)
 
     const aspect = state.size.width / state.size.height
 
-    // v14-M1: Nähe zur Mannschafts-Station (Draufsicht auf die Aufstellung).
-    // 1 an der Station, 0 außerhalb des Fensters.
-    const wMann = smoothstep(0.10, 0.03, Math.abs(smoothed.current - MANN_U))
-
-    // Landscape: die linke Bildhälfte gehört der DOM-Textspalte
-    // („UNSERE MANNSCHAFT" + Fließtext). Statt die Karten vom Rasenzentrum
-    // wegzuschieben (dann lägen die Außenreihen im Auslauf), versetzt sich
-    // die KAMERA quer — die Formation bleibt mittig auf dem Feld und rückt
-    // im Bild nach rechts.
-    if (wMann > 0.001 && aspect >= 1) {
-      pos.current.z += MANN_SIDE_SHIFT_Z * wMann
-      look.current.z += MANN_SIDE_SHIFT_Z * wMann
+    // v14-D: Mannschafts-Station — Präsenz 1 auf der Flyover-Strecke.
+    const wMann = teamState.w
+    if (wMann > 0.001) {
+      // Der Blick ruht nacheinander auf jeder Fokus-Karte (Plateaus) und
+      // gleitet dann weiter — die Keyframe-Blickkurve liefert die grobe
+      // Richtung, die Fokus-Karte zieht den Blick zu sich.
+      const wf = focusLookAt(teamState.s, focusPt.current) * 0.5 * wMann
+      if (wf > 0.001) {
+        look.current.x += (focusPt.current.x - look.current.x) * wf
+        look.current.y += (focusPt.current.y - look.current.y) * wf
+        look.current.z += (focusPt.current.z - look.current.z) * wf
+      }
     }
 
     // Portrait-Anpassung (v4-Audit): die Stationen sind für 16:9
     // komponiert — auf schmalen Viewports zieht die Kamera vom
     // Blickpunkt zurück, damit die Komposition erhalten bleibt.
     if (aspect < 1) {
-      // v14-M1: An der Mannschafts-Station wird dieses Zurückziehen fast
-      // vollständig zurückgenommen. Sonst schrumpft genau die Formation, die
-      // dort gelesen werden soll — auf 390x844 wäre sie sonst winzig. Die
-      // Breitenanpassung übernimmt stattdessen das Layout (zSpan in
-      // PlayerCards3D), die Formation rückt quer zusammen statt wegzurücken.
+      // v14-D: Im Flyover nur ein milder Rückzug — die Karten sollen groß
+      // bleiben (Tablet hochkant). Am Telefon trägt ohnehin das DOM-Deck.
       const kFull = Math.min(1.75, 1 + (1 - aspect) * 1.1)
-      const k = THREE.MathUtils.lerp(kFull, 1.04, wMann)
+      const k = THREE.MathUtils.lerp(kFull, 1 + (1 - aspect) * 0.45, wMann)
       pos.current.sub(look.current).multiplyScalar(k).add(look.current)
-      pos.current.y += (1 - aspect) * 0.5 * (1 - wMann * 0.85) // leicht höher für mehr Kontext
+      pos.current.y += (1 - aspect) * 0.5 * (1 - wMann * 0.6) // leicht höher für mehr Kontext
+    }
+
+    // v14-D: Bildverschiebung für die Textspalte (nur Landscape, weich ein/aus)
+    const persp2 = camera as THREE.PerspectiveCamera
+    const wantShift = aspect >= 1 ? TEAM_VIEW_SHIFT * wMann : 0
+    viewShift.current = wantShift
+    if (wantShift > 0.0005) {
+      const w = state.size.width
+      const h = state.size.height
+      persp2.setViewOffset(w, h, -wantShift * w, 0, w, h)
+    } else if (persp2.view && persp2.view.enabled) {
+      persp2.clearViewOffset()
     }
 
     // dezenter Idle-Sway für Lebendigkeit
     const t = state.clock.elapsedTime
-    const sway = 1 - smoothed.current * 0.6 // oben mehr, unten ruhiger
+    // v14-D: im Flyover ruhiger (die Fahrt selbst ist die Bewegung)
+    const sway = (1 - uNow * 0.6) * (1 - 0.65 * wMann) // oben mehr, unten ruhiger
     pos.current.x += Math.sin(t * 0.18) * 0.14 * sway
     pos.current.y += Math.sin(t * 0.23 + 1.3) * 0.08 * sway
 
     // v12-E6: Sponsoren-Karussell — nahe der Sponsoren-Station fährt die Kamera
     // seitlich an der Bande entlang auf die fokussierte Tafel (Pfeile im DOM).
     // Der Fokus-x wird gedämpft → sanftes „von Bande zu Bande fahren".
-    const wSp = smoothstep(0.11, 0.03, Math.abs(smoothed.current - SP_U)) // 1 an der Station, 0 weg
+    const wSp = smoothstep(0.11, 0.03, Math.abs(uNow - SP_U)) // 1 an der Station, 0 weg
     if (wSp > 0.001) {
       const targetBx = sponsorBoardX(useStore.getState().sponsorFocus)
       smoothedSponsorX.current = THREE.MathUtils.damp(smoothedSponsorX.current, targetBx, 3.5, delta)
