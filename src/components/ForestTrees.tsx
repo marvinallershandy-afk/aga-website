@@ -6,6 +6,11 @@ import { buildForest, FOREST_TIERS, type TreePlacement } from '../three/forestLa
 import { makeLeafTexture, makeTreeGeometry, TREE_SHAPES } from '../three/treeGeometry'
 import { forestUniforms, getForestMaterial, getLeafCardMaterial } from '../three/forestMaterial'
 import { floodLevels } from '../three/floodState'
+import { cameraState } from '../camera/CameraPath'
+
+// wie MapGround (FADE_START/FADE_SPAN), etwas früher fertig
+const MAP_FADE_START = 0.84
+const MAP_FADE_SPAN = 0.1
 
 // ─────────────────────────────────────────────────────────────
 // v14-A „Waldsportplatz": Der Platz liegt in einer Lichtung aus
@@ -162,6 +167,7 @@ export function ForestTrees() {
   // Laufzeit-Zustand über den Szenengraph (Refs), nicht über Closures
   const groupRef = useRef<THREE.Group>(null)
   const last = useRef(new THREE.Vector3(1e9, 0, 0))
+  const lastMap = useRef(1)
   useFrame((state) => {
     const group = groupRef.current
     if (!group) return
@@ -174,8 +180,13 @@ export function ForestTrees() {
     if (import.meta.env.DEV) {
       ;(window as unknown as Record<string, unknown>).__forest = { group, gl: state.gl, scene: state.scene, camera: state.camera }
     }
-    if (cam.distanceToSquared(last.current) < 1e-6) return
+    // Finale (Maps-Rauszoom, MapGround): die Welt wird zur Karte — der Wald
+    // zieht sich in den Boden zurück, während die Karte (mit ihren eigenen
+    // Waldflächen + „Waldsportplatz"-Label) einblendet.
+    const mapFade = 1 - THREE.MathUtils.clamp((cameraState.u - MAP_FADE_START) / MAP_FADE_SPAN, 0, 1)
+    if (cam.distanceToSquared(last.current) < 1e-6 && Math.abs(mapFade - lastMap.current) < 1e-4) return
     last.current.copy(cam)
+    lastMap.current = mapFade
     for (const obj of group.children) {
       const b = obj.userData.forest as { list: TreePlacement[]; fade: THREE.InstancedBufferAttribute } | undefined
       if (!b) continue
@@ -184,7 +195,7 @@ export function ForestTrees() {
       let dirty = false
       for (let i = 0; i < b.list.length; i++) {
         const t = b.list[i]
-        const v = visibleFactor(t, cam.x, cam.y, cam.z, shape.width * t.w * t.h * 1.15)
+        const v = mapFade * visibleFactor(t, cam.x, cam.y, cam.z, shape.width * t.w * t.h * 1.15)
         if (Math.abs(arr[i] - v) > 1e-3) {
           arr[i] = v
           dirty = true
