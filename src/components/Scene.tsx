@@ -21,6 +21,7 @@ import { Football } from './Football'
 import { KickoffDirector } from './KickoffDirector'
 import { ConeDust } from './ConeDust'
 import { GroundMist } from './GroundMist'
+import { GrassFuzz } from './GrassFuzz'
 import { LIGHTING } from '../theme/lighting'
 import { NightEnvironment } from '../theme/NightEnvironment'
 import { StaticShadows } from '../theme/StaticShadows'
@@ -72,6 +73,8 @@ export function Scene() {
       <Ground />
       <MapGround />
       <Pitch />
+      {/* v14-A: Halm-Saum an Rasenkante, Reling, Zäunen, Waldrand */}
+      <GrassFuzz />
       <Goals />
       <CornerFlags />
       <Barrier />

@@ -14,6 +14,17 @@ Alle 3D-Fremdassets sind **CC0** (Public Domain, keine Namensnennung nötig — 
 - **Warum dieses Pack:** EIN konsistenter Low-Poly-Stil; Kiefern passen zum echten
   Waldsportplatz (Platz liegt am Waldrand).
 
+- **Status v14-A:** Die drei Kiefern-GLBs werden **nicht mehr geladen**. Der Waldsportplatz ist
+  real von alten Buchen/Eichen umschlossen — `ForestTrees.tsx` erzeugt den Laubwald jetzt
+  prozedural (siehe unten). Die Dateien liegen noch in `public/models/` und können gelöscht werden.
+
+### v14-A: Laubwald, Rasen, Waldboden — vollständig prozedural, KEIN Fremd-Asset
+- Bäume (`src/three/treeGeometry.ts`, `forestMaterial.ts`, `forestLayout.ts`): Kronen aus
+  verrauschten Icosphären + alpha-getestete Laub-Karten; Laub-Büschel-Textur zur Laufzeit
+  auf einem Canvas gezeichnet.
+- Rasen-/Waldboden-Texturen (`Pitch.tsx`, `Ground.tsx`, `src/three/grassDetail.ts`):
+  zur Laufzeit gebacken (Value-Noise/fbm, Canvas-Striche). Keine Downloads, keine Lizenzfragen.
+
 ### Football (bestehend)
 - `public/models/football.glb` — projekteigen/vorbestehend.
 

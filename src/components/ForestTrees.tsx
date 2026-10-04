@@ -1,194 +1,215 @@
-import { useMemo } from 'react'
-import { useGLTF } from '@react-three/drei'
+import { useEffect, useMemo, useRef } from 'react'
+import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
+import { getWorldTier } from '../three/qualityTier'
+import { buildForest, FOREST_TIERS, type TreePlacement } from '../three/forestLayout'
+import { makeLeafTexture, makeTreeGeometry, TREE_SHAPES } from '../three/treeGeometry'
+import { forestUniforms, getForestMaterial, getLeafCardMaterial } from '../three/forestMaterial'
+import { floodLevels } from '../three/floodState'
+import { cameraState } from '../camera/CameraPath'
+
+// wie MapGround (FADE_START/FADE_SPAN), etwas früher fertig
+const MAP_FADE_START = 0.84
+const MAP_FADE_SPAN = 0.1
 
 // ─────────────────────────────────────────────────────────────
-// Waldrand aus echten CC0-Bäumen (v7-E1): Kenney „Nature Kit" (CC0),
-// Kiefern in EINEM Pack-Stil. Als InstancedMesh je Variante (1 Draw-
-// Call/Variante statt Wald aus Einzel-Meshes) — Perf-Leitplanke.
-// Steht als dimensionaler Saum VOR der bestehenden Silhouetten-
-// Treeline (Tiefe). Nacht-Tönung: Blätter → Waldgrün, Rinde → Braun,
-// damit die teal-grünen Pack-Farben ins SVA-Abendbild passen.
-// Kompass: +x Ost, +z Süd, Nord (−z) offen zum Dorf.
-// Lizenz: ASSETS_CREDITS.md
+// v14-A „Waldsportplatz": Der Platz liegt in einer Lichtung aus
+// alten Buchen und Eichen (20–30 m, doppelt so hoch wie das
+// Vereinsheim) — W, S, O dicht, Nord offen zum Dorf. Ersetzt die
+// kleinen Kenney-Kiefern (v7-E1) durch einen prozeduralen Laubwald:
+//  · 3 Baum-Varianten + 1 Unterholz-Variante = 4 InstancedMeshes
+//    (= 4 Draw-Calls, so viele wie vorher Kiefern + AO-Scheiben)
+//  · Waldrand dicht + warm vom Flutlicht angestrahlt, dahinter der
+//    günstigere Bestand, der ins Dunkel/den Fog abfällt
+//  · Wind im Vertex-Shader, Flutlicht-Streulicht im Fragment-Shader
+//    (src/three/forestMaterial.ts), Lage aus src/three/forestLayout.ts
+//  · Bäume, die aus der aktuellen Kamera den Platz verdecken würden
+//    (Hero-Drohne über dem Südwald), ziehen sich auf ihren Fuß zurück.
+// Mobile/schwache GPUs (cinemaTier 'reduced'): halber Wald, alles in
+// der günstigen Unterteilung, kein Unterholz.
 // ─────────────────────────────────────────────────────────────
 
-const MODELS = [
-  '/models/tree_pineDefaultA.glb',
-  '/models/tree_pineDefaultB.glb',
-  '/models/tree_pineRoundA.glb',
-]
+// Sichtziel für die Verdeckungs-Prüfung: Reling-Rechteck inkl. Fanblock
+const OCC = { x0: -5.95, x1: 5.95, z0: -4.1, z1: 4.95 }
+const OCC_TARGET_Y = 0.35 // Banner/Fans/Tafeln, nicht nur der Rasen
 
-const LEAF = new THREE.Color('#425c30') // Waldgrün (liest bei Nacht, ohne Tag-Optik)
-const BARK = new THREE.Color('#46331f') // dunkle Rinde, warm
+// Laub-Karten je Blob (Buche, Eiche, Bestand, Unterholz) — nur Desktop
+const CARDS_PER_BLOB = [7, 7, 4, 3]
 
-function mulberry32(seed: number) {
-  return () => {
-    seed |= 0
-    seed = (seed + 0x6d2b79f5) | 0
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed)
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+interface Bucket {
+  meshes: THREE.InstancedMesh[]
+  list: TreePlacement[]
+  fade: THREE.InstancedBufferAttribute
+}
+
+const FADE_BAND = 0.6
+
+/** Ein Sichtstrahl (xz) Kamera → Kronenpunkt: verdeckt ein Baum der Höhe h
+ *  dort etwas vom Platz? → 1 = sichtbar lassen, 0 = wegnehmen */
+function rayFade(px: number, pz: number, h: number, cx: number, cy: number, cz: number): number {
+  const dx = px - cx
+  const dz = pz - cz
+  const dist = Math.hypot(dx, dz)
+  if (dist < 1e-4) return 1
+  const ux = dx / dist
+  const uz = dz / dist
+  let tmin = -Infinity
+  let tmax = Infinity
+  // Slab-Test (2D) gegen das Platz-Rechteck
+  const slab = (o: number, u: number, a: number, b: number) => {
+    if (Math.abs(u) < 1e-6) return o >= a && o <= b
+    let t1 = (a - o) / u
+    let t2 = (b - o) / u
+    if (t1 > t2) [t1, t2] = [t2, t1]
+    tmin = Math.max(tmin, t1)
+    tmax = Math.min(tmax, t2)
+    return true
   }
+  if (!slab(cx, ux, OCC.x0, OCC.x1)) return 1
+  if (!slab(cz, uz, OCC.z0, OCC.z1)) return 1
+  if (tmax < Math.max(tmin, 0)) return 1 // Strahl verfehlt den Platz
+  if (tmin < 0) return 1 // Kamera steht auf der Lichtung → Wald ist Kulisse
+  if (tmax < dist) return 1 // Baum steht hinter dem Platz
+  // Kronenpunkt vor dem Platz (oder überhängend): Sichtlinie zum
+  // nächsten Platzrand, Höhe am Baum
+  const ySight = tmin > dist ? cy - (cy - OCC_TARGET_Y) * (dist / tmin) : OCC_TARGET_Y
+  return Math.min(1, Math.max(0, (ySight + FADE_BAND - h) / FADE_BAND))
 }
 
-// GLB (2 Primitives: Blätter + Rinde) → EINE Geometrie mit gebackenen
-// Nacht-Vertex-Colors, damit die Variante als 1 InstancedMesh läuft.
-function bakeTree(scene: THREE.Object3D): THREE.BufferGeometry {
-  scene.updateMatrixWorld(true)
-  const geos: THREE.BufferGeometry[] = []
-  scene.traverse((o) => {
-    const m = o as THREE.Mesh
-    if (!m.isMesh) return
-    const g = m.geometry.clone()
-    g.applyMatrix4(m.matrixWorld)
-    const mat = m.material as THREE.MeshStandardMaterial
-    const name = (mat.name || '').toLowerCase()
-    const isLeaf = name.includes('leaf') || name.includes('leafs')
-    const base = isLeaf ? LEAF : name.includes('wood') || name.includes('bark') ? BARK : null
-    // Fallback: helle Ausgangsfarbe = Blätter, dunkle = Rinde
-    const src = base ?? (mat.color && mat.color.g > mat.color.r ? LEAF : BARK)
-    const n = g.attributes.position.count
-    const colors = new Float32Array(n * 3)
-    for (let i = 0; i < n; i++) {
-      colors[i * 3] = src.r
-      colors[i * 3 + 1] = src.g
-      colors[i * 3 + 2] = src.b
-    }
-    g.setAttribute('color', new THREE.BufferAttribute(colors, 3))
-    for (const k of Object.keys(g.attributes)) {
-      if (!['position', 'normal', 'color'].includes(k)) g.deleteAttribute(k)
-    }
-    geos.push(g)
-  })
-  return mergeGeometries(geos, false)
-}
-
-interface Placement {
-  variant: number
-  x: number
-  z: number
-  rot: number
-  scale: number
-}
-
-function usePlacements(): Placement[] {
-  return useMemo(() => {
-    const rng = mulberry32(4711)
-    const out: Placement[] = []
-    const RINGS = [
-      { r: 11.4, count: 82, sMin: 1.3, sMax: 2.0 }, // naher Saum, dicht (~2–3 m)
-      { r: 15.5, count: 46, sMin: 1.8, sMax: 2.8 }, // hintere, höhere Reihe
-    ]
-    for (const ring of RINGS) {
-      for (let i = 0; i < ring.count; i++) {
-        const a = (i / ring.count) * Math.PI * 2 + (rng() - 0.5) * 0.06
-        const z0 = Math.sin(a)
-        // Nord-Lücke (−z) offen zum Dorf: dort keine Bäume
-        if (z0 < -0.34) continue
-        const r = ring.r + (rng() - 0.5) * 1.7
-        out.push({
-          variant: Math.floor(rng() * MODELS.length),
-          x: Math.cos(a) * r,
-          z: z0 * r,
-          rot: rng() * Math.PI * 2,
-          scale: ring.sMin + rng() * (ring.sMax - ring.sMin),
-        })
-      }
-    }
-    return out
-  }, [])
+/** Krone als drei Strahlen (Mitte + beide Flanken quer zur Blickrichtung) */
+function visibleFactor(p: TreePlacement, cx: number, cy: number, cz: number, crownR: number): number {
+  const dx = p.x - cx
+  const dz = p.z - cz
+  const dist = Math.hypot(dx, dz) || 1
+  const nx = -dz / dist
+  const nz = dx / dist
+  return Math.min(
+    rayFade(p.x, p.z, p.h, cx, cy, cz),
+    rayFade(p.x + nx * crownR, p.z + nz * crownR, p.h, cx, cy, cz),
+    rayFade(p.x - nx * crownR, p.z - nz * crownR, p.h, cx, cy, cz),
+  )
 }
 
 export function ForestTrees() {
-  const gltfs = useGLTF(MODELS)
-  const placements = usePlacements()
+  const tierName = getWorldTier()
+  const tier = FOREST_TIERS[tierName]
+  const reduced = tierName === 'reduced'
 
-  const geometries = useMemo(
-    () => gltfs.map((g) => bakeTree(g.scene.clone(true))),
-    [gltfs],
-  )
-
-  // Instanz-Matrizen je Variante bündeln
-  const perVariant = useMemo(() => {
-    const buckets: THREE.Matrix4[][] = MODELS.map(() => [])
+  const cardMaterial = useMemo(() => (reduced ? null : getLeafCardMaterial(makeLeafTexture())), [reduced])
+  const buckets = useMemo<Bucket[]>(() => {
+    const { trees, bushes } = buildForest(tier)
+    const material = getForestMaterial()
+    const lists: TreePlacement[][] = [[], [], [], []]
+    for (const t of trees) lists[t.variant].push(t)
+    lists[3] = bushes
+    const out: Bucket[] = []
     const m = new THREE.Matrix4()
     const q = new THREE.Quaternion()
     const s = new THREE.Vector3()
     const p = new THREE.Vector3()
     const up = new THREE.Vector3(0, 1, 0)
-    for (const pl of placements) {
-      q.setFromAxisAngle(up, pl.rot)
-      s.setScalar(pl.scale)
-      p.set(pl.x, -0.05, pl.z)
-      buckets[pl.variant].push(m.clone().compose(p, q, s))
-    }
-    return buckets
-  }, [placements])
-
-  // Kontaktschatten (v7-E2): flache AO-Scheibe unter jedem Baum, damit
-  // der Saum am Boden klebt statt zu schweben — EIN InstancedMesh, ~0 Kosten.
-  const aoTex = useMemo(() => {
-    const cv = document.createElement('canvas')
-    cv.width = cv.height = 64
-    const ctx = cv.getContext('2d')!
-    const g = ctx.createRadialGradient(32, 32, 2, 32, 32, 32)
-    g.addColorStop(0, 'rgba(0,0,0,0.7)')
-    g.addColorStop(0.6, 'rgba(0,0,0,0.3)')
-    g.addColorStop(1, 'rgba(0,0,0,0)')
-    ctx.fillStyle = g
-    ctx.fillRect(0, 0, 64, 64)
-    return new THREE.CanvasTexture(cv)
-  }, [])
-  const aoMatrices = useMemo(() => {
-    const m = new THREE.Matrix4()
-    const q = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -Math.PI / 2)
-    const s = new THREE.Vector3()
-    const p = new THREE.Vector3()
-    return placements.map((pl) => {
-      const rad = 0.7 + pl.scale * 0.7
-      s.set(rad, rad, rad)
-      p.set(pl.x, 0.02, pl.z)
-      return m.clone().compose(p, q, s)
+    const col = new THREE.Color()
+    lists.forEach((list, vi) => {
+      if (!list.length) return
+      const shape = TREE_SHAPES[vi]
+      const { core, cards } = makeTreeGeometry(
+        reduced ? { ...shape, detail: 1, blobs: Math.max(5, shape.blobs - 3), limbs: Math.min(shape.limbs, 2) } : shape,
+        reduced ? 0 : CARDS_PER_BLOB[vi],
+      )
+      const fade = new THREE.InstancedBufferAttribute(new Float32Array(list.length).fill(1), 1)
+      fade.setUsage(THREE.DynamicDrawUsage)
+      const shadeArr = new Float32Array(list.length)
+      list.forEach((t, i) => {
+        // Waldinneres schluckt Licht: Rand 1.0 → tief drin ~0.4
+        shadeArr[i] = 0.4 + 0.6 * Math.exp(-Math.max(0, t.depth - 0.4) * 0.42)
+      })
+      const shade = new THREE.InstancedBufferAttribute(shadeArr, 1)
+      const meshes: THREE.InstancedMesh[] = []
+      for (const [geo, mat] of [
+        [core, material],
+        [cards, cardMaterial],
+      ] as const) {
+        if (!geo || !mat) continue
+        geo.setAttribute('aFade', fade) // dieselben Instanz-Puffer für Kern + Karten
+        geo.setAttribute('aShade', shade)
+        const mesh = new THREE.InstancedMesh(geo, mat, list.length)
+        list.forEach((t, i) => {
+          q.setFromAxisAngle(up, t.rot)
+          s.set(t.h * t.w, t.h, t.h * t.w)
+          p.set(t.x, -0.03, t.z)
+          mesh.setMatrixAt(i, m.compose(p, q, s))
+          mesh.setColorAt(i, col.setRGB(t.tint[0], t.tint[1], t.tint[2]))
+        })
+        mesh.instanceMatrix.needsUpdate = true
+        if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
+        mesh.computeBoundingSphere()
+        // Laufzeit-Daten für die Verdeckungs-Prüfung (nur am Kern-Mesh)
+        if (!meshes.length) mesh.userData.forest = { list, fade }
+        meshes.push(mesh)
+      }
+      out.push({ meshes, list, fade })
     })
-  }, [placements])
+    return out
+  }, [tier, reduced, cardMaterial])
+
+  useEffect(
+    () => () => {
+      buckets.forEach((b) =>
+        b.meshes.forEach((mesh) => {
+          mesh.geometry.dispose()
+          mesh.dispose()
+        }),
+      )
+    },
+    [buckets],
+  )
+
+  // Laufzeit-Zustand über den Szenengraph (Refs), nicht über Closures
+  const groupRef = useRef<THREE.Group>(null)
+  const last = useRef(new THREE.Vector3(1e9, 0, 0))
+  const lastMap = useRef(1)
+  useFrame((state) => {
+    const group = groupRef.current
+    if (!group) return
+    const u = forestUniforms
+    u.uTime.value = state.clock.elapsedTime
+    u.uFlood.value.set(floodLevels[0], floodLevels[1], floodLevels[2], floodLevels[3])
+
+    const cam = state.camera.position
+    // Dev-Hook für die Perf-Messung (shots-atmo/bench*.mjs), im Build entfernt
+    if (import.meta.env.DEV) {
+      ;(window as unknown as Record<string, unknown>).__forest = { group, gl: state.gl, scene: state.scene, camera: state.camera }
+    }
+    // Finale (Maps-Rauszoom, MapGround): die Welt wird zur Karte — der Wald
+    // zieht sich in den Boden zurück, während die Karte (mit ihren eigenen
+    // Waldflächen + „Waldsportplatz"-Label) einblendet.
+    const mapFade = 1 - THREE.MathUtils.clamp((cameraState.u - MAP_FADE_START) / MAP_FADE_SPAN, 0, 1)
+    if (cam.distanceToSquared(last.current) < 1e-6 && Math.abs(mapFade - lastMap.current) < 1e-4) return
+    last.current.copy(cam)
+    lastMap.current = mapFade
+    for (const obj of group.children) {
+      const b = obj.userData.forest as { list: TreePlacement[]; fade: THREE.InstancedBufferAttribute } | undefined
+      if (!b) continue
+      const arr = b.fade.array as Float32Array
+      const shape = TREE_SHAPES[b.list[0].variant] ?? TREE_SHAPES[0]
+      let dirty = false
+      for (let i = 0; i < b.list.length; i++) {
+        const t = b.list[i]
+        const v = mapFade * visibleFactor(t, cam.x, cam.y, cam.z, shape.width * t.w * t.h * 1.15)
+        if (Math.abs(arr[i] - v) > 1e-3) {
+          arr[i] = v
+          dirty = true
+        }
+      }
+      if (dirty) b.fade.needsUpdate = true
+    }
+  })
 
   return (
-    <group>
-      {/* Kontaktschatten-Scheiben (erst, damit Bäume darüber liegen) */}
-      <instancedMesh
-        args={[undefined, undefined, aoMatrices.length]}
-        renderOrder={1}
-        ref={(inst) => {
-          if (!inst) return
-          aoMatrices.forEach((mm, i) => inst.setMatrixAt(i, mm))
-          inst.instanceMatrix.needsUpdate = true
-        }}
-      >
-        <planeGeometry args={[1, 1]} />
-        <meshBasicMaterial map={aoTex} transparent depthWrite={false} opacity={0.5} />
-      </instancedMesh>
-
-      {geometries.map((geo, vi) => {
-        const mats = perVariant[vi]
-        if (!mats.length) return null
-        return (
-          <instancedMesh
-            key={vi}
-            args={[geo, undefined, mats.length]}
-            ref={(inst) => {
-              if (!inst) return
-              mats.forEach((mm, i) => inst.setMatrixAt(i, mm))
-              inst.instanceMatrix.needsUpdate = true
-            }}
-          >
-            <meshStandardMaterial vertexColors roughness={0.92} metalness={0} />
-          </instancedMesh>
-        )
-      })}
+    <group ref={groupRef}>
+      {buckets.map((b, i) => (
+        b.meshes.map((mesh, j) => <primitive key={i + '-' + j} object={mesh} />)
+      ))}
     </group>
   )
 }
-
-MODELS.forEach((m) => useGLTF.preload(m))
