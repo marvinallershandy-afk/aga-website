@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { CONTACT } from '../data/club'
+import { CONTACT } from '../data/content'
 
 // ─────────────────────────────────────────────────────────────
 // „Platz finden" (v6-E4) — Nordstern-Feature: Fans/Spieler/Sponsoren

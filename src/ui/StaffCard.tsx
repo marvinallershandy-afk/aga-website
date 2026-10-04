@@ -1,6 +1,6 @@
 import type { Staff } from '../data/players'
 import { ROLE_LABEL } from '../data/players'
-import { CLUB, whatsappUrl, whatsappReady } from '../data/club'
+import { CLUB, whatsappUrl, whatsappReady } from '../data/content'
 import { WaIcon, MailIcon } from './Icons'
 
 // v10-E2: Trainerstab-Karte — bewusst KEINE FIFA-Spielerkarte (kein Rating,
