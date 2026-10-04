@@ -75,7 +75,9 @@ export interface ForestTier {
 }
 
 export const FOREST_TIERS: Record<'full' | 'reduced', ForestTier> = {
-  full: { maxDepth: 6.2, spacingEdge: 0.98, spacingDeep: 1.5, farFrom: 2.4, bushes: 90 },
+  // v14-E6: Tiefe 6.2→5.0 + Abstand 1.5→1.8 — die hinteren Reihen sind im Bild kaum sichtbar,
+  // kosteten aber die gelegentlichen 33-ms-Frames an den Wald-Stationen.
+  full: { maxDepth: 5.0, spacingEdge: 0.98, spacingDeep: 1.8, farFrom: 2.4, bushes: 90 },
   reduced: { maxDepth: 3.4, spacingEdge: 1.12, spacingDeep: 1.6, farFrom: 0, bushes: 0 },
 }
 

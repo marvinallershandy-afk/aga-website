@@ -106,6 +106,16 @@ export function CinemaEffects() {
     pass.clearPass.enabled = false
     pass.ignoreBackground = true
     pass.skipShadowMapUpdate = true
+    // renderer.autoClear steht beim Rendern wieder auf true (R3F/Szene setzt
+    // es zurück) → three würde vor dem Raum Farbe+Tiefe löschen und die
+    // Außenwelt schwarz machen. Für diese Pass explizit aus, danach zurück.
+    const render = pass.render.bind(pass)
+    pass.render = (renderer, inputBuffer, outputBuffer, deltaTime, stencilTest) => {
+      const auto = renderer.autoClear
+      renderer.autoClear = false
+      render(renderer, inputBuffer, outputBuffer, deltaTime, stencilTest)
+      renderer.autoClear = auto
+    }
     composer.addPass(pass, 1)
     return () => {
       composer.removePass(pass)
