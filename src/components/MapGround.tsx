@@ -53,9 +53,8 @@ function drawMapOverlays(ctx: CanvasRenderingContext2D, c: number) {
   ctx.shadowBlur = 8
   ctx.font = '800 42px Archivo, system-ui, sans-serif'
   ctx.fillText('AGATHENBURG', c, 104)
-  ctx.fillStyle = 'rgba(238,240,242,0.92)'
-  ctx.font = '800 30px Archivo, system-ui, sans-serif'
-  ctx.fillText('Waldsportplatz', c, c + ph / 2 + 42)
+  // v14: „Waldsportplatz" unter dem Platz entfernt — lag im Finale riesig
+  // über Impressum/Footer und doppelt zum Pin-Label (LocationMarker).
   ctx.save()
   ctx.translate(250, 820); ctx.rotate(-0.55)
   ctx.fillStyle = 'rgba(190,195,200,0.7)'

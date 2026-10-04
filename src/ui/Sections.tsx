@@ -1,3 +1,4 @@
+import { NextMatchPill } from './NextMatchPill'
 import { motion } from 'framer-motion'
 import { useStore } from '../store/useStore'
 // P1: Sektionstexte/Website-Daten aus der Fassade (Overlay → sonst Seed).
@@ -52,6 +53,7 @@ export function Sections() {
         >
           {CLUB.claim}
         </motion.p>
+        <NextMatchPill />
         {/* Mannschaftsfoto-Slot (v8-E5): rendert nur mit echtem Bild —
             kein leerer Rahmen. Marvin liefert Stimmungsbild → TEAM_PHOTO. */}
         {TEAM_PHOTO && (
