@@ -134,7 +134,8 @@ body {
   mask-image: none;
   /* Desktop: etwas dichter als die übrigen Stationen — im Flyover laufen
      Karten unter der Textspalte hindurch. */
-  background: linear-gradient(90deg, rgba(8,7,10,0.84) 0%, rgba(8,7,10,0.62) 30%, rgba(8,7,10,0.18) 46%, rgba(8,7,10,0) 58%);
+  /* v14-E7: Textspalte dichter — im Flyover liefen helle Karten direkt unter der Headline durch. */
+  background: linear-gradient(90deg, rgba(8,7,10,0.9) 0%, rgba(8,7,10,0.78) 30%, rgba(8,7,10,0.34) 44%, rgba(8,7,10,0) 58%);
 }
 .team-endstop {
   position: absolute;
