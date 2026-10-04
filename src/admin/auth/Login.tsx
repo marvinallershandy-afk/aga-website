@@ -46,7 +46,7 @@ export function Login() {
           <CardTitle className="text-2xl">
             SVA <span className="text-primary">Admin</span>
           </CardTitle>
-          <CardDescription>Social-Media-Redaktion · nur für das Team</CardDescription>
+          <CardDescription>Vereins-Pflege der Website · nur für das Team</CardDescription>
         </CardHeader>
         <CardContent>
           {sent ? (
