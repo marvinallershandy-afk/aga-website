@@ -1,4 +1,5 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 // P1: Website-Daten aus der Fassade (Overlay/DB → sonst statischer Seed).
 import { PLAYERS, STAFF, POSITION_LABEL, type Position, type Player } from '../data/content'
@@ -8,31 +9,81 @@ import { StaffCard } from './StaffCard'
 import { shareStory } from './storyShare'
 
 // ─────────────────────────────────────────────────────────────
-// v12-E2: „Alle Spieler anzeigen" — Vollbild-Galerie über den ganzen
-// Kader, gruppiert nach Tor / Abwehr / Mittelfeld / Sturm + Trainerstab.
-// Karten sind dieselben HoloCards (Klick → Detail-Modal wie auf dem Platz).
-// Übersichtlicher Zugang, ergänzt die 3D-Aufstellung (additiv).
+// „Alle Spieler anzeigen" — Vollbild-Overlay über den ganzen Kader,
+// gruppiert nach Tor / Abwehr / Mittelfeld / Angriff + Trainerstab.
+// v14-D: per React-Portal direkt an <body>. Vorher lag die Galerie IN
+// der Mannschafts-Sektion und erbte deren `pointer-events: none`
+// (.section--passthrough) — Klicks und Scrollen gingen ins 3D-Canvas.
+// Dazu: Esc/Schließen, Fokus-Falle, Body-Scroll-Lock (gezählt, damit das
+// Detail-Modal obendrauf die Sperre nicht vorzeitig löst).
 // ─────────────────────────────────────────────────────────────
 
+let locks = 0
+let savedOverflow = ''
+/** Gezählte Scroll-Sperre fürs Dokument (Galerie + Modal teilen sie). */
+export function lockScroll() {
+  if (locks++ === 0) {
+    savedOverflow = document.documentElement.style.overflow
+    document.documentElement.style.overflow = 'hidden'
+    document.body.style.overflow = 'hidden'
+  }
+}
+export function unlockScroll() {
+  locks = Math.max(0, locks - 1)
+  if (locks === 0) {
+    document.documentElement.style.overflow = savedOverflow
+    document.body.style.overflow = ''
+  }
+}
+
 const GROUPS: Position[] = ['TW', 'ABW', 'MIT', 'ANG']
+const FOCUSABLE = 'button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])'
 
 export function PlayerGallery({ open, onClose }: { open: boolean; onClose: () => void }) {
   const setSelected = useStore((s) => s.setSelectedPlayer)
+  const panelRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!open) return
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
+    const prev = document.activeElement as HTMLElement | null
+    lockScroll()
+    const onKey = (e: KeyboardEvent) => {
+      // Liegt das Detail-Modal obendrauf, gehört Esc/Tab dem Modal.
+      if (useStore.getState().selectedPlayer) return
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        onClose()
+        return
+      }
+      if (e.key === 'Tab' && panelRef.current) {
+        const els = [...panelRef.current.querySelectorAll<HTMLElement>(FOCUSABLE)].filter((el) => el.offsetParent !== null)
+        if (els.length === 0) return
+        const first = els[0]
+        const last = els[els.length - 1]
+        const active = document.activeElement
+        if (e.shiftKey && (active === first || !panelRef.current.contains(active))) {
+          e.preventDefault()
+          last.focus()
+        } else if (!e.shiftKey && (active === last || !panelRef.current.contains(active))) {
+          e.preventDefault()
+          first.focus()
+        }
+      }
+    }
     window.addEventListener('keydown', onKey)
-    document.body.style.overflow = 'hidden'
+    const t = setTimeout(() => panelRef.current?.querySelector<HTMLElement>('.pgal__close')?.focus(), 30)
     return () => {
+      clearTimeout(t)
       window.removeEventListener('keydown', onKey)
-      document.body.style.overflow = ''
+      unlockScroll()
+      prev?.focus?.()
     }
   }, [open, onClose])
 
   const byPos = (pos: Position): Player[] => PLAYERS.filter((p) => p.position === pos)
 
-  return (
+  if (typeof document === 'undefined') return null
+  return createPortal(
     <AnimatePresence>
       {open && (
         <motion.div
@@ -43,7 +94,11 @@ export function PlayerGallery({ open, onClose }: { open: boolean; onClose: () =>
           onClick={onClose}
         >
           <motion.div
+            ref={panelRef}
             className="pgal__panel"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="pgal-title"
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 20, opacity: 0 }}
@@ -52,8 +107,8 @@ export function PlayerGallery({ open, onClose }: { open: boolean; onClose: () =>
           >
             <header className="pgal__head">
               <div>
-                <span className="pgal__kicker">Der ganze Kader</span>
-                <h3 className="pgal__title">Alle Spieler</h3>
+                <span className="pgal__kicker">Der ganze Kader · 1. Herren</span>
+                <h3 className="pgal__title" id="pgal-title">Alle Spieler</h3>
               </div>
               <button className="pgal__close" onClick={onClose} aria-label="Schließen">×</button>
             </header>
@@ -63,14 +118,15 @@ export function PlayerGallery({ open, onClose }: { open: boolean; onClose: () =>
                 const group = byPos(pos)
                 if (group.length === 0) return null
                 return (
-                  <section key={pos} className="pgal__group">
-                    <span className="pgal__grouplabel">{POSITION_LABEL[pos]}</span>
+                  <section key={pos} className="pgal__group" aria-label={POSITION_LABEL[pos]}>
+                    <span className="pgal__grouplabel">
+                      {POSITION_LABEL[pos]} <em>{group.length}</em>
+                    </span>
                     <div className="pgal__grid">
                       {group.map((p) => (
-                        // v13-K4: jede Karte trägt ihren Story-Share direkt —
-                        // der IG-Loop (Karte sehen → teilen → Reichweite) in einem Tap.
+                        // v13-K4: jede Karte trägt ihren Story-Share direkt.
                         <div key={p.id} className="pgal__cardwrap">
-                          <HoloCard player={p} onClick={(pl) => { setSelected(pl) }} />
+                          <HoloCard player={p} onClick={(pl) => setSelected(pl)} />
                           <button className="pgal__share" onClick={() => void shareStory(p)}>
                             Story teilen ↗
                           </button>
@@ -81,8 +137,10 @@ export function PlayerGallery({ open, onClose }: { open: boolean; onClose: () =>
                 )
               })}
 
-              <section className="pgal__group">
-                <span className="pgal__grouplabel">Trainerstab</span>
+              <section className="pgal__group" aria-label="Trainerstab">
+                <span className="pgal__grouplabel">
+                  Trainerstab <em>{STAFF.length}</em>
+                </span>
                 <div className="pgal__grid pgal__grid--staff">
                   {STAFF.map((m) => (
                     <StaffCard key={m.id} member={m} />
@@ -93,6 +151,7 @@ export function PlayerGallery({ open, onClose }: { open: boolean; onClose: () =>
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   )
 }
