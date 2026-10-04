@@ -336,7 +336,7 @@ export type DeliveryRow = Tables<'sm_webhook_deliveries'>
 export type DeliveryInput = Partial<Omit<TablesInsert<'sm_webhook_deliveries'>, 'id' | 'gesendet_at'>>
 
 // Postgres meldet eine fehlende Tabelle mit SQLSTATE 42P01, PostgREST (neuere
-// Versionen) mit PGRST205 „Could not find the table … in the schema cache".
+// Versionen) mit PGRST205 „Could not find the table … in the schema cache“.
 // Solange eine Migration noch nicht angewandt ist, degradiert die UI darauf
 // sauber (Hinweis/Fallback) statt hart zu crashen.
 export function isMissingTable(err: unknown): boolean {
@@ -477,7 +477,7 @@ export async function fireWebhook(
 }
 
 // P4-Durchstich: fertige Grafik am zugehörigen Redaktionsplan-Beitrag
-// verankern (drive_asset_url) und den Beitrag auf „fertig" setzen.
+// verankern (drive_asset_url) und den Beitrag auf „fertig“ setzen.
 export async function linkContentAsset(contentId: string, assetUrl: string): Promise<ContentRow> {
   const { data, error } = await supabase
     .from('sm_content')

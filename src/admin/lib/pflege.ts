@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────
-// v14-C: Datenzugriff „Vereins-Pflege" (Website-Daten).
+// v14-C: Datenzugriff „Vereins-Pflege“ (Website-Daten).
 //
 // Kader/Spiele/Sponsoren/Tabelle nutzen weiter db.ts (sm_*-Tabellen, additiv
 // erweitert). Neu hier: Aufstellung, Verein & Links, Veröffentlichen und der
@@ -132,7 +132,7 @@ export async function uploadPublicImage(blob: Blob, folder: 'spieler' | 'sponsor
   return supabase.storage.from(PUBLIC_BUCKET).getPublicUrl(path).data.publicUrl
 }
 
-/** Aus einem Namen eine stabile, lesbare öffentliche ID: „Jörg Müller" → „p-joerg-mueller". */
+/** Aus einem Namen eine stabile, lesbare öffentliche ID: „Jörg Müller“ → „p-joerg-mueller“. */
 export function slugFromName(name: string, prefix: 'p' | 's'): string {
   const base = name
     .toLowerCase()
@@ -157,7 +157,7 @@ export const POSITION_CODES = [
 ] as const
 export type PositionCode = (typeof POSITION_CODES)[number]['value']
 
-/** Alt-Werte („Torwart", „Sturm" …) auf die Website-Codes abbilden — wie web_snapshot(). */
+/** Alt-Werte („Torwart“, „Sturm“ …) auf die Website-Codes abbilden — wie web_snapshot(). */
 export function positionCode(v: string | null | undefined): PositionCode {
   switch ((v ?? '').toUpperCase()) {
     case 'TW':
@@ -196,7 +196,7 @@ export function parseFussballDeTeamId(input: string): string | null {
 }
 export const fussballDeUrl = (teamId: string) => `https://www.fussball.de/mannschaft/-/team-id/${teamId}#!/`
 
-/** WhatsApp: „+49 151 / 123 45 678" oder „0151 12345678" → „4915112345678" (oder null). */
+/** WhatsApp: „+49 151 / 123 45 678“ oder „0151 12345678“ → „4915112345678“ (oder null). */
 export function normalizeWhatsapp(input: string): string | null {
   let d = input.replace(/[^\d+]/g, '')
   if (!d) return null

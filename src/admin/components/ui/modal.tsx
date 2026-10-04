@@ -50,7 +50,10 @@ export function Modal({
           </Dialog.Close>
         </div>
         <div className="space-y-4">{children}</div>
-        {footer && <div className="mt-6 flex justify-end gap-2">{footer}</div>}
+        {footer && (
+          // v14-C: Footer klebt unten — „Speichern" bleibt in langen Formularen sichtbar.
+          <div className="sticky -bottom-5 -mx-5 -mb-5 mt-6 flex flex-wrap justify-end gap-2 border-t border-border bg-card px-5 py-3">{footer}</div>
+        )}
       </Dialog.Content>
     </Dialog.Root>
   )
