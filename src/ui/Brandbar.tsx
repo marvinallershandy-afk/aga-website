@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { useStore } from '../store/useStore'
 // P1: Sektionstexte aus der Fassade (sm_website_content-Overlay → sonst Seed).
 import { SECTIONS } from '../data/content'
@@ -90,6 +91,16 @@ export function Brandbar() {
   const active = useStore((s) => s.activeSection)
   const soundOn = useStore((s) => s.soundOn)
   const setSoundOn = useStore((s) => s.setSoundOn)
+  const gateOpen = useStore((s) => s.gateOpen)
+  // v14: Tor öffnet stumm → der Ton-Knopf lädt die ersten Sekunden
+  // ausgeklappt („Ton an") ein und schrumpft dann aufs Icon.
+  const [hint, setHint] = useState(false)
+  useEffect(() => {
+    if (!gateOpen) return
+    setHint(true)
+    const t = window.setTimeout(() => setHint(false), 9000)
+    return () => window.clearTimeout(t)
+  }, [gateOpen])
   return (
     <>
       <header className="brandbar">
@@ -121,11 +132,16 @@ export function Brandbar() {
       <button
         className="audio-toggle"
         data-on={soundOn}
-        onClick={() => setSoundOn(!soundOn)}
+        data-hint={hint && !soundOn}
+        onClick={() => {
+          setHint(false)
+          setSoundOn(!soundOn)
+        }}
         aria-label={soundOn ? 'Ton aus' : 'Ton an'}
         title={soundOn ? 'Ton aus' : 'Ton an'}
       >
         <SpeakerIcon on={soundOn} />
+        <span className="audio-toggle__label" aria-hidden="true">Ton an</span>
       </button>
 
       <MobileDock />

@@ -1,3 +1,4 @@
+import { switchToStaticFallback } from '../ui/StageBoundary'
 import { Canvas } from '@react-three/fiber'
 import { useProgress } from '@react-three/drei'
 import { Suspense, useEffect } from 'react'
@@ -60,6 +61,14 @@ export function Stage() {
           toneMapping: THREE.NoToneMapping,
         }}
         dpr={getClampedPixelRatio(2)}
+        onCreated={({ gl }) => {
+          // v14: GPU-Kontext weg (Treiber-Reset, Tab im Hintergrund auf
+          // schwachen Handys) → statische Version statt schwarzer Fläche.
+          gl.domElement.addEventListener('webglcontextlost', (e) => {
+            e.preventDefault()
+            switchToStaticFallback('webglcontextlost')
+          })
+        }}
         camera={{
           fov: 46,
           near: 0.1,

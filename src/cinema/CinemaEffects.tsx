@@ -46,8 +46,13 @@ export function CinemaEffects() {
   // Die Composer-Passes sind bandbreiten-limitiert; Korn+Bloom decken
   // den Schärfe-Unterschied vollständig. (Gemessen: _v5fx.mjs)
   const heavy = tier === 'full' && (fx.bloom || fx.ca)
+  // v14: Telefone bekamen bisher die HÖCHSTE Füllrate (min(dpr,2), weil die
+  // reduzierte Kette nie „heavy" ist). Touch-Geräte jetzt hart auf 1.5 —
+  // auf 3x-Displays optisch kaum zu unterscheiden, ~45 % weniger Pixel.
   useEffect(() => {
-    setDpr(Math.min(window.devicePixelRatio, heavy ? 1.6 : 2))
+    const touch = window.matchMedia?.('(pointer: coarse)').matches ?? false
+    const cap = touch ? 1.5 : heavy ? 1.6 : 2
+    setDpr(Math.min(window.devicePixelRatio, cap))
   }, [heavy, setDpr])
 
   const chain: React.ReactElement[] = []

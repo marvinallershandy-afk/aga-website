@@ -42,7 +42,7 @@ export const SECTIONS: Section[] = [
     kicker: '1. Herren',
     title: 'Unsere\nMannschaft',
     // v13-F2: verdichtet — 2–3 Zeilen pro Station, Luft statt Textwand.
-    body: 'Eine Truppe, die montags humpelt und sonntags fliegt — jeder als Sammelkarte mit echten Zahlen. Tipp eine Karte an und teil deinen Spieler in der Story.',
+    body: 'Eine Truppe, die montags humpelt und sonntags fliegt — jeder als Sammelkarte. Flieg über die Elf, tipp eine Karte an und teil deinen Spieler in der Story.',
   },
   {
     id: 'fanblock',
@@ -135,12 +135,14 @@ export function nextKickoff(): Date | null {
 }
 
 // ── Saison-Cockpit (v11-E5) ──────────────────────────────────
-// Alles PLATZHALTER bis fussball.de-Anbindung / Marvins Pflege.
+// v14: KEINE erfundenen Werte mehr. Bis zur Pflege im Admin (Tabelle/
+// Spiele) sind Form, letztes Spiel und Tabelle LEER — das Cockpit zeigt
+// dann ehrlich den Weg zu fussball.de statt „TuS Beispielstadt".
 // FORM = die letzten 5 Ergebnisse, ÄLTESTES zuerst → NEUESTES zuletzt.
 export type FormResult = 'W' | 'U' | 'N' // Win / Unentschieden / Niederlage
-export const FORM: FormResult[] = ['N', 'U', 'W', 'W', 'W']
+export const FORM: FormResult[] = []
 
-// Letztes Spiel (Ergebnis). isPlaceholder → als „zuletzt"-Karte mit Hinweis.
+// Letztes Spiel (Ergebnis). null = noch nichts gepflegt.
 export interface PlayedMatch {
   opponent: string
   date: string
@@ -149,16 +151,9 @@ export interface PlayedMatch {
   goalsAgainst: number
   isPlaceholder?: boolean
 }
-export const LAST_MATCH: PlayedMatch = {
-  opponent: 'SV Musterdorf',
-  date: 'So · Ergebnis folgt live',
-  home: false,
-  goalsFor: 2,
-  goalsAgainst: 1,
-  isPlaceholder: true,
-}
+export const LAST_MATCH: PlayedMatch | null = null
 
-// Tabelle (Vorschau bis Live-Anbindung). self = wir.
+// Tabelle. self = wir. Leer = noch nicht gepflegt.
 export interface TableRow {
   pos: number
   team: string
@@ -166,13 +161,7 @@ export interface TableRow {
   pkt: number
   self?: boolean
 }
-export const TABLE_PREVIEW: TableRow[] = [
-  { pos: 1, team: 'TuS Beispielstadt', sp: 18, pkt: 44 },
-  { pos: 2, team: 'SV Musterdorf', sp: 18, pkt: 40 },
-  { pos: 3, team: 'SV Agathenburg-Dollern', sp: 18, pkt: 37, self: true },
-  { pos: 4, team: 'FC Nachbarort', sp: 18, pkt: 33 },
-  { pos: 5, team: 'SG Beispieltal', sp: 18, pkt: 29 },
-]
+export const TABLE_PREVIEW: TableRow[] = []
 
 // ── Vereins-/Mannschaftsfoto-Slot (v8-E5) ────────────────────
 // undefined → kein leerer Rahmen. Marvin liefert echtes Stimmungsbild.

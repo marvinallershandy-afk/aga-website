@@ -1,5 +1,4 @@
 import { lazy, Suspense } from 'react'
-import { useStore } from '../store/useStore'
 import { Ground } from './Ground'
 import { Pitch } from './Pitch'
 import { Goals } from './Goals'
@@ -26,8 +25,11 @@ import { LIGHTING } from '../theme/lighting'
 import { NightEnvironment } from '../theme/NightEnvironment'
 import { StaticShadows } from '../theme/StaticShadows'
 
-// Partyraum: eigener Chunk — lädt erst, wenn die Musik-Sektion
-// näher rückt (partyNear, PartyDirector) → beim Schnitt schon da.
+// Partyraum: eigener Chunk. v14: wird NICHT mehr erst kurz vor der Tür
+// gemountet — seine 11 Punktlichter zwangen beim Mount ALLE Materialien
+// zur Shader-Neukompilierung (gemessen ~1,3 s Hänger mitten in der Fahrt).
+// Jetzt suspendiert er die Haupt-Suspense mit → lädt und kompiliert
+// hinter dem Eingangstor, die Fahrt bleibt ruckelfrei.
 const PartyRoom = lazy(() => import('./PartyRoom'))
 
 // Die Bühne: der ECHTE Platz in Agathenburg (REFERENZ_MODELL.md)
@@ -36,7 +38,6 @@ const PartyRoom = lazy(() => import('./PartyRoom'))
 // Klinker-Hütte NW, Fanblock-Ecke SO. Flutlicht = Stilisierung.
 export function Scene() {
   const L = LIGHTING
-  const partyNear = useStore((s) => s.partyNear)
   return (
     <group>
       <fog attach="fog" args={[L.fog.color, L.fog.near, L.fog.far]} />
@@ -93,11 +94,7 @@ export function Scene() {
       <ConeDust />
       <GroundMist />
       <KickoffDirector />
-      {partyNear && (
-        <Suspense fallback={null}>
-          <PartyRoom />
-        </Suspense>
-      )}
+      <PartyRoom />
     </group>
   )
 }

@@ -3,6 +3,7 @@ import { useStore } from './store/useStore'
 import { detectWebGL, prefersReducedMotion } from './utils/caps'
 import { useScrollProgress } from './ui/useScrollProgress'
 import { StaticBackdrop } from './ui/StaticBackdrop'
+import { StageBoundary } from './ui/StageBoundary'
 
 // 3D-Bühne lazy → three/R3F landen in einem eigenen Chunk, den der
 // Fallback-Pfad (kein WebGL / reduced-motion) nie lädt.
@@ -61,14 +62,27 @@ export default function App() {
 
   // Fanblock-Finale: Atmosphäre zieht leicht an (Gemurmel näher)
   useEffect(() => {
+    // v14: nur bei Zustandswechsel melden (vorher bei JEDER Store-Änderung)
+    let last: boolean | null = null
     return useStore.subscribe((s2) => {
-      AudioManager.setAtmoBoost(s2.scrollProgress > 0.88)
+      const boost = s2.scrollProgress > 0.88
+      if (boost === last) return
+      last = boost
+      AudioManager.setAtmoBoost(boost)
     })
   }, [])
 
   return (
     <>
-      {fallback ? <StaticBackdrop /> : <Suspense fallback={null}><Stage /></Suspense>}
+      {fallback ? (
+        <StaticBackdrop />
+      ) : (
+        <StageBoundary>
+          <Suspense fallback={null}>
+            <Stage />
+          </Suspense>
+        </StageBoundary>
+      )}
       <EntranceGate />
       <PartyDirector />
       <Brandbar />

@@ -33,20 +33,34 @@ function makeLedTexture(): THREE.CanvasTexture {
   ctx.font = '700 30px Archivo, system-ui, sans-serif'
   ctx.fillStyle = dim
   ctx.textAlign = 'center'
-  ctx.fillText('· KREISLIGA · SAISON 26/27 ·', W / 2, 34)
+  ctx.fillText('· KREISLIGA STADE · SAISON 26/27 ·', W / 2, 34)
 
   const rows = TABLE_PREVIEW.slice(0, 4)
-  ctx.font = '800 34px Archivo, system-ui, sans-serif'
-  rows.forEach((r, i) => {
-    const y = 92 + i * 54
-    const self = !!r.self
-    ctx.fillStyle = self ? red : amber
-    ctx.textAlign = 'left'
-    ctx.fillText(String(r.pos), 28, y)
-    ctx.fillText(self ? '▶ SVA' : r.team.toUpperCase().slice(0, 16), 76, y)
-    ctx.textAlign = 'right'
-    ctx.fillText(String(r.pkt), W - 30, y)
-  })
+  if (rows.length > 0) {
+    ctx.font = '800 34px Archivo, system-ui, sans-serif'
+    rows.forEach((r, i) => {
+      const y = 92 + i * 54
+      const self = !!r.self
+      ctx.fillStyle = self ? red : amber
+      ctx.textAlign = 'left'
+      ctx.fillText(String(r.pos), 28, y)
+      ctx.fillText(self ? '▶ SVA' : r.team.toUpperCase().slice(0, 16), 76, y)
+      ctx.textAlign = 'right'
+      ctx.fillText(String(r.pkt), W - 30, y)
+    })
+  } else {
+    // v14: keine gepflegte Tabelle → Vereins-Tafel statt Beispiel-Vereine
+    ctx.textAlign = 'center'
+    ctx.fillStyle = red
+    ctx.font = '400 104px Anton, Archivo, system-ui, sans-serif'
+    ctx.fillText('SV AGA', W / 2, 150)
+    ctx.fillStyle = amber
+    ctx.font = '800 34px Archivo, system-ui, sans-serif'
+    ctx.fillText('AGATHENBURG-DOLLERN', W / 2, 238)
+    ctx.fillStyle = dim
+    ctx.font = '700 26px Archivo, system-ui, sans-serif'
+    ctx.fillText('SEIT 1949', W / 2, 282)
+  }
 
   ctx.strokeStyle = 'rgba(255,180,40,0.35)'
   ctx.lineWidth = 2
@@ -58,8 +72,11 @@ function makeLedTexture(): THREE.CanvasTexture {
   ctx.textAlign = 'center'
   ctx.font = '700 28px Archivo, system-ui, sans-serif'
   ctx.fillStyle = amber
-  const next = NEXT_MATCH.isPlaceholder ? 'NÄCHSTES HEIMSPIEL · SO 15:00' : `SVA – ${NEXT_MATCH.opponent.toUpperCase()} · ${NEXT_MATCH.date.toUpperCase()}`
-  ctx.fillText(next, W / 2, 350)
+  // v14: vorher stand hier fest „SO 15:00" ohne echten Termin
+  const next = NEXT_MATCH.isPlaceholder
+    ? 'HEIM · WALDSPORTPLATZ'
+    : `${NEXT_MATCH.home ? 'SVA – ' + NEXT_MATCH.opponent.toUpperCase() : NEXT_MATCH.opponent.toUpperCase() + ' – SVA'} · ${NEXT_MATCH.date.toUpperCase()}`
+  ctx.fillText(next.slice(0, 40), W / 2, 350)
 
   // LED-Matrix-Effekt: dunkles Linienraster (KEINE Alpha-Maske —
   // destination-in nullte die RGB-Werte und die Tafel wurde schwarz).

@@ -1,26 +1,25 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useStore } from '../store/useStore'
 import { CLUB } from '../data/club'
 
 // ─────────────────────────────────────────────────────────────
-// Das Sound-Eingangstor: Dämmerungs-Screen mit Wappen + Claim und
-// der Wahl „Mit Ton betreten" / „Ohne Ton". Der Klick ist zugleich
-// die Browser-Geste, die Audio freischaltet. Danach Vorhang-Reveal
-// (Fläche teilt sich horizontal). Entscheidung wird gemerkt —
-// Wiederkehrer sehen ein verkürztes Tor (Logo-Blitz → Vorhang).
-// reduced-motion: einfacher Fade, nie Auto-Audio.
+// Eingangstor v14: kein Klick-Zwang mehr. Wappen + Claim + Ladefortschritt,
+// sobald die Szene bereit ist (oder spätestens nach MAX_WAIT_MS) öffnet der
+// Vorhang automatisch — STUMM. Ton gibt's über den „Ton an"-Pill unten
+// rechts (Brandbar), der in den ersten Sekunden ausgeklappt einlädt.
+// Warum: Besucher aus der IG-Story landen im In-App-Browser; jeder
+// Pflicht-Klick vor dem ersten Bild kostet Absprünge. Autoplay mit Ton geht
+// ohne Geste ohnehin nicht.
+// reduced-motion: Fade statt Vorhang.
 // ─────────────────────────────────────────────────────────────
 
-type Phase = 'choice' | 'flash' | 'opening' | 'done'
+type Phase = 'loading' | 'opening' | 'done'
 
-function storedChoice(): 'on' | 'off' | null {
-  try {
-    const v = localStorage.getItem('sva-sound')
-    return v === 'on' || v === 'off' ? v : null
-  } catch {
-    return null
-  }
-}
+/** Spätestens dann geht das Tor auf — auch wenn die 3D-Szene noch lädt
+ *  oder hängt. Inhalt (DOM-Sektionen) ist dann sofort erreichbar. */
+const MAX_WAIT_MS = 9000
+/** Mindest-Standzeit, damit das Wappen nicht nur flackert. */
+const MIN_SHOW_MS = 650
 
 export function EntranceGate() {
   const ready = useStore((s) => s.ready)
@@ -28,13 +27,19 @@ export function EntranceGate() {
   const fallback = useStore((s) => s.fallback)
   const reducedMotion = useStore((s) => s.reducedMotion)
   const setGateOpen = useStore((s) => s.setGateOpen)
-  const setSoundOn = useStore((s) => s.setSoundOn)
 
-  const returning = useRef<'on' | 'off' | null>(storedChoice())
-  // reduced-motion: immer volle Wahl (kein Auto-Audio), sonst Kurz-Tor
-  const [phase, setPhase] = useState<Phase>(
-    returning.current && !reducedMotion ? 'flash' : 'choice',
-  )
+  const [phase, setPhase] = useState<Phase>('loading')
+  const [minShown, setMinShown] = useState(false)
+  const [timedOut, setTimedOut] = useState(false)
+
+  useEffect(() => {
+    const a = window.setTimeout(() => setMinShown(true), MIN_SHOW_MS)
+    const b = window.setTimeout(() => setTimedOut(true), MAX_WAIT_MS)
+    return () => {
+      window.clearTimeout(a)
+      window.clearTimeout(b)
+    }
+  }, [])
 
   // Scroll sperren, solange das Tor zu ist
   useEffect(() => {
@@ -45,25 +50,23 @@ export function EntranceGate() {
     }
   }, [phase])
 
-  const open = (sound: boolean) => {
-    setSoundOn(sound)
+  useEffect(() => {
+    if (phase !== 'loading' || !minShown) return
+    if (!ready && !fallback && !timedOut) return
     setPhase('opening')
     setGateOpen(true)
-    window.setTimeout(() => setPhase('done'), reducedMotion ? 500 : 1050)
-  }
+  }, [phase, minShown, ready, fallback, timedOut, setGateOpen])
 
-  // Kurz-Tor: Logo-Blitz, dann automatisch Vorhang (gemerkte Wahl)
+  // Eigener Effekt fürs Abbauen: läge der Timer im Öffnen-Effekt, räumte
+  // dessen Cleanup ihn beim Phasenwechsel sofort wieder ab.
   useEffect(() => {
-    if (phase !== 'flash') return
-    if (!ready && !fallback) return // warten bis geladen, Blitz läuft solange
-    const t = window.setTimeout(() => open(returning.current === 'on'), 700)
+    if (phase !== 'opening') return
+    const t = window.setTimeout(() => setPhase('done'), reducedMotion ? 500 : 1050)
     return () => window.clearTimeout(t)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, ready, fallback])
+  }, [phase, reducedMotion])
 
   if (phase === 'done') return null
 
-  const loading = !ready && !fallback
   const opening = phase === 'opening'
   const panelStyle = (dir: -1 | 1): React.CSSProperties => ({
     position: 'absolute',
@@ -72,25 +75,28 @@ export function EntranceGate() {
     height: '50.5%',
     top: dir === -1 ? 0 : undefined,
     bottom: dir === 1 ? 0 : undefined,
-    // v11-E9: CI statt Magenta/Blau — dunkles Schwarz mit warmem Rot-Unterton
-    // (Dämmerung am Platz), passend zu SVA-Rot/Schwarz.
     background:
       dir === -1
         ? 'linear-gradient(180deg, #0b0708 0%, #1a0c0e 78%, #2a1013 100%)'
         : 'linear-gradient(0deg, #0b0708 0%, #180b0d 78%, #2a1013 100%)',
     transform: opening && !reducedMotion ? `translateY(${dir * 102}%)` : 'translateY(0)',
     opacity: opening && reducedMotion ? 0 : 1,
-    transition: reducedMotion
-      ? 'opacity .45s ease'
-      : 'transform 1s cubic-bezier(.72,0,.18,1)',
+    transition: reducedMotion ? 'opacity .45s ease' : 'transform 1s cubic-bezier(.72,0,.18,1)',
     willChange: 'transform',
   })
 
+  const pct = Math.round(progress)
+
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 400, pointerEvents: opening ? 'none' : 'auto' }} data-testid="gate">
+    <div
+      style={{ position: 'fixed', inset: 0, zIndex: 400, pointerEvents: opening ? 'none' : 'auto' }}
+      data-testid="gate"
+      role="status"
+      aria-live="polite"
+      aria-label={`${CLUB.name} wird geladen`}
+    >
       <div style={panelStyle(-1)} />
       <div style={panelStyle(1)} />
-      {/* Inhalt */}
       <div
         style={{
           position: 'absolute',
@@ -108,11 +114,11 @@ export function EntranceGate() {
       >
         <img
           src="/brand/wappen.png"
-          alt={CLUB.name}
+          alt=""
           style={{
             width: 'clamp(110px, 22vw, 170px)',
             filter: 'drop-shadow(0 18px 30px rgba(0,0,0,.65)) drop-shadow(0 0 40px rgba(233,29,41,.25))',
-            animation: phase === 'flash' ? 'gatePulse 1.1s ease-in-out infinite' : undefined,
+            animation: reducedMotion ? undefined : 'gatePulse 1.1s ease-in-out infinite',
           }}
         />
         <div>
@@ -123,22 +129,12 @@ export function EntranceGate() {
             {CLUB.claim}
           </div>
         </div>
-
-        {phase === 'choice' && (
-          <div style={{ display: 'flex', gap: '.8rem', flexWrap: 'wrap', justifyContent: 'center', marginTop: '.5rem' }}>
-            <button className="btn btn--primary" disabled={loading} onClick={() => open(true)}>
-              {loading ? `Rasen wird gemäht … ${Math.round(progress)}%` : 'Mit Ton betreten'}
-            </button>
-            <button className="btn btn--ghost" disabled={loading} onClick={() => open(false)}>
-              Lieber leise
-            </button>
-          </div>
-        )}
-        {phase === 'flash' && (
-          <div style={{ fontSize: '.68rem', letterSpacing: '.28em', textTransform: 'uppercase', color: 'rgba(255,255,255,.45)' }}>
-            {loading ? `Flutlicht an … ${Math.round(progress)}%` : 'Willkommen zurück am Platz'}
-          </div>
-        )}
+        <div style={{ width: 'min(220px, 60vw)', height: 2, background: 'rgba(255,255,255,.1)', borderRadius: 2, overflow: 'hidden' }}>
+          <div style={{ width: `${ready || fallback ? 100 : Math.max(6, pct)}%`, height: '100%', background: 'var(--red)', transition: 'width .3s ease' }} />
+        </div>
+        <div style={{ fontSize: '.66rem', letterSpacing: '.28em', textTransform: 'uppercase', color: 'rgba(255,255,255,.45)', marginTop: '-.6rem' }}>
+          Flutlicht an
+        </div>
       </div>
       <style>{`@keyframes gatePulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.045); } }`}</style>
     </div>

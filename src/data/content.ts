@@ -63,7 +63,7 @@ export const SPONSORS: Sponsor[] = pick(ov?.sponsors, STATIC_SPONSORS)
 export const TABLE_PREVIEW: TableRow[] = pick(ov?.table, STATIC_TABLE)
 export const FORM: FormResult[] = pick(ov?.form, STATIC_FORM)
 export const NEXT_MATCH: Match = ov?.nextMatch ?? STATIC_NEXT_MATCH
-export const LAST_MATCH: PlayedMatch = ov?.lastMatch ?? STATIC_LAST_MATCH
+export const LAST_MATCH: PlayedMatch | null = ov?.lastMatch ?? STATIC_LAST_MATCH
 // v14: Aufstellung — Overlay nur, wenn es eine vollständige Elf trägt.
 export const LINEUP: Lineup = ov?.lineup && ov.lineup.startelf.length === 11 ? ov.lineup : STATIC_LINEUP
 export { FORMATION_SLOTS } from './lineup'

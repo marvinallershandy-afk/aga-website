@@ -20,7 +20,8 @@ export function StaticShadows() {
 
   useEffect(() => {
     gl.shadowMap.enabled = true
-    gl.shadowMap.type = THREE.PCFSoftShadowMap
+    // v14: PCFSoft ist in three r184 deprecated (fiel intern ohnehin auf PCF zurück + Konsolenwarnung)
+    gl.shadowMap.type = THREE.PCFShadowMap
     gl.shadowMap.autoUpdate = false
 
     const enableCasters = () => {

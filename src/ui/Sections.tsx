@@ -248,7 +248,7 @@ export function Sections() {
           <a href="/datenschutz.html" style={{ color: 'rgba(255,255,255,0.75)' }}>Datenschutz</a>
         </p>
         <p style={{ marginTop: '0.9rem', fontSize: '0.7rem', letterSpacing: '0.1em', color: 'rgba(255,255,255,0.55)' }}>
-          © Seit {CLUB.founded} · {CLUB.name} e.V. · Mit Herz gebaut, Platzhalter ehrlich markiert.
+          © Seit {CLUB.founded} · {CLUB.name} e.V. · Mit Herz gebaut in Agathenburg.
         </p>
       </section>
     </main>

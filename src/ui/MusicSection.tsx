@@ -55,10 +55,8 @@ export function MusicSectionPlayer() {
             </button>
           )
         })}
-        <div className="music-section__links">
-          <span className="music-section__soon" title="Kommt bald">Spotify · bald</span>
-          <span className="music-section__soon" title="Kommt bald">Apple Music · bald</span>
-        </div>
+        {/* v14: „Spotify · bald"-Chips raus (lasen sich wie interne Notizen).
+            Sobald Links existieren: hier als echte <a> wieder einhängen. */}
       </div>
     </div>
   )

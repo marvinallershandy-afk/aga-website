@@ -6,10 +6,11 @@ import { CLUB, CONTACT, fussballDeTeamUrl, FORM, LAST_MATCH, NEXT_MATCH, nextKic
 // ─────────────────────────────────────────────────────────────
 // v11-E5: SAISON-COCKPIT (löst die reine Tabelle ab).
 // v12-E5: nutzt die VOLLE Breite — Tabelle links, Form/Spiele/Torschützen
-// rechts, alles auf einem Bild. Hover-Effekte auf Zeilen & Karten,
-// Top-Torschützen prominenter. Nächstes-Spiel mit Live-Countdown +
-// „In Kalender" (ICS). Live-Daten kommen von fussball.de (Team-ID in
-// club.ts); Tabelle/Ergebnis/Termin sind bis zur Anbindung Vorschau.
+// rechts, alles auf einem Bild. Nächstes-Spiel mit Live-Countdown +
+// „In Kalender" (ICS).
+// v14: Jeder Block erscheint NUR mit echten Daten (Admin-Pflege → Build).
+// Ohne Daten führt das Cockpit direkt zu fussball.de — keine
+// Beispiel-Vereine, keine erfundene Formkurve, kein Fake-Ergebnis mehr.
 // ─────────────────────────────────────────────────────────────
 
 const reveal = {
@@ -57,7 +58,7 @@ function Countdown({ target }: { target: Date }) {
   const s = Math.floor((diff % 60000) / 1000)
   const cells: [number, string][] = [[d, 'Tage'], [h, 'Std'], [m, 'Min'], [s, 'Sek']]
   return (
-    <div className="countdown" aria-label="Countdown bis zum nächsten Heimspiel">
+    <div className="countdown" aria-label="Countdown bis zum nächsten Spiel">
       {cells.map(([v, l]) => (
         <span key={l} className="countdown__cell">
           <b>{l === 'Tage' ? v : pad(v)}</b>
@@ -68,36 +69,37 @@ function Countdown({ target }: { target: Date }) {
   )
 }
 
-function downloadICS(start: Date, opponent: string) {
+function downloadICS(start: Date, opponent: string, home: boolean) {
   const stamp = (x: Date) => x.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
   const end = new Date(start.getTime() + 2 * 3600 * 1000)
+  // v14: Auswärts stand vorher „SVA vs SVA" im Kalender.
+  const summary = home ? `${CLUB.shortName} vs ${opponent}` : `${opponent} vs ${CLUB.shortName}`
   const ics = [
-    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//SVA//Heimspiel//DE', 'BEGIN:VEVENT',
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//SVA//Spiel//DE', 'BEGIN:VEVENT',
     `DTSTART:${stamp(start)}`, `DTEND:${stamp(end)}`,
-    `SUMMARY:${CLUB.shortName} vs ${opponent}`,
-    `LOCATION:${CONTACT.address}`,
-    'DESCRIPTION:Heimspiel SV Agathenburg-Dollern (Termin vorläufig — bitte auf fussball.de prüfen).',
+    `SUMMARY:${summary}`,
+    `LOCATION:${home ? CONTACT.address : opponent}`,
+    `DESCRIPTION:${home ? 'Heimspiel' : 'Auswärtsspiel'} SV Agathenburg-Dollern — aktuelle Infos auf fussball.de.`,
     'END:VEVENT', 'END:VCALENDAR',
   ].join('\r\n')
   const blob = new Blob([ics], { type: 'text/calendar' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = 'sva-heimspiel.ics'
+  a.download = home ? 'sva-heimspiel.ics' : 'sva-auswaertsspiel.ics'
   a.click()
   URL.revokeObjectURL(url)
 }
 
 export function FussballWidget() {
   const topScorers = [...PLAYERS].sort((a, b) => b.stats.goals - a.stats.goals).slice(0, 3)
-  // v14-M6: Der Torschützen-Block blendet sich aus, solange keine Saisonzahlen
-  // erfasst sind — sonst stünden dort drei Spieler mit 0 Toren. Bewusst an die
-  // DATEN geknüpft und nicht hart entfernt: sobald der erste Treffer gepflegt
-  // ist, kommt der Block von allein zurück.
+  // Torschützen nur mit echten Zahlen (sonst drei Spieler mit 0 Toren).
   const hasGoals = topScorers.some((p) => p.stats.goals > 0)
+  const hasTable = TABLE_PREVIEW.length > 0
+  const hasForm = FORM.length > 0
   // null = kein echter Termin hinterlegt → Countdown/ICS bleiben aus.
   const kickoff = nextKickoff()
-  const opponent = NEXT_MATCH.home ? NEXT_MATCH.opponent : 'SVA'
+  const nextLabel = NEXT_MATCH.isPlaceholder ? 'Nächstes Spiel' : NEXT_MATCH.home ? 'Nächstes Heimspiel' : 'Nächstes Auswärtsspiel'
 
   return (
     <motion.div className="cockpit" {...reveal}>
@@ -105,33 +107,36 @@ export function FussballWidget() {
       <div className="cockpit__main">
         <div className="cockpit__panel cockpit__table">
           <div className="cockpit__label cockpit__label--row">
-            <span>Tabelle · Kreisliga</span>
+            <span>Tabelle · Kreisliga Stade</span>
             <a href={fussballDeTeamUrl} target="_blank" rel="noreferrer" className="cockpit__live">
-              Live auf fussball.de →
+              fussball.de →
             </a>
           </div>
-          <table className="cockpit-table">
-            <thead>
-              <tr><th>#</th><th>Team</th><th>Sp</th><th>Pkt</th></tr>
-            </thead>
-            <tbody>
-              {TABLE_PREVIEW.map((r) => (
-                <tr key={r.pos} className={r.self ? 'is-self' : undefined}>
-                  <td className="cockpit-table__pos">{r.pos}</td>
-                  <td>{r.team}</td>
-                  <td className="cockpit-table__c">{r.sp}</td>
-                  <td className="cockpit-table__c">{r.pkt}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <p className="widget-note">
-            Vorschau — sobald fussball.de verbunden ist ({CLUB.fussballDeTeamId.slice(0, 6)}…),
-            steht hier die echte Live-Tabelle. Der Link oben führt schon jetzt zur echten Tabelle.
-          </p>
+          {hasTable ? (
+            <table className="cockpit-table">
+              <thead>
+                <tr><th>#</th><th>Team</th><th>Sp</th><th>Pkt</th></tr>
+              </thead>
+              <tbody>
+                {TABLE_PREVIEW.map((r) => (
+                  <tr key={r.pos} className={r.self ? 'is-self' : undefined}>
+                    <td className="cockpit-table__pos">{r.pos}</td>
+                    <td>{r.team}</td>
+                    <td className="cockpit-table__c">{r.sp}</td>
+                    <td className="cockpit-table__c">{r.pkt}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <a className="cockpit-empty" href={fussballDeTeamUrl} target="_blank" rel="noreferrer">
+              <b>Tabelle, Spielplan &amp; Ergebnisse</b>
+              <span>Kreisliga Stade · Saison 26/27 — immer aktuell auf fussball.de</span>
+              <i aria-hidden="true">→</i>
+            </a>
+          )}
         </div>
 
-        {/* Top-Torschützen mit Gesichtern — prominent. Nur mit echten Zahlen. */}
         {hasGoals && (
           <div className="cockpit__panel cockpit__scorers">
             <span className="cockpit__label">Top-Torschützen</span>
@@ -151,62 +156,69 @@ export function FussballWidget() {
 
       {/* ── Seitenspalte: Form, Spiele ──────────────────────────── */}
       <div className="cockpit__side">
-        {/* Form der letzten 5 */}
-        <div className="cockpit__panel cockpit__form">
-          <span className="cockpit__label">Form · letzte 5</span>
-          <div className="form-row">
-            {FORM.map((r, i) => (
-              <span key={i} className={`form-dot ${FORM_META[r].cls}`} title={FORM_META[r].label}>
-                {r === 'U' ? 'U' : r === 'W' ? 'S' : 'N'}
-              </span>
-            ))}
-            <span className="form-row__hint">älteste → neueste</span>
-          </div>
-        </div>
-
-        {/* Letztes & nächstes Spiel */}
-        <div className="cockpit__matches">
-          <div className="cockpit__panel match-card">
-            <span className="cockpit__label">Zuletzt</span>
-            <div className="match-card__teams">
-              <b>{LAST_MATCH.home ? 'SVA' : LAST_MATCH.opponent}</b>
-              <span className="match-card__score">
-                {LAST_MATCH.home ? LAST_MATCH.goalsFor : LAST_MATCH.goalsAgainst}
-                <i>:</i>
-                {LAST_MATCH.home ? LAST_MATCH.goalsAgainst : LAST_MATCH.goalsFor}
-              </span>
-              <b>{LAST_MATCH.home ? LAST_MATCH.opponent : 'SVA'}</b>
+        {hasForm && (
+          <div className="cockpit__panel cockpit__form">
+            <span className="cockpit__label">Form · letzte {FORM.length}</span>
+            <div className="form-row">
+              {FORM.map((r, i) => (
+                <span key={i} className={`form-dot ${FORM_META[r].cls}`} title={FORM_META[r].label}>
+                  {r === 'U' ? 'U' : r === 'W' ? 'S' : 'N'}
+                </span>
+              ))}
+              <span className="form-row__hint">älteste → neueste</span>
             </div>
-            <span className="match-card__meta">{LAST_MATCH.date}{LAST_MATCH.isPlaceholder ? ' · Vorschau' : ''}</span>
           </div>
+        )}
+
+        <div className="cockpit__matches">
+          {LAST_MATCH && (
+            <div className="cockpit__panel match-card">
+              <span className="cockpit__label">Zuletzt</span>
+              <div className="match-card__teams">
+                <b>{LAST_MATCH.home ? 'SVA' : LAST_MATCH.opponent}</b>
+                <span className="match-card__score">
+                  {LAST_MATCH.home ? LAST_MATCH.goalsFor : LAST_MATCH.goalsAgainst}
+                  <i>:</i>
+                  {LAST_MATCH.home ? LAST_MATCH.goalsAgainst : LAST_MATCH.goalsFor}
+                </span>
+                <b>{LAST_MATCH.home ? LAST_MATCH.opponent : 'SVA'}</b>
+              </div>
+              <span className="match-card__meta">{LAST_MATCH.date}</span>
+            </div>
+          )}
 
           <div className="cockpit__panel match-card match-card--next">
-            <span className="cockpit__label">Nächstes Heimspiel</span>
-            <div className="match-card__teams">
-              <b>{NEXT_MATCH.home ? 'SVA' : NEXT_MATCH.opponent}</b>
-              <span className="match-card__vs">vs</span>
-              <b>{NEXT_MATCH.home ? NEXT_MATCH.opponent : 'SVA'}</b>
-            </div>
-            {kickoff ? (
-              <>
-                <Countdown target={kickoff} />
-                <div className="match-card__cta">
-                  <button className="btn btn--sm btn--primary" onClick={() => downloadICS(kickoff, opponent)}>
-                    In Kalender
-                  </button>
-                  <span className="match-card__meta">
-                    {kickoff.toLocaleString('de-DE', {
-                      weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
-                    })} Uhr
-                  </span>
-                </div>
-              </>
+            <span className="cockpit__label">{nextLabel}</span>
+            {NEXT_MATCH.isPlaceholder ? (
+              <a className="match-card__link" href={fussballDeTeamUrl} target="_blank" rel="noreferrer">
+                <b>Wann &amp; gegen wen?</b>
+                <span>Spielplan auf fussball.de →</span>
+              </a>
             ) : (
-              /* Kein erfundener Countdown: solange kein echter Anstoß
-                 hinterlegt ist, sagt die Karte ehrlich, dass der Termin fehlt. */
-              <span className="match-card__meta">
-                {NEXT_MATCH.date} — sobald der Spielplan steht, läuft hier der Countdown.
-              </span>
+              <>
+                <div className="match-card__teams">
+                  <b>{NEXT_MATCH.home ? 'SVA' : NEXT_MATCH.opponent}</b>
+                  <span className="match-card__vs">vs</span>
+                  <b>{NEXT_MATCH.home ? NEXT_MATCH.opponent : 'SVA'}</b>
+                </div>
+                {kickoff ? (
+                  <>
+                    <Countdown target={kickoff} />
+                    <div className="match-card__cta">
+                      <button className="btn btn--sm btn--primary" onClick={() => downloadICS(kickoff, NEXT_MATCH.opponent, NEXT_MATCH.home)}>
+                        In Kalender
+                      </button>
+                      <span className="match-card__meta">
+                        {kickoff.toLocaleString('de-DE', {
+                          weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
+                        })} Uhr
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <span className="match-card__meta">{NEXT_MATCH.date}</span>
+                )}
+              </>
             )}
           </div>
         </div>
