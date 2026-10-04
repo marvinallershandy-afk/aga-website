@@ -23,7 +23,7 @@ import { paketMeta } from '../lib/constants'
 import { toISODate, formatDateShort, tageBis } from '../lib/format'
 import { cn } from '../lib/utils'
 
-export function Sponsoren() {
+export function SponsorenCrm() {
   const toast = useToast()
   const sponsorenQ = useSponsoren()
   const { create, update, remove } = useSponsorenMutations()
