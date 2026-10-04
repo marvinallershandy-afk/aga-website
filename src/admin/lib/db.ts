@@ -335,11 +335,43 @@ export type WebhookInput = Partial<Omit<TablesInsert<'sm_webhooks'>, 'id' | 'cre
 export type DeliveryRow = Tables<'sm_webhook_deliveries'>
 export type DeliveryInput = Partial<Omit<TablesInsert<'sm_webhook_deliveries'>, 'id' | 'gesendet_at'>>
 
-// Postgres meldet eine fehlende Tabelle mit SQLSTATE 42P01. Solange die
-// Migration 20260719090000_sm_webhooks.sql noch nicht angewandt ist, degradiert
-// die UI darauf sauber (localStorage-Fallback) statt hart zu crashen.
+// Postgres meldet eine fehlende Tabelle mit SQLSTATE 42P01, PostgREST (neuere
+// Versionen) mit PGRST205 „Could not find the table … in the schema cache".
+// Solange eine Migration noch nicht angewandt ist, degradiert die UI darauf
+// sauber (Hinweis/Fallback) statt hart zu crashen.
 export function isMissingTable(err: unknown): boolean {
-  return !!err && typeof err === 'object' && 'code' in err && (err as { code?: string }).code === '42P01'
+  if (!err || typeof err !== 'object') return false
+  const code = (err as { code?: string }).code
+  const msg = (err as { message?: string }).message ?? ''
+  return code === '42P01' || code === 'PGRST205' || /could not find the table/i.test(msg)
+}
+
+// Fehlende Spalte/Funktion (Migration 20261004* noch nicht angewandt):
+// 42703 / PGRST204 (Spalte), 42883 / PGRST202 (Funktion).
+export function isMissingSchema(err: unknown): boolean {
+  if (isMissingTable(err)) return true
+  if (!err || typeof err !== 'object') return false
+  const code = (err as { code?: string }).code
+  const msg = (err as { message?: string }).message ?? ''
+  return (
+    code === '42703' || code === 'PGRST204' || code === '42883' || code === 'PGRST202' ||
+    /could not find the .* (column|function)/i.test(msg)
+  )
+}
+
+/** Verständliche Fehlermeldung für Ehrenamtliche statt Postgres-Jargon. */
+export function friendlyError(err: unknown, fallback = 'Das hat nicht geklappt.'): string {
+  if (isMissingSchema(err)) {
+    return 'Die Datenbank ist noch nicht auf dem neuen Stand (Migration fehlt). Bitte Marvin Bescheid geben.'
+  }
+  const msg = err instanceof Error ? err.message : (err as { message?: string } | null)?.message
+  if (msg && /sva_lineup_startelf_check|kein_doppelter/i.test(msg)) {
+    return 'Aufstellung ungültig: genau 11 verschiedene Spieler in der Startelf, niemand doppelt auf der Bank.'
+  }
+  if (msg && /whatsapp_check/i.test(msg)) return 'WhatsApp-Nummer bitte nur mit Ziffern, z. B. 4915112345678.'
+  if (msg && /slug/i.test(msg) && /unique|duplicate/i.test(msg)) return 'Diesen Spieler gibt es schon (gleicher Name).'
+  if (msg && /failed to fetch|networkerror|load failed/i.test(msg)) return 'Keine Verbindung. Bitte Netz prüfen und nochmal versuchen.'
+  return msg || fallback
 }
 
 export async function fetchWebhooks(): Promise<WebhookRow[]> {

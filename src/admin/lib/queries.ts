@@ -5,6 +5,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 import * as db from './db'
+import * as pflege from './pflege'
 import type {
   ContentInput,
   ContentRow,
@@ -332,4 +333,48 @@ export function useInsightsMutations() {
     onSuccess: invalidate,
   })
   return { upsert, remove }
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// v14-C: Vereins-Pflege — Aufstellung, Verein & Links, Veröffentlichen.
+// retry:false → fehlt die Migration noch, erscheint sofort ein Hinweis statt
+// eines langen Ladezustands.
+// ═════════════════════════════════════════════════════════════════════════════
+export const pflegeKeys = {
+  lineup: ['sva_lineup'] as const,
+  settings: ['sva_settings'] as const,
+  publishLog: ['sva_publish_log'] as const,
+}
+
+export function useLineup() {
+  return useQuery({ queryKey: pflegeKeys.lineup, queryFn: pflege.fetchLineup, retry: false })
+}
+export function useSaveLineup() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: pflege.LineupInput) => pflege.saveLineup(input),
+    onSuccess: (row) => qc.setQueryData(pflegeKeys.lineup, row),
+  })
+}
+
+export function useSettings() {
+  return useQuery({ queryKey: pflegeKeys.settings, queryFn: pflege.fetchSettings, retry: false })
+}
+export function useSaveSettings() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: pflege.SettingsInput) => pflege.saveSettings(input),
+    onSuccess: (row) => qc.setQueryData(pflegeKeys.settings, row),
+  })
+}
+
+export function usePublishLog() {
+  return useQuery({ queryKey: pflegeKeys.publishLog, queryFn: () => pflege.fetchPublishLog(5), retry: false })
+}
+export function usePublish() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () => pflege.publishSite(),
+    onSettled: () => qc.invalidateQueries({ queryKey: pflegeKeys.publishLog }),
+  })
 }

@@ -1,5 +1,8 @@
 // GENERIERT via Supabase MCP (generate_typescript_types) — nicht von Hand
-// pflegen, bei Schema-Änderungen neu generieren. Enthält auch Nicht-sm_-Tabellen
+// pflegen, bei Schema-Änderungen neu generieren. v14-C: sm_roster/sm_sponsoren-
+// Spalten, sva_lineup/sva_settings/sva_publish_log und web_snapshot() wurden
+// VON HAND nach den Migrationen 20261004* ergänzt (Projekt pausiert) — nach dem
+// Entpausen + Anwenden bitte neu generieren und vergleichen. Enthält auch Nicht-sm_-Tabellen
 // (Rezept-App im selben Projekt); der Admin nutzt nur die sm_-Typen.
 export type Json =
   | string
@@ -605,6 +608,13 @@ export type Database = {
       }
       sm_roster: {
         Row: {
+          freisteller_url: string | null
+          im_verein_seit: number | null
+          kapitaen: boolean
+          kontakt_text: string | null
+          neuzugang: boolean
+          rolle: string
+          slug: string
           aktiv: boolean
           created_at: string
           foto_url: string | null
@@ -617,6 +627,13 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          freisteller_url?: string | null
+          im_verein_seit?: number | null
+          kapitaen?: boolean
+          kontakt_text?: string | null
+          neuzugang?: boolean
+          rolle?: string
+          slug?: string
           aktiv?: boolean
           created_at?: string
           foto_url?: string | null
@@ -629,6 +646,13 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          freisteller_url?: string | null
+          im_verein_seit?: number | null
+          kapitaen?: boolean
+          kontakt_text?: string | null
+          neuzugang?: boolean
+          rolle?: string
+          slug?: string
           aktiv?: boolean
           created_at?: string
           foto_url?: string | null
@@ -689,6 +713,9 @@ export type Database = {
       }
       sm_sponsoren: {
         Row: {
+          bande: boolean
+          sortierung: number
+          website_url: string | null
           aktiv: boolean
           ansprechpartner: string | null
           created_at: string
@@ -704,6 +731,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          bande?: boolean
+          sortierung?: number
+          website_url?: string | null
           aktiv?: boolean
           ansprechpartner?: string | null
           created_at?: string
@@ -719,6 +749,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          bande?: boolean
+          sortierung?: number
+          website_url?: string | null
           aktiv?: boolean
           ansprechpartner?: string | null
           created_at?: string
@@ -956,6 +989,116 @@ export type Database = {
           },
         ]
       }
+      sva_lineup: {
+        Row: {
+          bank: string[]
+          created_at: string
+          erstellt_von: string | null
+          formation: string
+          id: string
+          match_label: string | null
+          spiel_id: string | null
+          startelf: string[]
+        }
+        Insert: {
+          bank?: string[]
+          created_at?: string
+          erstellt_von?: string | null
+          formation?: string
+          id?: string
+          match_label?: string | null
+          spiel_id?: string | null
+          startelf: string[]
+        }
+        Update: {
+          bank?: string[]
+          created_at?: string
+          erstellt_von?: string | null
+          formation?: string
+          id?: string
+          match_label?: string | null
+          spiel_id?: string | null
+          startelf?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sva_lineup_spiel_id_fkey"
+            columns: ["spiel_id"]
+            isOneToOne: false
+            referencedRelation: "sm_spiele"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sva_publish_log: {
+        Row: {
+          angefordert_at: string
+          angefordert_von: string | null
+          detail: string | null
+          id: string
+          status: string
+        }
+        Insert: {
+          angefordert_at?: string
+          angefordert_von?: string | null
+          detail?: string | null
+          id?: string
+          status: string
+        }
+        Update: {
+          angefordert_at?: string
+          angefordert_von?: string | null
+          detail?: string | null
+          id?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      sva_settings: {
+        Row: {
+          adresse: string | null
+          email: string | null
+          fupa_url: string | null
+          fussball_de_team_id: string | null
+          id: number
+          instagram: string | null
+          rechtstexte_ok: boolean
+          saison: string | null
+          training: string | null
+          updated_at: string
+          updated_by: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          adresse?: string | null
+          email?: string | null
+          fupa_url?: string | null
+          fussball_de_team_id?: string | null
+          id?: number
+          instagram?: string | null
+          rechtstexte_ok?: boolean
+          saison?: string | null
+          training?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          whatsapp?: string | null
+        }
+        Update: {
+          adresse?: string | null
+          email?: string | null
+          fupa_url?: string | null
+          fussball_de_team_id?: string | null
+          id?: number
+          instagram?: string | null
+          rechtstexte_ok?: boolean
+          saison?: string | null
+          training?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -978,6 +1121,8 @@ export type Database = {
         Returns: undefined
       }
       rezept_speichern: { Args: { p_rezept: Json }; Returns: string }
+      web_snapshot: { Args: never; Returns: Json }
+      sva_array_distinct: { Args: { a: string[] }; Returns: boolean }
       sm_spieltagspaket: {
         Args: { p_spiel_id: string }
         Returns: {
