@@ -173,12 +173,14 @@ export function CameraRig() {
 
     // v14-D: Bildverschiebung für die Textspalte (nur Landscape, weich ein/aus)
     const persp2 = camera as THREE.PerspectiveCamera
+    // Hochformat (Tablet): Text steht oben → Bild nach unten verschieben.
     const wantShift = aspect >= 1 ? TEAM_VIEW_SHIFT * wMann : 0
-    viewShift.current = wantShift
-    if (wantShift > 0.0005) {
+    const wantShiftY = aspect < 1 ? 0.13 * wMann : 0
+    viewShift.current = wantShift + wantShiftY
+    if (viewShift.current > 0.0005) {
       const w = state.size.width
       const h = state.size.height
-      persp2.setViewOffset(w, h, -wantShift * w, 0, w, h)
+      persp2.setViewOffset(w, h, -wantShift * w, -wantShiftY * h, w, h)
     } else if (persp2.view && persp2.view.enabled) {
       persp2.clearViewOffset()
     }

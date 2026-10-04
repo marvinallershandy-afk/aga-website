@@ -151,6 +151,13 @@ export function useScrollProgress(enabled: boolean) {
     return () => {
       clearTimeout(t)
       ro.disconnect()
+      // v14-D: Präsenz-Stile zurücksetzen. Schaltet die Seite nach dem Start
+      // in den Fallback (reduced-motion / kein WebGL), blieben die Sektionen
+      // sonst mit opacity:0 unsichtbar — auch die statischen Karten.
+      for (const z of presenceZones) {
+        z.el.style.opacity = ''
+        z.el.style.pointerEvents = ''
+      }
       window.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', onResize)
       if (raf) cancelAnimationFrame(raf)

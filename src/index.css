@@ -146,6 +146,13 @@ body {
   scroll-snap-align: start;
   pointer-events: none;
 }
+/* Tablet hochkant: Text oben, Formation darunter frei im Bild */
+@media (min-width: 641px) and (orientation: portrait) {
+  .team-sticky { justify-content: flex-start; padding-top: 6rem; }
+  .team-sticky > .section__scrim {
+    background: linear-gradient(180deg, rgba(8,7,10,0.85) 0%, rgba(8,7,10,0.6) 34%, rgba(8,7,10,0.1) 56%, rgba(8,7,10,0) 70%);
+  }
+}
 @media (max-width: 640px) {
   .section.section--team-fly { height: 210svh; padding: 0; }
   .team-sticky {
