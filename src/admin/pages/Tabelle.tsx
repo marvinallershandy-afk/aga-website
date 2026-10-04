@@ -11,7 +11,10 @@ import { ErrorState } from '../components/ui/error-state'
 import { useToast } from '../components/ui/toast'
 import { useConfirm } from '../components/ui/confirm'
 import type { TabelleRow, TabelleInput } from '../lib/db'
-import { useTabelle, useTabelleMutations } from '../lib/queries'
+import { useSettings, useTabelle, useTabelleMutations } from '../lib/queries'
+import { friendlyError, isMissingSchema } from '../lib/db'
+import { fussballDeUrl } from '../lib/pflege'
+import { PflegeHinweis } from '../components/PflegeHinweis'
 import { cn } from '../lib/utils'
 
 // ─────────────────────────────────────────────────────────────
@@ -28,8 +31,8 @@ import { cn } from '../lib/utils'
 // ist bewusst NICHT verdrahtet (offener Schalter).
 // ─────────────────────────────────────────────────────────────
 
-const FUSSBALL_DE_HINWEIS =
-  'https://www.fussball.de'
+// v14-C (Vereins-Pflege): Fachjargon raus, fussball.de-Link aus „Verein &
+// Links“, mobile Kartenliste statt 720-px-Tabelle, Saison vorbelegt.
 
 type Draft = {
   saison: string
@@ -96,8 +99,11 @@ export function Tabelle() {
   const toast = useToast()
   const confirm = useConfirm()
   const tabelleQ = useTabelle()
+  const settingsQ = useSettings()
   const { create, update, remove } = useTabelleMutations()
   const rows = tabelleQ.data ?? []
+  const saison = settingsQ.data?.saison ?? ''
+  const teamId = settingsQ.data?.fussball_de_team_id ?? null
 
   const [editorOpen, setEditorOpen] = useState(false)
   const [editId, setEditId] = useState<string | null>(null)
@@ -105,7 +111,8 @@ export function Tabelle() {
 
   const openNew = () => {
     setEditId(null)
-    setDraft(LEER)
+    const naechsterPlatz = rows.length ? Math.max(...rows.map((r) => r.platz)) + 1 : 1
+    setDraft({ ...LEER, saison, platz: String(naechsterPlatz) })
     setEditorOpen(true)
   }
   const openEdit = (r: TabelleRow) => {
@@ -131,36 +138,36 @@ export function Tabelle() {
   return (
     <>
       <PageHeader
-        title="Ligatabelle"
-        subtitle="Tabellenstand pflegen — erscheint über den Website-Build auf der öffentlichen Seite."
+        title="Tabelle"
+        subtitle="Den Tabellenstand nach jedem Spieltag abschreiben — die Website zeigt ihn nach dem Veröffentlichen."
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex w-full items-center gap-2 sm:w-auto">
             <Button variant="ghost" size="icon" onClick={() => void tabelleQ.refetch()} aria-label="Neu laden">
               <RefreshCw className={cn('h-4 w-4', tabelleQ.isFetching && 'animate-spin')} />
             </Button>
-            <Button onClick={openNew}>
-              <Plus className="h-4 w-4" /> Zeile hinzufügen
+            {teamId && (
+              <Button asChild variant="outline" className="flex-1 sm:flex-none">
+                <a href={fussballDeUrl(teamId)} target="_blank" rel="noreferrer">
+                  <ExternalLink className="h-4 w-4" /> fussball.de öffnen
+                </a>
+              </Button>
+            )}
+            <Button className="flex-1 sm:flex-none" onClick={openNew}>
+              <Plus className="h-4 w-4" /> Zeile
             </Button>
           </div>
         }
       />
 
-      {/* GATE-D-Hinweis: Quelle der Daten ist eine offene Entscheidung. */}
-      <div className="mb-4 rounded-lg border border-border bg-muted/20 p-3 text-sm text-muted-foreground">
-        Quelle offen (GATE-D): DFB-Widget · n8n-Auslesen von{' '}
-        <a
-          href={FUSSBALL_DE_HINWEIS}
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex items-center gap-1 text-foreground/80 underline"
-        >
-          fussball.de <ExternalLink className="h-3 w-3" />
-        </a>{' '}
-        · Handeingabe (dieser Weg). Bis zur Entscheidung ist die Handeingabe die verlässliche Quelle.
-      </div>
+      <PflegeHinweis className="mb-4" title="So geht’s">
+        fussball.de öffnen, Tabelle ansehen, Zeilen hier abschreiben (Platz, Team, Spiele, Punkte genügen).
+        Die eigene Mannschaft als „SVA“ markieren — sie wird auf der Website hervorgehoben.
+        {saison ? ` Es zählt die Saison ${saison} (einstellbar unter „Verein & Links“).` : ''}
+      </PflegeHinweis>
 
-      {tabelleQ.error && !tabelleQ.isPending && (
-        <ErrorState className="mb-4" message={tabelleQ.error.message} onRetry={() => void tabelleQ.refetch()} />
+      {tabelleQ.error && !tabelleQ.isPending && isMissingSchema(tabelleQ.error) && <PflegeHinweis schema className="mb-4" />}
+      {tabelleQ.error && !tabelleQ.isPending && !isMissingSchema(tabelleQ.error) && (
+        <ErrorState className="mb-4" message={friendlyError(tabelleQ.error)} onRetry={() => void tabelleQ.refetch()} />
       )}
 
       {tabelleQ.isPending ? (
@@ -177,7 +184,24 @@ export function Tabelle() {
           }
         />
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-border">
+        <>
+        <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card sm:hidden">
+          {rows.map((r) => (
+            <li key={r.id}>
+              <button
+                type="button"
+                onClick={() => openEdit(r)}
+                className={cn('flex min-h-[56px] w-full items-center gap-3 px-3 py-2 text-left', r.self && 'bg-primary/15 font-semibold')}
+              >
+                <span className="w-7 text-right font-display text-lg tabular-nums text-muted-foreground">{r.platz}</span>
+                <span className="min-w-0 flex-1 truncate">{r.team}</span>
+                <span className="text-xs tabular-nums text-muted-foreground">{r.spiele} Sp.</span>
+                <span className="w-12 text-right font-display text-lg tabular-nums">{r.punkte}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+        <div className="hidden overflow-x-auto rounded-lg border border-border sm:block">
           <table className="w-full min-w-[720px] text-sm">
             <thead className="border-b border-border bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
@@ -226,6 +250,7 @@ export function Tabelle() {
             </tbody>
           </table>
         </div>
+        </>
       )}
 
       <TabelleEditor
@@ -236,12 +261,24 @@ export function Tabelle() {
         onClose={() => setEditorOpen(false)}
         onSave={async () => {
           const input = draftToInput(draft)
-          if (!input.team) throw new Error('Team ist erforderlich.')
+          if (!input.team) throw new Error('Bitte den Teamnamen eintragen.')
+          if (!input.platz || input.platz < 1) throw new Error('Bitte den Platz eintragen.')
           if (editId) await update.mutateAsync({ id: editId, patch: input })
           else await create.mutateAsync(input)
           toast.success('Tabelle gespeichert.')
           setEditorOpen(false)
         }}
+        onDelete={
+          editId
+            ? () => {
+                const r = rows.find((x) => x.id === editId)
+                if (r) {
+                  setEditorOpen(false)
+                  void handleDelete(r)
+                }
+              }
+            : undefined
+        }
       />
     </>
   )
@@ -273,6 +310,7 @@ function TabelleEditor({
   setDraft,
   onClose,
   onSave,
+  onDelete,
 }: {
   open: boolean
   isEdit: boolean
@@ -280,6 +318,7 @@ function TabelleEditor({
   setDraft: (d: Draft) => void
   onClose: () => void
   onSave: () => Promise<void>
+  onDelete?: () => void
 }) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -305,6 +344,11 @@ function TabelleEditor({
       description="Tordifferenz wird automatisch aus Toren und Gegentoren berechnet."
       footer={
         <>
+          {onDelete && (
+            <Button variant="ghost" className="mr-auto text-muted-foreground" onClick={onDelete} disabled={saving}>
+              <Trash2 className="h-4 w-4" /> Löschen
+            </Button>
+          )}
           <Button variant="outline" onClick={onClose} disabled={saving}>
             Abbrechen
           </Button>
@@ -349,7 +393,7 @@ function TabelleEditor({
           onChange={(e) => set('self', e.target.checked)}
           className="h-4 w-4"
         />
-        Eigene Mannschaft (auf der Website hervorheben)
+        Das sind wir (SVA) — auf der Website hervorheben
       </label>
 
       {error && <p className="text-sm text-primary">{error}</p>}

@@ -63,6 +63,22 @@ export function formatAnstoss(iso: string): string {
   return `${tag}, ${datum} · ${zeit} Uhr`
 }
 
+/** „gerade eben" / „vor 5 Min." / „vor 3 Std." / „gestern" / „vor 4 Tagen" / „12.09.26". */
+export function relativZeit(iso: string | null | undefined): string {
+  if (!iso) return '—'
+  const t = new Date(iso).getTime()
+  if (Number.isNaN(t)) return '—'
+  const min = Math.round((Date.now() - t) / 60_000)
+  if (min < 1) return 'gerade eben'
+  if (min < 60) return `vor ${min} Min.`
+  const std = Math.round(min / 60)
+  if (std < 24) return `vor ${std} Std.`
+  const tage = Math.round(std / 24)
+  if (tage === 1) return 'gestern'
+  if (tage < 14) return `vor ${tage} Tagen`
+  return new Date(iso).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' })
+}
+
 /** Tage bis zu einem ISO-Datum (Ende des Tages); null ohne Datum. */
 export function tageBis(dateIso: string | null): number | null {
   if (!dateIso) return null

@@ -1,379 +1,438 @@
-import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
-import {
-  Plus,
-  RefreshCw,
-  CalendarClock,
-  Users,
-  Pencil,
-  PackagePlus,
-  ImageIcon,
-  Home,
-  Bus,
-  CheckCircle2,
-} from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { Plus, CalendarDays, Home, Bus, MapPin, Trash2, Loader2, ChevronDown, ExternalLink } from 'lucide-react'
 import { PageHeader } from './Placeholder'
 import { Button } from '../components/ui/button'
-import { Badge } from '../components/ui/badge'
 import { Card, CardContent } from '../components/ui/card'
+import { Input } from '../components/ui/input'
+import { Label } from '../components/ui/label'
+import { Modal } from '../components/ui/modal'
 import { SkeletonRows } from '../components/ui/skeleton'
 import { EmptyState } from '../components/ui/empty-state'
 import { ErrorState } from '../components/ui/error-state'
-import { Tabs } from '../components/ui/tabs'
 import { useToast } from '../components/ui/toast'
-import { SpielEditor } from '../components/SpielEditor'
-import { SpielerEditor } from '../components/SpielerEditor'
-import type { RosterInput, RosterRow, SpielInput, SpielRow } from '../lib/db'
-import {
-  useContent,
-  useRoster,
-  useRosterMutations,
-  useSpiele,
-  useSpieleMutations,
-} from '../lib/queries'
+import { useConfirm } from '../components/ui/confirm'
+import type { SpielInput, SpielRow } from '../lib/db'
+import { friendlyError } from '../lib/db'
+import { useSettings, useSpiele, useSpieleMutations } from '../lib/queries'
 import { formatAnstoss } from '../lib/format'
+import { ergebnisArt, ergebnisOffen, ergebnisText, hatErgebnis, naechstesSpiel, paarung } from '../lib/spiele'
+import { fussballDeUrl } from '../lib/pflege'
 import { cn } from '../lib/utils'
 
-type Tab = 'spiele' | 'kader'
+// ─────────────────────────────────────────────────────────────
+// v14-C: Spielplan, vereinfacht. Drei Blöcke:
+//   „Ergebnis fehlt“ (mit Schnell-Eingabe direkt in der Karte),
+//   „Anstehend“, „Gespielt“. Antippen öffnet das Formular.
+// Daten: sm_spiele (wie bisher; Archiv-Module lesen dieselben Zeilen).
+// ─────────────────────────────────────────────────────────────
+
+const HEIM_ORT = 'Waldsportplatz Agathenburg'
+const WETTBEWERB = 'Kreisliga Stade'
 
 export function Spiele() {
-  const [tab, setTab] = useState<Tab>('spiele')
+  const toast = useToast()
+  const spieleQ = useSpiele()
+  const settingsQ = useSettings()
+  const { create, update, remove } = useSpieleMutations()
+  const [editor, setEditor] = useState<{ open: boolean; row: SpielRow | null }>({ open: false, row: null })
+  const [alleGespielt, setAlleGespielt] = useState(false)
+
+  const spiele = useMemo(() => spieleQ.data ?? [], [spieleQ.data])
+  const offen = ergebnisOffen(spiele).sort((a, b) => +new Date(b.anstoss) - +new Date(a.anstoss))
+  const naechstes = naechstesSpiel(spiele)
+  const offenIds = new Set(offen.map((s) => s.id))
+  const anstehend = spiele
+    .filter((s) => !hatErgebnis(s) && !offenIds.has(s.id))
+    .sort((a, b) => +new Date(a.anstoss) - +new Date(b.anstoss))
+  const gespielt = spiele.filter(hatErgebnis).sort((a, b) => +new Date(b.anstoss) - +new Date(a.anstoss))
+  const teamId = settingsQ.data?.fussball_de_team_id
+
+  const speichern = async (input: SpielInput, id?: string) => {
+    if (id) await update.mutateAsync({ id, patch: input })
+    else await create.mutateAsync(input)
+    toast.success('Spiel gespeichert. Erscheint nach „Website veröffentlichen“.')
+  }
+
   return (
     <>
       <PageHeader
-        title="Spiele & Kader"
-        subtitle="Das Datenherz: Spieltage füttern Plan, Grafiken und Dashboard."
+        title="Spiele"
+        subtitle="Spielplan und Ergebnisse — daraus entstehen nächstes Spiel, letztes Ergebnis und Form auf der Website."
+        actions={
+          <div className="flex w-full gap-2 sm:w-auto">
+            {teamId && (
+              <Button asChild variant="outline" className="flex-1 sm:flex-none">
+                <a href={fussballDeUrl(teamId)} target="_blank" rel="noreferrer">
+                  <ExternalLink className="h-4 w-4" /> fussball.de
+                </a>
+              </Button>
+            )}
+            <Button className="flex-1 sm:flex-none" onClick={() => setEditor({ open: true, row: null })}>
+              <Plus className="h-4 w-4" /> Spiel
+            </Button>
+          </div>
+        }
       />
-      <Tabs
-        className="mb-4"
-        value={tab}
-        onChange={setTab}
-        items={[
-          { value: 'spiele', label: 'Spiele', icon: CalendarClock },
-          { value: 'kader', label: 'Kader', icon: Users },
-        ]}
-      />
-      {tab === 'spiele' ? <SpieleTab /> : <KaderTab />}
-    </>
-  )
-}
-
-// ── Spiele ──────────────────────────────────────────────────────────────────
-function SpieleTab() {
-  const toast = useToast()
-  const spieleQ = useSpiele()
-  const contentQ = useContent()
-  const { create, update, remove, paket } = useSpieleMutations()
-  const [editorOpen, setEditorOpen] = useState(false)
-  const [editRow, setEditRow] = useState<SpielRow | null>(null)
-
-  const spiele = spieleQ.data ?? []
-  const now = Date.now()
-  const { anstehend, gespielt } = useMemo(() => {
-    const a = spiele.filter((s) => new Date(s.anstoss).getTime() >= now)
-    const g = spiele.filter((s) => new Date(s.anstoss).getTime() < now).reverse()
-    return { anstehend: a, gespielt: g }
-  }, [spiele, now])
-
-  // Wie viele Plan-Beiträge hängen an einem Spiel? (aus dem geteilten Cache)
-  const paketCount = (spielId: string) =>
-    (contentQ.data ?? []).filter((c) => c.spiel_id === spielId).length
-
-  const handleSave = async (input: SpielInput, id?: string) => {
-    if (id) await update.mutateAsync({ id, patch: input })
-    else await create.mutateAsync(input)
-  }
-  const handleDelete = async (id: string) => {
-    await remove.mutateAsync(id)
-  }
-  const handlePaket = (row: SpielRow) => {
-    paket.mutate(row.id, {
-      onSuccess: (rows) =>
-        toast.success(`Spieltagspaket: ${rows.length} Beiträge im Redaktionsplan.`),
-      onError: (e) => toast.error(e instanceof Error ? e.message : 'Paket fehlgeschlagen.'),
-    })
-  }
-
-  const openNew = () => {
-    setEditRow(null)
-    setEditorOpen(true)
-  }
-
-  return (
-    <>
-      <div className="mb-4 flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          Ein Klick aufs Paket legt Ankündigung, Aufstellung, Ergebnis & MOTM im Plan an.
-        </p>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={() => void spieleQ.refetch()} aria-label="Neu laden">
-            <RefreshCw className={cn('h-4 w-4', spieleQ.isFetching && 'animate-spin')} />
-          </Button>
-          <Button onClick={openNew}>
-            <Plus className="h-4 w-4" /> Neues Spiel
-          </Button>
-        </div>
-      </div>
 
       {spieleQ.error && !spieleQ.isPending && (
-        <ErrorState className="mb-4" message={spieleQ.error.message} onRetry={() => void spieleQ.refetch()} />
+        <ErrorState className="mb-4" message={friendlyError(spieleQ.error)} onRetry={() => void spieleQ.refetch()} />
       )}
 
       {spieleQ.isPending ? (
-        <SkeletonRows rows={4} />
+        <SkeletonRows rows={5} />
       ) : spiele.length === 0 ? (
         <EmptyState
-          icon={CalendarClock}
+          icon={CalendarDays}
           title="Noch keine Spiele"
-          description="Lege den nächsten Spieltag an — daraus entstehen Paket-Beiträge und vorbefüllte Grafiken."
+          description="Trag das nächste Spiel ein — die Website zeigt dann Gegner, Anstoß und Countdown."
           action={
-            <Button onClick={openNew}>
-              <Plus className="h-4 w-4" /> Neues Spiel
+            <Button onClick={() => setEditor({ open: true, row: null })}>
+              <Plus className="h-4 w-4" /> Erstes Spiel anlegen
             </Button>
           }
         />
       ) : (
-        <div className="space-y-6">
-          {anstehend.length > 0 && (
-            <SpielSection
-              title="Anstehend"
-              rows={anstehend}
-              paketCount={paketCount}
-              onEdit={(r) => {
-                setEditRow(r)
-                setEditorOpen(true)
-              }}
-              onPaket={handlePaket}
-            />
-          )}
-          {gespielt.length > 0 && (
-            <SpielSection
-              title="Gespielt"
-              rows={gespielt}
-              paketCount={paketCount}
-              onEdit={(r) => {
-                setEditRow(r)
-                setEditorOpen(true)
-              }}
-              onPaket={handlePaket}
-            />
-          )}
-        </div>
-      )}
-
-      <SpielEditor
-        open={editorOpen}
-        onClose={() => setEditorOpen(false)}
-        onSave={handleSave}
-        onDelete={handleDelete}
-        row={editRow}
-      />
-    </>
-  )
-}
-
-function SpielSection({
-  title,
-  rows,
-  paketCount,
-  onEdit,
-  onPaket,
-}: {
-  title: string
-  rows: SpielRow[]
-  paketCount: (id: string) => number
-  onEdit: (r: SpielRow) => void
-  onPaket: (r: SpielRow) => void
-}) {
-  return (
-    <section>
-      <h2 className="mb-2 font-display text-lg tracking-wide">{title}</h2>
-      <div className="space-y-2">
-        {rows.map((s) => {
-          const n = paketCount(s.id)
-          const hatErgebnis = s.tore_sva != null && s.tore_gegner != null
-          return (
-            <Card key={s.id}>
-              <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="font-display text-lg tracking-wide">
-                      {s.heim ? `SVA vs. ${s.gegner}` : `${s.gegner} vs. SVA`}
-                    </h3>
-                    <Badge variant="outline" className="gap-1">
-                      {s.heim ? <Home className="h-3 w-3" /> : <Bus className="h-3 w-3" />}
-                      {s.heim ? 'Heim' : 'Auswärts'}
-                    </Badge>
-                    {hatErgebnis && (
-                      <Badge variant="default" className="tabular-nums">
-                        {s.heim ? `${s.tore_sva}:${s.tore_gegner}` : `${s.tore_gegner}:${s.tore_sva}`}
-                      </Badge>
-                    )}
-                  </div>
-                  <p className="mt-0.5 text-sm text-muted-foreground">
-                    {formatAnstoss(s.anstoss)}
-                    {s.ort ? ` · ${s.ort}` : ''}
-                    {s.wettbewerb ? ` · ${s.wettbewerb}` : ''}
-                    {s.spieltag_nr ? ` · ${s.spieltag_nr}. Spieltag` : ''}
-                  </p>
-                </div>
-
-                <div className="flex shrink-0 flex-wrap items-center gap-2">
-                  {n > 0 ? (
-                    <Badge variant="secondary" className="gap-1">
-                      <CheckCircle2 className="h-3 w-3 text-green-500" /> Paket ({n})
-                    </Badge>
-                  ) : (
-                    <Button size="sm" variant="secondary" onClick={() => onPaket(s)}>
-                      <PackagePlus className="h-4 w-4" /> Spieltagspaket
-                    </Button>
-                  )}
-                  <Button asChild size="sm" variant="outline">
-                    <Link to={`/matchday?spiel=${s.id}`} title="Grafik mit diesen Spieldaten">
-                      <ImageIcon className="h-4 w-4" /> Grafik
-                    </Link>
-                  </Button>
-                  <Button size="sm" variant="ghost" onClick={() => onEdit(s)} aria-label="Bearbeiten">
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )
-        })}
-      </div>
-    </section>
-  )
-}
-
-// ── Kader ───────────────────────────────────────────────────────────────────
-function KaderTab() {
-  const toast = useToast()
-  const rosterQ = useRoster()
-  const { create, update, remove } = useRosterMutations()
-  const roster = rosterQ.data ?? []
-  const [editorOpen, setEditorOpen] = useState(false)
-  const [editRow, setEditRow] = useState<RosterRow | null>(null)
-
-  const handleSave = async (input: RosterInput, id?: string) => {
-    if (id) await update.mutateAsync({ id, patch: input })
-    else await create.mutateAsync(input)
-  }
-  const handleDelete = async (id: string) => {
-    await remove.mutateAsync(id)
-  }
-  const toggleAktiv = (row: RosterRow) => {
-    update.mutate(
-      { id: row.id, patch: { aktiv: !row.aktiv } },
-      { onError: (e) => toast.error(e instanceof Error ? e.message : 'Update fehlgeschlagen.') },
-    )
-  }
-
-  const openNew = () => {
-    setEditRow(null)
-    setEditorOpen(true)
-  }
-
-  return (
-    <>
-      <div className="mb-4 flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          Single Source für Aufstellungs-Grafiken, MOTM und (später) die Website-Spielerkarten.
-        </p>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={() => void rosterQ.refetch()} aria-label="Neu laden">
-            <RefreshCw className={cn('h-4 w-4', rosterQ.isFetching && 'animate-spin')} />
-          </Button>
-          <Button onClick={openNew}>
-            <Plus className="h-4 w-4" /> Neuer Spieler
-          </Button>
-        </div>
-      </div>
-
-      {rosterQ.error && !rosterQ.isPending && (
-        <ErrorState className="mb-4" message={rosterQ.error.message} onRetry={() => void rosterQ.refetch()} />
-      )}
-
-      {rosterQ.isPending ? (
-        <SkeletonRows rows={4} />
-      ) : roster.length === 0 ? (
-        <EmptyState
-          icon={Users}
-          title="Kader ist leer"
-          description="Lege Spieler mit Nummer, Position und Foto an — Grafiken und Steckbriefe greifen darauf zu."
-          action={
-            <Button onClick={openNew}>
-              <Plus className="h-4 w-4" /> Neuer Spieler
-            </Button>
-          }
-        />
-      ) : (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-          {roster.map((p) => (
-            <Card key={p.id} className={cn(!p.aktiv && 'opacity-55')}>
-              <CardContent className="flex flex-col items-center gap-2 p-4 text-center">
-                <PlayerAvatar row={p} />
-                <div>
-                  <p className="font-medium leading-tight">{p.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {p.nummer != null ? `#${p.nummer}` : ''}
-                    {p.nummer != null && p.position ? ' · ' : ''}
-                    {p.position ?? ''}
-                  </p>
-                </div>
-                <div className="mt-1 flex items-center gap-2">
-                  <button
-                    onClick={() => toggleAktiv(p)}
-                    className={cn(
-                      'rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
-                      p.aktiv ? 'bg-green-600/20 text-green-500' : 'bg-secondary text-muted-foreground',
-                    )}
-                  >
-                    {p.aktiv ? 'aktiv' : 'inaktiv'}
-                  </button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => {
-                      setEditRow(p)
-                      setEditorOpen(true)
+        <div className="space-y-7">
+          {offen.length > 0 && (
+            <section>
+              <h2 className="mb-2 font-display text-lg tracking-wide text-primary">Ergebnis fehlt</h2>
+              <div className="space-y-2">
+                {offen.map((s) => (
+                  <SchnellErgebnis
+                    key={s.id}
+                    spiel={s}
+                    onOpen={() => setEditor({ open: true, row: s })}
+                    onSave={async (tore_sva, tore_gegner) => {
+                      try {
+                        await update.mutateAsync({ id: s.id, patch: { tore_sva, tore_gegner } })
+                        toast.success(`Ergebnis gespeichert: ${paarung(s)}.`)
+                      } catch (e) {
+                        toast.error(friendlyError(e))
+                      }
                     }}
-                    aria-label="Bearbeiten"
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+
+          <section>
+            <h2 className="mb-2 font-display text-lg tracking-wide">Anstehend</h2>
+            {anstehend.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Kein anstehendes Spiel eingetragen.</p>
+            ) : (
+              <SpielListe rows={anstehend} hervorheben={naechstes?.id} onOpen={(row) => setEditor({ open: true, row })} />
+            )}
+          </section>
+
+          {gespielt.length > 0 && (
+            <section>
+              <h2 className="mb-2 font-display text-lg tracking-wide">Gespielt</h2>
+              <SpielListe rows={alleGespielt ? gespielt : gespielt.slice(0, 5)} onOpen={(row) => setEditor({ open: true, row })} />
+              {gespielt.length > 5 && (
+                <Button variant="ghost" size="sm" className="mt-2" onClick={() => setAlleGespielt((v) => !v)}>
+                  <ChevronDown className={cn('h-4 w-4 transition-transform', alleGespielt && 'rotate-180')} />
+                  {alleGespielt ? 'Weniger zeigen' : `Alle ${gespielt.length} zeigen`}
+                </Button>
+              )}
+            </section>
+          )}
         </div>
       )}
 
-      <SpielerEditor
-        open={editorOpen}
-        onClose={() => setEditorOpen(false)}
-        onSave={handleSave}
-        onDelete={handleDelete}
-        row={editRow}
+      <SpielFormular
+        open={editor.open}
+        row={editor.row}
+        onClose={() => setEditor((e) => ({ ...e, open: false }))}
+        onSave={speichern}
+        onDelete={async (id) => {
+          await remove.mutateAsync(id)
+          toast.success('Spiel gelöscht.')
+        }}
       />
     </>
   )
 }
 
-function PlayerAvatar({ row }: { row: RosterRow }) {
-  if (row.foto_url) {
-    return (
-      <img
-        src={row.foto_url}
-        alt={row.name}
-        className="h-16 w-16 rounded-full border-2 border-primary/60 object-cover"
-        loading="lazy"
-      />
-    )
-  }
+function SpielListe({ rows, hervorheben, onOpen }: { rows: SpielRow[]; hervorheben?: string; onOpen: (r: SpielRow) => void }) {
   return (
-    <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-primary/60 bg-muted font-display text-xl text-primary">
-      {row.name.slice(0, 1).toUpperCase()}
-    </div>
+    <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
+      {rows.map((s) => {
+        const art = ergebnisArt(s)
+        return (
+          <li key={s.id}>
+            <button
+              type="button"
+              onClick={() => onOpen(s)}
+              className={cn('flex min-h-[64px] w-full items-center gap-3 px-3 py-2.5 text-left hover:bg-accent/40', hervorheben === s.id && 'bg-primary/10')}
+            >
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary" title={s.heim ? 'Heim' : 'Auswärts'}>
+                {s.heim ? <Home className="h-4 w-4" /> : <Bus className="h-4 w-4" />}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate font-medium">
+                  {paarung(s)}
+                  {hervorheben === s.id && <span className="ml-2 rounded bg-primary px-1.5 py-0.5 text-[10px] font-bold uppercase text-white">Nächstes</span>}
+                </span>
+                <span className="block truncate text-sm text-muted-foreground">
+                  {formatAnstoss(s.anstoss)}
+                  {s.ort ? ` · ${s.ort}` : ''}
+                </span>
+              </span>
+              {hatErgebnis(s) && (
+                <span
+                  className={cn(
+                    'shrink-0 rounded-md px-2.5 py-1 font-display text-lg tabular-nums',
+                    art === 'W' && 'bg-green-600/25 text-green-300',
+                    art === 'U' && 'bg-secondary text-foreground',
+                    art === 'N' && 'bg-primary/25 text-red-200',
+                  )}
+                >
+                  {ergebnisText(s)}
+                </span>
+              )}
+            </button>
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+
+function SchnellErgebnis({ spiel, onOpen, onSave }: { spiel: SpielRow; onOpen: () => void; onSave: (sva: number, gegner: number) => Promise<void> }) {
+  const [sva, setSva] = useState('')
+  const [geg, setGeg] = useState('')
+  const [busy, setBusy] = useState(false)
+  const ok = sva !== '' && geg !== ''
+  // Eingabefelder in Paarungs-Reihenfolge (Heim links).
+  const links = spiel.heim ? { label: 'SVA', v: sva, set: setSva } : { label: spiel.gegner, v: geg, set: setGeg }
+  const rechts = spiel.heim ? { label: spiel.gegner, v: geg, set: setGeg } : { label: 'SVA', v: sva, set: setSva }
+  const zahl = (v: string) => v.replace(/\D/g, '').slice(0, 2)
+
+  return (
+    <Card className="border-primary/40">
+      <CardContent className="space-y-3 p-4">
+        <button type="button" onClick={onOpen} className="block text-left">
+          <span className="block font-medium">{paarung(spiel)}</span>
+          <span className="block text-sm text-muted-foreground">{formatAnstoss(spiel.anstoss)}</span>
+        </button>
+        <div className="flex items-end gap-2">
+          <div className="flex-1 space-y-1">
+            <Label className="block truncate text-xs text-muted-foreground">{links.label}</Label>
+            <Input inputMode="numeric" className="h-14 text-center font-display text-2xl" value={links.v} onChange={(e) => links.set(zahl(e.target.value))} aria-label={`Tore ${links.label}`} />
+          </div>
+          <span className="pb-3 font-display text-2xl text-muted-foreground">:</span>
+          <div className="flex-1 space-y-1">
+            <Label className="block truncate text-xs text-muted-foreground">{rechts.label}</Label>
+            <Input inputMode="numeric" className="h-14 text-center font-display text-2xl" value={rechts.v} onChange={(e) => rechts.set(zahl(e.target.value))} aria-label={`Tore ${rechts.label}`} />
+          </div>
+          <Button
+            className="h-14 px-5"
+            disabled={!ok || busy}
+            onClick={async () => {
+              setBusy(true)
+              await onSave(Number(sva), Number(geg))
+              setBusy(false)
+            }}
+          >
+            {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Speichern'}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+// ── Formular ────────────────────────────────────────────────────────────────
+interface Form {
+  gegner: string
+  heim: boolean
+  datum: string // yyyy-mm-dd
+  zeit: string // hh:mm
+  ort: string
+  wettbewerb: string
+  toreSva: string
+  toreGegner: string
+}
+
+const pad = (n: number) => String(n).padStart(2, '0')
+function toForm(row: SpielRow | null): Form {
+  if (!row) return { gegner: '', heim: true, datum: '', zeit: '15:00', ort: HEIM_ORT, wettbewerb: WETTBEWERB, toreSva: '', toreGegner: '' }
+  const d = new Date(row.anstoss)
+  return {
+    gegner: row.gegner,
+    heim: row.heim,
+    datum: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
+    zeit: `${pad(d.getHours())}:${pad(d.getMinutes())}`,
+    ort: row.ort ?? '',
+    wettbewerb: row.wettbewerb ?? '',
+    toreSva: row.tore_sva != null ? String(row.tore_sva) : '',
+    toreGegner: row.tore_gegner != null ? String(row.tore_gegner) : '',
+  }
+}
+
+function SpielFormular({
+  open,
+  row,
+  onClose,
+  onSave,
+  onDelete,
+}: {
+  open: boolean
+  row: SpielRow | null
+  onClose: () => void
+  onSave: (input: SpielInput, id?: string) => Promise<void>
+  onDelete: (id: string) => Promise<void>
+}) {
+  const confirm = useConfirm()
+  const [f, setF] = useState<Form>(toForm(null))
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!open) return
+    setF(toForm(row))
+    setError(null)
+  }, [open, row])
+
+  const set = <K extends keyof Form>(k: K, v: Form[K]) => setF((x) => ({ ...x, [k]: v }))
+  const zahl = (v: string) => v.replace(/\D/g, '').slice(0, 2)
+
+  const submit = async () => {
+    if (!f.gegner.trim()) return setError('Bitte den Gegner eintragen.')
+    if (!f.datum) return setError('Bitte ein Datum wählen.')
+    const anstoss = new Date(`${f.datum}T${f.zeit || '15:00'}`)
+    if (Number.isNaN(anstoss.getTime())) return setError('Datum/Uhrzeit ungültig.')
+    if ((f.toreSva === '') !== (f.toreGegner === '')) return setError('Ergebnis bitte vollständig (beide Seiten) oder gar nicht.')
+    setSaving(true)
+    setError(null)
+    try {
+      await onSave(
+        {
+          gegner: f.gegner.trim(),
+          heim: f.heim,
+          anstoss: anstoss.toISOString(),
+          ort: f.ort.trim() || null,
+          wettbewerb: f.wettbewerb.trim() || null,
+          tore_sva: f.toreSva === '' ? null : Number(f.toreSva),
+          tore_gegner: f.toreGegner === '' ? null : Number(f.toreGegner),
+        },
+        row?.id,
+      )
+      onClose()
+    } catch (e) {
+      setError(friendlyError(e, 'Speichern fehlgeschlagen.'))
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const loeschen = async () => {
+    if (!row) return
+    const ok = await confirm({ title: 'Spiel löschen?', description: `${paarung(row)} wird entfernt.`, confirmLabel: 'Löschen', destructive: true })
+    if (!ok) return
+    setSaving(true)
+    try {
+      await onDelete(row.id)
+      onClose()
+    } catch (e) {
+      setError(friendlyError(e, 'Löschen fehlgeschlagen.'))
+      setSaving(false)
+    }
+  }
+
+  const istVergangen = f.datum && new Date(`${f.datum}T${f.zeit || '15:00'}`).getTime() < Date.now()
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={row ? 'Spiel bearbeiten' : 'Spiel hinzufügen'}
+      footer={
+        <>
+          {row && (
+            <Button variant="ghost" className="mr-auto text-muted-foreground" onClick={loeschen} disabled={saving}>
+              <Trash2 className="h-4 w-4" /> Löschen
+            </Button>
+          )}
+          <Button variant="outline" onClick={onClose} disabled={saving}>
+            Abbrechen
+          </Button>
+          <Button onClick={submit} disabled={saving}>
+            {saving ? 'Speichert …' : 'Speichern'}
+          </Button>
+        </>
+      }
+    >
+      <div className="space-y-1.5">
+        <Label htmlFor="s-gegner">Gegner *</Label>
+        <Input id="s-gegner" className="h-12 text-base" value={f.gegner} onChange={(e) => set('gegner', e.target.value)} placeholder="z. B. TuS Harsefeld" />
+      </div>
+
+      <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Heim oder Auswärts">
+        {[
+          { v: true, label: 'Heimspiel', icon: Home },
+          { v: false, label: 'Auswärts', icon: Bus },
+        ].map((o) => (
+          <button
+            key={o.label}
+            type="button"
+            role="radio"
+            aria-checked={f.heim === o.v}
+            onClick={() => setF((x) => ({ ...x, heim: o.v, ort: o.v ? (x.ort || HEIM_ORT) : x.ort === HEIM_ORT ? '' : x.ort }))}
+            className={cn(
+              'flex min-h-[48px] items-center justify-center gap-2 rounded-lg border text-sm font-medium',
+              f.heim === o.v ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-muted-foreground hover:bg-accent',
+            )}
+          >
+            <o.icon className="h-4 w-4" /> {o.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-[1fr_auto] gap-3">
+        <div className="space-y-1.5">
+          <Label htmlFor="s-datum">Datum *</Label>
+          <Input id="s-datum" type="date" className="h-12 text-base" value={f.datum} onChange={(e) => set('datum', e.target.value)} />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="s-zeit">Anstoß</Label>
+          <Input id="s-zeit" type="time" className="h-12 w-32 text-base" value={f.zeit} onChange={(e) => set('zeit', e.target.value)} />
+        </div>
+      </div>
+
+      <div className="space-y-1.5">
+        <Label htmlFor="s-ort" className="flex items-center gap-1">
+          <MapPin className="h-3.5 w-3.5" /> Ort
+        </Label>
+        <Input id="s-ort" className="h-12 text-base" value={f.ort} onChange={(e) => set('ort', e.target.value)} placeholder={f.heim ? HEIM_ORT : 'Sportplatz des Gegners'} />
+      </div>
+
+      <div className="space-y-1.5">
+        <Label htmlFor="s-wb">Wettbewerb</Label>
+        <Input id="s-wb" className="h-12 text-base" value={f.wettbewerb} onChange={(e) => set('wettbewerb', e.target.value)} placeholder={WETTBEWERB} />
+      </div>
+
+      <fieldset className={cn('rounded-lg border p-3', istVergangen ? 'border-primary/50' : 'border-border')}>
+        <legend className="px-1 text-xs uppercase tracking-wide text-muted-foreground">Ergebnis {istVergangen ? '' : '(nach dem Spiel)'}</legend>
+        <div className="flex items-end gap-2">
+          <div className="flex-1 space-y-1">
+            <Label htmlFor="s-sva" className="text-xs text-muted-foreground">SVA</Label>
+            <Input id="s-sva" inputMode="numeric" className="h-12 text-center font-display text-xl" value={f.toreSva} onChange={(e) => set('toreSva', zahl(e.target.value))} />
+          </div>
+          <span className="pb-2.5 font-display text-xl text-muted-foreground">:</span>
+          <div className="flex-1 space-y-1">
+            <Label htmlFor="s-geg" className="truncate text-xs text-muted-foreground">{f.gegner || 'Gegner'}</Label>
+            <Input id="s-geg" inputMode="numeric" className="h-12 text-center font-display text-xl" value={f.toreGegner} onChange={(e) => set('toreGegner', zahl(e.target.value))} />
+          </div>
+        </div>
+      </fieldset>
+
+      {error && (
+        <p role="alert" className="rounded-md border border-primary/40 bg-primary/10 px-3 py-2 text-sm">
+          {error}
+        </p>
+      )}
+    </Modal>
   )
 }

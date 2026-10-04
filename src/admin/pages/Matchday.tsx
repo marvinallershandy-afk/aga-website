@@ -105,7 +105,7 @@ export function Matchday() {
 
   const startelfAusKader = () => {
     const elf = aktiveSpieler
-      .filter((p) => p.position !== 'Trainer/Staff')
+      .filter((p) => p.position !== 'Trainer/Staff' && (p.rolle ?? 'spieler') === 'spieler')
       .slice(0, 11)
       .map((p) => (p.nummer != null ? `${p.nummer} ${p.name}` : p.name))
     setData((d) => ({ ...d, aufstellung: elf }))

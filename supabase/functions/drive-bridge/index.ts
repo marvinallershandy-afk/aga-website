@@ -14,6 +14,12 @@ const CORS = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
+// Google-Drive-IDs bestehen nur aus diesen Zeichen. Alles andere wird
+// abgelehnt, bevor es in die Drive-Query (q=…) eingesetzt wird — sonst ließe
+// sich per folderId wie "x' in parents or name contains '" das gesamte Drive
+// des OAuth-Kontos durchsuchen (Audit v14 §5).
+const DRIVE_ID = /^[A-Za-z0-9_-]{1,128}$/
+
 function json(obj: unknown, status = 200) {
   return new Response(JSON.stringify(obj), {
     status,
@@ -60,6 +66,7 @@ Deno.serve(async (req: Request) => {
 
     if (action === 'list') {
       if (!folderId) return json({ error: 'folderId_required' }, 400)
+      if (typeof folderId !== 'string' || !DRIVE_ID.test(folderId)) return json({ error: 'folderId_invalid' }, 400)
       const q = encodeURIComponent(`'${folderId}' in parents and trashed = false`)
       const fields = encodeURIComponent('files(id,name,mimeType,modifiedTime,webViewLink,size)')
       const r = await fetch(
@@ -73,6 +80,8 @@ Deno.serve(async (req: Request) => {
 
     if (action === 'create_folder') {
       if (!name || !parentId) return json({ error: 'name_and_parentId_required' }, 400)
+      if (typeof parentId !== 'string' || !DRIVE_ID.test(parentId)) return json({ error: 'parentId_invalid' }, 400)
+      if (typeof name !== 'string' || name.length > 200) return json({ error: 'name_invalid' }, 400)
       const r = await fetch('https://www.googleapis.com/drive/v3/files?fields=id,name,webViewLink&supportsAllDrives=true', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },

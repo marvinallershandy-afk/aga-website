@@ -58,7 +58,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signInWithMagicLink: async (email) => {
       const { error } = await supabase.auth.signInWithOtp({
         email,
-        options: { emailRedirectTo: `${window.location.origin}/admin` },
+        // shouldCreateUser:false → ein Magic-Link legt NIE ein neues Konto an.
+        // Nur bereits angelegte (und in sm_admins freigeschaltete) Nutzer
+        // kommen rein. Zusätzlich in Supabase Auth „Signups" abschalten.
+        options: { emailRedirectTo: `${window.location.origin}/admin`, shouldCreateUser: false },
       })
       return { error: error?.message ?? null }
     },
