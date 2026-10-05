@@ -221,6 +221,8 @@ function mapContact(st) {
   if (str(st.training)) c.training = str(st.training)
   // v15-L: Trainingsort ≠ Spielort (address = Waldsportplatz, Anfahrt/Karte)
   if (str(st.trainingOrt)) c.trainingOrt = str(st.trainingOrt)
+  // v19-K (Audit B §2.2): „Was dich am Platz erwartet" (Admin → Verein & Links)
+  if (str(st.amPlatz)) c.amPlatz = str(st.amPlatz).slice(0, 500)
   if (str(st.instagram)) {
     const h = str(st.instagram).replace(/^@/, '')
     c.instagram = `@${h}`
@@ -347,6 +349,41 @@ async function fetchMannschaften() {
   }
 }
 
+// v19-K (Audit B §2.2): Mini-Spielplan — die nächsten bis zu 5 Spiele mit
+// Heim/Auswärts. Quelle ist die vorhandene, anon-lesbare RPC web_kalender(true)
+// (alle Spiele mit `heim`, ohne Vorführ-/Testspiele) — NICHT web_snapshot, damit
+// dessen Ausgabe stabil bleibt. Fehlt die RPC: leerer Spielplan (Block unsichtbar).
+async function fetchSpielplan() {
+  try {
+    const r = await fetchWithTimeout(`${url}/rest/v1/rpc/web_kalender`, {
+      method: 'POST',
+      headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_alle: true }),
+    })
+    if (!r.ok) {
+      console.log(`fetch-content: web_kalender() nicht verfügbar (HTTP ${r.status}) → kein Mini-Spielplan.`)
+      return []
+    }
+    const j = await r.json()
+    const spiele = Array.isArray(j?.spiele) ? j.spiele : []
+    const schwelle = Date.now() - 3 * 3600_000 // bis 3 h nach Anpfiff gilt „aktuell"
+    return spiele
+      .filter((s) => s && str(s.gegner) && str(s.anstoss) && new Date(s.anstoss).getTime() >= schwelle)
+      .sort((a, b) => new Date(a.anstoss) - new Date(b.anstoss))
+      .slice(0, 5)
+      .map((s) => ({
+        opponent: str(s.gegner),
+        home: !!s.heim,
+        kickoff: str(s.anstoss),
+        date: formatKickoff(s.anstoss),
+        ...(str(s.wettbewerb) ? { competition: str(s.wettbewerb) } : {}),
+      }))
+  } catch (e) {
+    console.log(`fetch-content: web_kalender() nicht erreichbar (${e?.message || e}) → kein Mini-Spielplan.`)
+    return []
+  }
+}
+
 // ── Ablauf ──────────────────────────────────────────────────────────────────
 async function main() {
   if (!url || !key) {
@@ -415,6 +452,7 @@ async function main() {
   const partner = await mapPartner(snap.partner)
   const galerien = await mapGalerien(snap.galerien)
   const mannschaften = await fetchMannschaften()
+  const schedule = await fetchSpielplan()
 
   const table = (snap.table ?? [])
     .filter((r) => str(r.team) && Number.isInteger(r.pos))
@@ -467,6 +505,7 @@ async function main() {
   if (partner) overlay.partner = partner
   if (galerien.length) overlay.galerien = galerien
   if (mannschaften.length) overlay.mannschaften = mannschaften
+  if (schedule.length) overlay.schedule = schedule
 
   const hasData = Object.keys(overlay).length > 2
   if (!hasData) {

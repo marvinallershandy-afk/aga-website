@@ -33,6 +33,7 @@ import {
 import { LINEUP as STATIC_LINEUP } from './lineup'
 import type { Lineup } from './lineup'
 import { WEBSITE_CONTENT_OVERLAY } from './generated/website-content.generated'
+import type { ScheduleMatch } from './content-overlay'
 import type { Player, Staff } from './players'
 import type { Sponsor, Match, PlayedMatch, TableRow, FormResult, Section } from './club'
 
@@ -111,6 +112,14 @@ export const CONTACT: Contact = { ...STATIC_CONTACT, ...nonEmpty(ov?.contact) }
  *  (CONTACT.address) bleibt für Anfahrt/Karte. */
 export const TRAINING_ORT_KURZ: string = (CONTACT.trainingOrt ?? '').split(',')[0].trim()
 export const TRAINING_ZEILE: string = TRAINING_ORT_KURZ ? `${CONTACT.training} · ${TRAINING_ORT_KURZ}` : CONTACT.training
+
+// v19-K (Audit B §2.2): „Was dich am Platz erwartet" — NUR gesetzt, wenn im
+// Admin (Verein & Links) gepflegt; sonst null → Block bleibt unsichtbar. Kein
+// Seed-Fallback (nichts erfinden). Mini-Spielplan: nächste bis 5 Spiele mit
+// H/A aus dem Build (web_kalender), ohne Build-Daten leer.
+export const AM_PLATZ: string | null = ov?.contact?.amPlatz?.trim() || null
+export type { ScheduleMatch }
+export const SCHEDULE: ScheduleMatch[] = ov?.schedule ?? []
 
 const DUMMY_WHATSAPP = '491700000000'
 export const whatsappReady: boolean =

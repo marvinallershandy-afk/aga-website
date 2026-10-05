@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { useStore } from '../store/useStore'
-import { CONTACT, whatsappUrl, whatsappReady } from '../data/content'
+import { CONTACT, whatsappUrl, whatsappReady, AM_PLATZ, SCHEDULE } from '../data/content'
 import { PLACE_BY_ID, type PlaceId } from './places'
 import { closePlace, openPlace } from './nav'
 import { ArrowLeft, ArrowRight, X } from 'lucide-react'
@@ -52,6 +52,38 @@ function WaButton({ text, label }: { text: string; label: string }) {
   )
 }
 
+// v19-K (Audit B §2.2): „Was dich am Platz erwartet" — nur wenn im Admin
+// gepflegt (AM_PLATZ). Der Satz entscheidet oft, ob jemand kommt.
+function AmPlatz() {
+  if (!AM_PLATZ) return null
+  return (
+    <div className="kp-amplatz">
+      <span className="kp-amplatz__kicker">Am Platz</span>
+      <p>{AM_PLATZ}</p>
+    </div>
+  )
+}
+
+// v19-K (Audit B §2.2): Mini-Spielplan — die nächsten Spiele mit H/A-Badge.
+// Quelle: Build (web_kalender). Ohne Daten: nichts.
+function MiniSpielplan() {
+  if (!SCHEDULE.length) return null
+  return (
+    <div className="kp-spielplan">
+      <span className="kp-spielplan__kicker">Nächste Spiele</span>
+      <ul>
+        {SCHEDULE.map((m, i) => (
+          <li key={`${m.kickoff}-${i}`}>
+            <span className="kp-spielplan__ha" data-home={m.home || undefined}>{m.home ? 'H' : 'A'}</span>
+            <span className="kp-spielplan__dm">{m.date}</span>
+            <span className="kp-spielplan__opp">{m.home ? `vs ${m.opponent}` : `bei ${m.opponent}`}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
 function SpieltagBody() {
   const ms = useMatchStatus()
   return (
@@ -64,7 +96,9 @@ function SpieltagBody() {
         </span>
         <ArrowRight size={20} strokeWidth={1.5} aria-hidden="true" />
       </a>
+      <AmPlatz />
       <KalenderKnopf variante="zeile" adresse={CONTACT.address} />
+      <MiniSpielplan />
       <FussballWidget />
     </>
   )
