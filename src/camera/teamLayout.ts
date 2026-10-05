@@ -116,12 +116,12 @@ export const TEAM_CENTER = (() => {
 })()
 
 // ─── Fahrt-Phasen ────────────────────────────────────────────
-// v15-P „entschlackt": KEIN Person-für-Person-Fokus mehr (Karte heben/
-// glänzen, Name/Nr. links, Fortschrittsstriche, Blick-Zug zur Karte).
-// Die Fahrt ist EIN ruhiger Kameraweg bis zur Totale; der DOM-Text kennt
-// nur zwei Zustände: unterwegs (Hinweis) und Totale (Bank + Trainerstab).
-/** Ab hier gilt die Fahrt als in der Totale angekommen (s. teamEase). */
-export const TEAM_TOTALE_S = 0.82
+// v18-R „Spieler zu Spieler" (zurück, Marvin): die Kamera hält nacheinander
+// an jeder Karte der Startelf (Reihenfolge: tourPlan.TEAM_ORDER), danach die
+// Totale. teamState.s läuft 0 … 1 über die N Spieler-Halte + Totale
+// (Halt k bei s = k/N, Totale bei s = 1).
+/** Ab hier gilt die Fahrt als in der Totale angekommen. */
+export const TEAM_TOTALE_S = (STARTELF.length - 0.5) / Math.max(1, STARTELF.length)
 
 /** Phase der Sektion für den DOM-Text. */
 export function teamPhaseAt(s: number): 'fahrt' | 'totale' {
@@ -132,3 +132,9 @@ export function teamPhaseAt(s: number): 'fahrt' | 'totale' {
 /** s: Fortschritt durch die Mannschafts-Fahrt 0…1 (gedämpft),
  *  w: Präsenz der Station 0…1 (0 weit weg, 1 in der Sektion). */
 export const teamState = { s: 0, w: 0 }
+
+/** v18-R: Fokus der Spieler-Fahrt. k = Position in TEAM_ORDER (Bruchteil
+ *  zwischen zwei Spielern), −1 = kein Fokus (Anflug/Totale/weg);
+ *  card = Index in TEAM_CARDS der nächstgelegenen Fokus-Karte oder −1;
+ *  w = Gewicht 0…1 (Karten drehen sich voll zur Kamera). */
+export const teamFocus = { k: -1, card: -1, w: 0 }

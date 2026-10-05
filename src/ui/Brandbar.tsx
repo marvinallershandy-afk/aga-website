@@ -30,8 +30,9 @@ function SpeakerIcon({ on }: { on: boolean }) {
 export function jumpToSection(id: string) {
   const el = document.getElementById(id)
   if (!el) return
+  // v18-R: Mannschaft (Spieler-Strecke) beginnt beim ersten Spieler
   const target = () =>
-    el.classList.contains('section--snap-start')
+    el.classList.contains('section--snap-start') || el.classList.contains('section--team-fly')
       ? el.offsetTop
       : Math.round(el.offsetTop + el.offsetHeight / 2 - window.innerHeight / 2)
   let tries = 0

@@ -1,6 +1,7 @@
 import { NextMatchPill } from './NextMatchPill'
 import { motion } from 'framer-motion'
 import { useStore } from '../store/useStore'
+import { MUSIK_VH, TEAM_N, TEAM_STEP_VH } from '../camera/tourPlan'
 // P1: Sektionstexte/Website-Daten aus der Fassade (Overlay → sonst Seed).
 import { SECTIONS, CONTACT, CLUB, TEAM_PHOTO, whatsappUrl, whatsappReady } from '../data/content'
 import { PlayerCardGrid } from './PlayerCardGrid'
@@ -39,15 +40,31 @@ function Header({ kicker, title, body, center, h1 }: { kicker: string; title: st
 }
 
 export function Sections() {
-  // v11-E5: Reihenfolge tabelle↔sponsoren getauscht (Array in club.ts entspr.)
-  const [verein, mannschaft, fanblock, musik, tabelle, sponsoren, kontakt] = SECTIONS
+  // v18-R: Reihenfolge = Rundgang über das Gelände (docs/RUNDGANG.md) —
+  // Verein → Mannschaft → Bande → Fans → Anzeigetafel → Partyraum → Mitmachen.
+  const sec = (id: string) => SECTIONS.find((x) => x.id === id) ?? SECTIONS[0]
+  const verein = sec('verein')
+  const mannschaft = sec('mannschaft')
+  const fanblock = sec('fanblock')
+  const musik = sec('musik')
+  const tabelle = sec('tabelle')
+  const sponsoren = sec('sponsoren')
+  const kontakt = sec('kontakt')
   const fallback = useStore((s) => s.fallback)
 
   return (
     <main className="scroll-root">
       <span id="top" />
 
-      {/* 0 · VEREIN */}
+      {/* 0 · VEREIN — v18-R: im 3D-Rundgang KEIN Text-Zwischenbild mehr. Der
+          Rundgang beginnt in der Karten-Totale (Scroll 0 = Startseite), die
+          Kamera fährt vom ersten Pixel an los. Die Sektion bleibt als ruhiger
+          Anfang (Nav „Verein", Überschrift für Screenreader). */}
+      {!fallback ? (
+        <section id={verein.id} className="section section--karte" aria-label={verein.label}>
+          <h1 className="sr-only">{verein.title.replace(/\n/g, ' ')}</h1>
+        </section>
+      ) : (
       <section id={verein.id} className="section section--center">
         <div className="section__scrim" />
         <Header kicker={verein.kicker} title={verein.title} body={verein.body} center h1 />
@@ -72,23 +89,20 @@ export function Sections() {
           />
         )}
       </section>
+      )}
 
-      {/* ANSTOSS-Beat (v8): KEINE eigene Sektion/Stopp mehr. Der Moment
-          (Flutlicht flackert an, Ball rollt) lebt jetzt als NAHTLOSER
-          Kamera-Übergang Hero→Mannschaft. Ein kurzes Scroll-Polster gibt
-          dem Sturzflug Weg, ohne Text/Halt. Der Anker wird synthetisch
-          zwischen Verein und Mannschaft gesetzt (useScrollProgress.ts). */}
+      {/* v18-R: Scroll-Polster für den Sinkflug Karte → hinter den Torwart
+          (ohne Text, ohne Halt). Die Halte misst tourPlan.measureStopAnchors. */}
       <div id="anstoss-gap" aria-hidden="true" style={{ height: '80vh', pointerEvents: 'none' }} />
 
-      {/* 1 · MANNSCHAFT — v14-D „Startelf-Flyover". Im 3D-Pfad ist die
-          Sektion eine Flyover-Strecke (v15-P: Desktop 150svh, mobil 130svh):
-          der Text klebt (Sticky), die Kamera gleitet in EINEM ruhigen Weg
-          bis zur Totale (kein Person-für-Person-Fokus). Klick-durchlässig
-          (passthrough), damit Taps die 3D-Karten erreichen. Kamera-Anker
-          (Anfang/Ende der Strecke) misst useScrollProgress.ts.
-          Mobil trägt ein horizontales Swipe-Deck die Karten.
+      {/* 1 · MANNSCHAFT — v18-R „Spieler zu Spieler": im 3D-Pfad eine Sticky-
+          Strecke mit einem Halt je Spieler der Startelf (Torwart → Abwehr →
+          Mittelfeld → Sturm), danach die Totale (Bank + Trainerstab). Die
+          Kamera fährt per Scroll von Karte zu Karte (kein Snap, schnelles
+          Scrollen überspringt), Name + Nummer stehen im Begleittext.
+          Klick-durchlässig (passthrough), damit Taps die 3D-Karten erreichen.
           Fallback (kein WebGL / reduced-motion): normale Sektion mit
-          statischem Karten-Raster. */}
+          statischem Taktik-Board + Karten-Raster. */}
       {fallback ? (
         <section id={mannschaft.id} className="section section--left">
           <div className="section__scrim" />
@@ -99,6 +113,7 @@ export function Sections() {
         <section
           id={mannschaft.id}
           className="section section--left section--snap-start section--team-fly section--passthrough"
+          style={{ height: `calc(100svh + ${Math.round(TEAM_N * TEAM_STEP_VH * 100)}svh)` }}
         >
           <div className="team-sticky">
             <div className="section__scrim" />
@@ -110,7 +125,17 @@ export function Sections() {
         </section>
       )}
 
-      {/* 2 · FANBLOCK (v9-E2, zurückgeholt) — die Südkurve, emotionaler
+      {/* 2 · SPONSOREN — v18-R: direkt nach der Mannschaft; die Bande liegt an
+          der Südlinie gleich hinter dem Unterstand —
+          Banden-Zoom im 3D, hier die Argumente + WhatsApp-CTA + „dein Logo"-Slots. */}
+      <section id={sponsoren.id} className="section section--left">
+        <div className="section__scrim" />
+        <Header kicker={sponsoren.kicker} title={sponsoren.title} body={sponsoren.body} />
+        <SponsorPitch variante="rundgang" />
+      </section>
+
+      {/* 3 · FANBLOCK (v9-E2) — v18-R: nach der Bande, an der Süd-Linie weiter
+          nach Osten in die Kurve — die Südkurve, emotionaler
           Beat. Kamera-Station 3 schwenkt in die SO-Ecke auf die Fans +
           wehendes Banner (FanBlock.tsx). Linksbündig, rechts lebt die
           Kurve im 3D. */}
@@ -128,23 +153,8 @@ export function Sections() {
         <AlbumTeaser variante="rundgang" />
       </section>
 
-      {/* Trenn-Polster (v8): klare „reiner Platz"-Beat zwischen Fanblock und
-          Partyraum-Anflug — muss geräumt sein, bevor der Vereinsheim-Anflug
-          startet. Schiebt zugleich die Musik-Sektion nach unten → Anflug (an
-          musik.top gekoppelt) startet später. */}
-      <div id="team-musik-gap" aria-hidden="true" style={{ height: '60vh', pointerEvents: 'none' }} />
-
-      {/* 3 · MUSIK / PARTYRAUM-DURCHFAHRT — v11-E3: die Sektion ist bewusst
-          extra hoch (mehr Scroll-Puffer), damit der Vereinsheim-Schwenk rein
-          UND raus sich streckt und ruhig liest (Audit #18). Anker misst sich
-          aus dem DOM-Zentrum → Kamera-Station bleibt synchron. */}
-      <section id={musik.id} className="section section--left" style={{ minHeight: '210vh' }}>
-        <div className="section__scrim" />
-        <Header kicker={musik.kicker} title={musik.title} body={musik.body} />
-        <MusicSectionPlayer />
-      </section>
-
-      {/* 4 · TABELLE / SAISON-COCKPIT (v11-E5: jetzt VOR Sponsoren) —
+      {/* 4 · TABELLE / SAISON-COCKPIT — v18-R: Anzeigetafel am Vereinsheim,
+          nächster Ort nach der Kurve, vor dem Partyraum —
           Live-Tabelle, Form, Top-Torschützen, letztes/nächstes Spiel. */}
       <section id={tabelle.id} className="section section--left section--snap-start">
         <div className="section__scrim" />
@@ -155,15 +165,17 @@ export function Sections() {
         </div>
       </section>
 
-      {/* 5 · SPONSOREN (die Geld-Station, jetzt direkt vor „Mitmachen") —
-          Banden-Zoom im 3D, hier die Argumente + WhatsApp-CTA + „dein Logo"-Slots. */}
-      <section id={sponsoren.id} className="section section--left">
+      {/* 5 · MUSIK / PARTYRAUM — v18-R: die Sektion trägt VIER Halte (vor der
+          Tür → im Raum → Raum verlassen → wieder vor der Tür, tourPlan.ts).
+          Der Text lebt, solange die Kamera drinnen ist (Mitte ± 0.3 vh). */}
+      <section id={musik.id} className="section section--left" style={{ minHeight: `${MUSIK_VH * 100}vh` }}>
         <div className="section__scrim" />
-        <Header kicker={sponsoren.kicker} title={sponsoren.title} body={sponsoren.body} />
-        <SponsorPitch variante="rundgang" />
+        <Header kicker={musik.kicker} title={musik.title} body={musik.body} />
+        <MusicSectionPlayer />
       </section>
 
-      {/* 3 · MITMACHEN/FINALE — linksbündig, rechts lebt der Fanblock */}
+      {/* 6 · MITMACHEN/FINALE — v18-R: aus dem Partyraum zurück vor die Tür,
+          dann steigt die Kamera in die Anfahrts-Karte auf. */}
       <section id={kontakt.id} className="section section--left section--snap-start">
         {/* v13-E3: sprechender Anker-Alias fürs Link-in-Bio —
             /#mitmachen landet direkt am CTA-Beat. Absolut an der Sektions-

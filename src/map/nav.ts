@@ -1,7 +1,6 @@
 import { useEffect } from 'react'
 import { useStore, type ViewMode } from '../store/useStore'
 import { placeFromSlug, TOUR_SLUGS, type PlaceId } from './places'
-import { wantIntro } from './intro'
 
 // ─────────────────────────────────────────────────────────────
 // v16-K: Deep-Links + Browser-Zurück für die Karte.
@@ -88,8 +87,8 @@ export function initNavFromUrl() {
     window.history.replaceState(null, '', canon)
   }
   useStore.getState().setNav(first)
-  // v17-D: erster Besuch auf der Startseite (kein Deep-Link) → Intro-Fahrt
-  if (first.mode === 'map' && !first.place && wantIntro()) useStore.getState().setIntro('wait')
+  // v18-R: kein automatisches Intro mehr — die Startseite steht ruhig in
+  // der Karten-Totale, Scrollen startet den Rundgang nahtlos.
 }
 
 /** Einmal im App-Root: Zurück/Vor/Hash-Edits. */
