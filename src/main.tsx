@@ -34,14 +34,13 @@ if (!isAdmin && authReturn) {
   import('./live/mountLive').then(({ mountLive }) => mountLive(rootEl))
 } else {
   Promise.all([
-    // v17-D: Designsystem-Schicht garantiert NACH index.css + cards.css
-    // einfügen (überschreibt deren Altstände) — daher verkettet.
-    Promise.all([import('./index.css'), import('./ui/cards.css')]).then(() => import('./ui/cards-ds.css')),
+    import('./index.css'),
+    import('./ui/cards.css'), // v17-D: Designsystem-Schicht steht am Ende von cards.css
     import('react'),
     import('react-dom/client'),
     import('./App'),
     import('./store/useStore'),
-  ]).then(([, { StrictMode }, { createRoot }, { default: App }, { useStore }]) => {
+  ]).then(([, , { StrictMode }, { createRoot }, { default: App }, { useStore }]) => {
     if (import.meta.env.DEV) {
       ;(window as unknown as { useStore: typeof useStore }).useStore = useStore
     }

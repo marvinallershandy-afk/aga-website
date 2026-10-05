@@ -1,12 +1,14 @@
-import { useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { useStore } from '../store/useStore'
 import { CONTACT, SPONSORS, whatsappUrl, whatsappReady } from '../data/content'
 import { PLACE_BY_ID, type PlaceId } from './places'
 import { closePlace, openPlace } from './nav'
 import { ArrowLeft, ArrowRight, X } from 'lucide-react'
 import { TrainingMedia } from './TrainingMedia'
-import { GalerieView } from '../galerie/GalerieView'
 import { GALERIEN } from '../data/galerie'
+// v17-D: Galerie erst laden, wenn das Fans-Panel aufgeht (eigene CSS — nicht
+// auf dem kritischen Pfad der Startseite)
+const GalerieView = lazy(() => import('../galerie/GalerieView').then((m) => ({ default: m.GalerieView })))
 import { PLACE_LEAD } from './panelText'
 import { useMatchStatus } from './matchStatus'
 import { FussballWidget } from '../ui/FussballWidget'
@@ -134,7 +136,11 @@ function FansBody() {
   return (
     <>
       {/* v17-D: „Spieltag in Bildern“ — die neueste Galerie der Vereinsfotografin */}
-      {g && <GalerieView galerie={g} variant="panel" moreHref="/galerie" />}
+      {g && (
+        <Suspense fallback={<div className="kp-media" aria-hidden="true" />}>
+          <GalerieView galerie={g} variant="panel" moreHref="/galerie" />
+        </Suspense>
+      )}
       <FanGallery />
       <FanChantToggle />
       <div className="kp-actions">
