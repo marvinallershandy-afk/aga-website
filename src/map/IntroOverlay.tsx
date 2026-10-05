@@ -74,7 +74,12 @@ export function Intro() {
     <div className="kintro" data-phase={intro === 'play' ? phase : 'idle'} aria-live="polite">
       <p className="kintro__title">
         <span>{CLUB.name} · seit {CLUB.founded}</span>
-        <strong>{CLUB.claim}</strong>
+        <strong>
+          {/* ein Satz je Zeile: „Ein Dorf. / Ein Verein. / Ein Platz.“ */}
+          {CLUB.claim.split(/(?<=\.)\s+/).map((z) => (
+            <span key={z} className="kintro__zeile">{z}</span>
+          ))}
+        </strong>
       </p>
       <button className="kintro__skip" onClick={() => endIntro()}>
         Zur Karte

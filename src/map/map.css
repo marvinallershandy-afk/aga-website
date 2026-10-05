@@ -560,6 +560,7 @@ html.is-map body {
   text-transform: uppercase;
   text-shadow: 0 2px 30px rgba(0, 0, 0, .55);
 }
+.kintro__title .kintro__zeile { display: block; margin: 0; font-size: inherit; letter-spacing: inherit; color: var(--c-white); font-weight: 400; }
 .kintro__skip {
   position: absolute;
   right: var(--gutter);
