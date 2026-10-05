@@ -1,4 +1,4 @@
-import { useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { useState, type FormEvent, type ReactNode } from 'react'
 import { PARTNER_PAKETE, PAKETE_AUS_ADMIN } from '../data/partner'
 import { CONTACT, whatsappReady, whatsappUrl } from '../data/content'
 import { AnfrageFehler, anfrageKonfiguriert, feldText, quelleAusUrl, sendeAnfrage, type Feld } from './api'
@@ -35,7 +35,7 @@ function pruefe(w: Werte): Partial<Record<Feld, string>> {
 }
 
 export function Anfrage({ interesse, onInteresse }: { interesse: string; onInteresse: (v: string) => void }) {
-  const start = useRef(performance.now())
+  const [start] = useState(() => performance.now())
   const [w, setW] = useState<Werte>(LEER)
   const [fehler, setFehler] = useState<Partial<Record<Feld, string>>>({})
   const [status, setStatus] = useState<'bereit' | 'sendet' | 'danke'>('bereit')
@@ -88,7 +88,7 @@ export function Anfrage({ interesse, onInteresse }: { interesse: string; onInter
         nachricht: interesse === UNSICHER && PAKETE_AUS_ADMIN ? `[Noch unsicher, bitte beraten]\n${nachricht}`.trim() : nachricht,
         datenschutz: w.datenschutz,
         website: w.website,
-        dauerMs: performance.now() - start.current,
+        dauerMs: performance.now() - start,
         quelle: quelleAusUrl(),
       })
       setStatus('danke')

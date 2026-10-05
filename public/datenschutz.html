@@ -229,6 +229,47 @@
       </p>
       <p><span class="todo">TODO-MARVIN: Sobald die echte WhatsApp-Nummer aktiv ist, Abschnitt „WhatsApp" ergänzen</span></p>
 
+      <h2 id="partner-anfrage">7a. Partner-Anfrage (Formular auf /partner)</h2>
+      <!-- Verifiziert am Code (v16-S): src/partner/api.ts (fetch ohne Cookies,
+           credentials: 'omit'), RPC partner_anfrage() in
+           supabase/migrations/20261006100000_sva_partner.sql (Aufräumen,
+           IP-Hash, Webhook ohne Kontaktdaten). -->
+      <p>
+        Auf unserer Seite <a href="/partner">/partner</a> können Unternehmen eine Partner- bzw.
+        Sponsoring-Anfrage senden. Wir verarbeiten dabei: Name des Unternehmens, Name der
+        Ansprechperson, E-Mail-Adresse, freiwillig eine Telefonnummer, das gewählte Paket und
+        Ihre Nachricht. Stammt der Aufruf von einem Link mit Kanal-Kennzeichen (z. B.
+        <code>?utm_source=instagram</code>), speichern wir nur diesen Kanalnamen, keine Kennung von Ihnen.
+      </p>
+      <p>
+        Zum Schutz vor Missbrauch (zu viele Anfragen in kurzer Zeit) speichern wir zusätzlich einen
+        <strong>täglich wechselnden, nicht umkehrbaren Hash-Wert</strong> Ihrer IP-Adresse, nicht die
+        IP-Adresse selbst. Dieser Wert wird nach <strong>7 Tagen</strong> automatisch gelöscht. Ein
+        unsichtbares Formularfeld und die Ausfüllzeit dienen dazu, automatisierte Spam-Einträge
+        auszusortieren; dafür werden keine weiteren Daten gespeichert.
+      </p>
+      <p>
+        Die Angaben werden über eine verschlüsselte Verbindung an unseren Datenbank-Dienst
+        <strong>Supabase</strong> (Serverstandort Frankfurt am Main, EU; siehe Abschnitt 6a) übertragen und
+        sind nur für die Vereinsverantwortlichen mit Admin-Zugang einsehbar. Cookies werden dabei
+        nicht gesetzt. Ist eine Benachrichtigung eingerichtet, erhalten wir eine kurze Meldung
+        (Unternehmen, Ansprechperson, Paket) ohne E-Mail-Adresse, Telefonnummer oder Nachricht.
+        <span class="todo">TODO-MARVIN: Wenn die Benachrichtigung über n8n/WhatsApp aktiv ist, Anbieter hier nennen</span>
+      </p>
+      <p>
+        <strong>Zweck:</strong> Beantwortung Ihrer Anfrage und Anbahnung einer Partnerschaft.<br />
+        <strong>Rechtsgrundlage:</strong> Art. 6 Abs. 1 lit. b DSGVO (vorvertragliche Maßnahmen auf Ihre Anfrage)
+        und Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an der Missbrauchsabwehr). Die Checkbox im
+        Formular bestätigt, dass Sie diesen Hinweis zur Kenntnis genommen haben.<br />
+        <strong>Speicherdauer:</strong> Abgelehnte Anfragen löschen wir automatisch 6 Monate nach der letzten
+        Bearbeitung, unbeantwortete bzw. nicht abgeschlossene spätestens nach 12 Monaten. Kommt eine
+        Partnerschaft zustande, bewahren wir die Angaben für deren Dauer und im Rahmen gesetzlicher
+        Aufbewahrungspflichten auf.<br />
+        <strong>Löschung:</strong> Sie können jederzeit verlangen, dass wir Ihre Anfrage vorzeitig löschen —
+        eine formlose E-Mail an die in Abschnitt 1 genannte Adresse genügt.
+      </p>
+      <p><span class="todo">TODO-JURIST: Rechtsgrundlage und Fristen prüfen</span></p>
+
       <h2>8. Fotos auf dieser Website</h2>
       <!-- TODO-MARVIN: Auf den Fanblock-/Kaderfotos sind Personen erkennbar.
            Dafür braucht es eine Rechtsgrundlage (i. d. R. Einwilligung nach
