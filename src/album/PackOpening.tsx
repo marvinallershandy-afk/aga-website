@@ -264,8 +264,8 @@ export function PackOpening({ packId, art, gegner, partner, karten, nummern, sai
 
 const FARBEN = ['#E91D29', '#E8C15A', '#ffffff', '#50dcff', '#ff50c8', '#a0ff78']
 function Konfetti() {
-  const teile = useMemo(
-    () =>
+  // einmalig beim Einblenden zufällig verteilt (Lazy-Init statt Render-Zufall)
+  const [teile] = useState(() =>
       Array.from({ length: 70 }, (_, n) => ({
         x: Math.random() * 100,
         d: Math.random() * 0.5,
@@ -275,7 +275,6 @@ function Konfetti() {
         c: FARBEN[n % FARBEN.length],
         w: Math.random() * 40 - 20,
       })),
-    [],
   )
   return (
     <div className="al-konfetti" aria-hidden="true">

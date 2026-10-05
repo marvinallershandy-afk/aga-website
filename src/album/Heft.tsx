@@ -35,15 +35,6 @@ interface SeiteDef {
   gruppe?: Gruppe
 }
 
-/** Seite mit diesem Platz in den sichtbaren Bereich blättern. */
-export function zuPlatzBlaettern(key: string, sanft = true): HTMLElement | null {
-  const el = document.querySelector<HTMLElement>(`[data-platz="${CSS.escape(key)}"]`)
-  const seite = el?.closest<HTMLElement>('.hf-seite')
-  const leiste = document.querySelector<HTMLElement>('.hf-seiten')
-  if (el && seite && leiste) leiste.scrollTo({ left: seite.offsetLeft - leiste.offsetLeft, behavior: sanft ? 'smooth' : 'auto' })
-  return el
-}
-
 export function Heft(props: Props) {
   const { ps, katalog, mein, fs, tr, frisch, wartende, heimsiegWartet, rangliste, onPlatz, onGutschein, onPacks, onKonto } = props
   const leiste = useRef<HTMLDivElement>(null)

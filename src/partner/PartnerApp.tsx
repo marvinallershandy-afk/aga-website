@@ -105,6 +105,9 @@ function Zahlen() {
   if (m.instagramFollower != null) kacheln.push({ wert: zahl(m.instagramFollower), label: 'Follower auf Instagram', sub: CONTACT.instagram })
   if (m.reichweiteMonat != null) kacheln.push({ wert: zahl(m.reichweiteMonat), label: 'Ø Reichweite pro Monat', sub: 'erreichte Konten auf Instagram' })
   if (m.zuschauerHeim != null) kacheln.push({ wert: zahl(m.zuschauerHeim), label: 'Ø Zuschauer pro Heimspiel', sub: 'am Waldsportplatz' })
+  // v17-A: echte, digital gezählte Zuschauer (Check-ins im Sammelalbum)
+  if (m.checkinsSchnitt != null && m.checkinsSpiele)
+    kacheln.push({ wert: zahl(m.checkinsSchnitt), label: 'Ø digitale Check-ins pro Heimspiel', sub: `gezählt per Sammelalbum · ${m.checkinsSpiele} ${m.checkinsSpiele === 1 ? 'Spiel' : 'Spiele'}` })
   if (m.websiteBesucheMonat != null) kacheln.push({ wert: zahl(m.websiteBesucheMonat), label: 'Website-Besuche pro Monat' })
   if (m.heimspieleSaison != null) kacheln.push({ wert: zahl(m.heimspieleSaison), label: 'Heimspiele pro Saison', sub: 'Kreisliga Stade' })
   if (!kacheln.length) return null

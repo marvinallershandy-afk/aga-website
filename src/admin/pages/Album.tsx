@@ -127,15 +127,16 @@ function SpieltageTab() {
   const stat = useAlbumStatistik(true)
   const erzeugen = useCodeErzeugen()
   const [plakat, setPlakat] = useState<string | null>(null)
+  // „Jetzt“ beim Öffnen des Tabs (reicht für Heute/vorbei; Live-Zahlen kommen per Abfrage)
+  const [jetzt] = useState(() => Date.now())
 
   const heim = useMemo(() => {
-    const jetzt = Date.now()
     return (spiele.data ?? [])
       .filter((s) => s.heim && new Date(s.anstoss).getTime() > jetzt - 45 * 864e5)
       .sort((a, b) => new Date(a.anstoss).getTime() - new Date(b.anstoss).getTime())
-  }, [spiele.data])
+  }, [spiele.data, jetzt])
   const zaehler = new Map((stat.data?.spiele ?? []).map((s) => [s.spielId, s.checkins]))
-  const heute = heim.find((s) => Math.abs(new Date(s.anstoss).getTime() - Date.now()) < 4 * 3600e3)
+  const heute = heim.find((s) => Math.abs(new Date(s.anstoss).getTime() - jetzt) < 4 * 3600e3)
   const gezaehlt = (stat.data?.spiele ?? []).filter((s) => s.checkins > 0)
   const schnitt = gezaehlt.length ? Math.round(gezaehlt.reduce((a, s) => a + s.checkins, 0) / gezaehlt.length) : null
 
@@ -160,7 +161,7 @@ function SpieltageTab() {
           {heim.map((s) => {
             const c = (codes.data ?? []).find((x) => x.spiel_id === s.id)
             const n = zaehler.get(s.id) ?? 0
-            const vorbei = new Date(s.anstoss).getTime() < Date.now() - 4 * 3600e3
+            const vorbei = new Date(s.anstoss).getTime() < jetzt - 4 * 3600e3
             return (
               <li key={s.id} className={cn('flex flex-wrap items-center gap-3 px-4 py-3', vorbei && 'opacity-70')}>
                 <div className="min-w-0 flex-1">
@@ -738,13 +739,12 @@ function EinstellungenTab() {
   const stat = useAlbumStatistik()
   const speichern = useSaveAlbumEinstellungen()
   const pinSetzen = useStandPin()
-  const [f, setF] = useState<EinstellungenInput | null>(null)
+  // Entwurf erst bei der ersten Änderung anlegen; bis dahin gilt der geladene Stand
+  const [entwurf, setF] = useState<EinstellungenInput | null>(null)
   const [pin, setPin] = useState('')
-  useEffect(() => {
-    if (q.data && !f) setF(q.data)
-  }, [q.data, f])
+  const f = entwurf ?? q.data ?? null
   if (q.isLoading || !f) return <SkeletonRows rows={6} />
-  const set = (p: EinstellungenInput) => setF((x) => ({ ...x, ...p }))
+  const set = (p: EinstellungenInput) => setF((x) => ({ ...(x ?? f), ...p }))
   const summe = (f.gewicht_bronze ?? 0) + (f.gewicht_silber ?? 0) + (f.gewicht_gold ?? 0) + (f.gewicht_spezial ?? 0)
   const pct = (n?: number) => (summe ? `${((100 * (n ?? 0)) / summe).toLocaleString('de-DE', { maximumFractionDigits: 1 })} %` : '–')
   const zahl = (key: keyof EinstellungenInput, label: string, min: number, max: number, hint?: string) => (
@@ -768,7 +768,8 @@ function EinstellungenTab() {
   )
   const csv = () => {
     const zeilen = ['Name;E-Mail', ...(stat.data?.kontakte ?? []).map((k) => `${k.name};${k.email}`)]
-    herunterladen(new Blob([`﻿${zeilen.join('\n')}`], { type: 'text/csv;charset=utf-8' }), 'sva-album-erinnerung.csv')
+    // BOM, damit Excel die Umlaute richtig liest
+    herunterladen(new Blob(['﻿' + zeilen.join('\n')], { type: 'text/csv;charset=utf-8' }), 'sva-album-erinnerung.csv')
   }
 
   return (

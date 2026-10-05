@@ -19,7 +19,8 @@ import {
   type PartnerInfo,
   type RanglistenEintrag,
 } from './api'
-import { Heft, zuPlatzBlaettern } from './Heft'
+import { Heft } from './Heft'
+import { zuPlatzBlaettern } from './blaettern'
 import { KarteDetail } from './KarteDetail'
 import { GutscheinAnsicht } from './Gutschein'
 import { KontoDialog } from './Konto'
@@ -106,7 +107,7 @@ export function AlbumApp() {
   const [katalog, setKatalog] = useState<Katalog | null>(null)
   const [katalogFehlt, setKatalogFehlt] = useState(false)
   const [session, setSession] = useState<Session | null | undefined>(undefined)
-  const [mein, setMein] = useState<Mein | null>(null)
+  const [meinRoh, setMein] = useState<Mein | null>(null)
   const [meinFehler, setMeinFehler] = useState('')
   const [token, setToken] = useState<string | null>(() => tokenUebernehmen())
   const [ci, setCi] = useState<CheckinStatus | null>(null)
@@ -149,6 +150,8 @@ export function AlbumApp() {
   }, [])
 
   const uid = session?.user?.id
+  // Ohne Sitzung gibt es kein Heft (abgeleitet statt im Effekt zurückgesetzt)
+  const mein = uid ? meinRoh : null
   const neuLaden = useCallback(async () => {
     try {
       const m = await ladeMein()
@@ -162,11 +165,7 @@ export function AlbumApp() {
   }, [])
 
   useEffect(() => {
-    if (!uid) {
-      setMein(null)
-      return
-    }
-    void neuLaden()
+    if (uid) queueMicrotask(() => void neuLaden())
   }, [uid, neuLaden])
 
   const einchecken = useCallback(
@@ -196,7 +195,7 @@ export function AlbumApp() {
   )
 
   useEffect(() => {
-    if (token && mein?.profil && ci === null) void einchecken(token)
+    if (token && mein?.profil && ci === null) queueMicrotask(() => void einchecken(token))
   }, [token, mein, ci, einchecken])
 
   const imHeft = !!mein?.profil
@@ -261,7 +260,8 @@ export function AlbumApp() {
     const platz = ps.find((p) => p.versionen.some((v) => v.id === id))
     const karte = kartenMap.get(id)
     if (!platz || !karte) {
-      setKleben((k) => k.slice(1))
+      // Sticker nicht (mehr) im Katalog → überspringen
+      queueMicrotask(() => setKleben((k) => k.slice(1)))
       return
     }
     const t1 = window.setTimeout(() => {
@@ -291,7 +291,7 @@ export function AlbumApp() {
   const bereit = !!session && !!mein?.profil
   const zeigeHeft = bereit && offen && !!katalog
 
-  let unterCover: React.ReactNode = null
+  let unterCover: React.ReactNode
   if (laedt) {
     unterCover = <p className="al-start__hint">Heft wird geholt …</p>
   } else if (!session) {
