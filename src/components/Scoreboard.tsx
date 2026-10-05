@@ -1,9 +1,12 @@
-import { useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 // P1: Website-Daten aus der Fassade (Overlay/DB → sonst statischer Seed).
 import { TABLE_PREVIEW, NEXT_MATCH } from '../data/content'
 import { PITCH } from '../utils/constants'
+// v15-L: während eines laufenden Spiels zeigt die Tafel den Live-Stand
+// (Quelle: Spieltag-Leiste, nur im Spieltagsfenster — sonst null).
+import { getLiveSignal, onLiveSignal, type LiveSignal } from '../live/liveSignal'
 
 // ─────────────────────────────────────────────────────────────
 // v13-K6: Die LED-ANZEIGETAFEL am Vereinsheim — „Die Wahrheit vom
@@ -15,11 +18,19 @@ import { PITCH } from '../utils/constants'
 // ─────────────────────────────────────────────────────────────
 
 function makeLedTexture(): THREE.CanvasTexture {
-  const W = 640
-  const H = 384
   const cv = document.createElement('canvas')
-  cv.width = W
-  cv.height = H
+  cv.width = 640
+  cv.height = 384
+  drawLed(cv, getLiveSignal())
+  const tex = new THREE.CanvasTexture(cv)
+  tex.colorSpace = THREE.SRGBColorSpace
+  tex.anisotropy = 8
+  return tex
+}
+
+function drawLed(cv: HTMLCanvasElement, live: LiveSignal | null) {
+  const W = cv.width
+  const H = cv.height
   const ctx = cv.getContext('2d')!
 
   ctx.fillStyle = '#0a0806'
@@ -36,7 +47,26 @@ function makeLedTexture(): THREE.CanvasTexture {
   ctx.fillText('· KREISLIGA STADE · SAISON 26/27 ·', W / 2, 34)
 
   const rows = TABLE_PREVIEW.slice(0, 4)
-  if (rows.length > 0) {
+  if (live) {
+    // v15-L: Live-Stand statt Tabelle
+    ctx.textAlign = 'center'
+    ctx.fillStyle = red
+    ctx.font = '800 30px Archivo, system-ui, sans-serif'
+    const kopf = live.status === 'live' ? `● LIVE ${live.minuteLabel ?? ''}` : live.status === 'halbzeit' ? 'HALBZEIT' : 'ENDSTAND'
+    ctx.fillText(kopf.trim(), W / 2, 84)
+    const heim = live.home ? 'SVA' : live.opponent.toUpperCase().slice(0, 12)
+    const gast = live.home ? live.opponent.toUpperCase().slice(0, 12) : 'SVA'
+    const th = live.home ? live.goalsFor : live.goalsAgainst
+    const tg = live.home ? live.goalsAgainst : live.goalsFor
+    ctx.fillStyle = amber
+    ctx.font = '400 120px Anton, Archivo, system-ui, sans-serif'
+    ctx.fillText(`${th}:${tg}`, W / 2, 190)
+    ctx.font = '800 30px Archivo, system-ui, sans-serif'
+    ctx.textAlign = 'left'
+    ctx.fillText(heim, 28, 274)
+    ctx.textAlign = 'right'
+    ctx.fillText(gast, W - 28, 274)
+  } else if (rows.length > 0) {
     ctx.font = '800 34px Archivo, system-ui, sans-serif'
     rows.forEach((r, i) => {
       const y = 92 + i * 54
@@ -83,16 +113,20 @@ function makeLedTexture(): THREE.CanvasTexture {
   ctx.fillStyle = 'rgba(0,0,0,0.42)'
   for (let y = 0; y < H; y += 4) ctx.fillRect(0, y, W, 1.4)
   for (let x = 0; x < W; x += 4) ctx.fillRect(x, 0, 1.4, H)
-
-  const tex = new THREE.CanvasTexture(cv)
-  tex.colorSpace = THREE.SRGBColorSpace
-  tex.anisotropy = 8
-  return tex
 }
 
 export function Scoreboard() {
   const tex = useMemo(makeLedTexture, [])
   const matRef = useRef<THREE.MeshBasicMaterial>(null)
+  // v15-L: neu zeichnen nur bei Änderung des Live-Stands (außerhalb des Spieltagsfensters nie)
+  useEffect(
+    () =>
+      onLiveSignal((v) => {
+        drawLed(tex.image as HTMLCanvasElement, v)
+        tex.needsUpdate = true
+      }),
+    [tex],
+  )
 
   useFrame((state) => {
     const m = matRef.current

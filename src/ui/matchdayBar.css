@@ -1,0 +1,44 @@
+/* v15-L: Spieltag-Leiste — dünn, ruhig, unter der Brandbar (nur im Spieltagsfenster) */
+.mday {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + clamp(3.35rem, 5.4vw, 4.6rem));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 31;
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  max-width: calc(100vw - 24px);
+  height: 30px;
+  padding: 0 .9rem;
+  border-radius: 999px;
+  background: rgba(14, 13, 13, .78);
+  border: 1px solid rgba(233, 29, 41, .5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #fff;
+  text-decoration: none;
+  font-family: var(--font-body);
+  font-size: .72rem;
+  letter-spacing: .04em;
+  white-space: nowrap;
+  pointer-events: auto;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .35);
+}
+.mday b { font-weight: 800; letter-spacing: .1em; text-transform: uppercase; font-variant-numeric: tabular-nums; }
+.mday__vs { min-width: 0; overflow: hidden; text-overflow: ellipsis; color: rgba(255, 255, 255, .82); }
+.mday__min { font-variant-numeric: tabular-nums; color: rgba(255, 255, 255, .85); }
+.mday__cta { color: var(--red); font-weight: 800; }
+.mday:hover { border-color: var(--red); background: rgba(40, 10, 14, .85); }
+.mday:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.mday[data-status="live"] { border-color: var(--red); background: rgba(70, 8, 14, .82); }
+.mday__dot {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--red);
+  box-shadow: 0 0 0 0 rgba(233, 29, 41, .7); animation: mdayPuls 1.6s ease-out infinite;
+}
+@keyframes mdayPuls { to { box-shadow: 0 0 0 8px rgba(233, 29, 41, 0); } }
+@media (max-width: 640px) {
+  /* Mobil: Logo links, Leiste rechts daneben in derselben Höhe wie die Brandbar */
+  .mday { top: calc(env(safe-area-inset-top, 0px) + .82rem); left: auto; right: 12px; transform: none; max-width: calc(100vw - 96px); }
+}
+@media (prefers-reduced-motion: reduce) { .mday__dot { animation: none; } }
