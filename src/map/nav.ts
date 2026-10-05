@@ -14,7 +14,7 @@ import { wantIntro } from './intro'
 // ─────────────────────────────────────────────────────────────
 
 const MARK = { sva: 1 }
-const RESERVED_PATHS = ['admin', 'live', 'partner', 'impressum', 'datenschutz']
+const RESERVED_PATHS = ['admin', 'live', 'partner', 'impressum', 'datenschutz', 'album', 'galerie']
 
 function parse(): { mode: ViewMode; place: PlaceId | null } {
   const hash = window.location.hash.replace(/^#/, '')

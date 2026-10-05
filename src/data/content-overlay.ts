@@ -94,6 +94,31 @@ export interface SectionCopyOverride {
   body?: string
 }
 
+/** v17-D: Bild einer Galerie (lokal unter /generated/galerien/… oder /galerie/…). */
+export interface GalerieBild {
+  /** Vollbild, lange Kante ≤ 2000 px */
+  src: string
+  /** Vorschau, lange Kante ≤ 800 px */
+  preview: string
+  w: number
+  h: number
+  alt: string
+  cover?: boolean
+}
+
+/** v17-D: „Spieltag in Bildern“ — eine veröffentlichte Galerie. */
+export interface Galerie {
+  slug: string
+  titel: string
+  untertitel?: string
+  /** ISO-Datum YYYY-MM-DD */
+  datum?: string
+  fotograf: string
+  fotografUrl?: string
+  spiel?: { opponent: string; home: boolean; kickoff?: string }
+  bilder: GalerieBild[]
+}
+
 export interface WebsiteContentOverlay {
   /** Herkunft, für Build-Log/Debug. */
   source: 'db'
@@ -116,4 +141,6 @@ export interface WebsiteContentOverlay {
   links?: LinksOverride
   /** v16-S: Partner-Bereich (/partner): Pakete, Mediadaten, Live-Partner. */
   partner?: PartnerOverlay
+  /** v17-D: Galerien „Spieltag in Bildern“ (Admin → Galerien). */
+  galerien?: Galerie[]
 }

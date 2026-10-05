@@ -5,6 +5,8 @@ import { PLACE_BY_ID, type PlaceId } from './places'
 import { closePlace, openPlace } from './nav'
 import { ArrowLeft, ArrowRight, X } from 'lucide-react'
 import { TrainingMedia } from './TrainingMedia'
+import { GalerieView } from '../galerie/GalerieView'
+import { GALERIEN } from '../data/galerie'
 import { PLACE_LEAD } from './panelText'
 import { useMatchStatus } from './matchStatus'
 import { FussballWidget } from '../ui/FussballWidget'
@@ -128,8 +130,11 @@ function MannschaftBody() {
 }
 
 function FansBody() {
+  const g = GALERIEN[0]
   return (
     <>
+      {/* v17-D: „Spieltag in Bildern“ — die neueste Galerie der Vereinsfotografin */}
+      {g && <GalerieView galerie={g} variant="panel" moreHref="/galerie" />}
       <FanGallery />
       <FanChantToggle />
       <div className="kp-actions">
@@ -254,7 +259,7 @@ export function MapPanel() {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape' || e.defaultPrevented) return
       const s = useStore.getState()
-      if (s.selectedPlayer || s.fanPhoto != null || document.querySelector('.pgal')) return
+      if (s.selectedPlayer || s.fanPhoto != null || document.querySelector('.pgal, .glb-lb')) return
       closePlace()
     }
     window.addEventListener('keydown', onKey)
