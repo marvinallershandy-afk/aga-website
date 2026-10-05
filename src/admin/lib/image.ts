@@ -89,6 +89,43 @@ export async function renderLogo(img: HTMLImageElement): Promise<Blob> {
   return canvasToBlob(canvas, true)
 }
 
+/**
+ * v15-T: Screenshot für die Tabellen-Erkennung. Lange Kante ≤ `maxSide`,
+ * kein Zuschnitt. Sehr lange Bilder (Scroll-Screenshots) werden in bis zu
+ * `maxTeile` überlappende Abschnitte zerlegt — sonst würde die Schrift beim
+ * Verkleinern unlesbar. WebP mit hoher Qualität, damit Ziffern scharf bleiben.
+ */
+export async function renderScreenshot(img: HTMLImageElement, maxSide = 2000, maxTeile = 3): Promise<Blob[]> {
+  const W = img.naturalWidth
+  const H = img.naturalHeight
+  const ratio = H / W
+  // Ab ~2,4 : 1 (länger als ein normaler Handy-Screenshot) in Abschnitte teilen.
+  const teile = ratio > 2.4 ? Math.min(maxTeile, Math.ceil(ratio / 1.8)) : 1
+  const ueberlapp = teile > 1 ? Math.round(H * 0.06) : 0
+  const teilH = Math.ceil((H + ueberlapp * (teile - 1)) / teile)
+  const out: Blob[] = []
+  for (let i = 0; i < teile; i++) {
+    const sy = Math.max(0, Math.min(H - teilH, i * (teilH - ueberlapp)))
+    const sh = Math.min(teilH, H - sy)
+    const scale = Math.min(1, maxSide / Math.max(W, sh))
+    const w = Math.max(1, Math.round(W * scale))
+    const h = Math.max(1, Math.round(sh * scale))
+    const canvas = document.createElement('canvas')
+    canvas.width = w
+    canvas.height = h
+    const ctx = canvas.getContext('2d')
+    if (!ctx) throw new Error('Canvas nicht verfügbar.')
+    ctx.imageSmoothingQuality = 'high'
+    ctx.drawImage(img, 0, sy, W, sh, 0, 0, w, h)
+    const toBlob = (type: string, q?: number) => new Promise<Blob | null>((res) => canvas.toBlob(res, type, q))
+    let blob = await toBlob('image/webp', 0.92)
+    if (!blob || blob.type !== 'image/webp') blob = await toBlob('image/jpeg', 0.92)
+    if (!blob) throw new Error('Bild konnte nicht umgewandelt werden.')
+    out.push(blob)
+  }
+  return out
+}
+
 export const ACCEPT_IMAGES = 'image/jpeg,image/png,image/webp,image/heic,image/heif'
 
 export function formatBytes(n: number): string {

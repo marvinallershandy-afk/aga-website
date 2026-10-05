@@ -15,6 +15,8 @@ import { useSettings, useTabelle, useTabelleMutations } from '../lib/queries'
 import { friendlyError, isMissingSchema } from '../lib/db'
 import { fussballDeUrl } from '../lib/pflege'
 import { PflegeHinweis } from '../components/PflegeHinweis'
+import { TabelleImport } from '../components/TabelleImport'
+import { ersetzeTabelle, type TabelleSchreibInput } from '../lib/tabelleImport'
 import { cn } from '../lib/utils'
 
 // ─────────────────────────────────────────────────────────────
@@ -33,6 +35,10 @@ import { cn } from '../lib/utils'
 
 // v14-C (Vereins-Pflege): Fachjargon raus, fussball.de-Link aus „Verein &
 // Links“, mobile Kartenliste statt 720-px-Tabelle, Saison vorbelegt.
+//
+// v15-T: Oben „📸 Tabelle per Screenshot aktualisieren“ (Claude liest ab,
+// Vorschau mit Diff, Übernehmen ersetzt die Saison-Tabelle). Die Handeingabe
+// darunter bleibt als Fallback.
 
 type Draft = {
   saison: string
@@ -103,6 +109,17 @@ export function Tabelle() {
   const { create, update, remove } = useTabelleMutations()
   const rows = tabelleQ.data ?? []
   const saison = settingsQ.data?.saison ?? ''
+
+  // v15-T: Screenshot-Import ersetzt die Saison-Tabelle — mit der bestehenden
+  // Schreib-Logik (sm_tabelle-Mutationen), Platz für Platz, nie „erst alles löschen“.
+  const uebernehmen = async (zeilen: TabelleSchreibInput[], basis: TabelleRow[]) => {
+    await ersetzeTabelle(zeilen, basis, {
+      create: (input) => create.mutateAsync(input),
+      update: (id, patch) => update.mutateAsync({ id, patch }),
+      remove: (id) => remove.mutateAsync(id),
+    })
+    toast.success(`Tabelle übernommen (${zeilen.length} Mannschaften). Die Website zeigt sie nach dem nächsten Veröffentlichen.`)
+  }
   const teamId = settingsQ.data?.fussball_de_team_id ?? null
 
   const [editorOpen, setEditorOpen] = useState(false)
@@ -139,7 +156,7 @@ export function Tabelle() {
     <>
       <PageHeader
         title="Tabelle"
-        subtitle="Den Tabellenstand nach jedem Spieltag abschreiben — die Website zeigt ihn nach dem Veröffentlichen."
+        subtitle="Nach jedem Spieltag aktualisieren — die Website zeigt den Stand nach dem Veröffentlichen."
         actions={
           <div className="flex w-full items-center gap-2 sm:w-auto">
             <Button variant="ghost" size="icon" onClick={() => void tabelleQ.refetch()} aria-label="Neu laden">
@@ -152,18 +169,21 @@ export function Tabelle() {
                 </a>
               </Button>
             )}
-            <Button className="flex-1 sm:flex-none" onClick={openNew}>
-              <Plus className="h-4 w-4" /> Zeile
-            </Button>
           </div>
         }
       />
 
-      <PflegeHinweis className="mb-4" title="So geht’s">
-        fussball.de öffnen, Tabelle ansehen, Zeilen hier abschreiben (Platz, Team, Spiele, Punkte genügen).
-        Die eigene Mannschaft als „SVA“ markieren — sie wird auf der Website hervorgehoben.
-        {saison ? ` Es zählt die Saison ${saison} (einstellbar unter „Verein & Links“).` : ''}
-      </PflegeHinweis>
+      <TabelleImport gespeichert={rows} saison={saison || null} onUebernehmen={uebernehmen} />
+
+      <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <h2 className="text-xl">Gespeicherte Tabelle{saison ? ` ${saison}` : ''}</h2>
+          <p className="text-sm text-muted-foreground">Von Hand ändern: Zeile antippen. Neue Zeile: „+ Zeile“.</p>
+        </div>
+        <Button variant="outline" size="sm" onClick={openNew}>
+          <Plus className="h-4 w-4" /> Zeile
+        </Button>
+      </div>
 
       {tabelleQ.error && !tabelleQ.isPending && isMissingSchema(tabelleQ.error) && <PflegeHinweis schema className="mb-4" />}
       {tabelleQ.error && !tabelleQ.isPending && !isMissingSchema(tabelleQ.error) && (
@@ -176,10 +196,10 @@ export function Tabelle() {
         <EmptyState
           icon={ListOrdered}
           title="Noch keine Tabelle"
-          description="Trage die Ligatabelle Zeile für Zeile ein. Markiere die eigene Mannschaft, damit sie auf der Website hervorgehoben wird."
+          description="Am schnellsten oben per Screenshot. Oder Zeile für Zeile von Hand eintragen und die eigene Mannschaft als „SVA“ markieren."
           action={
-            <Button onClick={openNew}>
-              <Plus className="h-4 w-4" /> Erste Zeile anlegen
+            <Button variant="outline" onClick={openNew}>
+              <Plus className="h-4 w-4" /> Von Hand anlegen
             </Button>
           }
         />
