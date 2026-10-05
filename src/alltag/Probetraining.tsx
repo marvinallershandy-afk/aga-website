@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { Sheet } from './Sheet'
 import { useSheetAusloeser } from './useSheetAusloeser'
-import { MANNSCHAFTEN, POSITIONEN, anfrageLink, nachricht, trainingFuer, type Mannschaft, type Position } from './mitspielen'
+import { MANNSCHAFTEN, POSITIONEN, anfrageLink, nachricht, trainingFuer, helferLink, helferNachricht, type Mannschaft, type Position } from './mitspielen'
 import { zaehleEreignis } from '../statistik/zaehlen'
 import { WaIcon, MailIcon } from '../ui/Icons'
 
@@ -24,6 +24,9 @@ export function ProbetrainingSheet({ open, onClose, start }: { open: boolean; on
   const [position, setPosition] = useState<Position | null>(null)
   const [vorname, setVorname] = useState('')
   const [jahrgang, setJahrgang] = useState('')
+  // v19-K (Audit B §4.7): „Mithelfen am Spieltag" — Helfer-Seitenpfad
+  const [helfer, setHelfer] = useState(false)
+  const hlink = helferLink()
 
   useEffect(() => {
     zaehleEreignis('probetraining-start')
@@ -37,6 +40,38 @@ export function ProbetrainingSheet({ open, onClose, start }: { open: boolean; on
 
   return (
     <Sheet open={open} onClose={onClose} kicker="Probetraining" titel="Komm vorbei" label="al-probe">
+      {helfer ? (
+        <>
+          <p className="al-frage">Mithelfen am Spieltag</p>
+          <p className="al-lead">
+            Ein Verein lebt von Leuten, die anpacken — am Grill, an der Kasse, beim Auf- und Abbau. Sag kurz Bescheid,
+            wir melden uns, wo gerade Hände fehlen.
+          </p>
+          <pre className="al-vorschau" aria-label="Deine Nachricht">
+            {helferNachricht()}
+          </pre>
+          <div className="al-aktionen">
+            <a
+              className="ds-btn ds-btn--primary"
+              href={hlink.href}
+              target={hlink.kanal === 'whatsapp' ? '_blank' : undefined}
+              rel={hlink.kanal === 'whatsapp' ? 'noopener' : undefined}
+              data-kanal={hlink.kanal}
+            >
+              {hlink.kanal === 'whatsapp' ? <WaIcon size={18} /> : <MailIcon size={18} />}
+              {hlink.kanal === 'whatsapp' ? 'In WhatsApp öffnen' : 'Per E-Mail senden'}
+            </a>
+            <button type="button" className="al-link" onClick={() => setHelfer(false)}>
+              <ArrowLeft size={14} strokeWidth={1.5} aria-hidden="true" /> Zurück
+            </button>
+          </div>
+          <p className="al-note">
+            Die Nachricht öffnet sich in {hlink.kanal === 'whatsapp' ? 'WhatsApp' : 'deinem Mail-Programm'} – du kannst sie
+            vor dem Senden noch ändern. Wir speichern nichts.
+          </p>
+        </>
+      ) : (
+      <>
       <span className="al-schritt">
         Schritt {nr} von {gesamt}
       </span>
@@ -63,6 +98,16 @@ export function ProbetrainingSheet({ open, onClose, start }: { open: boolean; on
                 </button>
               </li>
             ))}
+            {/* v19-K (Audit B §4.7): vierte Option — ohne Fußball, fürs Ehrenamt */}
+            <li>
+              <button type="button" className="al-opt al-opt--helfer" onClick={() => setHelfer(true)}>
+                <span className="al-opt__txt">
+                  <b>Mithelfen am Spieltag</b>
+                  <small>Grill, Getränke, Auf- und Abbau — kein Fußball nötig</small>
+                </span>
+                <ArrowRight size={18} strokeWidth={1.5} aria-hidden="true" />
+              </button>
+            </li>
           </ul>
         </>
       )}
@@ -154,6 +199,8 @@ export function ProbetrainingSheet({ open, onClose, start }: { open: boolean; on
           <p className="al-note">Die Nachricht öffnet sich in {link.kanal === 'whatsapp' ? 'WhatsApp' : 'deinem Mail-Programm'} – du kannst sie vor dem Senden noch ändern. Wir speichern nichts.</p>
         </>
       )}
+      </>
+      )}
     </Sheet>
   )
 }
@@ -164,13 +211,20 @@ export function ProbetrainingKnopf({
   label = 'Probetraining anfragen',
   mannschaft,
   icon = true,
+  autoOpen = false,
 }: {
   className?: string
   label?: string
   mannschaft?: string
   icon?: boolean
+  /** v19-K: beim Einstieg über /probetraining das Sheet sofort öffnen. */
+  autoOpen?: boolean
 }) {
   const { ausloeser, offen, auf, zu } = useSheetAusloeser()
+  // v19-K (Audit B §2.5.1): /probetraining öffnet den Assistenten direkt.
+  useEffect(() => {
+    if (autoOpen) auf()
+  }, [autoOpen, auf])
   return (
     <>
       <button type="button" className={className} ref={ausloeser} onClick={auf} aria-haspopup="dialog">

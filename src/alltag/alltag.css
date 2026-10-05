@@ -116,3 +116,12 @@
 .al-mitspielen { margin-top: var(--s-6); padding-top: var(--s-5); border-top: var(--border); display: grid; gap: var(--s-3); justify-items: start; }
 .al-mitspielen h4 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: var(--t-d4); text-transform: uppercase; color: var(--c-white); }
 .al-mitspielen p { margin: 0; color: var(--c-text-2); font-size: var(--t-small); max-width: 46ch; }
+
+/* v19-K (Audit B §4.7): „Mithelfen am Spieltag" — vierte Option, dezent von den
+   Mannschaften abgesetzt (Ehrenamt statt Fußball). */
+.al-opt--helfer { margin-top: var(--s-3); }
+.al-opt--helfer::before {
+  content: ""; position: absolute; left: var(--s-4); right: var(--s-4); top: calc(-1 * var(--s-2));
+  border-top: 1px solid var(--c-line);
+}
+.al-opt--helfer { position: relative; }

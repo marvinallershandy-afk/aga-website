@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { useStore } from '../store/useStore'
 import { CONTACT, whatsappUrl, whatsappReady, AM_PLATZ, SCHEDULE } from '../data/content'
 import { PLACE_BY_ID, type PlaceId } from './places'
-import { closePlace, openPlace } from './nav'
+import { closePlace, openPlace, consumeProbe } from './nav'
 import { ArrowLeft, ArrowRight, X } from 'lucide-react'
 import { TrainingMedia } from './TrainingMedia'
 import { GALERIEN } from '../data/galerie'
@@ -106,6 +106,8 @@ function SpieltagBody() {
 
 function TrainingBody() {
   const ort = CONTACT.trainingOrt
+  // v19-K (Audit B §2.5.1): Einstieg über /probetraining → Assistent sofort auf.
+  const [autoProbe] = useState(() => consumeProbe())
   return (
     <>
       <dl className="kp-facts">
@@ -124,7 +126,7 @@ function TrainingBody() {
         )}
       </dl>
       <div className="kp-actions">
-        <ProbetrainingKnopf className="btn btn--primary" icon={false} />
+        <ProbetrainingKnopf className="btn btn--primary" icon={false} autoOpen={autoProbe} />
         {ort && (
           <a className="btn btn--ghost" href={mapsDir(ort)} target="_blank" rel="noreferrer">
             Route zum Trainingsplatz
