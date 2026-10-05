@@ -1,7 +1,6 @@
 /* ═══ v15-L: Live-Seite /live — ruhig, dunkel, Rot-Schwarz, mobil zuerst ═══
-   Eigenes Stylesheet (kein Tailwind, keine Onepager-CSS). Die Board-Regeln
-   (.tboard*) sind aus src/ui/cards.css übernommen (v14-M Taktik-Board),
-   damit /live dasselbe Board zeigt, ohne cards.css zu laden. */
+   Eigenes Stylesheet (kein Tailwind, keine Onepager-CSS). v17-G: Die
+   Aufstellung im TV-Stil hat ihr eigenes Stylesheet (aufstellung/tv.css). */
 :root {
   --red: #E91D29;
   --red-deep: #B4141D;
@@ -295,68 +294,6 @@ img { display: block; }
 .lv-skel--m { width: 55%; height: 18px; }
 @keyframes lvSkel { to { background-position: -200% 0; } }
 
-/* ── Taktik-Board (aus cards.css v14-M übernommen) + Live-Marker ───────── */
-.lv-board { padding: 14px 12px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; }
-.tboard__meta { font-size: .62rem; font-weight: 800; letter-spacing: .24em; text-transform: uppercase; color: var(--gold); margin: 0 0 .45rem; }
-.tboard__field { position: relative; width: 100%; max-width: 460px; aspect-ratio: 360 / 300; margin: 0 auto .9rem; }
-.tboard__pitch { position: absolute; inset: 0; width: 100%; height: 100%; filter: drop-shadow(0 10px 24px rgba(0,0,0,.55)); }
-.tboard__face {
-  --f: 44px;
-  position: relative; display: block; flex: 0 0 auto;
-  width: var(--f); height: var(--f);
-  border-radius: 50%; overflow: hidden;
-  background: radial-gradient(circle at 50% 30%, #a3172a 0%, #4a0911 70%, #26050a 100%);
-  border: 2px solid rgba(255,255,255,.92);
-  box-shadow: 0 3px 10px rgba(0,0,0,.5);
-}
-.tboard__face img { position: absolute; left: 50%; top: -36%; width: 172%; max-width: none; transform: translateX(-47%); pointer-events: none; user-select: none; }
-.tboard__face i { position: absolute; inset: 0; display: grid; place-items: center; font-style: normal; font-family: var(--font-display); font-size: calc(var(--f) * .38); color: #fff; }
-.tboard__chip {
-  position: absolute; display: flex; flex-direction: column; align-items: center; color: #fff;
-  transform: translate(-50%, calc(var(--f-k) * -.5));
-  --f-k: calc(42px * var(--k, 1));
-}
-.tboard__chip .tboard__face { --f: var(--f-k); }
-.tboard__chip[data-role="TW"] .tboard__face { border-color: #e8f04a; }
-.tboard__chip.is-captain .tboard__face { border-color: var(--gold); }
-.tboard__num {
-  position: absolute; top: calc(var(--f-k) - 15px); left: calc(50% + var(--f-k) * .26);
-  min-width: 17px; height: 17px; padding: 0 3px; border-radius: 9px;
-  background: var(--red); color: #fff; font: 700 .6rem/17px var(--font-body); text-align: center;
-  box-shadow: 0 2px 6px rgba(0,0,0,.45);
-}
-.tboard__name {
-  margin-top: 2px; max-width: 92px; padding: 1px 5px; border-radius: 4px;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  font-family: var(--font-display); font-size: .62rem; line-height: 1.25; letter-spacing: .03em;
-  text-transform: uppercase; color: #fff; background: rgba(8,7,10,.7);
-}
-.tboard__row { display: flex; align-items: center; gap: .4rem; margin-top: .6rem; }
-.tboard__label { flex: 0 0 auto; width: 3.3rem; font-size: .58rem; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; color: var(--red); }
-.tboard__bench { flex: 1 1 auto; min-width: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(46px, 1fr)); gap: 6px 2px; }
-.tboard__mini { display: flex; flex-direction: column; align-items: center; min-width: 0; color: #fff; }
-.tboard__mini .tboard__face { --f: 32px; border-width: 1.5px; }
-.tboard__mini .tboard__name { font-size: .56rem; max-width: 100%; padding: 0 3px; background: none; color: rgba(255,255,255,.82); }
-.tboard__mini.is-raus { opacity: .6; }
-.tboard__staff { flex: 1 1 auto; min-width: 0; display: flex; flex-wrap: wrap; gap: .4rem .8rem; }
-.tboard__coach { display: flex; align-items: center; gap: .3rem; min-width: 0; }
-.tboard__coach .tboard__face { --f: 26px; border-width: 1.5px; border-color: rgba(232,193,90,.8); }
-.tboard__coach > span:last-child { display: flex; flex-direction: column; min-width: 0; line-height: 1.1; }
-.tboard__coach b { font-family: var(--font-display); font-weight: 400; font-size: .74rem; text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; }
-.tboard__coach small { font-size: .52rem; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.55); white-space: nowrap; }
-.lv-rein { font-style: normal; color: #3ecf6e; margin-right: 3px; font-family: var(--font-body); font-weight: 800; }
-.lv-raus { font-style: normal; color: #ff5560; margin-right: 2px; }
-.lv-karte {
-  position: absolute; top: 0; left: calc(50% - var(--f-k) * .5 - 4px);
-  width: 9px; height: 13px; border-radius: 2px; background: #f5c518; transform: rotate(-10deg);
-  box-shadow: 0 1px 4px rgba(0,0,0,.6);
-}
-.lv-karte--rot { background: var(--red); }
-.lv-chip-tor {
-  position: absolute; top: -6px; left: calc(50% - var(--f-k) * .5 - 6px);
-  font-style: normal; font-size: .7rem; line-height: 1;
-}
-.lv-karte + .lv-chip-tor { top: 14px; }
 
 @media (prefers-reduced-motion: reduce) {
   .lv-puls, .lv-skel { animation: none; }
@@ -382,21 +319,3 @@ a.lv-partner:hover .lv-partner__label { color: var(--fg); }
 .lv-table tr.is-self td { background: rgba(233,29,41,.16); font-weight: 700; }
 .lv-table tr.is-self td:first-child { box-shadow: inset 3px 0 0 #e91d29; }
 .lv-table__quelle { margin: 10px 0 0; font-size: 12px; color: rgba(255,255,255,.45); }
-
-/* ── v16-W: 3D-Aufstellung (three.js nur nach Klick) ───────────────── */
-.lv3d-open { width: 100%; margin: 0 0 12px; }
-.lv3d { margin: 0 0 .9rem; }
-.lv3d__stage {
-  position: relative; width: 100%; aspect-ratio: 4 / 5; max-height: 72vh;
-  border-radius: 14px; overflow: hidden; background: #0E0D0D;
-  border: 1px solid var(--line);
-  display: grid; place-items: center;
-}
-@media (min-width: 900px) { .lv3d__stage { aspect-ratio: 5 / 4; } }
-.lv3d__canvas { position: absolute; inset: 0; width: 100% !important; height: 100% !important; display: block; cursor: grab; }
-.lv3d__canvas:active { cursor: grabbing; }
-.lv3d__video { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
-.lv3d__hint { position: relative; z-index: 1; font-size: .85rem; color: var(--mut); }
-.lv3d__bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; }
-.lv3d__tip { font-size: .74rem; color: var(--mut); }
-.lv3d__close { min-height: 40px; font-size: .78rem; }
