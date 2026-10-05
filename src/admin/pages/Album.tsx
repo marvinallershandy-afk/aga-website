@@ -31,7 +31,6 @@ import {
   useKarten,
   useKartenMutations,
   useSaveAlbumEinstellungen,
-  useStandPin,
   walkoutSuchen,
   type EinstellungenInput,
   type KarteInput,
@@ -46,7 +45,7 @@ import { A4, canvasZuBlob, herunterladen, plakatPdf, zeichnePlakat } from '../li
 //   Sticker    — Katalog: aus Kader erzeugen, Momente/Partner/Fans mit
 //                Foto, Seltenheit, Walkout-Videos finden
 //   Gutscheine — Liste, Suche nach Code, Notfall-Einlösen
-//   Einstellungen — Chancen, Tütchen-Größe, Fenster, Belohnungen, Stand-PIN
+//   Einstellungen — Chancen, Tütchen-Größe, Fenster, Belohnungen (v17-D: ohne Stand-PIN)
 // Die Ziehung passiert in der Datenbank; hier wird nur gepflegt.
 // ─────────────────────────────────────────────────────────────
 
@@ -82,7 +81,7 @@ export function Album() {
             ['spieltage', 'Spieltage', CalendarCheck],
             ['sticker', 'Sticker', Sparkles],
             ['gutscheine', 'Gutscheine', Ticket],
-            ['einstellungen', 'Regeln & PIN', Settings2],
+            ['einstellungen', 'Regeln', Settings2],
           ] as const
         ).map(([value, label, Icon]) => (
           <button
@@ -681,7 +680,7 @@ function GutscheineTab() {
         </div>
       </div>
       <p className="text-sm text-muted-foreground">
-        Eingelöst wird normalerweise direkt am Stand: Der Fan zeigt den Gutschein, ein Helfer tippt die Stand-PIN auf dem Handy des Fans. Hier nur für Notfälle (z. B. Akku leer).
+        Eingelöst wird normalerweise direkt am Stand: Der Fan tippt „Einlösen“ und bestätigt — danach zeigt sein Handy einen großen Haken mit Uhrzeit, der Gutschein ist verbraucht. Hier nur für Notfälle (z. B. Akku leer).
         „Album komplett“ ist ein Los für die Saison-Verlosung.
       </p>
       {q.isLoading ? (
@@ -731,17 +730,15 @@ function GutscheineTab() {
   )
 }
 
-// ── Regeln & Stand-PIN ──────────────────────────────────────
+// ── Regeln ──────────────────────────────────────────────────
 function EinstellungenTab() {
   const toast = useToast()
   const q = useAlbumEinstellungen()
   const sponsoren = useSponsoren()
   const stat = useAlbumStatistik()
   const speichern = useSaveAlbumEinstellungen()
-  const pinSetzen = useStandPin()
   // Entwurf erst bei der ersten Änderung anlegen; bis dahin gilt der geladene Stand
   const [entwurf, setF] = useState<EinstellungenInput | null>(null)
-  const [pin, setPin] = useState('')
   const f = entwurf ?? q.data ?? null
   if (q.isLoading || !f) return <SkeletonRows rows={6} />
   const set = (p: EinstellungenInput) => setF((x) => ({ ...(x ?? f), ...p }))
@@ -774,30 +771,12 @@ function EinstellungenTab() {
 
   return (
     <div className="space-y-6">
-      <section className="space-y-3 rounded-lg border border-border p-4">
-        <h2 className="font-display text-xl">Stand-PIN</h2>
+      <section className="space-y-2 rounded-lg border border-border p-4">
+        <h2 className="font-display text-xl">Gutscheine am Stand</h2>
         <p className="text-sm text-muted-foreground">
-          4 Ziffern, nur für die Helfer am Stand. Damit lösen sie Gutscheine auf dem Handy der Fans ein. Nach 5 falschen Versuchen ist der Gutschein 15 Minuten gesperrt.
-          Gespeichert wird nur ein verschlüsselter Fingerabdruck — die PIN selbst sieht niemand mehr, also gut merken.
+          Ohne PIN: Der Fan zeigt den Gutschein, tippt „Einlösen“ und bestätigt „Wirklich einlösen?“. Danach steht auf seinem Handy ein großer
+          Haken mit Datum und Uhrzeit — der Gutschein ist verbraucht und lässt sich kein zweites Mal einlösen. Helfer achten nur auf den Haken.
         </p>
-        <p className="text-sm">{q.data?.stand_pin_gesetzt_at ? `Zuletzt gesetzt: ${new Date(q.data.stand_pin_gesetzt_at).toLocaleString('de-DE')}` : 'Noch keine PIN gesetzt — Einlösen am Stand geht erst danach.'}</p>
-        <div className="flex max-w-sm gap-2">
-          <Input aria-label="Neue Stand-PIN" inputMode="numeric" maxLength={4} placeholder="z. B. 4711" value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))} />
-          <Button
-            disabled={pin.length !== 4 || pinSetzen.isPending}
-            onClick={async () => {
-              try {
-                await pinSetzen.mutateAsync(pin)
-                setPin('')
-                toast.success('Stand-PIN gesetzt.')
-              } catch (e) {
-                toast.error(friendlyError(e))
-              }
-            }}
-          >
-            PIN setzen
-          </Button>
-        </div>
       </section>
 
       <section className="space-y-4 rounded-lg border border-border p-4">

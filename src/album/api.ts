@@ -142,10 +142,10 @@ export interface RanglistenEintrag {
   ich?: boolean
 }
 
+/** v17-D: Einlösen ohne PIN (Bestätigung im Client). */
 export type EinloeseErgebnis =
   | { ok: true; eingeloestAt: string }
-  | { ok: false; grund: 'pin_falsch'; versuche: number }
-  | { ok: false; grund: 'gesperrt' | 'keine_pin' | 'verlosung' }
+  | { ok: false; grund: 'verlosung' }
   | { ok: false; grund: 'schon_eingeloest'; eingeloestAt?: string }
 
 // ── Fehler → freundlicher Text ──────────────────────────────
@@ -237,8 +237,8 @@ export const profilSpeichern = (p: { vorname: string; initial: string; rangliste
     p_erinnerung: p.erinnerung,
     p_einwilligung: p.einwilligung,
   })
-export const gutscheinEinloesen = (id: string, pin: string) =>
-  rpc<EinloeseErgebnis>('album_gutschein_einloesen', { p_gutschein: id, p_pin: pin })
+export const gutscheinEinloesen = (id: string) =>
+  rpc<EinloeseErgebnis>('album_gutschein_einloesen', { p_gutschein: id })
 export const kontoLoeschen = () => rpc<{ ok: true; loginGeloescht: boolean }>('album_konto_loeschen')
 
 // ── Login ───────────────────────────────────────────────────

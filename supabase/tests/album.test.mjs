@@ -1,6 +1,7 @@
 // PGlite-Test der Migration 20261007100000_sva_album.sql: Katalog, Check-in
 // (Token, Zeitfenster, Einmaligkeit), serverseitige Ziehung (Gewichte,
-// Doppelten-Bremse), Pack öffnen, Belohnungen, Stand-PIN (Sperre),
+// Doppelten-Bremse), Pack öffnen, Belohnungen, Gutschein einlösen (v17-D: ohne PIN,
+// 20261008110000_sva_album_gutschein_ohne_pin.sql),
 // Heimsieg-Bonus, Rangliste, Konto löschen, Mediadaten in web_snapshot() —
 // und MISSBRAUCH: Fan-Konto liest/schreibt Admin-Tabellen, ruft Admin-/interne
 // Funktionen, öffnet fremde Packs, löst fremde Gutscheine ein.
@@ -39,6 +40,9 @@ for (const f of fs.readdirSync(M).sort()) {
 }
 await defaults()
 await run(NEU) // zweiter Lauf: idempotent + entzieht die Default-Rechte wieder
+// v17-D: spätere Migrationen danach erneut (sonst stünde nach dem zweiten
+// Album-Lauf wieder die alte PIN-Funktion da — echte Reihenfolge herstellen)
+for (const f of fs.readdirSync(M).sort().filter((f) => f > NEU)) await run(f)
 
 const claims = (uid, email) => JSON.stringify({ sub: uid, email, role: 'authenticated' })
 const as = async (uid, email, sql, params) => {
@@ -227,29 +231,21 @@ const p3 = (await rpc(fan1, `select album_mein()`)).packs[0]
 op = await rpc(fan1, `select album_pack_oeffnen($1)`, [p3.id])
 ok(op.gutscheine.some((g) => g.stufe === 'komplett'), 'Alle Spieler-Plätze belegt (Kapitän als Gold) → „Album komplett“-Los')
 
-// ── Stand-PIN ──────────────────────────────────────────────────────────────
+// ── Gutschein einlösen (v17-D: ohne PIN, Bestätigung im Client) ────────────
 const g1 = (await rpc(fan1, `select album_mein()`)).gutscheine.find((g) => g.stufe === 'schwelle_1')
 const gk = (await rpc(fan1, `select album_mein()`)).gutscheine.find((g) => g.stufe === 'komplett')
-r = await rpc(fan1, `select album_gutschein_einloesen($1, '1234')`, [g1.id])
-ok(r.ok === false && r.grund === 'keine_pin', 'Ohne Stand-PIN: freundlich „keine PIN“')
-await expectErr(fan1(`select album_admin_pin('1234')`), 'Fan darf die PIN nicht setzen', /album_kein_admin/)
-await expectErr(admin(`select album_admin_pin('12a4')`), 'PIN: genau 4 Ziffern', /album_ungueltig:pin/)
-await admin(`select album_admin_pin('4711')`)
-const e1 = await one(`select stand_pin_hash, stand_pin_salt from sva_album_einstellungen`)
-ok(/^[0-9a-f]{64}$/.test(e1.stand_pin_hash) && !JSON.stringify(e1).includes('4711'), 'PIN nur als gesalzener Hash gespeichert')
-await expectErr(fan2(`select album_gutschein_einloesen($1, '4711')`, [g1.id]), 'Fremden Gutschein einlösen → unbekannt', /album_gutschein_unbekannt/)
-r = await rpc(fan1, `select album_gutschein_einloesen($1, '0000')`, [g1.id])
-ok(r.ok === false && r.grund === 'pin_falsch' && r.versuche === 4, 'Falsche PIN → abgelehnt, Versuch zählt (noch 4)')
-for (let i = 0; i < 4; i++) await rpc(fan1, `select album_gutschein_einloesen($1, '000${i + 1}')`, [g1.id])
-r = await rpc(fan1, `select album_gutschein_einloesen($1, '4711')`, [g1.id])
-ok(r.ok === false && r.grund === 'gesperrt', '5 Fehlversuche → 15 min gesperrt, auch mit richtiger PIN')
-ok((await one(`select status from sva_album_gutscheine where id = $1`, [g1.id])).status === 'offen', 'Gesperrt: Gutschein bleibt offen')
-await db.exec(`update sva_album_pin_fehler set created_at = now() - interval '16 minutes'`)
-r = await rpc(fan1, `select album_gutschein_einloesen($1, ' 4711 ')`, [g1.id])
-ok(r.ok === true && (await one(`select status, eingeloest_durch from sva_album_gutscheine where id = $1`, [g1.id])).eingeloest_durch === 'stand', 'Nach der Sperre: richtige PIN → eingelöst')
-r = await rpc(fan1, `select album_gutschein_einloesen($1, '4711')`, [g1.id])
-ok(r.ok === false && r.grund === 'schon_eingeloest', 'Zweites Einlösen → „schon eingelöst“')
-r = await rpc(fan1, `select album_gutschein_einloesen($1, '4711')`, [gk.id])
+await expectErr(fan1(`select album_gutschein_einloesen($1, '4711')`, [g1.id]), 'Alte PIN-Signatur gibt es nicht mehr', /does not exist/)
+await expectErr(admin(`select album_admin_pin('4711')`), 'album_admin_pin entfernt', /does not exist/)
+await expectErr(fan2(`select album_gutschein_einloesen($1)`, [g1.id]), 'Fremden Gutschein einlösen → abgelehnt (unbekannt)', /album_gutschein_unbekannt/)
+ok((await one(`select status from sva_album_gutscheine where id = $1`, [g1.id])).status === 'offen', 'Fremder Versuch: Gutschein bleibt offen')
+await expectErr(asAnon(`select album_gutschein_einloesen('${'00000000-0000-4000-8000-000000000000'}')`), 'anon darf nicht einlösen', /permission denied/)
+r = await rpc(fan1, `select album_gutschein_einloesen($1)`, [g1.id])
+const eg = await one(`select status, eingeloest_at, eingeloest_durch from sva_album_gutscheine where id = $1`, [g1.id])
+ok(r.ok === true && !!r.eingeloestAt && eg.status === 'eingeloest' && eg.eingeloest_durch === 'stand' && eg.eingeloest_at != null, 'Eigener Gutschein → eingelöst mit Zeitstempel')
+r = await rpc(fan1, `select album_gutschein_einloesen($1)`, [g1.id])
+ok(r.ok === false && r.grund === 'schon_eingeloest' && !!r.eingeloestAt, 'Doppeltes Einlösen → abgelehnt („schon eingelöst“ + Zeitpunkt)')
+ok((await one(`select eingeloest_at from sva_album_gutscheine where id = $1`, [g1.id])).eingeloest_at.getTime() === eg.eingeloest_at.getTime(), 'Zeitstempel bleibt beim zweiten Versuch unverändert')
+r = await rpc(fan1, `select album_gutschein_einloesen($1)`, [gk.id])
 ok(r.ok === false && r.grund === 'verlosung', 'Verlosungs-Los ist nicht am Stand einlösbar')
 ok((await fan1(`update sva_album_gutscheine set status = 'eingeloest' where fan_user_id = $1 returning id`, [FAN1])).rows.length === 0, 'Fan kann Gutscheine nicht direkt auf „eingelöst“ setzen')
 
