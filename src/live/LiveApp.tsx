@@ -11,6 +11,7 @@ import {
   type LiveData,
   type LiveEvent,
   type LiveMatch,
+  type LivePartner,
   type LivePlayer,
 } from './model'
 import { liveKonfiguriert } from './api'
@@ -102,6 +103,8 @@ export function LiveApp() {
         </button>
       </header>
 
+      {d?.partner && <Praesentiert p={d.partner} />}
+
       {!liveKonfiguriert ? (
         <Leer titel="Live-Ticker nicht eingerichtet" text="Die Live-Daten sind auf dieser Seite noch nicht verbunden." />
       ) : live.loading && !d ? (
@@ -173,6 +176,23 @@ export function LiveApp() {
         </div>
       )}
     </div>
+  )
+}
+
+// v16-S: dezente Zeile „Live-Ticker präsentiert von“ unter dem Kopf
+function Praesentiert({ p }: { p: LivePartner }) {
+  const inhalt = (
+    <>
+      <span className="lv-partner__label">Live-Ticker präsentiert von</span>
+      {p.logoUrl ? <img className="lv-partner__logo" src={p.logoUrl} alt={p.name} height="28" /> : <b className="lv-partner__name">{p.name}</b>}
+    </>
+  )
+  return p.url ? (
+    <a className="lv-partner" href={p.url} target="_blank" rel="sponsored noopener">
+      {inhalt}
+    </a>
+  ) : (
+    <p className="lv-partner">{inhalt}</p>
   )
 }
 

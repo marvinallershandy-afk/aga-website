@@ -4,7 +4,7 @@
 -- Was diese Migration tut (alles ADDITIV, nur eigene sm_*/sva_*-Objekte —
 -- das Supabase-Projekt wird mit einer fremden App geteilt):
 --   1. sva_partner_pakete: verkaufbare Pakete (Bande, Trikot, Social Media,
---      „Spieltag präsentiert von", „Live-Ticker präsentiert von", Unterstützer)
+--      „Spieltag präsentiert von“, „Live-Ticker präsentiert von“, Unterstützer)
 --      mit Preis „ab …", Plätzen, Reihenfolge, sichtbar ja/nein. Vorschlags-
 --      Seed nur, wenn die Tabelle leer ist (im Admin änderbar).
 --   2. sm_sponsoren: + stufe (hauptpartner | partner | unterstuetzer) für die
@@ -12,7 +12,7 @@
 --      2 frei" rechnet sich selbst).
 --   3. sva_partner_info (genau 1 Zeile): Mediadaten (Instagram-Follower,
 --      Ø Reichweite/Monat, Ø Zuschauer Heimspiel, Website-Besuche/Monat,
---      Heimspiele/Saison, Stand) + „Live-Ticker präsentiert von" (Sponsor).
+--      Heimspiele/Saison, Stand) + „Live-Ticker präsentiert von“ (Sponsor).
 --   4. sva_partner_anfragen: Eingang des Anfrage-Formulars auf /partner.
 --      Lesen/Bearbeiten nur Admin. Schreiben NUR über die RPC (5).
 --   5. partner_anfrage(...) — öffentliche RPC (anon), SECURITY DEFINER:
@@ -22,7 +22,7 @@
 --      `partner.anfrage` über pg_net — nur wenn die Extension aktiv ist.
 --   6. web_snapshot(): + sponsors[].stufe, + partner { pakete, mediadaten,
 --      livePartner }  (nur öffentliche Felder).
---   7. web_live(): + partner { name, logoUrl, url } für „präsentiert von".
+--   7. web_live(): + partner { name, logoUrl, url } für „präsentiert von“.
 --
 -- NICHT automatisch anwenden — Reihenfolge siehe docs/PARTNER.md.
 -- Idempotent formuliert (mehrfaches Anwenden schadet nicht). Lokal gegen
@@ -72,11 +72,11 @@ select * from (values
    'Reichweite in der Region: Wir stellen dich in Stories und einem Reel vor.',
    array['2 Story-Features mit Markierung', '1 Reel mit deinem Unternehmen', 'Logo auf der Partner-Wand'],
    150, 'Saison', null, false, 30),
-  ('„Spieltag präsentiert von"',
+  ('„Spieltag präsentiert von“',
    'Ein Heimspiel gehört dir: Ankündigung, Durchsage und Spieltagsgrafik mit deinem Namen.',
    array['Nennung in Spieltags-Post und Story', 'Durchsage am Platz', 'Logo auf der Spieltagsgrafik'],
    75, 'Spieltag', 15, false, 40),
-  ('„Live-Ticker präsentiert von"',
+  ('„Live-Ticker präsentiert von“',
    'Dein Logo im Kopf des Live-Tickers und auf jeder Endstand-Grafik der Saison.',
    array['Logo im Kopf von aga-erste.de/live bei jedem Spiel', 'Logo auf jeder Endstand-Story-Grafik', 'Nennung im Ticker-Link in der Instagram-Story'],
    300, 'Saison', 1, false, 50),
@@ -103,7 +103,7 @@ comment on column public.sm_sponsoren.stufe is 'Partner-Wand auf /partner: haupt
 comment on column public.sm_sponsoren.partner_paket_id is 'Gekauftes Partner-Paket (zählt gegen sva_partner_pakete.plaetze).';
 create index if not exists sm_sponsoren_partner_paket_idx on public.sm_sponsoren (partner_paket_id);
 
--- ── 3. Mediadaten + „präsentiert von" (genau eine Zeile) ─────────────────────
+-- ── 3. Mediadaten + „präsentiert von“ (genau eine Zeile) ─────────────────────
 create table if not exists public.sva_partner_info (
   id smallint primary key default 1 check (id = 1),
   instagram_follower integer check (instagram_follower is null or instagram_follower between 0 and 100000000),
@@ -112,12 +112,12 @@ create table if not exists public.sva_partner_info (
   website_besuche_monat integer check (website_besuche_monat is null or website_besuche_monat between 0 and 100000000),
   heimspiele_saison integer check (heimspiele_saison is null or heimspiele_saison between 0 and 60),
   stand date,
-  -- „Live-Ticker präsentiert von": erscheint auf /live (Kopf) + Endstand-Story.
+  -- „Live-Ticker präsentiert von“: erscheint auf /live (Kopf) + Endstand-Story.
   live_partner_id uuid references public.sm_sponsoren(id) on delete set null,
   updated_at timestamptz not null default now(),
   updated_by text
 );
-comment on table public.sva_partner_info is 'Mediadaten für /partner + „Live-Ticker präsentiert von" (genau 1 Zeile, id = 1).';
+comment on table public.sva_partner_info is 'Mediadaten für /partner + „Live-Ticker präsentiert von“ (genau 1 Zeile, id = 1).';
 alter table public.sva_partner_info enable row level security;
 insert into public.sva_partner_info (id) values (1) on conflict (id) do nothing;
 
@@ -473,7 +473,7 @@ begin
     ) x;
 
   -- v16-S: Partner-Bereich (/partner) — Pakete (sichtbar), Mediadaten (nur
-  -- gepflegte Felder), „Live-Ticker präsentiert von". Keine Anfragen, keine
+  -- gepflegte Felder), „Live-Ticker präsentiert von“. Keine Anfragen, keine
   -- Kontakte, keine internen IDs außer der Paket-ID (Formular-Auswahl).
   select jsonb_build_object(
            'pakete', coalesce((
@@ -576,7 +576,7 @@ $$;
 revoke all on function public.web_snapshot() from public;
 grant execute on function public.web_snapshot() to anon, authenticated, service_role;
 
--- ── 7. web_live(): + partner („Live-Ticker präsentiert von") ─────────────────
+-- ── 7. web_live(): + partner („Live-Ticker präsentiert von“) ─────────────────
 -- Unverändert gegenüber 20261005100000 bis auf v_partner + Feld „partner".
 create or replace function public.web_live()
 returns jsonb
@@ -779,7 +779,7 @@ begin
    order by s.anstoss desc
    limit 1;
 
-  -- v16-S: „Live-Ticker präsentiert von" (nur aktiver Sponsor, nur öffentliche Felder)
+  -- v16-S: „Live-Ticker präsentiert von“ (nur aktiver Sponsor, nur öffentliche Felder)
   select jsonb_strip_nulls(jsonb_build_object('name', sp.name, 'logoUrl', sp.logo_url, 'url', sp.website_url))
     into v_partner
     from public.sva_partner_info pi

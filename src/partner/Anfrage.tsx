@@ -72,7 +72,7 @@ export function Anfrage({ interesse, onInteresse }: { interesse: string; onInter
       return
     }
     if (!anfrageKonfiguriert) {
-      setProblem({ text: 'Das Formular ist auf dieser Seite noch nicht verbunden. Schick uns deine Anfrage direkt — die Angaben sind schon eingetragen:', direkt: true })
+      setProblem({ text: 'Das Formular ist auf dieser Seite noch nicht verbunden. Schick uns deine Anfrage direkt, deine Angaben sind schon eingetragen:', direkt: true })
       return
     }
     setStatus('sendet')
@@ -100,7 +100,7 @@ export function Anfrage({ interesse, onInteresse }: { interesse: string; onInter
         document.getElementById(`pt-${err.feld}`)?.focus()
       } else {
         const text = err instanceof Error ? err.message : 'Das hat nicht geklappt.'
-        setProblem({ text: `${text} Deine Angaben sind unten schon eingetragen:`, direkt: true })
+        setProblem({ text: `${text} Mit einem Tipp geht sie direkt raus, deine Angaben sind schon eingetragen:`, direkt: true })
       }
     }
   }
