@@ -1,0 +1,13 @@
+{
+  "_hinweis": "Manuelle Zuordnung/Korrektur für scripts/greenscreen/build.mjs. Schlüssel = Dateiname im Quellordner. Einträge hier gehen vor die automatische Erkennung und gelten als bestätigt. Siehe docs/GREENSCREEN.md.",
+  "_beispiel": {
+    "clips": {
+      "IMG_1234.MOV": { "id": "p-warkehr-i", "takes": { "2": [12.4, 16.0], "7": [61.0, 64.5] } },
+      "IMG_1240.MOV": { "id": "s-junge" },
+      "IMG_1250.MOV": { "ignore": true }
+    },
+    "fotos": { "IMG_1235.HEIC": "p-warkehr-i" }
+  },
+  "clips": {},
+  "fotos": {}
+}
