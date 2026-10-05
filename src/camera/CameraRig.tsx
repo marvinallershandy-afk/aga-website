@@ -26,6 +26,7 @@ import { mapWorld } from '../map/mapWorld'
 import { INTRO_S, endIntro } from '../map/intro'
 import { mapPanelRect } from '../map/layout'
 import type { PlaceId } from '../map/places'
+import { BANDE_PANELE, BANDE_SLOTS } from '../data/bandeLayout'
 
 // Scroll-getriebene Kamerafahrt. Der Ziel-Fortschritt kommt aus dem
 // Store (DOM-Scroll). Wir dämpfen ihn zeitbasiert → cinematisches
@@ -44,10 +45,11 @@ const devCam = (() => {
   return v.length === 6 && v.every((n) => !isNaN(n)) ? v : null
 })()
 
-// v12-E6: Geometrie der Süd-Bande (muss zu Barrier.tsx passen). 6 Tafeln:
-// [Verein, Slot0..3, CTA]. Das Karussell fokussiert die 4 Slot-Tafeln.
+// v12-E6: Geometrie der Süd-Bande (muss zu Barrier.tsx passen):
+// [Verein, Slot0..N-1, CTA]. Das Karussell fokussiert die Slot-Tafeln.
+// v18-P: Tafelzahl aus src/data/bandeLayout.ts (Hook für die Bandenansicht).
 const SP_BOARD_W = PITCH.width * 0.86
-const SP_PANELS = 6
+const SP_PANELS = BANDE_PANELE
 const SP_U = 6 / (STATION_COUNT - 1) // Scroll-Param der Sponsoren-Station
 // v14-D: Mannschafts-Flyover. Präsenz der Station in Stations-Einheiten g
 // (anchors.ts): Ankunft g 1.55→2, Flyover g 2→3, Ausflug g 3→3.45.
@@ -68,7 +70,7 @@ const PHONE_TEAM_POS = new THREE.Vector3(-0.3, 12.5, 1.9)
 const PHONE_TEAM_LOOK = new THREE.Vector3(-0.3, 0, 0.1)
 function sponsorBoardX(focus: number): number {
   const panelW = SP_BOARD_W / SP_PANELS
-  const boardIndex = 1 + THREE.MathUtils.clamp(focus, 0, 3) // Slot-Tafeln = Board 1..4
+  const boardIndex = 1 + THREE.MathUtils.clamp(focus, 0, BANDE_SLOTS - 1) // Slot-Tafeln = Board 1..N
   return -SP_BOARD_W / 2 + (boardIndex + 0.5) * panelW
 }
 function smoothstep(a: number, b: number, x: number) {

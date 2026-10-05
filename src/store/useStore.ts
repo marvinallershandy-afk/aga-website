@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import type { Player } from '../data/players'
 import type { PlaceId } from '../map/places'
+import { BANDE_SLOTS, FREIER_SLOT, slotZuFokus } from '../data/bandeLayout'
 
 export interface PerfStats {
   fps: number
@@ -91,10 +92,7 @@ interface AppState {
   sponsorFocus: number
   sponsorCount: number
   setSponsorFocus: (i: number) => void
-  /** v13-K5 „Deine Bande": eingetippter Firmenname erscheint live auf
-   *  der fokussierten leeren 3D-Bande. */
-  sponsorPreviewName: string
-  setSponsorPreviewName: (v: string) => void
+  // v18-P: der Banden-Entwurf lebt in src/partner/bande/entwurf.ts
 
   /** Ton an/aus (Nutzer-Entscheidung am Tor bzw. Mute-Toggle). */
   soundOn: boolean
@@ -197,16 +195,15 @@ export const useStore = create<AppState>((set) => ({
   partyNear: false,
   setPartyNear: (v) => set((s) => (s.partyNear === v ? s : { partyNear: v })),
 
-  // v12-E6: 4 „dein-Logo"-Tafeln (Banden-Slots) — Fokus wandert per Pfeil.
-  sponsorFocus: 0,
-  sponsorCount: 4,
+  // v12-E6: „dein-Logo"-Tafeln (Banden-Slots) — Fokus wandert per Pfeil.
+  // v18-P: Anzahl aus der Banden-Aufteilung; Start = erste freie Tafel.
+  sponsorFocus: slotZuFokus(FREIER_SLOT),
+  sponsorCount: BANDE_SLOTS,
   setSponsorFocus: (i) => set((s) => {
     const n = s.sponsorCount
     const wrapped = ((i % n) + n) % n
     return s.sponsorFocus === wrapped ? s : { sponsorFocus: wrapped }
   }),
-  sponsorPreviewName: '',
-  setSponsorPreviewName: (v) => set({ sponsorPreviewName: v }),
 
   soundOn: false,
   setSoundOn: (v) => {

@@ -44,8 +44,21 @@ Assets in `public/album/` (Tisch, Deko, Cover-Foto) werden nicht mehr geladen.
    mit „präsentiert von“-Partnern prüfen.
 5. „Website veröffentlichen“ — erst dann erscheint die Check-in-Zahl auf `/partner`.
 
-Der Startseite liegt nur ein Link-Eintrag bei (`ALBUM_LINK` in `src/data/club.ts`);
-eingebunden wird er beim Umbau der Startseite.
+**Zugänge (v18-P)** — überall derselbe ruhige Baustein `AlbumTeaser`
+(`src/ui/AlbumTeaser.tsx`, Texte zentral in `ALBUM_LINK`, `src/data/club.ts`):
+
+| Wo | Was |
+|---|---|
+| Karte (Startseite) | Karte unten links „Werde Teil der Kurve · Bei jedem Heimspiel Sticker sammeln", erst nach dem Intro, verschwindet bei offenem Panel |
+| Fans-Panel | unter Galerie/Fangesang |
+| Vereinsheim-Panel | unter der Musik (dort gibt's das Freibier) |
+| Rundgang | Fans-Station („Der Fanblock") |
+| `/live` | bei Heimspielen unter dem Spielkopf „Am Eingang einchecken" (während des Spiels „Am Platz? Noch schnell einchecken") |
+| Fußzeilen | Karte, Rundgang, `/live`, `/partner` → „Sammelalbum" |
+
+Die Belohnungen im Text (5. Heimspiel Freibier/Bratwurst, 10. Fanartikel) sind die
+Standard-Regeln — ändert sich das im Admin, `ALBUM_LINK.nutzen` mitziehen.
+Teaser-Bild neu erzeugen: `node scripts/album-teaser.mjs`.
 
 ## 2. Ablauf am Spieltag
 

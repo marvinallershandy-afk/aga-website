@@ -1,4 +1,6 @@
-import { useState, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
+import type { EntwurfZustand } from './bande/entwurf'
+import { schriftenBereit, zeichneTafel } from './bande/tafel'
 import { PARTNER_PAKETE, PAKETE_AUS_ADMIN } from '../data/partner'
 import { CONTACT, whatsappReady, whatsappUrl } from '../data/content'
 import { AnfrageFehler, anfrageKonfiguriert, feldText, quelleAusUrl, sendeAnfrage, type Feld } from './api'
@@ -34,9 +36,41 @@ function pruefe(w: Werte): Partial<Record<Feld, string>> {
   return f
 }
 
-export function Anfrage({ interesse, onInteresse }: { interesse: string; onInteresse: (v: string) => void }) {
+/** v18-P: Banden-Entwurf als Text für die Nachricht (die RPC nimmt keine Bilder). */
+function entwurfText(e: EntwurfZustand): string {
+  return [
+    '— Banden-Entwurf (Konfigurator auf /partner) —',
+    `Name auf der Bande: „${e.name.trim()}“`,
+    e.zeile2.trim() ? `Zweite Zeile: „${e.zeile2.trim()}“` : '',
+    `Untergrund: ${e.grund === 'auto' ? 'automatisch' : e.grund}`,
+    e.logoDataUrl ? 'Logo: eigenes Logo im Entwurf (Datei wird per E-Mail nachgereicht)' : 'Logo: keins im Entwurf',
+  ]
+    .filter(Boolean)
+    .join('\n')
+}
+
+export function Anfrage({
+  interesse,
+  onInteresse,
+  entwurf,
+  onOhneEntwurf,
+}: {
+  interesse: string
+  onInteresse: (v: string) => void
+  entwurf?: EntwurfZustand | null
+  onOhneEntwurf?: () => void
+}) {
   const [start] = useState(() => performance.now())
-  const [w, setW] = useState<Werte>(LEER)
+  const [w, setW] = useState<Werte>(() => (entwurf?.name.trim() ? { ...LEER, firma: entwurf.name.trim().slice(0, 120) } : LEER))
+  const [logoDabei, setLogoDabei] = useState(false)
+  // Entwurf kommt dazu (Knopf im Konfigurator) → Firmenname übernehmen, wenn leer
+  // (während des Renderns abgeglichen statt per Effekt — React-Muster für abgeleiteten Zustand)
+  const entwurfName = entwurf?.name.trim() ?? ''
+  const [vorName, setVorName] = useState(entwurfName)
+  if (entwurfName !== vorName) {
+    setVorName(entwurfName)
+    if (entwurfName && !w.firma.trim()) setW({ ...w, firma: entwurfName.slice(0, 120) })
+  }
   const [fehler, setFehler] = useState<Partial<Record<Feld, string>>>({})
   const [status, setStatus] = useState<'bereit' | 'sendet' | 'danke'>('bereit')
   const [problem, setProblem] = useState<{ text: string; direkt: boolean } | null>(null)
@@ -54,6 +88,7 @@ export function Anfrage({ interesse, onInteresse }: { interesse: string; onInter
       interesseText ? `Ich interessiere mich für: ${interesseText}.` : 'Ich interessiere mich für eine Partnerschaft.',
       w.nachricht.trim(),
       w.telefon.trim() ? `Telefon: ${w.telefon.trim()}` : '',
+      entwurf ? `\n${entwurfText(entwurf)}` : '',
     ]
       .filter(Boolean)
       .join('\n')
@@ -78,7 +113,13 @@ export function Anfrage({ interesse, onInteresse }: { interesse: string; onInter
     setStatus('sendet')
     try {
       // Ohne Admin-Pakete (Seed) geht das Interesse als Text mit.
-      const nachricht = !PAKETE_AUS_ADMIN && interesseText ? `Interesse: ${interesseText}\n\n${w.nachricht.trim()}`.trim() : w.nachricht.trim()
+      let nachricht = !PAKETE_AUS_ADMIN && interesseText ? `Interesse: ${interesseText}\n\n${w.nachricht.trim()}`.trim() : w.nachricht.trim()
+      // v18-P: Entwurf als Text anhängen (max. 2000 Zeichen gesamt)
+      if (entwurf) {
+        const anhang = entwurfText(entwurf)
+        nachricht = `${nachricht.slice(0, 1990 - anhang.length - 40)}${nachricht ? '\n\n' : ''}${anhang}`
+      }
+      setLogoDabei(!!entwurf?.logoDataUrl)
       await sendeAnfrage({
         firma: w.firma.trim(),
         name: w.name.trim(),
@@ -89,7 +130,7 @@ export function Anfrage({ interesse, onInteresse }: { interesse: string; onInter
         datenschutz: w.datenschutz,
         website: w.website,
         dauerMs: performance.now() - start,
-        quelle: quelleAusUrl(),
+        quelle: quelleAusUrl() ?? (entwurf ? 'bande-konfigurator' : null),
       })
       setStatus('danke')
       window.setTimeout(() => document.getElementById('pt-danke')?.focus(), 50)
@@ -113,6 +154,13 @@ export function Anfrage({ interesse, onInteresse }: { interesse: string; onInter
           Deine Anfrage{w.firma.trim() ? ` für ${w.firma.trim()}` : ''} ist bei uns angekommen. Wir melden uns in den nächsten Tagen
           persönlich{w.telefon.trim() ? ' — per Telefon oder' : ' per'} E-Mail an <b>{w.email.trim()}</b>.
         </p>
+        {logoDabei && (
+          <p>
+            Dein Logo ist nur auf deinem Gerät. Schick uns die Datei gern direkt an{' '}
+            <a href={`mailto:${CONTACT.email}?subject=${encodeURIComponent(`Logo für die Bande: ${w.firma.trim()}`)}`}>{CONTACT.email}</a> — dann bauen wir die
+            Bande damit.
+          </p>
+        )}
         <p className="pt-danke__sub">Schneller geht’s direkt:</p>
         <div className="pt-actions">
           {whatsappReady ? (
@@ -169,6 +217,22 @@ export function Anfrage({ interesse, onInteresse }: { interesse: string; onInter
       <Feldzeile id="nachricht" label="Nachricht" hinweis="optional" fehler={fehler.nachricht}>
         <textarea id="pt-nachricht" rows={4} value={w.nachricht} onChange={(e) => set('nachricht', e.target.value)} maxLength={2000} placeholder="z. B. Budget, Wunschfläche, Start ab …" aria-invalid={!!fehler.nachricht} />
       </Feldzeile>
+
+      {entwurf && (
+        <div className="pt-entwurf">
+          <EntwurfMini e={entwurf} />
+          <div>
+            <p className="pt-entwurf__titel">Dein Banden-Entwurf geht mit</p>
+            <p className="pt-entwurf__text">
+              Name{entwurf.zeile2.trim() ? ', zweite Zeile' : ''} und Untergrund gehen als Text mit.
+              {entwurf.logoDataUrl ? ' Dein Logo bleibt auf deinem Gerät — die Datei schickst du uns nach der Anfrage per E-Mail.' : ''}
+            </p>
+            <button type="button" className="pt-entwurf__weg" onClick={onOhneEntwurf}>
+              Ohne Entwurf anfragen
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Honeypot: für Menschen unsichtbar, Bots füllen es aus → still verworfen */}
       <div className="pt-hp" aria-hidden="true">
@@ -227,6 +291,24 @@ export function Anfrage({ interesse, onInteresse }: { interesse: string; onInter
       </p>
     </form>
   )
+}
+
+function EntwurfMini({ e }: { e: EntwurfZustand }) {
+  const ref = useRef<HTMLCanvasElement>(null)
+  useEffect(() => {
+    let ab = false
+    schriftenBereit().then(() => {
+      const cv = ref.current
+      if (ab || !cv) return
+      const ctx = cv.getContext('2d')!
+      ctx.clearRect(0, 0, cv.width, cv.height)
+      zeichneTafel(ctx, 0, 0, cv.width, cv.height, { name: e.name, zeile2: e.zeile2, logo: e.logo, grund: e.grund })
+    })
+    return () => {
+      ab = true
+    }
+  }, [e])
+  return <canvas ref={ref} className="ptafel pt-entwurf__tafel" width={416} height={160} role="img" aria-label={`Entwurf: ${e.name}`} />
 }
 
 function Feldzeile({

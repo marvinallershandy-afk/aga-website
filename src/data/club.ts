@@ -237,14 +237,20 @@ export function whatsappUrl(text: string): string {
   return `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(text)}`
 }
 
-// v17-A: Sammelalbum (eigene Seite /album, QR-Check-in am Platz). Nur als
-// exportierbarer Link-Eintrag — die Startseite (Karte/Marker) bindet ihn
-// selbst ein; hier wird bewusst nichts an der Startseite verändert.
+// v17-A: Sammelalbum (eigene Seite /album, QR-Check-in am Platz).
+// v18-P: Zugänge überall (AlbumTeaser: Karte, Fans, Vereinsheim, Rundgang,
+// /live, Fußzeilen) — Texte hier zentral. Belohnungen = Standard-Regeln
+// (Admin → Album → Regeln); bei Änderung hier mitziehen.
 export const ALBUM_LINK = {
   href: '/album',
   label: 'Sammelalbum',
   kurz: 'Album',
   beschreibung: 'Am Platz einchecken, Karten-Packs öffnen, Album füllen — Freibier beim 5. Heimspiel.',
+  titel: 'Werde Teil der Kurve',
+  nutzen: 'Bei jedem Heimspiel am Eingang einchecken und Sticker sammeln — beim 5. Mal gibt’s Freibier oder Bratwurst, beim 10. einen Fanartikel.',
+  kurzNutzen: 'Bei jedem Heimspiel Sticker sammeln',
+  cta: 'Zum Sammelalbum',
+  bild: '/album/teaser.webp',
 } as const
 
 // ── v17-D: Offizielle Vereinsfotografin ──────────────────────

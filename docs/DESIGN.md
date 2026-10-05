@@ -133,6 +133,15 @@ Zuschauern/Kindern im Bild sind.
   Bildtext und Credit. Credit immer: „Fotos: picture by Nele“ → `NELE_INSTAGRAM`.
 * Orte: Karte → Fans (Panel), `/galerie` (eigene Seite, `galerie.html`).
 
+## 8a. Partner als Bandentafel (v18-P)
+
+Partnerlogos erscheinen nie als „Logo in weißer Kachel", sondern als ihre
+**Bandentafel** (Format 2,6 : 1, 4 px Radius, Haarlinie): Logo getrimmt, nach Fläche
+normiert, Untergrund warmes Weiß bzw. Schwarz nach Kontrast, Bildzeichen + Name in
+Logofarbe. Gleiche Zeichnung wie auf der 3D-Bande (`src/partner/bande/tafel.ts`).
+Freie 3D-Tafeln: Schwarz, rote Kante links, Claim in Anton — keine gestrichelten
+Platzhalter-Boxen. Details: docs/PARTNER.md.
+
 ## 8. Sammelalbum
 
 Siehe docs/ALBUM.md. Gleiche Tokens; Panini nur als Akzent (helle Sticker-Kante,

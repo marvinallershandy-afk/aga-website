@@ -101,12 +101,65 @@ Credit überall: „Fotos: picture by Nele“ mit Link — Galerien (Karte → F
 
 ---
 
+## Logos auf der Bande (v18-P)
+
+Jedes Partnerlogo wird **einmal** im Browser aufbereitet (`src/partner/bande/logo.ts`,
+Cache pro URL) und danach überall gleich gezeichnet (`tafel.ts`): 3D-Bande,
+„Schon dabei" im Partner-Panel/Rundgang, Partner-Wand auf `/partner`.
+
+| Schritt | Was passiert |
+|---|---|
+| Trimmen | transparente Ränder weg; **einfarbige** Ränder (weißes JPG) werden vom Rand her freigestellt — Weiß *im* Logo bleibt |
+| Größe | nach **Fläche** normiert (Höhe ∝ Seitenverhältnis^-0,4): ein quadratisches Bildzeichen wirkt so groß wie eine lange Wortmarke |
+| Abstand | 9 % (3D-Bande) bzw. 13 % Rand oben/unten, mind. 4 % seitlich; auf der langen 3D-Tafel bleibt der Inhalt in den mittleren 52 % (die Kamera fährt nah heran) |
+| Untergrund | warmes Weiß, außer das Logo wäre darauf schlecht lesbar (z. B. weißes Logo) → Schwarz |
+| Name | reines **Bildzeichen ohne Schrift** (wenige Formteile) → Firmenname daneben, in der Logofarbe. Logos mit Schrift bekommen keinen Namen dazu |
+| Schärfe | jede 3D-Tafel hat eine eigene Textur (256 px hoch, exaktes Seitenverhältnis, Mipmaps, Anisotropie) |
+
+**Logo anfordern:** am besten PNG mit transparentem Hintergrund oder SVG→PNG, mind.
+800 px breit. JPG mit weißem Rand geht auch (wird freigestellt). Ins Admin
+(Partner → Sponsoren) hochladen und veröffentlichen.
+
+Geprüft (v18-P) mit dem echten Logo (Marvin Allers Finance) und drei synthetischen
+Problemfällen: weiße Wortmarke auf weißem JPG, weißes Logo auf transparent, Hochformat
+mit viel Rand — Screens lokal unter `shots-partner/` (nicht im Repo).
+
+## Konfigurator „Diese Bande sucht dich" (v18-P)
+
+* **Partner-Panel der Karte + Rundgang-Station:** Firmenname tippen, optional Logo
+  wählen → erscheint sofort auf der **ersten freien 3D-Tafel**, die Kamera fährt hin.
+  Pfeile fahren von Tafel zu Tafel („Tafel 2 von 5 · noch frei").
+* **`/partner#deine-bande`:** dieselben Felder (+ zweite Zeile, Untergrund
+  Auto/Hell/Dunkel/Rot), flache Tafel und **„So sieht's am Spieltag aus"**: das
+  Spieltagsfoto (picture by Nele, Meisterspieltag 2026) hat zwischen zwei Banden eine
+  echte Lücke — dort wird der Entwurf perspektivisch eingesetzt (Unschärfe/Licht des
+  Fotos, Gras davor). Daneben Banden-Paket mit Preis/Plätzen und Reichweite (nur
+  gepflegte Mediadaten; ohne Admin-Wert „630+ Follower" laut Verein, Okt. 2026).
+* **„Mit diesem Entwurf anfragen"** → Anfrage-Formular mit Firmenname, Paket „Bande"
+  und dem Entwurf als Text (Name, zweite Zeile, Untergrund, „eigenes Logo im
+  Entwurf"). Die RPC `partner_anfrage()` nimmt keine Bilder — **keine Migration nötig**;
+  Quelle = `bande-konfigurator` (wenn kein `utm_source`). Das Logo schickt der
+  Interessent danach per E-Mail (steht im Danke-Text).
+* **„Vorschau als Bild speichern"**: PNG (Foto + Tafel + Firmenname) zum
+  Weiterschicken an Chef/Team.
+* **Datenschutz:** Das Logo wird nur im Browser gelesen (Canvas), nichts wird
+  hochgeladen. Der Entwurf liegt im `sessionStorage` (Tab-Sitzung), damit er von der
+  Karte nach `/partner` mitkommt.
+
+Foto neu wählen: `FOTO.ecken` in `src/partner/bande/foto.ts` (4 Ecken der freien
+Fläche im 2000-px-Foto) und `public/partner/spieltag-bande*.webp` ersetzen.
+
+---
+
 ## Teil C: Verkaufsleitfaden (1 Seite)
 
 **Grundsatz:** Sponsoren kaufen keine Holzbande, sie kaufen **Sichtbarkeit bei Menschen aus der Region**. Deshalb gehören die Zahlen an den Anfang, und die Bande kommt erst danach.
 
 **Vor dem Gespräch (5 Minuten)**
 - Die Zahlen im Admin aktualisieren und `/partner` am Handy öffnen. Das ist dein Prospekt.
+- Im Gespräch: `/partner#deine-bande` öffnen, **ihren** Firmennamen eintippen (Logo von
+  ihrer Website speichern und wählen) — „So sieht's am Spieltag aus" zeigen und das Bild
+  per „Vorschau als Bild speichern" direkt rüberschicken. Das verkauft mehr als jede Liste.
 - Über das Unternehmen klären: Wer sind ihre Kunden? Liegt die Firma in Agathenburg, Dollern oder Stade? Sucht sie Mitarbeiter? Azubi-Suche ist oft das stärkste Argument.
 
 **Gesprächsablauf**

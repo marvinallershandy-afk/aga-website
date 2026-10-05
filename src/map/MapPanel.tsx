@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { useStore } from '../store/useStore'
-import { CONTACT, SPONSORS, whatsappUrl, whatsappReady } from '../data/content'
+import { CONTACT, whatsappUrl, whatsappReady } from '../data/content'
 import { PLACE_BY_ID, type PlaceId } from './places'
 import { closePlace, openPlace } from './nav'
 import { ArrowLeft, ArrowRight, X } from 'lucide-react'
@@ -17,6 +17,7 @@ import { PlayerGallery } from '../ui/PlayerGallery'
 import { FanGallery } from '../ui/FanGallery'
 import { FanChantToggle } from '../ui/FanChantToggle'
 import { MusicSectionPlayer } from '../ui/MusicSection'
+import { AlbumTeaser } from '../ui/AlbumTeaser'
 import { SponsorPitch } from '../ui/SponsorsStrip'
 import { PlatzFinden } from '../ui/PlatzFinden'
 import { WaIcon, IgIcon, MailIcon } from '../ui/Icons'
@@ -140,6 +141,8 @@ function FansBody() {
       )}
       <FanGallery />
       <FanChantToggle />
+      {/* v18-P: Zugang zum Sammelalbum (QR-Check-in bei Heimspielen) */}
+      <AlbumTeaser />
       <div className="kp-actions">
         <button className="btn btn--primary" onClick={() => openPlace('spieltag')}>
           Nächstes Spiel ansehen
@@ -150,22 +153,11 @@ function FansBody() {
 }
 
 function PartnerBody() {
-  const logos = SPONSORS.filter((s) => s.logoUrl)
+  // v18-P: Logos erscheinen jetzt als Bandentafeln in „Schon dabei"
+  // (SponsorPitch) — vorher weiße Silhouetten ohne Farbe.
   return (
     <>
-      {logos.length > 0 && (
-        <div className="kp-logos" aria-label="Unsere Partner">
-          {logos.map((s) =>
-            s.url ? (
-              <a key={s.name} href={s.url} target="_blank" rel="noreferrer">
-                <img src={s.logoUrl} alt={s.name} loading="lazy" />
-              </a>
-            ) : (
-              <img key={s.name} src={s.logoUrl} alt={s.name} loading="lazy" />
-            ),
-          )}
-        </div>
-      )}
+      <SponsorPitch />
       <a className="kp-cta" href="/partner">
         <span>
           <b>Partner werden</b>
@@ -173,7 +165,6 @@ function PartnerBody() {
         </span>
         <ArrowRight size={20} strokeWidth={1.5} aria-hidden="true" />
       </a>
-      <SponsorPitch />
     </>
   )
 }
@@ -229,7 +220,13 @@ function Body({ id }: { id: PlaceId }) {
     case 'fans':
       return <FansBody />
     case 'musik':
-      return <MusicSectionPlayer />
+      // v18-P: am Vereinsheim gibt's das Freibier — Album-Zugang dazu
+      return (
+        <>
+          <MusicSectionPlayer />
+          <AlbumTeaser />
+        </>
+      )
     case 'partner':
       return <PartnerBody />
     case 'anfahrt':

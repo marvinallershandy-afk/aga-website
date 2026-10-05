@@ -9,6 +9,7 @@ import { FussballWidget } from './FussballWidget'
 import { PlatzFinden } from './PlatzFinden'
 import { SponsorPitch } from './SponsorsStrip'
 import { FanGallery } from './FanGallery'
+import { AlbumTeaser } from './AlbumTeaser'
 import { WaIcon, IgIcon, MailIcon } from './Icons'
 // v18-A: Kalender-Abo + Probetraining-Assistent (src/alltag/)
 import { KalenderKnopf } from '../alltag/Kalender'
@@ -123,6 +124,8 @@ export function Sections() {
         {/* v11-E7: Meisterfeier-Kacheln + Lightbox — dieselbe Lightbox öffnen
             die 3D-Schilder (v-website-polish). Nur echte Fotos. */}
         <FanGallery />
+        {/* v18-P: die Kurve → Sammelalbum (Check-in bei jedem Heimspiel) */}
+        <AlbumTeaser variante="rundgang" />
       </section>
 
       {/* Trenn-Polster (v8): klare „reiner Platz"-Beat zwischen Fanblock und
@@ -157,7 +160,7 @@ export function Sections() {
       <section id={sponsoren.id} className="section section--left">
         <div className="section__scrim" />
         <Header kicker={sponsoren.kicker} title={sponsoren.title} body={sponsoren.body} />
-        <SponsorPitch />
+        <SponsorPitch variante="rundgang" />
       </section>
 
       {/* 3 · MITMACHEN/FINALE — linksbündig, rechts lebt der Fanblock */}
@@ -265,6 +268,8 @@ export function Sections() {
             auch wenn WebGL fehlt oder das 3D-Bundle nicht lädt. Sie stehen im
             prerenderten .scroll-root, also auch ohne JS im Quelltext. */}
         <p style={{ marginTop: '3rem', fontSize: '0.72rem', letterSpacing: '0.1em' }}>
+          <a href="/album" style={{ color: 'rgba(255,255,255,0.75)' }}>Sammelalbum</a>
+          <span style={{ color: 'rgba(255,255,255,0.35)', margin: '0 0.6rem' }}>·</span>
           <a href="/impressum.html" style={{ color: 'rgba(255,255,255,0.75)' }}>Impressum</a>
           <span style={{ color: 'rgba(255,255,255,0.35)', margin: '0 0.6rem' }}>·</span>
           <a href="/datenschutz.html" style={{ color: 'rgba(255,255,255,0.75)' }}>Datenschutz</a>

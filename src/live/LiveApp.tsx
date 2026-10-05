@@ -20,6 +20,8 @@ import { LiveTabelle } from './LiveTabelle'
 import { Icon } from './icons'
 // v18-A: gemeinsame Kalender-Komponente (Spiel + Abo)
 import { KalenderKnopf } from '../alltag/Kalender'
+import { ArrowRight, QrCode } from 'lucide-react'
+import { ALBUM_LINK } from '../data/club'
 
 // ─────────────────────────────────────────────────────────────
 // v15-L: Öffentliche Live-Seite /live — der Spieltag lebt hier, nicht im
@@ -172,6 +174,7 @@ export function LiveApp() {
       <footer className="lv-foot">
         <a href="/">Zur Vereinsseite</a>
         <a href="/probetraining">Mitspielen</a>
+        <a href="/album">Sammelalbum</a>
         <a href="/impressum">Impressum</a>
         <a href="/datenschutz">Datenschutz</a>
         <span>Eigener Liveticker des Vereins · ohne Gewähr</span>
@@ -281,7 +284,23 @@ function Hero({ m, now, players, adresse, prev, onTeilen }: { m: LiveMatch; now:
           <KalenderKnopf className="lv-btn lv-btn--ghost" adresse={adresse} spiel={{ id: m.id, gegner: m.opponent, heim: m.home, anstoss: m.kickoff, ort: m.home ? adresse : m.venue, wettbewerb: m.competition }} />
         )}
       </div>
+
+      {/* v18-P: Heimspiel → am Eingang einchecken (Sammelalbum, QR am Tor) */}
+      {m.home && m.status !== 'beendet' && <AlbumCheckin laeuft={m.status === 'live' || m.status === 'halbzeit'} />}
     </section>
+  )
+}
+
+function AlbumCheckin({ laeuft }: { laeuft: boolean }) {
+  return (
+    <a className="lv-album" href={ALBUM_LINK.href}>
+      <QrCode size={24} strokeWidth={1.5} aria-hidden="true" />
+      <span>
+        <b>{laeuft ? 'Am Platz? Noch schnell einchecken' : 'Am Eingang einchecken'}</b>
+        <small>QR-Code am Eingang scannen, Sticker-Tütchen öffnen — beim 5. Heimspiel gibt’s Freibier oder Bratwurst.</small>
+      </span>
+      <ArrowRight size={18} strokeWidth={1.5} aria-hidden="true" />
+    </a>
   )
 }
 
