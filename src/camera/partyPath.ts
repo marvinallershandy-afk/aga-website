@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { PARTY_HOP } from './rigState'
 
 // ─────────────────────────────────────────────────────────────
 // Die Partyraum-DURCHFAHRT (v5, Marvins Raumbeschreibung):
@@ -14,7 +15,8 @@ import * as THREE from 'three'
 // ─────────────────────────────────────────────────────────────
 
 /** Fortschritt, bei dem die Türöffnung das Bild füllt → Welt-Hop. */
-export const PARTY_HOP = 0.48
+// v16-K: Wert lebt three-frei in ./rigState (PartyDirector, DOM-Pfad).
+export { PARTY_HOP }
 
 /** Tür des Vereinsheim-Anbaus (Weltkoordinaten, s. Clubhouse.tsx).
  *  v9-E3 (Marvins Gebäudewissen, nach Referenzfotos): Der echte Eingang

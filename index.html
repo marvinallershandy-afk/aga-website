@@ -24,7 +24,7 @@
     <meta property="og:site_name" content="SV Agathenburg-Dollern" />
     <meta property="og:url" content="https://sva-agathenburg-dollern.netlify.app/" />
     <meta property="og:title" content="SV Agathenburg-Dollern — Fußball in Agathenburg seit 1949" />
-    <meta property="og:description" content="Ein Dorf. Ein Verein. Ein Platz. Scroll dich über unseren Platz — Kader-Sammelkarten, Vereins-Soundtrack, Probetraining Di & Do." />
+    <meta property="og:description" content="Ein Dorf. Ein Verein. Ein Platz. Tipp dich über unser Vereinsgelände — Spieltag & Live-Ticker, Probetraining, Kader als Sammelkarten, Vereins-Soundtrack." />
     <meta property="og:image" content="https://sva-agathenburg-dollern.netlify.app/og-image.jpg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -79,6 +79,12 @@
     }
     </script>
 
+    <!-- v16-K: Karten-Shell (Poster + Marker) ist im vorgerenderten HTML —
+         ihr CSS muss VOR dem JS da sein. Strikt auf .kmap*/.kpanel* begrenzt,
+         dem Admin (gleiche index.html) also egal. -->
+    <link rel="stylesheet" href="/src/map/map.css" />
+    <!-- /admin und /live (Rückfallebene) zeigen die vorgerenderte Karte nicht -->
+    <script>/^\/(admin|live)(\/|\.html|$)/.test(location.pathname)&&document.documentElement.classList.add('no-map')</script>
   </head>
   <body>
     <div id="root"><!--app-html--></div>

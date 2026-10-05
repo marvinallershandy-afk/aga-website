@@ -8,7 +8,7 @@ import { openPlace, closePlace, startTour } from './nav'
 import { PlaceIcon } from './MarkerIcons'
 import { useMatchStatus } from './matchStatus'
 import { PLACE_SEO } from './panelText'
-import './map.css'
+// map.css kommt direkt aus index.html (vor dem JS verfügbar, s. dort)
 
 // ─────────────────────────────────────────────────────────────
 // v16-K „Vereinsgelände-Karte" — die Startseite.
@@ -135,7 +135,7 @@ export function MapPoster() {
     <div className="kmap__poster" data-hide={hide || undefined} aria-hidden="true">
       <picture>
         <source media="(max-aspect-ratio: 1/1)" srcSet={MAP_POSTER.tall.src} />
-        <img src={MAP_POSTER.wide.src} alt="" fetchPriority="high" decoding="async" />
+        <img src={MAP_POSTER.wide.src} alt="" fetchPriority="high" />
       </picture>
     </div>
   )

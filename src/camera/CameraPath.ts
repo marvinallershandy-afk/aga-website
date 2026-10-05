@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { cameraState, KICKOFF_U } from './rigState'
 
 // ─────────────────────────────────────────────────────────────
 // Die geführte Kamerafahrt (Signature-Moment).
@@ -64,10 +65,11 @@ export const STATION_COUNT = STATIONS.length
 // ─── Anstoß-Dramaturgie ──────────────────────────────────────
 // Geteilter Fahrt-Zustand (pro Frame von CameraRig geschrieben,
 // von Flutlicht/Ball/Staub gelesen — kein React-State).
-export const cameraState = { u: 0 }
-
-// Kurven-Parameter der Anstoß-Station
-export const KICKOFF_U = 1 / (STATIONS.length - 1) // = 1/7 bei 8 Stationen
+// v16-K: cameraState/KICKOFF_U leben three-frei in ./rigState (DOM-Pfad).
+export { cameraState, KICKOFF_U }
+if (import.meta.env.DEV && KICKOFF_U !== 1 / (STATIONS.length - 1)) {
+  console.warn('[SVA] KICKOFF_U passt nicht mehr zur Stationszahl')
+}
 
 /** Anstoß-Phase 0..1 (rein aus u abgeleitet → scroll-reversibel). */
 export function kickoffPhase(u: number): number {

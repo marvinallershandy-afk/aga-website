@@ -5,12 +5,39 @@
    Positionen in % — funktioniert schon im vorgerenderten HTML ohne JS.
    ───────────────────────────────────────────────────────────── */
 
+/* Wird direkt aus index.html geladen (vor dem JS, render-blockierend klein):
+   ALLES hier ist auf die Klassen kmap, kmark, kpanel, kdock begrenzt — das Admin-Bundle
+   teilt sich index.html und darf davon nichts abbekommen. CI-Farben und
+   Schriften stehen deshalb hier noch einmal lokal (index.css kommt erst
+   mit dem Onepager-JS). */
 html.is-map,
 html.is-map body {
   overflow: hidden;
   height: 100%;
   overscroll-behavior: none;
 }
+
+.no-map .kmap,
+.no-map .kmap__poster { display: none !important; }
+
+.kmap,
+.kmap__poster,
+.kpanel {
+  --red: #E91D29;
+  --red-deep: #B4141D;
+  --font-display: "Anton", system-ui, sans-serif;
+  --font-body: "Archivo Variable", system-ui, -apple-system, sans-serif;
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+.kmap *,
+.kmap *::before,
+.kmap *::after { box-sizing: border-box; }
+.kmap h1,
+.kmap h2,
+.kmap p,
+.kmap dl,
+.kmap dd { margin: 0; }
 
 .kmap {
   --pin: 46px;

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useStore } from '../store/useStore'
 import { AudioManager } from '../audio/AudioManager'
-import { PARTY_HOP } from '../camera/partyPath'
+import { PARTY_HOP } from '../camera/rigState'
 
 // ─────────────────────────────────────────────────────────────
 // Die Musik-Station IST der Partyraum — v5: echte DURCHFAHRT

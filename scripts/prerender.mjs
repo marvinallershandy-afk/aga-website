@@ -8,7 +8,8 @@ import { createServer } from 'node:http'
 import { readFileSync, writeFileSync, existsSync } from 'node:fs'
 import { join, extname } from 'node:path'
 
-const DIST = 'dist'
+// v16-K: Zielordner per DIST=… (z. B. Mess-Builds außerhalb von dist/)
+const DIST = process.env.DIST || 'dist'
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.mp3': 'audio/mpeg', '.glb': 'model/gltf-binary', '.wasm': 'application/wasm', '.xml': 'application/xml', '.txt': 'text/plain', '.woff2': 'font/woff2', '.woff': 'font/woff' }
 
 const server = createServer((req, res) => {
@@ -28,13 +29,17 @@ const browser = await chromium.launch()
 const ctx = await browser.newContext({ reducedMotion: 'reduce', viewport: { width: 1280, height: 800 } })
 const page = await ctx.newPage()
 await page.goto('http://localhost:45733/', { waitUntil: 'load', timeout: 60000 })
-await page.waitForSelector('.scroll-root', { timeout: 30000 })
+// v16-K: Startseite ist die Vereinsgelände-Karte. Vorgerendert werden
+// Poster + Marker (echte Links /#ort, schon vor dem JS klickbar), Kopf und
+// der SEO-Block mit dem Kerninhalt jedes Ortes (visuell verborgen).
+await page.waitForSelector('.kmap .kmark', { state: 'attached', timeout: 30000 })
 await page.waitForTimeout(1200)
 
 const html = await page.evaluate(() => {
-  // Nur statischen Inhalt prerendern (kein Gate, keine Overlays)
-  const main = document.querySelector('.scroll-root')
-  return main ? main.outerHTML : ''
+  // Nur statischen Inhalt prerendern (keine Panels, keine Overlays)
+  const poster = document.querySelector('.kmap__poster')
+  const map = document.querySelector('.kmap')
+  return poster && map ? poster.outerHTML + map.outerHTML : ''
 })
 await browser.close()
 server.close()
@@ -52,4 +57,4 @@ if (out === index) {
   process.exit(1)
 }
 writeFileSync(indexPath, out)
-console.log(`Prerender ok: ${(html.length / 1024).toFixed(1)} kB Inhalts-DOM in dist/index.html`)
+console.log(`Prerender ok: ${(html.length / 1024).toFixed(1)} kB Inhalts-DOM in ${indexPath}`)
