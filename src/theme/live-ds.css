@@ -1,0 +1,47 @@
+/* ═══ v17-D: /live im Designsystem — NUR Optik (Kopf, Knöpfe, Pills,
+   Spieler des Spiels). Bewusst eigene Datei außerhalb von src/live/
+   (dort arbeitet parallel die TV-Aufstellung/3D); Aufstellung/Board
+   (.tboard*, .lv-3d*) bleiben unberührt. Wird aus live.html geladen —
+   vor live.css, daher mit :root-Präfix (höhere Spezifität). ═══ */
+:root:root {
+  --red: var(--c-red);
+  --red-deep: var(--c-red-press);
+  --bg: var(--c-black);
+  --card: var(--c-ink);
+  --line: var(--c-line);
+  --mut: var(--c-text-2);
+  --fg: var(--c-white);
+}
+/* Spielkopf: flache Fläche statt Rot-Verlauf + Streifen */
+:root .lv-hero {
+  background: var(--c-ink);
+  border-radius: var(--r-l);
+}
+:root .lv-hero::after { display: none; }
+:root .lv-kicker { color: var(--c-red); letter-spacing: var(--ls-label); font-weight: 700; }
+/* Knöpfe rechteckig */
+:root .lv-btn {
+  border-radius: var(--r-s);
+  min-height: 48px;
+  padding: 0 var(--s-5);
+  font-weight: 700;
+  font-size: .8125rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  transition: background-color var(--d-1) var(--ease), border-color var(--d-1) var(--ease);
+}
+:root .lv-btn--ghost { background: transparent; border-color: var(--c-line-strong); }
+:root .lv-btn--ghost:hover { background: transparent; border-color: var(--c-white); }
+:root .lv-iconbtn { background: transparent; border: 1px solid var(--c-line-strong); }
+:root .lv-iconbtn:hover { background: transparent; border-color: var(--c-white); }
+:root .lv-btn:focus-visible,
+:root .lv-iconbtn:focus-visible { outline: 2px solid var(--c-white); }
+/* Status-Schilder statt Pills */
+:root .lv-pill { border-radius: var(--r-s); }
+:root .lv-pill--hz { background: transparent; border-color: var(--c-line-strong); color: var(--c-white); }
+/* Spieler des Spiels: ruhig, Gold nur als feine Linie */
+:root .lv-motm {
+  border-radius: var(--r-s);
+  background: var(--c-ink-2);
+  border-color: rgba(232, 193, 90, .45);
+}

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0E0D0D" />
+    <meta name="theme-color" content="#0B0A0B" />
     <meta name="color-scheme" content="dark" />
     <title>Datenschutzerklärung — SV Agathenburg-Dollern</title>
 
@@ -14,7 +14,8 @@
 
     <!-- Bewusst KEINE externen Fonts/CDNs — siehe Abschnitt 6. -->
     <style>
-      :root { --rot: #E91D29; --bg: #0E0D0D; --fg: #ECEAE8; --mut: rgba(236,234,232,.62); }
+      /* v17-D: Werte aus src/theme/design.css (statische Seite, kein Build-CSS) */
+      :root { --rot: #E91D29; --bg: #0B0A0B; --fg: #F4F2EF; --mut: rgba(244,242,239,.62); --line: rgba(244,242,239,.12); }
       * { box-sizing: border-box; }
       body {
         margin: 0; background: var(--bg); color: var(--fg);
@@ -28,12 +29,12 @@
               letter-spacing: .12em; text-transform: uppercase; color: var(--mut); }
       h1 { font-size: clamp(2rem, 6vw, 3rem); line-height: 1.05; margin: 0 0 .4rem;
            text-transform: uppercase; letter-spacing: .01em; }
-      h1 span { color: var(--rot); }
-      h2 { font-size: 1.05rem; text-transform: uppercase; letter-spacing: .1em;
+      h1 span { color: inherit; } /* v17-D: einfarbige Headlines */
+      h2 { font-size: .8rem; text-transform: uppercase; letter-spacing: .14em; padding-top: 1.6rem; border-top: 1px solid var(--line);
            margin: 2.6rem 0 .6rem; color: #fff; }
       h3 { font-size: .95rem; margin: 1.6rem 0 .4rem; color: #fff; }
       .lead { color: var(--mut); margin: 0 0 2rem; }
-      .rule { height: 3px; width: 64px; background: var(--rot); border: 0; margin: 1.4rem 0 2rem; }
+      .rule { height: 1px; width: 24px; background: var(--rot); border: 0; margin: 1.4rem 0 2rem; }
       p, li { color: rgba(236,234,232,.88); }
       ul { padding-left: 1.1rem; }
       li { margin-bottom: .35rem; }
