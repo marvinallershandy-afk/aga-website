@@ -53,13 +53,19 @@ function speicher(fn: () => void) {
     /* privat-Modus */
   }
 }
-/** ?c= aus der URL übernehmen (6 h gemerkt — überlebt den Login-Umweg) und aus der Adresszeile entfernen. */
-function tokenUebernehmen(): string | null {
+/** ?c= aus der URL übernehmen (6 h gemerkt — überlebt den Login-Umweg) und aus
+ *  der Adresszeile entfernen. `unlesbar` = es stand ein ?c= in der URL, war aber
+ *  kein gültiger Code (Audit B §2.6: dann freundlichen Hinweis zeigen). */
+function tokenUebernehmen(): { token: string | null; unlesbar: boolean } {
   let neu: string | null = null
+  let unlesbar = false
   try {
     const url = new URL(window.location.href)
     const c = url.searchParams.get('c')
-    if (c && /^[A-Za-z0-9]{16,64}$/.test(c)) neu = c.toLowerCase()
+    if (c) {
+      if (/^[A-Za-z0-9]{16,64}$/.test(c)) neu = c.toLowerCase()
+      else unlesbar = true
+    }
     if (url.searchParams.has('c')) {
       url.searchParams.delete('c')
       window.history.replaceState(null, '', url.pathname + (url.search || '') + url.hash)
@@ -72,17 +78,17 @@ function tokenUebernehmen(): string | null {
       localStorage.setItem(C_KEY, neu!)
       localStorage.setItem(C_TS, String(Date.now()))
     })
-    return neu
+    return { token: neu, unlesbar: false }
   }
   try {
     const t = localStorage.getItem(C_KEY)
     const ts = Number(localStorage.getItem(C_TS) || 0)
-    if (t && Date.now() - ts < 6 * 3600_000) return t
+    if (t && Date.now() - ts < 6 * 3600_000) return { token: t, unlesbar }
     localStorage.removeItem(C_KEY)
   } catch {
     /* egal */
   }
-  return null
+  return { token: null, unlesbar }
 }
 function tokenVergessen() {
   speicher(() => {
@@ -111,7 +117,9 @@ export function AlbumApp() {
   const [session, setSession] = useState<Session | null | undefined>(undefined)
   const [meinRoh, setMein] = useState<Mein | null>(null)
   const [meinFehler, setMeinFehler] = useState('')
-  const [token, setToken] = useState<string | null>(() => tokenUebernehmen())
+  const start = useMemo(() => tokenUebernehmen(), [])
+  const [token, setToken] = useState<string | null>(start.token)
+  const [codeUnlesbar, setCodeUnlesbar] = useState(start.unlesbar)
   const [ci, setCi] = useState<CheckinStatus | null>(null)
   const [packs, setPacks] = useState<PackAuftrag[]>([])
   const [detail, setDetail] = useState<Platz | null>(null)
@@ -365,6 +373,14 @@ export function AlbumApp() {
       </header>
 
       <main>
+        {codeUnlesbar && !ci && (
+          <div className="al-ci al-ci--fehler" role="alert">
+            <span>Der QR-Code konnte nicht gelesen werden — scann ihn am Eingang einfach noch mal.</span>
+            <button type="button" className="al-ci__x" onClick={() => setCodeUnlesbar(false)} aria-label="Hinweis schließen">
+              ×
+            </button>
+          </div>
+        )}
         {ci && <CheckinBanner ci={ci} onNochmal={() => token && void einchecken(token)} onWeg={() => setCi(null)} />}
 
         {zeigeHeft && katalog && mein ? (
@@ -403,7 +419,7 @@ export function AlbumApp() {
                 </span>
               )}
             </button>
-            {unterCover}
+            <div className="al-start__rechts">{unterCover}</div>
           </section>
         )}
       </main>
@@ -538,8 +554,10 @@ function CoverFront({ saison }: { saison?: string }) {
       </span>
       <span className="al-cover__saison">Saison {saison ?? '2026/27'}</span>
       <span className="al-cover__team">
-        {COVER_SPIELER.map((slug) => (
-          <img key={slug} src={`/players/cutout/hd/${slug}.webp`} alt="" draggable={false} />
+        {/* v19-S (Audit C): 640er-Freisteller statt HD (960×1440) — die Köpfe
+            werden klein gezeigt; halbiert den LCP-/Transfer-Aufwand mobil. */}
+        {COVER_SPIELER.map((slug, i) => (
+          <img key={slug} src={`/players/cutout/${slug}.webp`} alt="" draggable={false} fetchPriority={i === 0 ? 'high' : undefined} decoding="async" />
         ))}
       </span>
       <span className="al-cover__band">SV Agathenburg-Dollern · Kreisliga Stade</span>
