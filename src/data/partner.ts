@@ -27,10 +27,16 @@ const SEED_PAKETE: PartnerPaket[] = [
 
 /** Pakete aus dem Admin (nur sichtbare), sonst Seed ohne Preise. */
 export const PARTNER_PAKETE: PartnerPaket[] = ov?.partner ? ov.partner.pakete : SEED_PAKETE
+/** v18-P: das Banden-Paket für den Konfigurator („Diese Bande sucht dich"). */
+export const BANDEN_PAKET: PartnerPaket | null =
+  PARTNER_PAKETE.find((p) => /bande/i.test(p.name)) ?? PARTNER_PAKETE.find((p) => p.hervorgehoben) ?? null
 /** true = Pakete kommen aus dem Admin (IDs gehen mit der Anfrage mit). */
 export const PAKETE_AUS_ADMIN = !!ov?.partner
 
 export const MEDIADATEN: PartnerMediadaten = ov?.partner?.mediadaten ?? {}
+/** v18-P: Vereinsangabe (Marvin, Oktober 2026), solange im Admin keine
+ *  Follower-Zahl gepflegt ist. Angezeigt als „630+" — Admin-Werte haben Vorrang. */
+export const REICHWEITE_FALLBACK = { instagramFollower: 630, stand: '2026-10-01' } as const
 export const LIVE_PARTNER = ov?.partner?.livePartner ?? null
 
 /** Alle aktiven Sponsoren mit Stufe (fehlend = 'partner'). Hauptpartner zuerst. */

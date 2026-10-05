@@ -150,7 +150,7 @@ export function Sections() {
       <section id={sponsoren.id} className="section section--left">
         <div className="section__scrim" />
         <Header kicker={sponsoren.kicker} title={sponsoren.title} body={sponsoren.body} />
-        <SponsorPitch />
+        <SponsorPitch variante="rundgang" />
       </section>
 
       {/* 3 · MITMACHEN/FINALE — linksbündig, rechts lebt der Fanblock */}

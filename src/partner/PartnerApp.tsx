@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import {
+  BANDEN_PAKET,
   MEDIADATEN,
   PARTNER_PAKETE,
   PARTNER_SPONSOREN,
+  REICHWEITE_FALLBACK,
   STUFE_LABEL,
   plaetzeText,
   preisText,
@@ -16,6 +18,9 @@ import { NELE } from '../data/club'
 import { GALERIEN, coverOf } from '../data/galerie'
 import { ArrowRight, ArrowUpRight, Check } from 'lucide-react'
 import { Anfrage } from './Anfrage'
+import { Konfigurator } from './bande/Konfigurator'
+import { PartnerTafel } from './bande/PartnerTafel'
+import { entwurf, entwurfAktiv, useEntwurf } from './bande/entwurf'
 
 // ─────────────────────────────────────────────────────────────
 // v16-S: Öffentliche Partner-Seite /partner — Sponsoren gewinnen.
@@ -24,13 +29,32 @@ import { Anfrage } from './Anfrage'
 // Alles statisch aus dem Build-Overlay; nur „Anfrage senden" geht ans Netz.
 // ─────────────────────────────────────────────────────────────
 
-export function PartnerApp() {
-  const [interesse, setInteresse] = useState<string>('')
+// v18-P: Einstieg aus dem Panel/Rundgang mit Entwurf: /partner?entwurf=1#anfrage
+function startMitEntwurf(): boolean {
+  try {
+    return new URLSearchParams(window.location.search).get('entwurf') === '1' && entwurfAktiv(entwurf())
+  } catch {
+    return false
+  }
+}
 
-  const waehle = (p: PartnerPaket) => {
-    setInteresse(p.id)
+export function PartnerApp() {
+  const [mitEntwurf, setMitEntwurf] = useState(startMitEntwurf)
+  const [interesse, setInteresse] = useState<string>(() => (mitEntwurf && BANDEN_PAKET ? BANDEN_PAKET.id : ''))
+  const e = useEntwurf()
+
+  const zurAnfrage = () => {
     document.getElementById('anfrage')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     window.setTimeout(() => document.getElementById('pt-firma')?.focus({ preventScroll: true }), 450)
+  }
+  const waehle = (p: PartnerPaket) => {
+    setInteresse(p.id)
+    zurAnfrage()
+  }
+  const mitDiesemEntwurf = () => {
+    if (BANDEN_PAKET) setInteresse(BANDEN_PAKET.id)
+    setMitEntwurf(true)
+    zurAnfrage()
   }
 
   return (
@@ -48,6 +72,7 @@ export function PartnerApp() {
 
       <main>
         <Hero />
+        <Konfigurator onAnfragen={mitDiesemEntwurf} />
         <Zahlen />
         <PartnerWand />
         <Pakete onWaehle={waehle} />
@@ -58,7 +83,12 @@ export function PartnerApp() {
             Lass uns reden
           </h2>
           <p className="pt-lead pt-lead--sm">Kein Vertrag, keine Verpflichtung. Du sagst uns, was dich interessiert — wir melden uns persönlich.</p>
-          <Anfrage interesse={interesse} onInteresse={setInteresse} />
+          <Anfrage
+            interesse={interesse}
+            onInteresse={setInteresse}
+            entwurf={mitEntwurf && entwurfAktiv(e) ? e : null}
+            onOhneEntwurf={() => setMitEntwurf(false)}
+          />
         </section>
       </main>
 
@@ -98,11 +128,11 @@ function Hero() {
           Platz, auf dem Trikot und in jeder Story.
         </p>
         <div className="pt-actions">
-          <a className="pt-btn" href="#pakete">
-            Pakete ansehen
+          <a className="pt-btn" href="#deine-bande">
+            Deine Bande ausprobieren
           </a>
-          <a className="pt-btn pt-btn--ghost" href="#anfrage">
-            Anfrage senden
+          <a className="pt-btn pt-btn--ghost" href="#pakete">
+            Pakete ansehen
           </a>
         </div>
       </div>
@@ -116,6 +146,8 @@ function Zahlen() {
   const m = MEDIADATEN
   const kacheln: { wert: string; label: string; sub?: string }[] = []
   if (m.instagramFollower != null) kacheln.push({ wert: zahl(m.instagramFollower), label: 'Follower auf Instagram', sub: CONTACT.instagram })
+  // v18-P: ohne Admin-Wert die Vereinsangabe — ehrlich als Mindestwert „630+"
+  else kacheln.push({ wert: `${zahl(REICHWEITE_FALLBACK.instagramFollower)}+`, label: 'Follower auf Instagram', sub: CONTACT.instagram })
   if (m.reichweiteMonat != null) kacheln.push({ wert: zahl(m.reichweiteMonat), label: 'Ø Reichweite pro Monat', sub: 'erreichte Konten auf Instagram' })
   if (m.zuschauerHeim != null) kacheln.push({ wert: zahl(m.zuschauerHeim), label: 'Ø Zuschauer pro Heimspiel', sub: 'am Waldsportplatz' })
   // v17-A: echte, digital gezählte Zuschauer (Check-ins im Sammelalbum)
@@ -125,7 +157,7 @@ function Zahlen() {
   if (m.heimspieleSaison != null) kacheln.push({ wert: zahl(m.heimspieleSaison), label: 'Heimspiele pro Saison', sub: 'Kreisliga Stade' })
   if (!kacheln.length) return null
   const kontakte = m.zuschauerHeim != null && m.heimspieleSaison != null ? m.zuschauerHeim * m.heimspieleSaison : null
-  const stand = standText(m.stand)
+  const stand = standText(m.stand ?? (m.instagramFollower == null ? REICHWEITE_FALLBACK.stand : undefined))
   return (
     <section id="zahlen" className="pt-sec" aria-labelledby="h-zahlen">
       <p className="pt-kicker">Mediadaten</p>
@@ -210,13 +242,11 @@ function PartnerWand() {
   )
 }
 
+// v18-P: jeder Partner als seine Bandentafel — getrimmt, nach Fläche normiert,
+// Untergrund nach Kontrast (vorher: Logo sprengte die weiße Kachel)
 function LogoKachel({ name, logoUrl, url, klein }: { name: string; logoUrl?: string; url?: string; klein?: boolean }) {
-  const inhalt = logoUrl ? (
-    <img src={logoUrl} alt={name} loading="lazy" decoding="async" />
-  ) : (
-    <span className="pt-logo__name">{name}</span>
-  )
-  const cls = `pt-logo${klein ? ' pt-logo--klein' : ''}${logoUrl ? '' : ' pt-logo--text'}`
+  const inhalt = <PartnerTafel name={name} logoUrl={logoUrl} breite={klein ? 360 : 640} />
+  const cls = `pt-logo${klein ? ' pt-logo--klein' : ''}`
   return url ? (
     <a className={cls} href={url} target="_blank" rel="sponsored noopener" title={name}>
       {inhalt}

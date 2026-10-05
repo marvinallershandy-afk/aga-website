@@ -813,8 +813,6 @@ html.is-map body {
 .kp-cta small { font-size: var(--t-small); color: rgba(255, 255, 255, .82); }
 .kp-live__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c-white); flex: none; }
 .kp-live.is-live .kp-live__dot { animation: kmarkBlink 1s steps(2, start) infinite; }
-.kp-logos { display: flex; flex-wrap: wrap; gap: var(--s-4); align-items: center; }
-.kp-logos img { height: 40px; width: auto; filter: brightness(0) invert(1); opacity: .9; }
 .kp-legal { font-size: var(--t-micro); letter-spacing: .1em; color: var(--c-text-3); }
 .kp-legal a { color: var(--c-text-2); }
 

@@ -1,223 +1,126 @@
-import { useRef, useState } from 'react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { motion } from 'framer-motion'
-// P1: Website-Daten aus der Fassade (Overlay/DB → sonst statischer Seed).
-import { SPONSORS, SPONSOR_PLACEHOLDER_SLOTS, NEXT_MATCH, CONTACT, whatsappUrl, whatsappReady } from '../data/content'
+import { CONTACT, whatsappUrl, whatsappReady } from '../data/content'
 import { useStore } from '../store/useStore'
-// v16-S: Partner-Logoleiste + Link auf /partner (eigenes Mini-Stylesheet,
-// damit cards.css unberührt bleibt).
 import { PARTNER_SPONSOREN } from '../data/partner'
-import './partner-leiste.css'
+import { BANDE_SLOTS, BANDE_SPONSOREN, FREIER_SLOT, fokusZuSlot, slotZuFokus } from '../data/bandeLayout'
+import { EntwurfFelder } from '../partner/bande/EntwurfFelder'
+import { PartnerTafel } from '../partner/bande/PartnerTafel'
+import { LEER_CLAIMS } from '../partner/bande/tafel'
+import { entwurfAktiv, useEntwurf } from '../partner/bande/entwurf'
+import '../partner/bande/bande.css'
 
 // ─────────────────────────────────────────────────────────────
-// Sponsoren-Station (Geld-Station). v11-E6: die Partner/„dein-Logo"-
-// Slots leben in einem KARUSSELL (Pfeile zum Durchblättern). Leere
-// Slots im CI-Look mit einladendem Claim (kein Preis) + WhatsApp UND
-// E-Mail als CTA.
+// Sponsoren-Station (Partner-Panel der Karte + Rundgang).
+// v18-P: „Diese Bande sucht dich" als Konfigurator: Firmenname + optional
+// Logo → erscheint sofort auf der freien 3D-Tafel, die Kamera fährt hin.
+// Danach: „So sieht's am Spieltag aus" (Foto, /partner) oder direkt mit dem
+// Entwurf anfragen. Partner erscheinen als ihre Bandentafel (gleiche
+// Zeichnung wie in 3D).
 // ─────────────────────────────────────────────────────────────
 
-// v13-F3: synchron zum leichteren Sections-Reveal.
 const reveal = {
   initial: { opacity: 0, y: 16 },
   whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true, amount: 0.4 },
+  viewport: { once: true, amount: 0.3 },
   transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] as const },
 }
 
-const WA_TEXT = 'Hallo SV Agathenburg-Dollern! Ich interessiere mich für eine Bande / ein Sponsoring. Erzählt mir mehr?'
 const MAIL_SUBJECT = 'Sponsoring / Bande beim SV Agathenburg-Dollern'
-const MAIL_BODY = 'Hallo SV Agathenburg-Dollern,\n\nich interessiere mich für eine Bande / ein Sponsoring. Bitte meldet euch mit den Infos.\n\nViele Grüße'
-const mailtoUrl = `mailto:${CONTACT.email}?subject=${encodeURIComponent(MAIL_SUBJECT)}&body=${encodeURIComponent(MAIL_BODY)}`
+const DIREKT_TEXT = 'Hallo SV Agathenburg-Dollern! Ich interessiere mich für eine Bande / ein Sponsoring. Erzählt mir mehr?'
 
-export function NextMatch() {
+/** Banden-Navigation: fährt die Kamera von Tafel zu Tafel (Lesereihenfolge). */
+function BandeNav() {
+  const focus = useStore((s) => s.sponsorFocus)
+  const setFocus = useStore((s) => s.setSponsorFocus)
+  const e = useEntwurf()
+  const slot = fokusZuSlot(focus)
+  const geh = (d: number) => setFocus(slotZuFokus((slot + d + BANDE_SLOTS) % BANDE_SLOTS))
+  const sponsor = BANDE_SPONSOREN[slot]
+  const titel = sponsor
+    ? sponsor.name
+    : slot === FREIER_SLOT && entwurfAktiv(e)
+      ? e.name.trim() || 'Dein Entwurf'
+      : LEER_CLAIMS[slot % LEER_CLAIMS.length].replace('\n', ' ')
   return (
-    <motion.div className="next-match" {...reveal}>
-      <span className="next-match__label">Nächstes Heimspiel</span>
-      <span className="next-match__game">
-        SV Agathenburg-Dollern <em>vs.</em> {NEXT_MATCH.opponent}
-      </span>
-      <span className="next-match__date">
-        {NEXT_MATCH.date}
-        {NEXT_MATCH.isPlaceholder && <span className="next-match__ph"> · Platzhalter</span>}
-      </span>
+    <div className="bk-nav">
+      <button type="button" className="bk-nav__pfeil" onClick={() => geh(-1)} aria-label="Tafel links">
+        <ChevronLeft size={18} strokeWidth={1.5} aria-hidden="true" />
+      </button>
+      <div className="bk-nav__mitte" aria-live="polite">
+        <span className="bk-nav__titel">{titel}</span>
+        <span className="bk-nav__sub">
+          Tafel {slot + 1} von {BANDE_SLOTS} · {sponsor ? 'Partner' : slot === FREIER_SLOT && entwurfAktiv(e) ? <b>dein Entwurf</b> : 'noch frei'}
+        </span>
+      </div>
+      <button type="button" className="bk-nav__pfeil" onClick={() => geh(1)} aria-label="Tafel rechts">
+        <ChevronRight size={18} strokeWidth={1.5} aria-hidden="true" />
+      </button>
+    </div>
+  )
+}
+
+export function SponsorPitch({ variante = 'panel' }: { variante?: 'panel' | 'rundgang' }) {
+  const setFocus = useStore((s) => s.setSponsorFocus)
+  const e = useEntwurf()
+  const aktiv = entwurfAktiv(e)
+  // Eingabe → Kamera auf die freie Tafel, auf der der Entwurf hängt
+  const zurFreienTafel = () => {
+    const f = slotZuFokus(FREIER_SLOT)
+    if (useStore.getState().sponsorFocus !== f) setFocus(f)
+  }
+  return (
+    <motion.div className={`bk-pitch bk-pitch--${variante}`} {...reveal}>
+      <BandeNav />
+      <div className="bk-box">
+        <div className="bk-box__kopf">
+          <p className="bk-kicker">Diese Bande sucht dich</p>
+          <h3 className="bk-titel">Wie sähe deine Bande aus?</h3>
+        </div>
+        <EntwurfFelder kompakt ohneGrund={variante === 'rundgang'} onEingabe={zurFreienTafel} />
+        <div className="bk-actions">
+          {aktiv && (
+            <a className="bk-knopf bk-knopf--rot" href="/partner?entwurf=1#anfrage">
+              Mit diesem Entwurf anfragen
+            </a>
+          )}
+          <a className={`bk-knopf ${aktiv ? 'bk-knopf--linie' : 'bk-knopf--rot'}`} href="/partner#deine-bande">
+            So sieht’s am Spieltag aus
+          </a>
+        </div>
+      </div>
+      <p className="bk-direkt">
+        Lieber direkt?{' '}
+        <a href={whatsappReady ? whatsappUrl(DIREKT_TEXT) : `mailto:${CONTACT.email}?subject=${encodeURIComponent(MAIL_SUBJECT)}`} target={whatsappReady ? '_blank' : undefined} rel={whatsappReady ? 'noreferrer' : undefined}>
+          {whatsappReady ? 'WhatsApp' : CONTACT.email}
+        </a>{' '}
+        · <a href="/partner">Alle Pakete &amp; Zahlen</a>
+      </p>
+      <PartnerLeiste />
     </motion.div>
   )
 }
 
-// Die Claims der leeren Banden-Tafeln (in Sync mit Barrier.tsx-Slots).
-const BAND_CLAIMS = ['Diese Bande sucht dich', 'Hier fehlst noch du', 'Dein Logo am Spielfeld', 'Werde Teil der Kurve']
-
-// v12-E6: Das KARUSSELL LEBT JETZT AUF DER 3D-BANDE. Die Pfeile hier fahren die
-// Kamera an der Bande entlang von Tafel zu Tafel (Store: sponsorFocus). Der DOM
-// bleibt bewusst schlank: kurzer Pitch, Pfeile + Punkte, zwei CTAs.
-export function SponsorPitch() {
-  const focus = useStore((s) => s.sponsorFocus)
-  const count = useStore((s) => s.sponsorCount)
-  const setFocus = useStore((s) => s.setSponsorFocus)
-  // v13-K5 „Deine Bande": lokaler Wert sofort, Store (→ 3D-Bake) debounced.
-  const setPreview = useStore((s) => s.setSponsorPreviewName)
-  const [tryName, setTryName] = useState('')
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const onTryName = (v: string) => {
-    setTryName(v)
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => setPreview(v.trim()), 160)
-  }
-
-  return (
-    <>
-      {/* v14-R: Argument-Pills raus — der Text darüber sagt dasselbe (Ruhe-Pass). */}
-      {/* Banden-Karussell-Steuerung → fährt die 3D-Kamera an der Bande entlang */}
-      <motion.div className="band-nav" {...reveal}>
-        <button className="band-nav__arrow" onClick={() => setFocus(focus - 1)} aria-label="Bande davor">‹</button>
-        <div className="band-nav__center">
-          <span className="band-nav__claim">{BAND_CLAIMS[focus % BAND_CLAIMS.length]}</span>
-          <span className="band-nav__count">Bande {focus + 1} / {count} · an der Kamera vorbei</span>
-          <div className="band-nav__dots">
-            {Array.from({ length: count }, (_, k) => (
-              <button
-                key={k}
-                className={`carousel__dot${k === focus ? ' is-active' : ''}`}
-                onClick={() => setFocus(k)}
-                aria-label={`Bande ${k + 1}`}
-              />
-            ))}
-          </div>
-        </div>
-        <button className="band-nav__arrow" onClick={() => setFocus(focus + 1)} aria-label="Nächste Bande">›</button>
-      </motion.div>
-
-      {/* v13-K5: „Wie sähe DEINE Bande aus?" — Name tippen, er erscheint
-          LIVE auf der fokussierten 3D-Bande. Der Begehrlichkeits-Moment. */}
-      <motion.div className="band-try" {...reveal}>
-        <label className="band-try__label" htmlFor="band-try-input">
-          Wie sähe <em>deine</em> Bande aus?
-        </label>
-        <div className="band-try__row">
-          <input
-            id="band-try-input"
-            className="band-try__input"
-            type="text"
-            maxLength={26}
-            placeholder="Firmenname eintippen …"
-            value={tryName}
-            onChange={(e) => onTryName(e.target.value)}
-            autoComplete="organization"
-          />
-          <span className="band-try__hint" aria-hidden="true">→ schau auf die Bande</span>
-        </div>
-      </motion.div>
-
-      {/* v13-E4: ohne echte WA-Nummer gäbe es hier zwei E-Mail-Buttons —
-          dann nur EINEN ehrlichen primären E-Mail-CTA zeigen. */}
-      <motion.div className="sponsor-ctas" {...reveal}>
-        {whatsappReady ? (
-          <>
-            <a className="btn btn--wa" href={whatsappUrl(WA_TEXT)} target="_blank" rel="noreferrer">
-              Bande sichern · WhatsApp
-            </a>
-            <a className="btn btn--ghost" href={mailtoUrl}>
-              E-Mail
-            </a>
-          </>
-        ) : (
-          <a className="btn btn--primary" href={mailtoUrl}>
-            Bande sichern · E-Mail
-          </a>
-        )}
-        {/* v16-S: Zahlen, Pakete und Anfrage-Formular auf der schlanken Seite */}
-        <a className="btn btn--ghost partner-link" href="/partner">
-          Alle Pakete &amp; Zahlen →
-        </a>
-      </motion.div>
-
-      <PartnerLeiste />
-    </>
-  )
-}
-
-// v16-S: kleine Leiste der echten Partner (Logo oder Name). Ohne Sponsoren
-// keine Leiste — die leeren Banden sprechen dann für sich.
+/** „Schon dabei" — jeder Partner als seine Bandentafel. */
 function PartnerLeiste() {
-  const liste = PARTNER_SPONSOREN.slice(0, 8)
+  const liste = PARTNER_SPONSOREN.slice(0, 6)
   if (!liste.length) return null
   return (
-    <motion.div className="partner-leiste" {...reveal}>
-      <span className="partner-leiste__label">Schon dabei</span>
-      <ul className="partner-leiste__logos">
+    <div className="bk-leiste">
+      <span className="bk-leiste__label">Schon dabei</span>
+      <ul className="bk-leiste__tafeln">
         {liste.map((s) => (
-          <li key={s.name} className={s.logoUrl ? undefined : 'is-text'} title={s.name}>
-            {s.logoUrl ? <img src={s.logoUrl} alt={s.name} loading="lazy" decoding="async" /> : <span>{s.name}</span>}
+          <li key={s.name}>
+            {s.url ? (
+              <a href={s.url} target="_blank" rel="sponsored noopener" title={s.name}>
+                <PartnerTafel name={s.name} logoUrl={s.logoUrl} breite={480} />
+              </a>
+            ) : (
+              <PartnerTafel name={s.name} logoUrl={s.logoUrl} breite={480} />
+            )}
           </li>
         ))}
       </ul>
-    </motion.div>
-  )
-}
-
-// v11-E6: Karussell durch die Partner-/„dein-Logo"-Slots.
-type Slot = { kind: 'logo'; name: string; logoUrl: string; url?: string } | { kind: 'empty'; claim: string }
-
-function buildSlots(): Slot[] {
-  const withLogos = SPONSORS.filter((s) => s.logoUrl).map(
-    (s) => ({ kind: 'logo', name: s.name, logoUrl: s.logoUrl!, url: s.url } as Slot),
-  )
-  const emptyCount = Math.max(SPONSOR_PLACEHOLDER_SLOTS - withLogos.length, withLogos.length ? 1 : SPONSOR_PLACEHOLDER_SLOTS)
-  const claims = ['Diese Bande sucht dich', 'Hier fehlst noch du', 'Dein Logo am Spielfeld', 'Werde Teil der Kurve']
-  const empties: Slot[] = Array.from({ length: emptyCount }, (_, i) => ({ kind: 'empty', claim: claims[i % claims.length] }))
-  return [...withLogos, ...empties]
-}
-
-// Alias: die Mitmachen-Sektion zeigt weiterhin „Unsere Partner" (als Karussell).
-export { SponsorCarousel as SponsorsStrip }
-
-export function SponsorCarousel() {
-  const slots = buildSlots()
-  const [i, setI] = useState(0)
-  const n = slots.length
-  const go = (d: number) => setI((v) => (v + d + n) % n)
-  const slot = slots[i]
-
-  return (
-    <motion.div className="sponsors" {...reveal}>
-      <span className="sponsors__label">Unsere Partner</span>
-      <div className="carousel">
-        <button className="carousel__arrow" onClick={() => go(-1)} aria-label="Vorheriger Slot">‹</button>
-
-        <div className="carousel__stage">
-          {slot.kind === 'logo' ? (
-            <div className="carousel__slot carousel__slot--logo">
-              {slot.url ? (
-                <a href={slot.url} target="_blank" rel="noreferrer"><img src={slot.logoUrl} alt={slot.name} /></a>
-              ) : (
-                <img src={slot.logoUrl} alt={slot.name} />
-              )}
-            </div>
-          ) : (
-            <div className="carousel__slot carousel__slot--empty">
-              <span className="carousel__claim">{slot.claim}</span>
-              <span className="carousel__sub">Deine Bande direkt am Platz — kein Preisschild, einfach fragen.</span>
-              <div className="carousel__ctas">
-                {whatsappReady && (
-                  <a className="btn btn--wa btn--sm" href={whatsappUrl(WA_TEXT)} target="_blank" rel="noreferrer">WhatsApp</a>
-                )}
-                <a className={`btn btn--sm ${whatsappReady ? 'btn--ghost' : 'btn--primary'}`} href={mailtoUrl}>E-Mail</a>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <button className="carousel__arrow" onClick={() => go(1)} aria-label="Nächster Slot">›</button>
-      </div>
-      <div className="carousel__dots">
-        {slots.map((_, k) => (
-          <button
-            key={k}
-            className={`carousel__dot${k === i ? ' is-active' : ''}`}
-            onClick={() => setI(k)}
-            aria-label={`Slot ${k + 1}`}
-          />
-        ))}
-      </div>
-    </motion.div>
+    </div>
   )
 }
