@@ -60,6 +60,9 @@ function pick<T>(a: T[] | undefined, fallback: T[]): T[] {
 export const PLAYERS: Player[] = pick(ov?.players, STATIC_PLAYERS)
 export const STAFF: Staff[] = pick(ov?.staff, STATIC_STAFF)
 export const SPONSORS: Sponsor[] = pick(ov?.sponsors, STATIC_SPONSORS)
+/** v16-S: nur Sponsoren mit „Auf der Bande" (Admin) — für die 3D-Bande.
+ *  Statischer Seed kennt kein `bande` → alle. */
+export const BANDEN_SPONSOREN: Sponsor[] = ov?.sponsors?.length ? ov.sponsors.filter((s) => s.bande !== false) : STATIC_SPONSORS
 export const TABLE_PREVIEW: TableRow[] = pick(ov?.table, STATIC_TABLE)
 export const FORM: FormResult[] = pick(ov?.form, STATIC_FORM)
 export const NEXT_MATCH: Match = ov?.nextMatch ?? STATIC_NEXT_MATCH

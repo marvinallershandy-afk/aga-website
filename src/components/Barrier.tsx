@@ -2,7 +2,8 @@ import { useMemo, useRef, useEffect } from 'react'
 import * as THREE from 'three'
 import { PITCH, COLORS } from '../utils/constants'
 // P1: Website-Daten aus der Fassade (Overlay/DB → sonst statischer Seed).
-import { SPONSORS, SPONSOR_PLACEHOLDER_SLOTS, type Sponsor } from '../data/content'
+// v16-S: nur Sponsoren mit „Auf der Bande“ (Admin → Partner) landen auf der Bande.
+import { BANDEN_SPONSOREN as SPONSORS, SPONSOR_PLACEHOLDER_SLOTS, type Sponsor } from '../data/content'
 import { AOBlob } from './AOBlob'
 import { useStore } from '../store/useStore'
 

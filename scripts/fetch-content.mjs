@@ -238,6 +238,47 @@ function mapLinks(st) {
   return Object.keys(l).length ? l : null
 }
 
+// v16-S: Partner-Bereich (/partner) — Pakete, Mediadaten, Live-Partner.
+const STUFEN = new Set(['hauptpartner', 'partner', 'unterstuetzer'])
+const EINHEITEN = new Set(['Saison', 'Spieltag', 'Monat', 'einmalig'])
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const natural = (v) => (Number.isInteger(v) && v >= 0 ? v : null)
+async function mapPartner(p) {
+  if (!p || typeof p !== 'object') return null
+  const pakete = (Array.isArray(p.pakete) ? p.pakete : [])
+    .map((k) => {
+      const id = str(k.id)
+      const name = str(k.name)
+      if (!id || !UUID.test(id) || !name) return null
+      const leistungen = (Array.isArray(k.leistungen) ? k.leistungen : []).map(str).filter(Boolean).slice(0, 12)
+      const o = { id, name, leistungen, preisEinheit: EINHEITEN.has(k.preisEinheit) ? k.preisEinheit : 'Saison' }
+      if (str(k.beschreibung)) o.beschreibung = str(k.beschreibung)
+      if (natural(k.preisAb) != null) o.preisAb = k.preisAb
+      if (natural(k.plaetze) != null) {
+        o.plaetze = k.plaetze
+        o.frei = Math.min(k.plaetze, natural(k.frei) ?? k.plaetze)
+      }
+      if (k.hervorgehoben) o.hervorgehoben = true
+      return o
+    })
+    .filter(Boolean)
+  const m = p.mediadaten && typeof p.mediadaten === 'object' ? p.mediadaten : {}
+  const mediadaten = {}
+  for (const k of ['instagramFollower', 'reichweiteMonat', 'zuschauerHeim', 'websiteBesucheMonat', 'heimspieleSaison']) {
+    if (natural(m[k]) != null) mediadaten[k] = m[k]
+  }
+  if (Object.keys(mediadaten).length && str(m.stand) && /^\d{4}-\d{2}-\d{2}$/.test(str(m.stand))) mediadaten.stand = str(m.stand)
+  let livePartner
+  const lp = p.livePartner
+  if (lp && str(lp.name)) {
+    const logoUrl = await localize(lp.logoUrl, 'sponsors', str(lp.name))
+    const link = str(lp.url)
+    livePartner = { name: str(lp.name), ...(logoUrl ? { logoUrl } : {}), ...(link && /^https?:\/\//.test(link) ? { url: link } : {}) }
+  }
+  if (!pakete.length && !Object.keys(mediadaten).length && !livePartner) return null
+  return { pakete, mediadaten, ...(livePartner ? { livePartner } : {}) }
+}
+
 // ── Ablauf ──────────────────────────────────────────────────────────────────
 async function main() {
   if (!url || !key) {
@@ -299,8 +340,11 @@ async function main() {
       ...(logoUrl ? { logoUrl } : {}),
       ...(link && /^https?:\/\//.test(link) ? { url: link } : {}),
       bande: s.bande !== false,
+      // v16-S: Stufe für die Partner-Wand (/partner)
+      ...(STUFEN.has(s.stufe) ? { stufe: s.stufe } : {}),
     })
   }
+  const partner = await mapPartner(snap.partner)
 
   const table = (snap.table ?? [])
     .filter((r) => str(r.team) && Number.isInteger(r.pos))
@@ -350,6 +394,7 @@ async function main() {
   if (sections.length) overlay.sections = sections
   if (contact) overlay.contact = contact
   if (links) overlay.links = links
+  if (partner) overlay.partner = partner
 
   const hasData = Object.keys(overlay).length > 2
   if (!hasData) {
@@ -364,7 +409,8 @@ async function main() {
   console.log(
     `fetch-content: Overlay geschrieben (players=${players.length}, staff=${staff.length}, lineup=${lineup ? lineup.formation : '—'}, ` +
       `sponsors=${sponsors.length}, table=${table.length}, form=${form.length}, nextMatch=${!!nextMatch}, lastMatch=${!!lastMatch}, ` +
-      `sections=${sections.length}, contact=${!!contact}, links=${!!links}, bilder=${downloads}).`,
+      `sections=${sections.length}, contact=${!!contact}, links=${!!links}, ` +
+      `partner=${partner ? `${partner.pakete.length} Pakete/${Object.keys(partner.mediadaten).length} Zahlen` : '—'}, bilder=${downloads}).`,
   )
 }
 
@@ -372,8 +418,17 @@ async function main() {
 // gespeicherte Antwort ohne Netzwerk (nur Entwicklung).
 if (process.env.SNAPSHOT_FILE) {
   const snapFile = process.env.SNAPSHOT_FILE
+  // v16-S: SNAPSHOT_ASSETS=ordner → Storage-Bilder (…/object/public/<bucket>/<pfad>)
+  // werden aus diesem Ordner beantwortet (Logo-Download ohne Netzwerk testen).
+  const assets = process.env.SNAPSHOT_ASSETS
+  const MIME = { svg: 'image/svg+xml', png: 'image/png', webp: 'image/webp', jpg: 'image/jpeg' }
   globalThis.fetch = async (target) => {
     if (String(target).includes('/rpc/web_snapshot')) return new Response(readFileSync(snapFile, 'utf8'), { status: 200 })
+    const m = String(target).match(/\/storage\/v1\/object\/public\/[^/]+\/(.+)$/)
+    if (assets && m && existsSync(join(assets, m[1]))) {
+      const ext = m[1].split('.').pop()
+      return new Response(readFileSync(join(assets, m[1])), { status: 200, headers: { 'content-type': MIME[ext] || 'application/octet-stream' } })
+    }
     return new Response('nope', { status: 404 })
   }
 }
