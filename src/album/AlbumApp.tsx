@@ -30,6 +30,7 @@ import { PackOpening } from './PackOpening'
 import { ProfilForm } from './Profil'
 import { Sticker } from './Sticker'
 import { besitzMap, fortschritt, karteById, plaetze, reduzierteBewegung, treue, type Platz } from './model'
+import { InstagramZeile } from '../ui/InstagramZeile'
 
 // ─────────────────────────────────────────────────────────────
 // v17-A: Seite /album — „Das offizielle Stickerheft“ des SVA mit
@@ -408,7 +409,10 @@ export function AlbumApp() {
       </main>
 
       <footer className="al-fuss">
-        <a href="/">Vereinsseite</a> · <a href="/live">Live-Ticker</a> · <a href="/datenschutz#album">Datenschutz</a> · <a href="/impressum">Impressum</a>
+        <span className="al-fuss__links">
+          <a href="/">Vereinsseite</a> · <a href="/live">Live-Ticker</a> · <a href="/datenschutz#album">Datenschutz</a> · <a href="/impressum">Impressum</a>
+        </span>
+        <InstagramZeile className="ig-zeile--fuss" />
       </footer>
 
       {packs[0] && (

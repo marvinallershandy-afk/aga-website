@@ -11,6 +11,7 @@ import { PLACE_SEO } from './panelText'
 import { ArrowRight, Map as MapIcon } from 'lucide-react'
 import { useMapScrollToTour } from './intro'
 import { AlbumTeaser } from '../ui/AlbumTeaser'
+import { InstagramZeile } from '../ui/InstagramZeile'
 // map.css kommt direkt aus index.html (vor dem JS verfügbar, s. dort)
 
 // ─────────────────────────────────────────────────────────────
@@ -262,11 +263,14 @@ export function MapView() {
       {/* v18-P: ruhiger Einstieg ins Sammelalbum (nach dem Intro sichtbar) */}
       <AlbumTeaser variante="karte" />
       <footer className="kmap__foot">
-        <a href="/album">Sammelalbum</a>
-        <span aria-hidden="true">·</span>
-        <a href="/impressum.html">Impressum</a>
-        <span aria-hidden="true">·</span>
-        <a href="/datenschutz.html">Datenschutz</a>
+        <InstagramZeile className="ig-zeile--karte" />
+        <span className="kmap__foot-links">
+          <a href="/album">Sammelalbum</a>
+          <span aria-hidden="true">·</span>
+          <a href="/impressum.html">Impressum</a>
+          <span aria-hidden="true">·</span>
+          <a href="/datenschutz.html">Datenschutz</a>
+        </span>
       </footer>
       <PlaceSeo />
       <div ref={veilRef} className="kmap__veil" aria-hidden="true" />

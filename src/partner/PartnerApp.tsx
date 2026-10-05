@@ -21,6 +21,7 @@ import { Anfrage } from './Anfrage'
 import { Konfigurator } from './bande/Konfigurator'
 import { PartnerTafel } from './bande/PartnerTafel'
 import { entwurf, entwurfAktiv, useEntwurf } from './bande/entwurf'
+import { InstagramZeile } from '../ui/InstagramZeile'
 
 // ─────────────────────────────────────────────────────────────
 // v16-S: Öffentliche Partner-Seite /partner — Sponsoren gewinnen.
@@ -110,6 +111,7 @@ export function PartnerApp() {
         <a href="/impressum">Impressum</a>
         <a href="/datenschutz">Datenschutz</a>
         <span>SV Agathenburg-Dollern · {CONTACT.email}</span>
+        <InstagramZeile className="ig-zeile--fuss" />
       </footer>
     </div>
   )

@@ -276,6 +276,17 @@ img { display: block; }
 .lv-seg button { min-height: 36px; padding: 0 14px; border: 0; border-radius: 8px; background: none; cursor: pointer; font-weight: 700; font-size: .82rem; color: var(--mut); }
 .lv-seg button[aria-pressed="true"] { background: #fff; color: #111; }
 
+/* ── v19-S: Abpfiff → zurück nach Instagram ──────────────── */
+.lv-story {
+  margin-top: 20px; padding: 18px 16px; text-align: center;
+  background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+  display: grid; gap: 6px; justify-items: center;
+}
+.lv-story__kicker { font-size: .72rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--c-red, #e91d29); }
+.lv-story__titel { font-family: var(--font-display); font-weight: 400; font-size: 1.2rem; text-transform: uppercase; letter-spacing: .02em; color: var(--c-white, #fff); }
+.lv-story__text { max-width: 30rem; font-size: .9rem; color: var(--mut); }
+.lv-story .ig-zeile { margin-top: 8px; }
+
 /* ── Fuß, Toast, Skeleton ────────────────────────────────── */
 .lv-foot {
   display: flex; flex-wrap: wrap; gap: 8px 18px; justify-content: center;

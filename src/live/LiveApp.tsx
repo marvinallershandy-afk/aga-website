@@ -25,6 +25,8 @@ import { ALBUM_LINK } from '../data/club'
 // v18-T: Vorführ-Spiel nur über /live?vorfuehrung=1
 import { VORFUEHRUNG } from './vorfuehrung'
 import { VorfuehrungsHinweis } from './VorfuehrungsHinweis'
+import { InstagramZeile } from '../ui/InstagramZeile'
+import { CONTACT } from '../data/content'
 
 // ─────────────────────────────────────────────────────────────
 // v15-L: Öffentliche Live-Seite /live — der Spieltag lebt hier, nicht im
@@ -172,6 +174,7 @@ export function LiveApp() {
               {d!.previous && <Zuletzt prev={d!.previous} />}
             </section>
           </main>
+          {m.status === 'beendet' && <AbpfiffStory />}
         </>
       )}
 
@@ -185,6 +188,7 @@ export function LiveApp() {
         <a href="/impressum">Impressum</a>
         <a href="/datenschutz">Datenschutz</a>
         <span>Eigener Liveticker des Vereins · ohne Gewähr</span>
+        <InstagramZeile className="ig-zeile--fuss" text="Tore, Interviews, MOTM auch in der Story: @svagathenburg" />
       </footer>
       {toast && (
         <div className="lv-toast" role="status">
@@ -308,6 +312,18 @@ function AlbumCheckin({ laeuft }: { laeuft: boolean }) {
       </span>
       <ArrowRight size={18} strokeWidth={1.5} aria-hidden="true" />
     </a>
+  )
+}
+
+// v19-S: nach Abpfiff zurück nach Instagram lenken (Audit B §2.3)
+function AbpfiffStory() {
+  return (
+    <section className="lv-story">
+      <p className="lv-story__kicker">Nach dem Spiel</p>
+      <b className="lv-story__titel">Spieler des Spiels läuft in unserer Story.</b>
+      <p className="lv-story__text">Wie fandest du’s? Abstimmen, MOTM wählen und alle Highlights gibt’s auf Instagram.</p>
+      <InstagramZeile text={`Zur Story: ${CONTACT.instagram}`} />
+    </section>
   )
 }
 
