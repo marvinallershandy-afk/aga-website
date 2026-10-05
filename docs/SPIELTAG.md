@@ -1,6 +1,6 @@
 # Spieltag-Modus: Live-Ticker
 
-Stand: 05.10.2026 (v15-L).
+Stand: 05.10.2026 (v15-L, Vorführ-Spiel v18-T).
 
 Der Spieltag hat eine eigene, schnelle Seite: **`/live`**. Dort sehen Fans:
 - Spielstand und laufende Minute
@@ -40,6 +40,13 @@ Teil A ist für die Ticker-Person (Trainer, Teammanager). Teil B ist für Marvin
 - Unter **Spieler des Spiels** einen Spieler antippen. Er erscheint auf `/live`.
 - **Story-Grafik erstellen:** Das Bild (Endstand, Torschützen, Karte des Spielers des Spiels) geht direkt ins Teilen-Menü (Instagram-Story) oder wird heruntergeladen.
 - Admins tippen danach **Website veröffentlichen**, damit Ergebnis und Form auch im Onepager stehen. Auf `/live` ist alles schon sofort sichtbar.
+
+**Vorführ-Spiel zeigen** (nur Admin, z. B. für Sponsoren oder neue Ticker-Leute)
+1. Im Admin auf **Übersicht** ganz nach unten zur Karte **Vorführ-Spiel**. Gegner lassen („FC Vorführung“) oder ändern, **Vorführ-Spiel starten** tippen. Mit „Mit Beispiel-Ereignissen“ stehen schon Anpfiff, Chance, Tor und Gelbe Karte mit echten Spielern im Ticker.
+2. Das Gegenüber scannt den **QR-Code** (oder **Kopieren** und per WhatsApp schicken). Der Link ist `…/live?vorfuehrung=1`. Dort steht oben „Vorführung – kein echtes Spiel“. Wer selbst tickern will: **Ticker-Pult** tippen. Das Pult ist rot gestrichelt als **VORFÜHRUNG** markiert und funktioniert wie am Spieltag.
+3. Danach **Beenden** (Abpfiff) oder **Löschen**. Mit **Neu starten** geht es wieder bei 0:0 los.
+
+Ohne den Link sieht niemand etwas davon: nicht auf `/live`, nicht auf der Karte, nicht im Kalender-Abo, nicht in Ergebnis/Form, nicht im Album und nicht in der Statistik. Es gibt immer höchstens ein Vorführ-Spiel. Auf der Karte zeigt `/?vorfuehrung=1` die Spieltag-Leiste mit dem Vorführ-Spiel.
 
 **Wer darf was?**
 - **Team-Zugang:** Übersicht, Live, Aufstellung und bei Spielen nur das Ergebnis.

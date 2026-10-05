@@ -10,7 +10,9 @@ Spielplan als Kalender (ICS, RFC 5545) — öffentlich, ohne Login.
 
 Daten: nur die öffentliche RPC `web_kalender()` (Migration
 `20261009090000_sva_alltag.sql`) mit dem anon-Key — keine Notizen, Testspiele
-mit „(TEST)“ im Gegnernamen ausgeblendet. Die Function speichert nichts.
+mit „(TEST)“ im Gegnernamen ausgeblendet, Vorführ-Spiele (`sm_spiele.demo`, v18-T)
+filtert `web_kalender()` selbst heraus — die Function braucht dafür kein
+neues Deployment. Die Function speichert nichts.
 
 ## Deploy (nach Review)
 
