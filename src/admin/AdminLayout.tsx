@@ -13,6 +13,8 @@ import {
   Menu,
   X,
   MoreHorizontal,
+  Radio,
+  KeyRound,
 } from 'lucide-react'
 import { useAuth } from './auth/AuthProvider'
 import { cn } from './lib/utils'
@@ -26,6 +28,8 @@ import { PublishButton } from './components/PublishButton'
 // „Archiv: Social Media"-Link ganz unten.
 // Mobil (Trainer am Spielfeldrand): untere Tab-Leiste mit den vier häufigsten
 // Bereichen + „Mehr" (Drawer mit allem).
+// v15-L: + „Live" (Ticker) und „Team & Zugänge"; der Team-Zugang sieht nur
+// Übersicht, Live, Aufstellung und Spiele.
 // ─────────────────────────────────────────────────────────────
 
 interface NavItem {
@@ -34,27 +38,38 @@ interface NavItem {
   icon: typeof Users
   /** true → NavLink matcht nur exakt (nötig für die Index-Route "/"). */
   end?: boolean
+  /** v15-L: auch für den Team-Zugang sichtbar */
+  team?: boolean
 }
 
 // Pfade RELATIV zum BrowserRouter-basename="/admin" — kein führendes /admin.
 const NAV: NavItem[] = [
-  { to: '/', label: 'Übersicht', icon: LayoutDashboard, end: true },
+  { to: '/', label: 'Übersicht', icon: LayoutDashboard, end: true, team: true },
+  { to: '/live', label: 'Live', icon: Radio, team: true },
+  { to: '/aufstellung', label: 'Aufstellung', icon: LayoutGrid, team: true },
+  { to: '/spiele', label: 'Spiele', icon: CalendarDays, team: true },
   { to: '/kader', label: 'Kader', icon: Users },
-  { to: '/aufstellung', label: 'Aufstellung', icon: LayoutGrid },
-  { to: '/spiele', label: 'Spiele', icon: CalendarDays },
   { to: '/tabelle', label: 'Tabelle', icon: ListOrdered },
   { to: '/sponsoren', label: 'Sponsoren', icon: Handshake },
   { to: '/verein', label: 'Verein & Links', icon: Link2 },
+  { to: '/team', label: 'Team & Zugänge', icon: KeyRound },
 ]
-const MOBILE_TABS = NAV.slice(0, 4)
+// v15-L: Team sieht nur die Spieltags-Bereiche (Rechte erzwingt die DB-RLS).
+function useNav(): NavItem[] {
+  const { rolle } = useAuth()
+  return rolle === 'team' ? NAV.filter((n) => n.team) : NAV
+}
+// Mobile Tab-Leiste: am Spieltag zählt Live → Übersicht · Live · Aufstellung · Spiele · Mehr
+const MOBILE_TABS = NAV.filter((n) => n.team).slice(0, 4)
 
 // Routen des Social-Media-Archivs (für die Hervorhebung des Archiv-Links).
 const ARCHIV_PFADE = ['/archiv', '/social', '/redaktionsplan', '/ideen', '/produktion', '/matchday', '/insights', '/automationen', '/sponsoren-crm']
 
 function NavItems({ onNavigate }: { onNavigate?: () => void }) {
+  const nav = useNav()
   return (
     <nav className="flex flex-col gap-1" aria-label="Hauptnavigation">
-      {NAV.map((item) => {
+      {nav.map((item) => {
         const Icon = item.icon
         return (
           <NavLink
@@ -109,10 +124,13 @@ function Brand() {
 }
 
 function UserBox() {
-  const { user, signOut } = useAuth()
+  const { user, signOut, rolle } = useAuth()
   return (
     <div className="border-t border-border pt-3">
-      <p className="mb-2 truncate px-3 text-xs text-muted-foreground">{user?.email ?? 'Vorschau'}</p>
+      <p className="mb-2 truncate px-3 text-xs text-muted-foreground">
+        {user?.email ?? 'Vorschau'}
+        {rolle === 'team' && <span className="ml-1.5 rounded bg-secondary px-1.5 py-0.5 text-[10px] uppercase">Team</span>}
+      </p>
       <Button variant="outline" className="w-full" onClick={() => signOut()}>
         <LogOut className="h-4 w-4" /> Abmelden
       </Button>
@@ -123,6 +141,8 @@ function UserBox() {
 export function AdminLayout() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const location = useLocation()
+  const { rolle } = useAuth()
+  const istAdmin = rolle !== 'team'
 
   return (
     <div className="min-h-screen">
@@ -149,9 +169,9 @@ export function AdminLayout() {
               </Button>
             </div>
             <NavItems onNavigate={() => setMobileOpen(false)} />
-            <PublishButton size="compact" />
+            {istAdmin && <PublishButton size="compact" />}
             <div className="mt-auto space-y-2">
-              <ArchivLink onNavigate={() => setMobileOpen(false)} />
+              {istAdmin && <ArchivLink onNavigate={() => setMobileOpen(false)} />}
               <UserBox />
             </div>
           </aside>
@@ -163,9 +183,9 @@ export function AdminLayout() {
         <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col gap-5 overflow-y-auto border-r border-border bg-background p-4 md:flex">
           <Brand />
           <NavItems />
-          <PublishButton size="compact" />
+          {istAdmin && <PublishButton size="compact" />}
           <div className="mt-auto space-y-2">
-            <ArchivLink />
+            {istAdmin && <ArchivLink />}
             <UserBox />
           </div>
         </aside>

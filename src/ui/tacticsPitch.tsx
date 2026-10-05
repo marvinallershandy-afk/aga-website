@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components -- Geometrie-Helfer und Board-Bausteine bewusst in einer Datei */
 import type { Slot } from '../data/lineup'
 
 // ─────────────────────────────────────────────────────────────

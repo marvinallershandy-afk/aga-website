@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { ExternalLink, Save, Loader2, CheckCircle2, AlertCircle, Link2, Phone, Clock, Scale } from 'lucide-react'
+import { ExternalLink, Save, Loader2, CheckCircle2, AlertCircle, Link2, Phone, Clock, Scale, ListOrdered } from 'lucide-react'
+import { parseWidgetId } from '../../live/model'
 import { PageHeader } from './Placeholder'
 import { Button } from '../components/ui/button'
 import { Card, CardContent } from '../components/ui/card'
@@ -25,6 +26,9 @@ import { cn } from '../lib/utils'
 
 interface Form {
   fussballDe: string
+  widgetTabelle: string
+  widgetSpielplan: string
+  trainingOrt: string
   fupa: string
   instagram: string
   whatsapp: string
@@ -35,7 +39,7 @@ interface Form {
   rechtstexteOk: boolean
 }
 
-const LEER: Form = { fussballDe: '', fupa: '', instagram: '', whatsapp: '', email: '', training: '', adresse: '', saison: '', rechtstexteOk: false }
+const LEER: Form = { widgetTabelle: '', widgetSpielplan: '', trainingOrt: '', fussballDe: '', fupa: '', instagram: '', whatsapp: '', email: '', training: '', adresse: '', saison: '', rechtstexteOk: false }
 
 export function Verein() {
   const toast = useToast()
@@ -49,6 +53,9 @@ export function Verein() {
     if (!s) return
     const form: Form = {
       fussballDe: s.fussball_de_team_id ?? '',
+      widgetTabelle: s.fussball_de_widget_tabelle ?? '',
+      widgetSpielplan: s.fussball_de_widget_spielplan ?? '',
+      trainingOrt: s.training_ort ?? '',
       fupa: s.fupa_url ?? '',
       instagram: s.instagram ?? '',
       whatsapp: s.whatsapp ?? '',
@@ -73,12 +80,19 @@ export function Verein() {
   const wa = normalizeWhatsapp(f.whatsapp)
   const waOk = !f.whatsapp.trim() || !!wa
   const mailOk = !f.email.trim() || /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(f.email.trim())
+  // v15-L: fussball.de-Widgets — ID ODER kompletter Einbettungs-Code
+  const wTab = parseWidgetId(f.widgetTabelle)
+  const wPlan = parseWidgetId(f.widgetSpielplan)
+  const wTabOk = !f.widgetTabelle.trim() || !!wTab
+  const wPlanOk = !f.widgetSpielplan.trim() || !!wPlan
   const fehler = [
     f.fussballDe.trim() && !teamId && 'fussball.de: Link oder Team-ID nicht erkannt.',
     !fupaOk && 'FuPa: Link muss mit https://www.fupa.net/ beginnen.',
     !instaOk && 'Instagram: nur der Name, z. B. sva_fussball.',
     !waOk && 'WhatsApp: Nummer nicht erkannt, z. B. 0151 12345678.',
     !mailOk && 'E-Mail sieht nicht richtig aus.',
+    !wTabOk && 'fussball.de-Widget Tabelle: ID nicht erkannt (32 Zeichen).',
+    !wPlanOk && 'fussball.de-Widget Spielplan: ID nicht erkannt (32 Zeichen).',
   ].filter(Boolean) as string[]
 
   const speichern = async () => {
@@ -86,6 +100,9 @@ export function Verein() {
     try {
       await save.mutateAsync({
         fussball_de_team_id: teamId,
+        fussball_de_widget_tabelle: wTab,
+        fussball_de_widget_spielplan: wPlan,
+        training_ort: f.trainingOrt.trim() || null,
         fupa_url: f.fupa.trim() || null,
         instagram: insta || null,
         whatsapp: wa,
@@ -132,6 +149,32 @@ export function Verein() {
             </Feld>
           </Abschnitt>
 
+          <Abschnitt icon={ListOrdered} titel="fussball.de-Widgets (Live-Seite)">
+            <p className="text-sm text-muted-foreground">
+              Die Live-Seite <b className="text-foreground">/live</b> zeigt Tabelle und Spielplan als offizielles fussball.de-Widget — erst, wenn ein
+              Besucher auf „laden“ tippt (Datenschutz). Ohne ID gibt es dort nur einen Link zu fussball.de.
+            </p>
+            <details className="rounded-lg border border-border bg-secondary/40 p-3 text-sm">
+              <summary className="cursor-pointer font-semibold">So bekommst du die Widget-ID (2 Minuten)</summary>
+              <ol className="mt-2 list-decimal space-y-1 pl-5 text-muted-foreground">
+                <li>
+                  Auf <a className="underline" href="https://www.fussball.de/widgets" target="_blank" rel="noreferrer">fussball.de/widgets</a> mit einem
+                  (kostenlosen) fussball.de-Konto anmelden.
+                </li>
+                <li>„Widget erstellen“ → Typ <b className="text-foreground">Mannschaft</b> wählen, unsere 1. Herren suchen.</li>
+                <li>Als Inhalt <b className="text-foreground">Tabelle</b> wählen, als Website-Adresse unsere Domain eintragen, speichern.</li>
+                <li>Den angezeigten Einbettungs-Code komplett kopieren und hier einfügen — die 32-stellige ID wird automatisch erkannt.</li>
+                <li>Für den <b className="text-foreground">Spielplan</b> dasselbe noch einmal mit Inhalt „Spielplan“.</li>
+              </ol>
+            </details>
+            <Feld id="v-wt" label="Widget-ID Tabelle" hint="32 Zeichen — oder den ganzen Einbettungs-Code einfügen." ok={wTab ? `ID erkannt: ${wTab}` : null} fehler={!wTabOk ? 'Keine Widget-ID gefunden' : null}>
+              <Input id="v-wt" className="h-12 font-mono text-sm" value={f.widgetTabelle} onChange={(e) => set('widgetTabelle', e.target.value)} placeholder="z. B. 02ABCDEFGH000000VS5489B2VVP292BR" autoCapitalize="characters" />
+            </Feld>
+            <Feld id="v-ws" label="Widget-ID Spielplan" ok={wPlan ? `ID erkannt: ${wPlan}` : null} fehler={!wPlanOk ? 'Keine Widget-ID gefunden' : null}>
+              <Input id="v-ws" className="h-12 font-mono text-sm" value={f.widgetSpielplan} onChange={(e) => set('widgetSpielplan', e.target.value)} placeholder="32 Zeichen oder Einbettungs-Code" autoCapitalize="characters" />
+            </Feld>
+          </Abschnitt>
+
           <Abschnitt icon={Phone} titel="Kontakt">
             <Feld
               id="v-wa"
@@ -152,7 +195,22 @@ export function Verein() {
             <Feld id="v-tr" label="Trainingszeiten" hint="So wie es auf der Website stehen soll.">
               <Input id="v-tr" className="h-12 text-base" value={f.training} onChange={(e) => set('training', e.target.value)} placeholder="Di & Do, ab 19:00 Uhr" />
             </Feld>
-            <Feld id="v-adr" label="Adresse des Sportplatzes" test={f.adresse.trim() ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(f.adresse.trim())}` : null} testLabel="Karte">
+            <Feld
+              id="v-tort"
+              label="Trainingsort"
+              hint="Wo trainiert wird (nicht der Spielort). Steht auf der Website neben den Trainingszeiten."
+              test={f.trainingOrt.trim() ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(f.trainingOrt.trim())}` : null}
+              testLabel="Karte"
+            >
+              <Input id="v-tort" className="h-12 text-base" value={f.trainingOrt} onChange={(e) => set('trainingOrt', e.target.value)} placeholder="Sportplatz an der B73, Am Paschberg 1, 21684 Agathenburg" />
+            </Feld>
+            <Feld
+              id="v-adr"
+              label="Spielort (Heimspiele)"
+              hint="Der Waldsportplatz: Anfahrt, Karte, Live-Seite und Suchmaschinen nutzen diese Adresse."
+              test={f.adresse.trim() ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(f.adresse.trim())}` : null}
+              testLabel="Karte"
+            >
               <Textarea id="v-adr" className="text-base" rows={2} value={f.adresse} onChange={(e) => set('adresse', e.target.value)} placeholder="Waldsportplatz Agathenburg, Zur Mehrzweckhalle, 21684 Agathenburg" />
             </Feld>
             <Feld id="v-saison" label="Aktuelle Saison" hint="Die Tabelle zeigt nur Zeilen dieser Saison.">

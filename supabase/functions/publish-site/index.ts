@@ -47,9 +47,18 @@ Deno.serve(async (req: Request) => {
     if (!userData?.user) return json({ error: 'not_authenticated' }, 401)
 
     // 2) Vereins-Admin? (RLS-Self-Select liefert nur die eigene Zeile, wenn freigeschaltet)
-    const { data: adminRows, error: adminErr } = await supabase.from('sm_admins').select('email').limit(1)
-    if (adminErr) return json({ error: 'admin_check_failed', detail: adminErr.message }, 500)
-    if (!adminRows || adminRows.length === 0) return json({ error: 'not_admin' }, 403)
+    // v15-L: NUR Rolle „admin" (Team-Zugänge pflegen Ticker/Aufstellung, veröffentlichen aber nicht).
+    // is_sm_admin() prüft seit Migration 20261005100000 die Rolle. Fehlt die RPC
+    // noch (Migration nicht angewandt), gilt der alte RLS-Self-Select.
+    let istAdmin = false
+    const rpc = await supabase.rpc('is_sm_admin')
+    if (!rpc.error) istAdmin = rpc.data === true
+    else {
+      const { data: adminRows, error: adminErr } = await supabase.from('sm_admins').select('email').limit(1)
+      if (adminErr) return json({ error: 'admin_check_failed', detail: adminErr.message }, 500)
+      istAdmin = !!adminRows && adminRows.length > 0
+    }
+    if (!istAdmin) return json({ error: 'not_admin' }, 403)
 
     const log = async (status: 'ok' | 'fehler' | 'nicht_konfiguriert', detail: string | null) => {
       const { error } = await supabase

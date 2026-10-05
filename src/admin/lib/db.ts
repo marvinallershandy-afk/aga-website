@@ -368,6 +368,10 @@ export function friendlyError(err: unknown, fallback = 'Das hat nicht geklappt.'
   if (msg && /sva_lineup_startelf_check|kein_doppelter/i.test(msg)) {
     return 'Aufstellung ungültig: genau 11 verschiedene Spieler in der Startelf, niemand doppelt auf der Bank.'
   }
+  if (msg && /sm_admins_email_key|duplicate key.*sm_admins/i.test(msg)) return 'Diese E-Mail hat schon einen Zugang.'
+  if (msg && /sm_admins_email_format/i.test(msg)) return 'E-Mail bitte klein und ohne Leerzeichen, z. B. name@beispiel.de.'
+  if (msg && /widget_(tabelle|spielplan)_check/i.test(msg)) return 'fussball.de-Widget-ID: genau 32 Zeichen (Buchstaben/Ziffern).'
+  if (msg && /sva_team_nur_live_felder/i.test(msg)) return 'Mit dem Team-Zugang lassen sich nur Ergebnis und Live-Stand ändern.'
   if (msg && /whatsapp_check/i.test(msg)) return 'WhatsApp-Nummer bitte nur mit Ziffern, z. B. 4915112345678.'
   if (msg && /slug/i.test(msg) && /unique|duplicate/i.test(msg)) return 'Diesen Spieler gibt es schon (gleicher Name).'
   if (msg && /failed to fetch|networkerror|load failed/i.test(msg)) return 'Keine Verbindung. Bitte Netz prüfen und nochmal versuchen.'
