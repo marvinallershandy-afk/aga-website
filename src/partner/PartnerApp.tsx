@@ -141,7 +141,7 @@ const HERO = (() => {
 function Hero() {
   return (
     <section className={`pt-hero${HERO ? ' has-foto' : ''}`} aria-labelledby="h-hero">
-      {HERO && <img className="pt-hero__foto" src={HERO.src} srcSet={`${HERO.preview} 800w, ${HERO.src} 2000w`} sizes="(min-width: 1120px) 1120px, 100vw" alt={HERO.alt} />}
+      {HERO && <img className="pt-hero__foto" src={HERO.src} srcSet={`${HERO.preview} 800w, ${HERO.src} 2000w`} sizes="(min-width: 1120px) 1120px, 100vw" alt={HERO.alt} fetchPriority="high" decoding="async" />}
       <div className="pt-hero__text">
         <p className="pt-kicker">Für Unternehmen aus der Region</p>
         <h1 className="pt-h1" id="h-hero">
