@@ -19,6 +19,8 @@ import { Verein } from './pages/Verein'
 // v15-L Spieltag-Modus
 import { Live } from './pages/Live'
 import { TeamZugaenge } from './pages/TeamZugaenge'
+// v17-A Sammelalbum (Stickerheft, QR-Check-in)
+import { Album } from './pages/Album'
 // Archiv: Social Media (nicht mehr in der Hauptnavigation, Routen unverändert)
 import { Archiv } from './pages/Archiv'
 import { Dashboard } from './pages/Dashboard'
@@ -56,6 +58,7 @@ export function AdminApp() {
                   <Route path="kader" element={<NurAdmin><Kader /></NurAdmin>} />
                   <Route path="tabelle" element={<NurAdmin><Tabelle /></NurAdmin>} />
                   <Route path="sponsoren" element={<NurAdmin><Sponsoren /></NurAdmin>} />
+                  <Route path="album" element={<NurAdmin><Album /></NurAdmin>} />
                   <Route path="verein" element={<NurAdmin><Verein /></NurAdmin>} />
                   <Route path="team" element={<NurAdmin><TeamZugaenge /></NurAdmin>} />
 

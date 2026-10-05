@@ -69,6 +69,10 @@ export interface PartnerMediadaten {
   zuschauerHeim?: number
   websiteBesucheMonat?: number
   heimspieleSaison?: number
+  /** v17-A: Ø gezählte Zuschauer-Check-ins (Sammelalbum) pro Heimspiel der Saison */
+  checkinsSchnitt?: number
+  /** v17-A: über so viele Heimspiele gezählt */
+  checkinsSpiele?: number
   /** ISO-Datum (YYYY-MM-DD) */
   stand?: string
 }

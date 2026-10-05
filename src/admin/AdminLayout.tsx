@@ -16,6 +16,7 @@ import {
   Radio,
   KeyRound,
   UserRound,
+  BookOpen,
 } from 'lucide-react'
 import { useAuth } from './auth/AuthProvider'
 import { cn } from './lib/utils'
@@ -54,6 +55,8 @@ const NAV: NavItem[] = [
   { to: '/tabelle', label: 'Tabelle', icon: ListOrdered },
   // v16-S: Bereich „Partner“ (Sponsoren, Pakete, Zahlen, Anfragen) — Pfad bleibt
   { to: '/sponsoren', label: 'Partner', icon: Handshake },
+  // v17-A: Sammelalbum (Stickerheft auf /album, QR-Check-in)
+  { to: '/album', label: 'Album', icon: BookOpen },
   { to: '/verein', label: 'Verein & Links', icon: Link2 },
   { to: '/team', label: 'Team & Zugänge', icon: KeyRound },
 ]

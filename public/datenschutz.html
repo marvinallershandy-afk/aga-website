@@ -270,6 +270,50 @@
       </p>
       <p><span class="todo">TODO-JURIST: Rechtsgrundlage und Fristen prüfen</span></p>
 
+      <h2 id="album">7b. Sammelalbum / Stickerheft (Seite /album)</h2>
+      <!-- Verifiziert am Code (v17-A): src/album/api.ts (eigener Speicher-
+           schlüssel sva-album-auth, Login per E-Mail-Link/Code), RPCs in
+           supabase/migrations/20261007100000_sva_album.sql (album_checkin,
+           album_konto_loeschen: Album-Daten weg, Check-ins nur noch anonym,
+           PIN-Fehlversuche nach 1 Tag gelöscht). -->
+      <p>
+        Auf <a href="/album">/album</a> können Sie freiwillig am digitalen Stickerheft des Vereins teilnehmen: Bei Heimspielen
+        scannen Sie am Eingang einen QR-Code („Check-in“), erhalten Sticker für Ihr Heft und ab bestimmten Check-ins Gutscheine.
+        Dafür brauchen Sie ein Konto, das Sie nur mit Ihrer E-Mail-Adresse anlegen (kein Passwort). Wir verarbeiten:
+      </p>
+      <ul>
+        <li><strong>E-Mail-Adresse</strong> — für das Login per E-Mail-Link bzw. Code;</li>
+        <li><strong>Vorname und Anfangsbuchstabe des Nachnamens</strong> — steht auf Ihren Gutscheinen;</li>
+        <li><strong>Check-ins</strong> (welches Heimspiel, Zeitpunkt), <strong>Sticker</strong> in Ihrem Heft, <strong>Gutscheine</strong> (Code, Status, Zeitpunkt des Einlösens);</li>
+        <li>Ihre <strong>Einwilligungen</strong> (Zeitpunkt) und freiwillige Einstellungen: Anzeige in der Rangliste „Treueste Fans“ (nur „Vorname I.“) und Erinnerung vor Heimspielen per E-Mail;</li>
+        <li>falsche Eingaben der Stand-PIN beim Einlösen eines Gutscheins (Zeitpunkt) — nur zum Schutz vor Ausprobieren, nach einem Tag gelöscht.</li>
+      </ul>
+      <p>
+        Damit Sie eingeloggt bleiben, speichert Ihr Browser die Login-Sitzung im lokalen Speicher (Schlüssel <code>sva-album-auth</code>),
+        dazu kurzzeitig einen gescannten Check-in-Code (höchstens 6 Stunden, damit der Check-in nach dem Login klappt) und den Hinweis,
+        dass Sie eingewilligt haben. Das ist für den von Ihnen gewünschten Dienst technisch erforderlich (§ 25 Abs. 2 Nr. 2 TDDDG).
+        Die Daten liegen bei unserem Datenbank-Dienst <strong>Supabase</strong> (Serverstandort Frankfurt am Main, EU; siehe Abschnitt 6a),
+        der auch die Login-E-Mails verschickt. <span class="todo">TODO-MARVIN: Falls ein eigener E-Mail-Versand (SMTP) eingerichtet wird, Anbieter hier nennen</span>
+      </p>
+      <p>
+        Die Zahl der Check-ins je Spiel veröffentlichen wir nur als <strong>Gesamtzahl</strong> (z. B. für Partner: „Ø Zuschauer pro Heimspiel“),
+        nie mit Namen. Partner, die einen Check-in, einen Sticker oder eine Belohnung „präsentieren“, erhalten <strong>keine</strong> Daten von Ihnen;
+        am Stand sieht der Helfer nur den Gutschein auf Ihrem Handy. Eine Weitergabe an Dritte findet nicht statt.
+      </p>
+      <p>
+        <strong>Zweck:</strong> Betrieb des Stickerhefts (Check-ins, Sticker, Belohnungen), Rangliste und — nur mit Ihrer Zustimmung —
+        Erinnerung vor Heimspielen.<br />
+        <strong>Rechtsgrundlage:</strong> Ihre Einwilligung (Art. 6 Abs. 1 lit. a DSGVO), die Sie beim Anlegen des Kontos erteilen; Rangliste und
+        E-Mail-Erinnerung sind jeweils eigene, freiwillige Einwilligungen. Die Sperre bei falscher Stand-PIN beruht auf unserem berechtigten
+        Interesse an der Missbrauchsabwehr (Art. 6 Abs. 1 lit. f DSGVO).<br />
+        <strong>Speicherdauer:</strong> bis Sie Ihr Konto löschen oder Ihre Einwilligung widerrufen; endet das Stickerheft-Angebot, löschen wir alle
+        Album-Daten.<br />
+        <strong>Löschung &amp; Widerruf:</strong> jederzeit selbst über „Konto“ → <strong>„Konto löschen“</strong> auf /album. Dann löschen wir sofort
+        Profil, Sticker und Gutscheine; Ihre Check-ins zählen nur noch anonym (ohne jeden Bezug zu Ihnen) in der Zuschauerzahl. Ein über das
+        Stickerheft angelegtes Login wird mitgelöscht. Rangliste und Erinnerung lassen sich im Konto einzeln abschalten.
+      </p>
+      <p><span class="todo">TODO-JURIST: Einwilligungstext auf /album, Mindestalter (Kinder unter 16: Einwilligung der Eltern, Art. 8 DSGVO) und eine automatische Löschung inaktiver Konten prüfen</span></p>
+
       <h2>8. Fotos auf dieser Website</h2>
       <!-- TODO-MARVIN: Auf den Fanblock-/Kaderfotos sind Personen erkennbar.
            Dafür braucht es eine Rechtsgrundlage (i. d. R. Einwilligung nach
@@ -282,7 +326,7 @@
       <p>
         Eine Weitergabe Ihrer Daten findet an den Hosting-Anbieter als
         Auftragsverarbeiter (Abschnitt 3) sowie beim Abruf von Live-Daten an Supabase
-        (Abschnitt 6a) statt; an fussball.de nur nach Ihrem Klick (Abschnitt 6b). Eine darüber
+        (Abschnitt 6a) bzw. bei Nutzung des Stickerhefts (Abschnitt 7b) statt; an fussball.de nur nach Ihrem Klick (Abschnitt 6b). Eine darüber
         hinausgehende Übermittlung erfolgt nicht.
         <span class="todo">TODO-JURIST: bestätigen, sobald Abschnitt 3 gefüllt ist</span>
       </p>

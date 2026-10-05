@@ -56,3 +56,11 @@ prozedurale Geometrie** und wurden nur aufgewertet — bewusst, mit Begründung:
   Figuren gewünscht sind; kostet Draw-Calls (aktuell: InstancedMesh-freundliche Primitives).
 
 Kein Higgsfield-Kandidat nötig (Guthaben ohnehin aufgebraucht — nicht selbst aufgeladen).
+
+## v17-A Sammelalbum (`public/album/`)
+Alle Dateien sind **eigene Higgsfield-Generierungen des Vereins** (Entwurf „Das offizielle
+Stickerheft“, von Marvin bereitgestellt), zugeschnitten und als WebP optimiert:
+- `cover.webp` — geschlossenes Heft (nur das Heft, ohne Tischdeko).
+- `tisch.webp` — Holztisch-Ausschnitt ohne Gläser/Flaschen/Aschenbecher (Hintergrund).
+- `deko-unten.webp`, `deko-oben-links.webp`, `deko-oben-rechts.webp` — Wimpel + Wappen-Aufkleber.
+Bewusst NICHT übernommen: Bierflasche, Glas, Aschenbecher (U18-Zielgruppe).

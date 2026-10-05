@@ -236,3 +236,13 @@ export function whatsappUrl(text: string): string {
   }
   return `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(text)}`
 }
+
+// v17-A: Sammelalbum (eigene Seite /album, QR-Check-in am Platz). Nur als
+// exportierbarer Link-Eintrag — die Startseite (Karte/Marker) bindet ihn
+// selbst ein; hier wird bewusst nichts an der Startseite verändert.
+export const ALBUM_LINK = {
+  href: '/album',
+  label: 'Sammelalbum',
+  kurz: 'Album',
+  beschreibung: 'Am Platz einchecken, Karten-Packs öffnen, Album füllen — Freibier beim 5. Heimspiel.',
+} as const

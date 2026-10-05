@@ -264,7 +264,8 @@ async function mapPartner(p) {
     .filter(Boolean)
   const m = p.mediadaten && typeof p.mediadaten === 'object' ? p.mediadaten : {}
   const mediadaten = {}
-  for (const k of ['instagramFollower', 'reichweiteMonat', 'zuschauerHeim', 'websiteBesucheMonat', 'heimspieleSaison']) {
+  // v17-A: + checkinsSchnitt/checkinsSpiele (gezählte Album-Check-ins je Heimspiel)
+  for (const k of ['instagramFollower', 'reichweiteMonat', 'zuschauerHeim', 'websiteBesucheMonat', 'heimspieleSaison', 'checkinsSchnitt', 'checkinsSpiele']) {
     if (natural(m[k]) != null) mediadaten[k] = m[k]
   }
   if (Object.keys(mediadaten).length && str(m.stand) && /^\d{4}-\d{2}-\d{2}$/.test(str(m.stand))) mediadaten.stand = str(m.stand)
