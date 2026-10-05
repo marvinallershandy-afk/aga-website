@@ -116,6 +116,27 @@
   status = 302
   force = true
 
+# v19-K (Audit B §2.10): Ziel-Kurz-Links je Vereinsziel für Instagram/Plakate.
+# 302 + force wie /ig; Zuordnung in der Statistik (docs/STATISTIK.md §2).
+#   /sonntag → Spieltag (Story)   /kicken → Probetraining (Bio)   /bande → Partner (Bio)
+[[redirects]]
+  from = "/sonntag"
+  to = "/live?utm_source=instagram&utm_medium=story"
+  status = 302
+  force = true
+
+[[redirects]]
+  from = "/kicken"
+  to = "/probetraining?utm_source=instagram&utm_medium=bio"
+  status = 302
+  force = true
+
+[[redirects]]
+  from = "/bande"
+  to = "/partner?utm_source=instagram&utm_medium=bio"
+  status = 302
+  force = true
+
 # ── SPA-Rewrites + echte 404 (v19-K, Audit A §2.13 / C §5) ─────
 # Früher bog ein einziges /* → /index.html (200) ALLE unbekannten Pfade auf
 # die Startkarte um — vertippte/geteilte Links zeigten kommentarlos die Karte
@@ -236,7 +257,64 @@
   to = "/404.html"
   status = 404
 
-# ── Cache-Kontrolle (v13-E10) ─────────────────────────────────
+# ── Sicherheits-Header (v19-K, Audit C §5) ────────────────────
+# Auf ALLE Antworten. Setzt KEIN Cache-Control → kein Konflikt mit den
+# Cache-Regeln unten. CSP zunächst als Report-Only (nur Konsolen-Report, blockt
+# nichts) — three.js nutzt WASM (draco) + Blob-Worker, /live bindet den
+# fussball.de-Widget-Iframe ein, Live/Statistik sprechen Supabase an. Nach ~1
+# Woche Beobachtung ohne Fehlalarme scharf schalten (Report-Only → CSP).
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    Content-Security-Policy-Report-Only = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://fwiivwmoyagcdrjvhaou.supabase.co; worker-src 'self' blob:; child-src 'self' blob:; media-src 'self'; frame-src 'self' https://www.fussball.de https://www.fupa.net; form-action 'self'; manifest-src 'self'"
+
+# ── Cache-Kontrolle (v13-E10 · v19-K Audit C §5) ──────────────
+# HTML-Einstiege NIE lange cachen (Bundle-Hashes wechseln je Deploy — sonst
+# hängen Besucher nach dem Veröffentlichen auf toten Asset-Hashes). Diese
+# Regeln stehen VOR /galerie/* & Co.: Netlify nimmt die zuerst definierte
+# passende Regel → /galerie (HTML) bekommt no-cache, /galerie/<bild> bleibt
+# langlebig. Der frühere Bug: /galerie wurde von /galerie/* mit 7 Tagen erfasst.
+[[headers]]
+  for = "/"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+[[headers]]
+  for = "/galerie"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+[[headers]]
+  for = "/live"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+[[headers]]
+  for = "/partner"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+[[headers]]
+  for = "/album"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+[[headers]]
+  for = "/impressum"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+[[headers]]
+  for = "/datenschutz"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+[[headers]]
+  for = "/404.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
 # Vite-Assets tragen Content-Hashes im Dateinamen → für immer cachebar.
 [[headers]]
   for = "/assets/*"
