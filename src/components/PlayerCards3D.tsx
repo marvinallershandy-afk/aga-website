@@ -4,7 +4,7 @@ import * as THREE from 'three'
 import { whatsappUrl, whatsappReady } from '../data/content'
 import { useStore } from '../store/useStore'
 import { cameraState } from '../camera/CameraPath'
-import { TEAM_CARDS, TEAM_CENTER, TEAM_PLAYERS, DUGOUT, teamState, focusCardAt, type TeamCard } from '../camera/teamLayout'
+import { TEAM_CARDS, TEAM_CENTER, TEAM_PLAYERS, DUGOUT, teamState, type TeamCard } from '../camera/teamLayout'
 import { makePlayerCardTexture, makeStaffCardTexture, CARD_TEX_ASPECT } from '../three/playerCardTexture'
 
 // ─────────────────────────────────────────────────────────────
@@ -15,15 +15,15 @@ import { makePlayerCardTexture, makeStaffCardTexture, CARD_TEX_ASPECT } from '..
 //  · Karten drehen sich leicht zur Kamera: gemeinsamer Team-Yaw
 //    (Blick vom Formations-Schwerpunkt zur Kamera) + begrenzter
 //    Einzel-Yaw je Karte (±0.45 rad), weich gedämpft
-//  · Fokus-Karte (teamLayout.focusCardAt) hebt sich leicht, wird
-//    etwas größer und bekommt Glanz; ein Licht-Teller am Boden folgt
+//  · v15-P: kein Person-für-Person-Fokus mehr (Heben/Glanz/Licht-Teller
+//    entfallen) — alle Karten gleichwertig, nur ein dezenter Glanz-Lauf
 //  · Kontaktschatten (instanziert) erden jede Karte
 // Klick → Tap-Launch (Karte fliegt zur Kamera) → Flip-Detail-Modal.
 // Mobil (≤640px) gibt es KEIN 3D-Kartenfeld — dort trägt das DOM-
 // Taktik-Board (v14-M).
 // v14-M „Ganzer Platz": Elf über die volle Feldlänge, Bank in einem
 // schlichten Unterstand AUSSERHALB der Südlinie auf Höhe der Mittellinie
-// (wächst mit der Bank-Reihe aus dem Rasen), Fokus nur noch dezent.
+// (wächst mit der Bank-Reihe aus dem Rasen).
 // ─────────────────────────────────────────────────────────────
 
 const MANN_U = 2 / 7
@@ -110,7 +110,6 @@ function Dugout({ groupRef }: { groupRef: React.RefObject<THREE.Group | null> })
 
 interface Placed extends TeamCard {
   tex: THREE.CanvasTexture
-  phase: number
 }
 
 const _launchTarget = new THREE.Vector3()
@@ -130,9 +129,8 @@ function CardField() {
   const aniso = Math.min(8, gl.capabilities.getMaxAnisotropy())
   const layout: Placed[] = useMemo(
     () =>
-      TEAM_CARDS.map((c, i) => ({
+      TEAM_CARDS.map((c) => ({
         ...c,
-        phase: i * 1.37,
         tex: c.player
           ? makePlayerCardTexture(c.player, c.kind === 'start' ? 640 : 384, aniso).texture
           : makeStaffCardTexture(c.staff!, 384, aniso).texture,
@@ -149,40 +147,33 @@ function CardField() {
   const dugoutRef = useRef<THREE.Group>(null)
   const meshes = useRef<(THREE.Mesh | null)[]>([])
   const shadowRef = useRef<THREE.InstancedMesh>(null)
-  const ringRef = useRef<THREE.Mesh>(null)
   const shadowTex = useMemo(() => makeBlobTexture('rgba(0,0,0,0.62)', 'rgba(0,0,0,0.25)'), [])
-  const ringTex = useMemo(() => makeBlobTexture('rgba(255,215,190,0.55)', 'rgba(233,29,41,0.22)'), [])
   const yaw = useRef<number[]>(layout.map(() => 0))
-  const focusW = useRef<number[]>(layout.map(() => 0))
-  const uniforms = useRef(layout.map(() => ({ uFocus: { value: 0 } })))
   const glintT = useRef({ value: 0 })
-  const ring = useRef({ x: 0, z: 0, a: 0 })
   // v13-K4: Tap-Launch — die angetippte Karte fliegt der Kamera entgegen,
   // DANN öffnet das Flip-Modal.
   const launch = useRef<{ i: number; t0: number } | null>(null)
 
-  // Glanz + Fokus in die Basic-Materialien injizieren (einmalig).
+  // Dezenter Glanz-Lauf in die Basic-Materialien injizieren (einmalig).
   useEffect(() => {
-    meshes.current.forEach((m, i) => {
+    meshes.current.forEach((m) => {
       if (!m) return
       const mat = m.material as THREE.MeshBasicMaterial
       mat.onBeforeCompile = (shader) => {
         shader.uniforms.uGlintT = glintT.current
-        shader.uniforms.uFocus = uniforms.current[i].uFocus
         shader.fragmentShader = shader.fragmentShader
-          .replace('void main() {', 'uniform float uGlintT;\nuniform float uFocus;\nvoid main() {')
+          .replace('void main() {', 'uniform float uGlintT;\nvoid main() {')
           .replace(
             '#include <map_fragment>',
             `#include <map_fragment>
 #ifdef USE_MAP
-  float glintBand = abs(fract(vMapUv.x * 0.8 - vMapUv.y * 0.42 + uGlintT * (0.035 + uFocus * 0.05)) - 0.5) - 0.05;
+  float glintBand = abs(fract(vMapUv.x * 0.8 - vMapUv.y * 0.42 + uGlintT * 0.035) - 0.5) - 0.05;
   float glint = smoothstep(0.05, 0.0, glintBand);
-  diffuseColor.rgb += glint * vec3(1.0, 0.92, 0.8) * (0.06 + uFocus * 0.2) * diffuseColor.a;
-  diffuseColor.rgb *= 1.0 + uFocus * 0.12;
+  diffuseColor.rgb += glint * vec3(1.0, 0.92, 0.8) * 0.06 * diffuseColor.a;
 #endif`,
           )
       }
-      mat.customProgramCacheKey = () => 'sva-card-v14d'
+      mat.customProgramCacheKey = () => 'sva-card-v15p'
       mat.needsUpdate = true
     })
   }, [layout])
@@ -217,10 +208,8 @@ function CardField() {
     const camX = camera.position.x
     const camZ = camera.position.z
     const teamYaw = Math.atan2(camX - TEAM_CENTER.x, camZ - TEAM_CENTER.z)
-    const fi = teamState.w > 0.5 ? focusCardAt(teamState.s) : -1
     const shadows = shadowRef.current
     const k = 1 - Math.exp(-8 * delta)
-    const kf = 1 - Math.exp(-6 * delta)
 
     for (let i = 0; i < layout.length; i++) {
       const m = meshes.current[i]
@@ -246,18 +235,11 @@ function CardField() {
       }
       yaw.current[i] += wrapAngle(target - yaw.current[i]) * k
 
-      // Fokus
-      focusW.current[i] += ((i === fi ? 1 : 0) - focusW.current[i]) * kf
-      const fw = focusW.current[i]
-      uniforms.current[i].uFocus.value = fw
-
-      const sc = item.w * (0.7 + 0.3 * ease) * (1 + 0.04 * fw)
-      const bob = Math.sin(t * 0.7 + item.phase) * 0.008
-      m.position.set(item.x, -(1 - ease) * 0.25 + 0.08 * fw + bob * fw, item.z)
+      const sc = item.w * (0.7 + 0.3 * ease)
+      m.position.set(item.x, -(1 - ease) * 0.25, item.z)
       m.scale.set(sc, sc, sc)
       _euler.set(LEAN, yaw.current[i], 0)
       m.quaternion.setFromEuler(_euler)
-      m.renderOrder = fw > 0.5 ? 2 : 1
 
       // Tap-Launch überlagert die Pose
       const L = launch.current
@@ -283,22 +265,6 @@ function CardField() {
       }
     }
     if (shadows) shadows.instanceMatrix.needsUpdate = true
-
-    // Licht-Teller unter der Fokus-Karte
-    const r = ringRef.current
-    if (r) {
-      const R = ring.current
-      if (fi >= 0) {
-        const c = layout[fi]
-        if (R.a < 0.02) { R.x = c.x; R.z = c.z }
-        R.x += (c.x - R.x) * kf
-        R.z += (c.z - R.z) * kf
-      }
-      R.a += ((fi >= 0 ? 1 : 0) * fo - R.a) * kf
-      r.position.set(R.x, 0.016, R.z)
-      ;(r.material as THREE.MeshBasicMaterial).opacity = R.a * 0.6
-      r.visible = R.a > 0.01
-    }
   })
 
   return (
@@ -346,10 +312,6 @@ function CardField() {
         <planeGeometry args={[1, 1]} />
         <meshBasicMaterial map={shadowTex} transparent depthWrite={false} toneMapped={false} />
       </instancedMesh>
-      <mesh ref={ringRef} rotation-x={-Math.PI / 2} scale={[1.9, 1.9, 1]} visible={false}>
-        <planeGeometry args={[1, 1]} />
-        <meshBasicMaterial map={ringTex} transparent depthWrite={false} toneMapped={false} blending={THREE.AdditiveBlending} opacity={0} />
-      </mesh>
     </group>
   )
 }

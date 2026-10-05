@@ -1,6 +1,6 @@
 // ─────────────────────────────────────────────────────────────
-// v14-D „Startelf-Flyover": gemeinsame Aufstellungs-Geometrie und
-// Fokus-Dramaturgie der Mannschafts-Station.
+// v14-D „Startelf-Flyover": gemeinsame Aufstellungs-Geometrie der
+// Mannschafts-Station (v15-P: ohne Fokus-Dramaturgie).
 //
 // Bewusst OHNE three-Import: Kamera (CameraPath/CameraRig), 3D-Karten
 // (PlayerCards3D) UND der DOM-Text der Sektion (PlayerCardGrid) lesen
@@ -115,74 +115,17 @@ export const TEAM_CENTER = (() => {
   return { x: s.reduce((a, c) => a + c.x, 0) / n, z: s.reduce((a, c) => a + c.z, 0) / n }
 })()
 
-// ─── Fokus-Reihenfolge ───────────────────────────────────────
-// Die Kamera fliegt vom Sturm zum Torwart. Der Fokus wandert als
-// „Schlange" durch die Reihen (Sturm rechts→links aus Kamerasicht,
-// Mittelfeld zurück, Abwehr wieder hin, dann der Torwart), damit der
-// Blick nie quer über das ganze Feld springen muss.
-export const FOCUS_ORDER: number[] = (() => {
-  const rows: Slot['role'][] = ['ANG', 'MIT', 'ABW', 'TW']
-  const out: number[] = []
-  rows.forEach((role, r) => {
-    const idx = TEAM_CARDS.map((c, i) => ({ c, i })).filter(({ c }) => c.kind === 'start' && c.role === role)
-    // Kamera blickt nach Westen: Bildschirm-links = Süden (+z).
-    idx.sort((a, b) => (r % 2 === 0 ? b.c.z - a.c.z : a.c.z - b.c.z))
-    idx.forEach(({ i }) => out.push(i))
-  })
-  return out
-})()
+// ─── Fahrt-Phasen ────────────────────────────────────────────
+// v15-P „entschlackt": KEIN Person-für-Person-Fokus mehr (Karte heben/
+// glänzen, Name/Nr. links, Fortschrittsstriche, Blick-Zug zur Karte).
+// Die Fahrt ist EIN ruhiger Kameraweg bis zur Totale; der DOM-Text kennt
+// nur zwei Zustände: unterwegs (Hinweis) und Totale (Bank + Trainerstab).
+/** Ab hier gilt die Fahrt als in der Totale angekommen (s. teamEase). */
+export const TEAM_TOTALE_S = 0.82
 
-// Zeitplan der Fahrt (s = Fortschritt durch die Sektion, 0…1).
-// Vor FOCUS_S0: Establishing-Shot hinter den Spitzen. Nach FOCUS_S1:
-// Totale hinter dem eigenen Tor mit Bank und Trainerstab.
-export const FOCUS_S0 = 0.07
-export const FOCUS_S1 = 0.84
-
-/** Fokus-Lage bei s: Index in FOCUS_ORDER (kontinuierlich) oder −1. */
-export function focusPos(s: number): number {
-  const n = FOCUS_ORDER.length
-  if (n === 0 || s < FOCUS_S0 || s > FOCUS_S1 + 0.04) return -1
-  const k = (s - FOCUS_S0) / (FOCUS_S1 - FOCUS_S0)
-  return Math.min(n - 1, Math.max(0, k * n - 0.5))
-}
-
-/** Index in TEAM_CARDS der aktuellen Fokus-Karte oder −1. */
-export function focusCardAt(s: number): number {
-  const f = focusPos(s)
-  if (f < 0) return -1
-  return FOCUS_ORDER[Math.round(f)]
-}
-
-/** Phase der Sektion für den DOM-Text: Intro, Fokus oder Totale. */
-export function teamPhaseAt(s: number): 'intro' | 'focus' | 'outro' {
-  if (s < FOCUS_S0) return 'intro'
-  if (s > FOCUS_S1 + 0.04) return 'outro'
-  return 'focus'
-}
-
-const smooth = (a: number, b: number, x: number) => {
-  const t = Math.min(1, Math.max(0, (x - a) / (b - a)))
-  return t * t * (3 - 2 * t)
-}
-
-/** Blickpunkt auf der Fokus-Karte (Weltkoordinaten) — mit Plateaus pro
- *  Karte: der Blick ruht kurz auf jedem Spieler und gleitet dann weiter.
- *  Schreibt in out und gibt das Fokus-Gewicht 0…1 zurück. */
-export function focusLookAt(s: number, out: { x: number; y: number; z: number }): number {
-  const n = FOCUS_ORDER.length
-  if (n === 0) return 0
-  const k = (s - FOCUS_S0) / (FOCUS_S1 - FOCUS_S0)
-  const f = Math.min(n - 1, Math.max(0, k * n - 0.5))
-  const i0 = Math.floor(f)
-  const i1 = Math.min(n - 1, i0 + 1)
-  const e = smooth(0.35, 0.65, f - i0)
-  const a = TEAM_CARDS[FOCUS_ORDER[i0]]
-  const b = TEAM_CARDS[FOCUS_ORDER[i1]]
-  out.x = a.x + (b.x - a.x) * e
-  out.z = a.z + (b.z - a.z) * e
-  out.y = 0.62
-  // Ein-/Ausblenden des Fokus-Blicks an den Rändern der Fokus-Phase
-  return smooth(FOCUS_S0 - 0.04, FOCUS_S0 + 0.05, s) * (1 - smooth(FOCUS_S1 - 0.02, FOCUS_S1 + 0.08, s))
+/** Phase der Sektion für den DOM-Text. */
+export function teamPhaseAt(s: number): 'fahrt' | 'totale' {
+  return s >= TEAM_TOTALE_S ? 'totale' : 'fahrt'
 }
 
 // ─── Geteilter Fahrt-Zustand der Station (pro Frame vom CameraRig) ──
