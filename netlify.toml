@@ -116,11 +116,125 @@
   status = 302
   force = true
 
-# SPA-Fallback: deckt sowohl den 3D-Onepager als auch /admin/* ab.
+# ── SPA-Rewrites + echte 404 (v19-K, Audit A §2.13 / C §5) ─────
+# Früher bog ein einziges /* → /index.html (200) ALLE unbekannten Pfade auf
+# die Startkarte um — vertippte/geteilte Links zeigten kommentarlos die Karte
+# (kein 404-Signal). Jetzt: Admin + alle Onepager-Deep-Link-Aliase (Quelle:
+# src/map/places.ts aliases + Rundgang-Slugs) werden explizit auf den SPA-
+# Einstieg index.html gerewritet (200, clientseitiges Routing via src/map/nav.ts),
+# und NUR der Rest fällt auf die gebrandete 404-Seite (Status 404).
+# Reihenfolge: erster Treffer gewinnt, der 404-Catch-all steht zuletzt.
+# WICHTIG: Beim Erweitern der Aliase in places.ts diese Liste mitpflegen.
+
+# Admin-Cockpit (eigene clientseitige Unterrouten /admin/statistik …)
 [[redirects]]
-  from = "/*"
+  from = "/admin"
   to = "/index.html"
   status = 200
+[[redirects]]
+  from = "/admin/*"
+  to = "/index.html"
+  status = 200
+
+# Onepager-Deep-Link-Aliase → 3D-Karte (index.html), clientseitig aufgelöst.
+[[redirects]]
+  from = "/anfahrt"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/fanblock"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/fans"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/kader"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/kontakt"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/mannschaft"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/meisterfeier"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/mitmachen"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/mitspielen"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/musik"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/partyraum"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/probetraining"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/route"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/rundgang"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/spielplan"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/spieltag"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/sponsor"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/sponsoren"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/tabelle"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/team"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/tour"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/training"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/vereinsheim"
+  to = "/index.html"
+  status = 200
+
+# Alles andere: echte 404 mit gebrandeter Seite (public/404.html).
+[[redirects]]
+  from = "/*"
+  to = "/404.html"
+  status = 404
 
 # ── Cache-Kontrolle (v13-E10) ─────────────────────────────────
 # Vite-Assets tragen Content-Hashes im Dateinamen → für immer cachebar.

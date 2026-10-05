@@ -58,3 +58,7 @@ scripts/mail/patch.json
 # v18-R: Rundgang-Beweise/Messläufe (lokal)
 shots-rundgang/
 _rundgang/
+
+# v19-K: Audit-Screenshots + Wegwerf-Runner (nicht committen)
+shots-v19-karte/
+scripts/_v19k-shots.mjs

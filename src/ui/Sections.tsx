@@ -26,10 +26,24 @@ const reveal = {
   transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] as const },
 }
 
-function Header({ kicker, title, body, center, h1 }: { kicker: string; title: string; body: string; center?: boolean; h1?: boolean }) {
+// v19-K (Audit A §2.4.3): Geister-Text beim Finale. Der Kontakt-Beat ist der
+// letzte Rundgang-Halt; währenddessen steigt die Kamera in die Anfahrts-Karte
+// auf. Mit dem normalen Fade-Fenster (amount 0.4, once:false) hingen die
+// Textspalten halbtransparent über der Karte, während die Kamera noch ankam.
+// Darum eigenes Fenster: erst später sichtbar (amount 0.6 = Sektion gut im Bild
+// = Kamera angekommen) und once:true, damit nichts wieder zu Geisterschrift
+// ausblendet, wenn man in die Karte zurückscrollt.
+const revealFinale = {
+  initial: { opacity: 0, y: 22 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, amount: 0.6 },
+  transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] as const },
+}
+
+function Header({ kicker, title, body, center, h1, v }: { kicker: string; title: string; body: string; center?: boolean; h1?: boolean; v?: typeof reveal }) {
   const Tag = h1 ? 'h1' : 'h2'
   return (
-    <motion.div {...reveal} style={center ? { maxWidth: 720 } : undefined}>
+    <motion.div {...(v ?? reveal)} style={center ? { maxWidth: 720 } : undefined}>
       <span className="section__kicker">{kicker}</span>
       <Tag className="section__title">{title}</Tag>
       <p className="section__body" style={center ? { marginLeft: 'auto', marginRight: 'auto' } : undefined}>
@@ -183,13 +197,13 @@ export function Sections() {
             (offsetTop, .section--snap-start) landet statt hinterm Padding. */}
         <span id="mitmachen" aria-hidden="true" style={{ position: 'absolute', top: 0 }} />
         <div className="section__scrim" />
-        <Header kicker={kontakt.kicker} title={kontakt.title} body={kontakt.body} />
+        <Header kicker={kontakt.kicker} title={kontakt.title} body={kontakt.body} v={revealFinale} />
 
         {/* v9-E5: direkter Draht ganz vorn — WhatsApp + Instagram prominent.
             v12-E7: NextMatch + Sponsoren-Karussell hier ENTFERNT (dupliziert die
             Tabelle-/Sponsoren-Station) → der Mitmachen-Snap zeigt jetzt komponiert
             die Kernaussage: Komm vorbei + WA/Insta + 3 Karten. */}
-        <motion.div className="contact-actions" {...reveal}>
+        <motion.div className="contact-actions" {...revealFinale}>
           {/* v13-E4: ohne echte Nummer wird der WA-Button ehrlich zum
               E-Mail-Button (whatsappUrl fällt auf mailto zurück). */}
           <a
@@ -208,7 +222,7 @@ export function Sections() {
         </motion.div>
 
         {/* Wen wir suchen — jeder Baustein mit nächstem Schritt */}
-        <motion.div className="wanted-grid" {...reveal}>
+        <motion.div className="wanted-grid" {...revealFinale}>
           <div className="wanted-card">
             <h3>Spieler</h3>
             <p>Du kannst kicken? Oder glaubst es zumindest? Beides reicht für den Anfang.</p>
@@ -245,7 +259,7 @@ export function Sections() {
           </div>
         </motion.div>
 
-        <motion.dl className="contact-grid" {...reveal} style={{ maxWidth: 620 }}>
+        <motion.dl className="contact-grid" {...revealFinale} style={{ maxWidth: 620 }}>
           <div>
             <dt>Training</dt>
             <dd style={{ maxWidth: 260 }}>

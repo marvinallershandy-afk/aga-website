@@ -135,6 +135,15 @@
 /* Rundgang: Text liegt über der 3D-Bande — kompakter */
 .bk-pitch--rundgang { gap: var(--s-4); max-width: 30rem; }
 .bk-pitch--rundgang .bk-box__kopf { display: none; }
+/* v19-K (Audit A §2.2.2): Im Rundgang schwebte das Formular ohne Fläche über
+   der 3D-Szene. Jetzt sitzt die Eingabe (Nav + Felder + CTA) auf einer ruhigen
+   Ink-Fläche mit Haarlinie — lesbar, abgesetzt von der Bande dahinter. */
+.bk-pitch--rundgang .bk-box {
+  background: var(--c-ink);
+  border: var(--border);
+  border-radius: var(--r-l);
+  padding: var(--s-4);
+}
 .bk-pitch--rundgang .bk-leiste__tafeln { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
 /* mobil: Foto direkt nach den Eingaben (der Aha-Moment), Tafel danach */

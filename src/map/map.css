@@ -355,6 +355,13 @@ html.is-map body {
   .kmap__tourShort { display: inline; }
   .kmap__tour { padding: 0 var(--s-3); min-height: 36px; }
 }
+/* v19-K (Audit A §2.10.2): Claim im Kopf nicht abschneiden. Auf sehr schmalen
+   Geräten reicht die Breite nicht für „Ein Dorf. Ein Verein. Ein Platz." neben
+   Name + Rundgang-Knopf — statt „EIN PL…" (Bastel-Look) den Claim ganz
+   weglassen (er steht weiterhin im Hero/Rundgang). */
+@media (max-width: 420px) {
+  .kmap__brand small { display: none; }
+}
 
 /* ── Hinweis „scrollen = Rundgang", Lade-Zeile, Fuß ─────────── */
 .kmap__hint {
