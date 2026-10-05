@@ -109,3 +109,32 @@ Sek. 8–11,6, ×1,25 verlangsamt, vorwärts + rückwärts (nahtlos), 9 s, stumm
 Neu erzeugen: `scripts/training-loop.mjs` (ffmpeg-static, Parameter
 `SRC`, `SS`, `T`) — Ausschnitt so wählen, dass keine Nahaufnahmen von
 Zuschauern/Kindern im Bild sind.
+
+## 6. Spielerkarten
+
+* Freisteller: `public/players/cutout/hd/*.webp` (960×1440) für Galerie, Modal,
+  Story; `cutout/*.webp` (640×960, gleiche Geometrie) für Gesichter, 3D, /live.
+  Erzeugt aus den Print-Originalen (`AGA_FOTOS_FERTIG.zip → print/`, 1400×2100):
+  `osascript -l JavaScript scripts/cutout/cutout.js <print> <masken>` (macOS Vision),
+  dann `node scripts/cutout/refine.mjs <masken> public/players` (Choke/Feather,
+  Kanten-Entfärbung gegen Grünsaum). Vorher/Nachher: `shots-premium/spieler/`.
+* Hover (Desktop): keine 3D-Neigung (unscharf), sondern Parallaxe — Spieler hebt
+  sich minimal, Nummer/Prägung gegenläufig, ein Licht-Sweep (800 ms), Vorname +
+  Vereinszeile blenden ein. Nur transform/opacity. Touch: alles sichtbar.
+* Walkout-Videos aus: `WALKOUT_ENABLED = false` (src/data/walkout.ts) bis die
+  Greenscreen-Aufnahmen da sind.
+
+## 7. Galerien „Spieltag in Bildern“
+
+* Daten: Admin → Galerien (`sva_galerien`, `sva_galerie_bilder`, Migration
+  `20261008100000_sva_galerien.sql`) → `web_snapshot().galerien` → Build.
+  Bis etwas veröffentlicht ist: Seed `src/data/galerie.ts` (Urknall-Pokal 2026).
+* Raster: Fotos randlos, 4 px Fuge, Titelbild groß, Lightbox schwarz mit Zähler,
+  Bildtext und Credit. Credit immer: „Fotos: picture by Nele“ → `NELE_INSTAGRAM`.
+* Orte: Karte → Fans (Panel), `/galerie` (eigene Seite, `galerie.html`).
+
+## 8. Sammelalbum
+
+Siehe docs/ALBUM.md. Gleiche Tokens; Panini nur als Akzent (helle Sticker-Kante,
+Tütchen). Seltenheit = Folienkante (`--folie-silber/-gold/-holo`), Bewegung nur
+beim Aufdecken.
