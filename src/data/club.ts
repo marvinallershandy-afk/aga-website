@@ -248,7 +248,7 @@ export const ALBUM_LINK = {
 } as const
 
 // ── v17-D: Offizielle Vereinsfotografin ──────────────────────
-// PLATZHALTER: Marvin bestätigt Handle (aus Neles Unterlagen:
+// Von Marvin bestätigt (05.10.2026; aus Neles Unterlagen:
 // instagram.com/pictureby.nele). Steuert alle „Fotos: picture by Nele"-Credits.
 export const NELE_INSTAGRAM = 'pictureby.nele'
 export const NELE = {
