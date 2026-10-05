@@ -14,7 +14,7 @@ const close = () => useStore.getState().setSelectedPlayer(null)
 // (Flip) zeigt NUR echte Angaben: Name, Nummer, Position, „im Verein seit"
 // (nur wenn bekannt) und den Story-Teilen-Button. Keine 0/0/0-Stats, kein
 // Platzhalter-Spruch.
-function ModalContent({ player }: { player: Player }) {
+function ModalContent({ player, from = 0 }: { player: Player; from?: number }) {
   const [sharing, setSharing] = useState(false)
   const [result, setResult] = useState<ShareResult | null>(null)
   const [flipped, setFlipped] = useState(false)
@@ -61,8 +61,8 @@ function ModalContent({ player }: { player: Player }) {
       role="dialog"
       aria-modal="true"
       aria-label={player.name}
-      initial={{ scale: 0.9, y: 20, opacity: 0 }}
-      animate={{ scale: 1, y: 0, opacity: 1 }}
+      initial={from ? { x: from * 48, opacity: 0 } : { scale: 0.9, y: 20, opacity: 0 }}
+      animate={{ scale: 1, x: 0, y: 0, opacity: 1 }}
       exit={{ scale: 0.92, opacity: 0 }}
       transition={{ type: 'spring', stiffness: 260, damping: 26 }}
       onClick={(e) => e.stopPropagation()}
@@ -138,6 +138,34 @@ function ModalContent({ player }: { player: Player }) {
 
 export function PlayerModal() {
   const player = useStore((s) => s.selectedPlayer)
+  const list = useStore((s) => s.playerList)
+  // v14-M: Blättern zwischen Spielern (Taktik-Board / 3D-Feld übergeben
+  // Startelf + Bank als Liste): Pfeile, ←/→ und Wischen.
+  const idx = player && list ? list.findIndex((p) => p.id === player.id) : -1
+  const nav = !!list && idx >= 0 && list.length > 1
+  // Richtung der letzten Blätter-Geste — nur für genau den Zielspieler
+  // (frisch geöffnete Karten zoomen normal herein).
+  const [slide, setSlide] = useState({ id: '', dir: 0 })
+  const touch = useRef<{ x: number; y: number } | null>(null)
+  const go = (d: number) => {
+    if (!nav || !list) return
+    const n = list.length
+    const next = list[(idx + d + n) % n]
+    setSlide({ id: next.id, dir: d })
+    useStore.getState().setSelectedPlayer(next)
+  }
+  useEffect(() => {
+    if (!nav || !list) return
+    const onKey = (e: KeyboardEvent) => {
+      const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0
+      if (!d) return
+      const next = list[(idx + d + list.length) % list.length]
+      setSlide({ id: next.id, dir: d })
+      useStore.getState().setSelectedPlayer(next)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [nav, idx, list])
 
   return (
     <AnimatePresence>
@@ -149,9 +177,49 @@ export function PlayerModal() {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.25 }}
           onClick={close}
+          onTouchStart={(e) => {
+            const t = e.touches[0]
+            touch.current = t ? { x: t.clientX, y: t.clientY } : null
+          }}
+          onTouchEnd={(e) => {
+            const t0 = touch.current
+            const t = e.changedTouches[0]
+            touch.current = null
+            if (!t0 || !t || !nav) return
+            const dx = t.clientX - t0.x
+            const dy = t.clientY - t0.y
+            if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.4) go(dx < 0 ? 1 : -1)
+          }}
         >
           <button className="modal-close" onClick={close} aria-label="Schließen">×</button>
-          <ModalContent key={player.id} player={player} />
+          {nav && list && (
+            <>
+              <span className="modal-count" aria-live="polite">
+                {idx + 1} / {list.length}
+              </span>
+              <button
+                className="modal-nav modal-nav__prev"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  go(-1)
+                }}
+                aria-label={`Vorheriger Spieler: ${list[(idx - 1 + list.length) % list.length].name}`}
+              >
+                ‹
+              </button>
+              <button
+                className="modal-nav modal-nav__next"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  go(1)
+                }}
+                aria-label={`Nächster Spieler: ${list[(idx + 1) % list.length].name}`}
+              >
+                ›
+              </button>
+            </>
+          )}
+          <ModalContent key={player.id} player={player} from={slide.id === player.id ? slide.dir : 0} />
         </motion.div>
       )}
     </AnimatePresence>

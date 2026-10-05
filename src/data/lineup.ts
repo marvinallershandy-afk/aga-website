@@ -28,7 +28,11 @@ export interface Lineup {
 
 /** Ein Slot auf dem Feld. x: −1 (links) … 1 (rechts) aus Sicht des eigenen
  *  Tores; y: 0 (eigene Torlinie) … 1 (Mittellinie). Nur eigene Hälfte —
- *  die Elf steht wie beim Anstoß. */
+ *  die Elf steht wie beim Anstoß (so zeigt sie auch das Admin-Spielfeld).
+ *
+ *  v14-M: Die Website zeigt die Elf über den GANZEN Platz (Spielordnung
+ *  statt Anstoß-Aufstellung) — die Umrechnung macht slotDepth() unten,
+ *  die Slot-Werte und ihre Bedeutung bleiben dafür unverändert. */
 export interface Slot {
   x: number
   y: number
@@ -62,6 +66,15 @@ export const FORMATION_SLOTS: Record<Formation, Slot[]> = {
     { x: -0.8, y: 0.58, role: 'MIT' }, { x: -0.38, y: 0.52, role: 'MIT' }, { x: 0, y: 0.5, role: 'MIT' }, { x: 0.38, y: 0.52, role: 'MIT' }, { x: 0.8, y: 0.58, role: 'MIT' },
     { x: -0.25, y: 0.86, role: 'ANG' }, { x: 0.25, y: 0.86, role: 'ANG' },
   ],
+}
+
+/** v14-M: Tiefe eines Slots über die VOLLE Platzlänge (0 = eigene Torlinie,
+ *  1 = gegnerische Torlinie). Streckt die Anstoß-Aufstellung (eigene
+ *  Hälfte) zur Spielordnung: Torwart vor dem eigenen Fünfer, Abwehr am
+ *  eigenen Strafraum, Mittelfeld um die Mittellinie, Sturm in der
+ *  gegnerischen Hälfte. Gemeinsam genutzt von 3D-Feld und Mobil-Board. */
+export function slotDepth(slot: Slot): number {
+  return 0.04 + slot.y * 0.78
 }
 
 export const LINEUP: Lineup = {
