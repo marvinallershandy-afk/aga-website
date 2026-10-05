@@ -53,7 +53,7 @@ test('Modell-Konstante und Anfrage-Bau', () => {
   assert.equal(MODELL, 'claude-sonnet-5-5')
   const a = baueAnfrage([{ mediaType: 'image/png', data: PNG_1PX }, { mediaType: 'image/webp', data: PNG_1PX }])
   assert.equal(a.model, MODELL)
-  assert.deepEqual(a.tool_choice, { type: 'tool', name: TOOL_NAME })
+  assert.deepEqual(a.tool_choice, { type: 'auto' }) // 5er-Modelle: kein erzwungenes tool_choice
   assert.equal(a.tools[0].name, TOOL_NAME)
   const content = a.messages[0].content
   assert.equal(content.length, 3, '2 Bilder + 1 Text')
