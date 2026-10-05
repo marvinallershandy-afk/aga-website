@@ -2,20 +2,22 @@
 import { chromium } from '/Users/marvinallers/code/sva-fussball/node_modules/playwright/index.mjs'
 import { readFileSync } from 'node:fs'
 const R = '/Users/marvinallers/code/sva-fussball'
-const N = '/Users/marvinallers/pbn-ablauf-handy/public/'
+const N = new URL('fotos/', import.meta.url).pathname
 const OUT = new URL('.', import.meta.url).pathname
 const uri = (p, t) => `data:${t};base64,${readFileSync(p).toString('base64')}`
-const JUBEL = uri(N + 'meisterspieltag-lauf-zu-den-fans.jpg', 'image/jpeg')
-const TEAM = uri(N + 'meisterspieltag-mannschaftsfoto-meister.jpg', 'image/jpeg')
+const TRAUBE = uri(N + 'jubel-traube.jpg', 'image/jpeg')
+const UMARMUNG = uri(N + 'jubel-umarmung.jpg', 'image/jpeg')
+const LAUF = uri(N + 'lauf-zu-den-fans.jpg', 'image/jpeg')
+const TEAM = uri(N + 'mannschaftsfoto-meister.jpg', 'image/jpeg')
 const wappen = uri(R + '/public/brand/wappen.png', 'image/png')
 const anton = uri(R + '/dist/assets/anton-latin-400-normal-Byf51wtH.woff2', 'font/woff2')
 
 const VARIANTEN = {
-  login: [JUBEL, '50% 40%', 'Mitglieder-Login', 'DEIN LOGIN.'],
-  willkommen: [JUBEL, '50% 40%', 'Willkommen im Verein', 'SCHÖN, DASS DU DA BIST.'],
+  login: [TRAUBE, '50% 40%', 'Mitglieder-Login', 'DEIN LOGIN.'],
+  willkommen: [UMARMUNG, '50% 40%', 'Willkommen im Verein', 'SCHÖN, DASS DU DA BIST.'],
   team: [TEAM, 'TEAM', 'Vereins-Pflege', 'WILLKOMMEN IM TEAM.'],
-  passwort: [JUBEL, '50% 40%', 'Konto', 'NEUES PASSWORT.'],
-  email: [JUBEL, '50% 40%', 'Konto', 'NEUE E-MAIL-ADRESSE.'],
+  passwort: [LAUF, '50% 40%', 'Konto', 'NEUES PASSWORT.'],
+  email: [LAUF, '50% 40%', 'Konto', 'NEUE E-MAIL-ADRESSE.'],
 }
 
 const html = (foto, pos, kicker, titel) => `<!doctype html><html><head><style>

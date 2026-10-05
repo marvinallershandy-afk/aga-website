@@ -1,7 +1,7 @@
 # Baut die Supabase-Auth-Mailvorlagen v2 (Foto-Kopf, Ticket-Code, dunkler Fuß)
 import json, os
 B = 'https://fwiivwmoyagcdrjvhaou.supabase.co/storage/v1/object/public/sva_public/mail/'
-V = 'v2'
+V = 'v3'
 F = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif"
 MONO = "'SF Mono',Menlo,Consolas,'Courier New',monospace"
 
@@ -82,6 +82,6 @@ patch = {}
 for k, (subj, html) in T.items():
     patch[f'mailer_subjects_{k}'] = subj
     patch[f'mailer_templates_{k}_content'] = html
-    open(os.path.join(out, f'v2-{k}.html'), 'w').write(html)
+    open(os.path.join(out, f'{V}-{k}.html'), 'w').write(html)
     print(k, len(html.encode()), 'Bytes')
-json.dump(patch, open(os.path.join(out, 'patch-v2.json'), 'w'), ensure_ascii=False)
+json.dump(patch, open(os.path.join(out, 'patch.json'), 'w'), ensure_ascii=False)

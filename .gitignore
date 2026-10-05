@@ -52,3 +52,5 @@ scripts/mail/*.jpg
 scripts/mail/*.png
 scripts/mail/v2-*.html
 scripts/mail/patch-*.json
+scripts/mail/v*-*.html
+scripts/mail/patch.json
