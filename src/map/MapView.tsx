@@ -144,12 +144,11 @@ export function MapPoster() {
 function MapLoader() {
   const stageLive = useStore((s) => s.stageLive)
   const fallback = useStore((s) => s.fallback)
-  const progress = useStore((s) => s.loadProgress)
   if (fallback) return null
   return (
     <div className="kmap__loader" data-hide={stageLive || undefined} role="status" aria-live="polite">
       <span className="kmap__loaderDot" aria-hidden="true" />
-      {stageLive ? 'Flutlicht an' : `Flutlicht geht an … ${Math.max(5, Math.round(progress))} %`}
+      {stageLive ? 'Flutlicht an' : 'Flutlicht geht an …'}
     </div>
   )
 }
