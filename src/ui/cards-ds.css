@@ -1,0 +1,299 @@
+/* ═══════════════════════════════════════════════════════════════
+   v17-D · Designsystem-Schicht über cards.css + index.css
+   (Tokens: src/theme/design.css · Regeln: docs/DESIGN.md)
+   Bringt die gewachsenen Bausteine auf eine Linie: zwei Radien (4/12),
+   Haarlinien statt Gold-/Rot-Leuchträndern, keine Glas-Kästen, keine
+   Hüpf-Hover, keine Fremdmarken-Farbverläufe, Bewegung 200–400 ms.
+   Wird direkt NACH cards.css geladen (main.tsx) und überschreibt deren
+   Altstände gezielt — so bleibt nachvollziehbar, was sich geändert hat.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Knöpfe */
+.btn,
+.btn:hover,
+.btn:active {
+  transform: none;
+  box-shadow: none;
+}
+.btn {
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 var(--s-5);
+  border: 1px solid transparent;
+  border-radius: var(--r-s);
+  font: 700 .8125rem/1 var(--f-body);
+  letter-spacing: .08em;
+  text-decoration: none;
+  transition: background-color var(--d-1) var(--ease), border-color var(--d-1) var(--ease), color var(--d-1) var(--ease);
+}
+.btn--primary { background: var(--c-red); color: var(--c-white); }
+.btn--primary:hover { background: var(--c-red-press); }
+.btn--ghost,
+.btn--wa,
+.btn--ig {
+  background: transparent;
+  color: var(--c-white);
+  border-color: var(--c-line-strong);
+  filter: none;
+}
+.btn--ghost:hover,
+.btn--wa:hover,
+.btn--ig:hover { background: transparent; border-color: var(--c-white); filter: none; }
+.btn--sm { min-height: 40px; padding: 0 var(--s-4); font-size: .75rem; }
+.btn:focus-visible { outline: 2px solid var(--c-white); outline-offset: 2px; }
+.btn:disabled { opacity: .5; cursor: default; }
+
+/* Ton-Schalter: Kreis mit Linie, Einladung als ruhiges Schild */
+.audio-toggle {
+  width: 40px;
+  height: 40px;
+  background: rgba(11, 10, 11, .72);
+  border: 1px solid var(--c-line-strong);
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.audio-toggle:hover { background: rgba(11, 10, 11, .9); border-color: var(--c-white); transform: none; }
+.audio-toggle[data-hint="true"] {
+  border-radius: var(--r-s);
+  background: rgba(11, 10, 11, .86);
+  border-color: var(--c-line-strong);
+  animation: none;
+}
+.audio-toggle[data-hint="true"]:hover { border-color: var(--c-white); }
+.audio-toggle:focus-visible { outline-color: var(--c-white); }
+/* Karte mobil: oben unter „Rundgang" (unten liegen Wegweiser + Leiste) */
+@media (max-width: 759px), (max-aspect-ratio: 1/1) {
+  html.is-map .audio-toggle {
+    top: calc(max(16px, env(safe-area-inset-top, 0px)) + 52px);
+    bottom: auto;
+    right: var(--gutter);
+  }
+  html.is-map .audio-toggle[data-hint="true"] { width: 40px; padding: 0; }
+  html.is-map .audio-toggle[data-hint="true"] .audio-toggle__label { display: none; }
+}
+
+/* Detail-Modal */
+.modal-backdrop { background: rgba(11, 10, 11, .92); -webkit-backdrop-filter: none; backdrop-filter: none; }
+.modal-close,
+.pgal__close,
+.lightbox__close {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--c-line-strong);
+  background: transparent;
+  color: var(--c-white);
+  transition: border-color var(--d-1) var(--ease), background-color var(--d-1) var(--ease);
+}
+.modal-close:hover,
+.pgal__close:hover,
+.lightbox__close:hover { border-color: var(--c-white); background: rgba(244, 242, 239, .06); }
+.modal-nav { border-radius: 50%; border: 1px solid var(--c-line-strong); background: rgba(11, 10, 11, .6); }
+.modal-chips { gap: var(--s-3); }
+.modal-chips span {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  font-size: var(--t-label);
+  letter-spacing: var(--ls-label);
+  color: var(--c-text-2);
+}
+.modal-chips span + span::before { content: '·'; margin-right: var(--s-3); color: var(--c-text-3); }
+.modal-info .modal-sub { color: var(--c-accent); letter-spacing: var(--ls-label); font-size: var(--t-label); font-weight: 700; }
+.modal-lead { color: var(--c-text-2); }
+.flip-hint { letter-spacing: var(--ls-label); color: var(--c-text-3); }
+
+/* Kader-Galerie */
+.pgal { background: rgba(11, 10, 11, .94); -webkit-backdrop-filter: none; backdrop-filter: none; }
+.pgal__panel {
+  background: var(--c-ink);
+  border: var(--border);
+  border-radius: var(--r-l);
+  box-shadow: var(--shadow-float);
+}
+.pgal__head { border-bottom: var(--border); }
+.pgal__kicker { color: var(--c-red); letter-spacing: var(--ls-label); }
+.pgal__grouplabel { letter-spacing: var(--ls-label); color: var(--c-text-2); }
+.pgal__grouplabel em { color: var(--c-text-3); }
+.pgal__share {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-1);
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--c-text-3);
+  font-size: var(--t-micro);
+  letter-spacing: var(--ls-label);
+  transition: color var(--d-1) var(--ease);
+}
+.pgal__share:hover { background: none; color: var(--c-white); }
+
+/* Fotos (Fanblock) + Lightbox */
+.fan-gallery { gap: var(--s-2); }
+.fan-tile {
+  border: 0;
+  border-radius: var(--r-s);
+  background: var(--c-ink-2);
+  transition: none;
+}
+.fan-tile:hover { transform: none; box-shadow: none; }
+.fan-tile img { transition: transform var(--d-3) var(--ease); }
+.fan-tile:hover img { transform: scale(1.03); }
+.fan-tile__tag {
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--c-white);
+  font-size: var(--t-micro);
+  letter-spacing: var(--ls-label);
+}
+.fan-tile__cap { color: var(--c-text-2); }
+.lightbox { background: rgba(11, 10, 11, .96); -webkit-backdrop-filter: none; backdrop-filter: none; }
+.lightbox__fig img { border-radius: 0; box-shadow: none; }
+.lightbox__fig figcaption { color: var(--c-text-2); font-size: var(--t-small); }
+.lightbox__fig figcaption b { color: var(--c-white); }
+.lightbox__nav {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1px solid var(--c-line-strong);
+  background: transparent;
+}
+.lightbox__nav:hover { background: rgba(244, 242, 239, .06); border-color: var(--c-white); }
+
+/* Saison-Cockpit */
+.cockpit__panel {
+  background: rgba(20, 18, 19, .9);
+  border: var(--border);
+  border-radius: var(--r-l);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  transition: none;
+}
+@media (hover: hover) {
+  .cockpit__panel:hover { transform: none; border-color: var(--c-line); box-shadow: none; }
+  .scorer:hover { transform: none; border-color: transparent; }
+}
+.cockpit__label { letter-spacing: var(--ls-label); font-size: var(--t-micro); }
+.cockpit__live { color: var(--c-text-2); }
+.match-card--next { border-color: var(--c-line); }
+.match-card__score { color: var(--c-white); }
+.scorer { border-radius: var(--r-s); }
+.scorer--lead { background: rgba(244, 242, 239, .04); border-color: transparent; }
+.scorer__face,
+.scorer--lead .scorer__face { border: 1px solid var(--c-line-strong); background: var(--c-ink-2); }
+.scorer__rank,
+.scorer__goals b { color: var(--c-white); }
+.countdown__cell { border: 0; border-radius: var(--r-s); background: var(--c-ink-2); }
+.cockpit-table tr.is-self .cockpit-table__pos { color: var(--c-white); }
+.cockpit-empty {
+  border-radius: var(--r-l);
+  background: var(--c-ink-2);
+  border: var(--border);
+  transition: border-color var(--d-1) var(--ease);
+}
+.cockpit-empty:hover { background: var(--c-ink-2); border-color: var(--c-line-strong); transform: none; }
+.widget-frame { border: var(--border); border-radius: var(--r-l); }
+
+/* Kontakt, Gesucht, Argumente */
+.contact-grid {
+  border-radius: var(--r-l);
+  background: rgba(11, 10, 11, .78);
+  border: var(--border);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.contact-grid dt { letter-spacing: var(--ls-label); font-size: var(--t-micro); }
+.contact-grid dd { text-shadow: none; }
+.wanted-card {
+  border-radius: var(--r-l);
+  background: rgba(11, 10, 11, .72);
+  border: var(--border);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  transition: none;
+}
+.wanted-card:hover { transform: none; border-color: var(--c-line); }
+.wanted-card p.wanted-card__when { color: var(--c-text-2); }
+.sponsor-arg { border-radius: var(--r-l); background: rgba(11, 10, 11, .72); border: var(--border); }
+.sponsor-arg h3 { color: var(--c-white); }
+.platz-finden { border-radius: var(--r-l); border: var(--border); box-shadow: none; }
+.next-match { border-radius: 0; }
+
+/* Sponsoren / Bande */
+.sponsors__slot { border-radius: var(--r-s); border: var(--border); }
+.sponsors__slot--empty { border-style: solid; border-color: var(--c-line); }
+.carousel__arrow { border-radius: var(--r-s); border: var(--border); background: transparent; }
+.carousel__slot { border-radius: var(--r-l); }
+.carousel__slot--empty { background: var(--c-ink-2); border: var(--border); }
+.band-nav__arrow,
+.band-nav__arrow:hover,
+.band-nav__arrow:active {
+  transform: none;
+  background: transparent;
+  border: 1px solid var(--c-line-strong);
+  color: var(--c-white);
+  box-shadow: none;
+}
+.band-nav__arrow:hover { border-color: var(--c-white); }
+.band-try__input { border-radius: var(--r-s); }
+
+/* Musik */
+.music-section__list { border-radius: var(--r-l); border: var(--border); }
+.music-track { border-radius: var(--r-s); }
+.music-track:hover { transform: none; }
+.music-track.is-active { background: rgba(244, 242, 239, .06); }
+.music-section__cover img { border-radius: var(--r-s); box-shadow: none; }
+.music-section__coverGlow { display: none; }
+.music-section__soon { border-radius: var(--r-s); }
+
+/* Fangesang-Schalter */
+.fanchant__btn {
+  border-radius: var(--r-s);
+  background: transparent;
+  border-color: var(--c-line-strong);
+  font: 700 var(--t-label)/1 var(--f-body);
+  letter-spacing: var(--ls-label);
+  min-height: 44px;
+}
+.fanchant__btn:hover { transform: none; border-color: var(--c-white); }
+.fanchant__btn.is-on .fanchant__dot { animation: none; box-shadow: none; }
+.fanchant__hint { color: var(--c-text-3); }
+
+/* Pills im Rundgang → ruhige Schilder */
+.training-pill,
+.next-pill { border-radius: var(--r-s); }
+.next-pill:hover,
+.training-pill:hover { transform: none; }
+.next-pill__dot { animation: none; box-shadow: none; }
+.mobile-dock { border-radius: var(--r-s); background: rgba(11, 10, 11, .94); -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; }
+.mobile-dock__cta { border-radius: var(--r-s); box-shadow: none; }
+
+/* ── Rundgang-Typografie (index.css) ────────────────────────── */
+.section__kicker { font-size: var(--t-label); letter-spacing: var(--ls-label); gap: var(--s-3); }
+.section__kicker::before { width: 24px; height: 1px; }
+.section__title {
+  font-size: var(--t-d1);
+  line-height: .92;
+  letter-spacing: var(--ls-display);
+  /* Lesbarkeit über der 3D-Bühne — weich, kein Leuchten */
+  text-shadow: 0 2px 24px rgba(0, 0, 0, .45);
+}
+.section__body {
+  max-width: 44ch;
+  font-size: var(--t-lead);
+  line-height: var(--lh-body);
+  color: var(--c-text-2);
+  text-shadow: 0 1px 12px rgba(0, 0, 0, .7);
+}
+.scrollhint { font-size: var(--t-micro); letter-spacing: .2em; color: var(--c-text-2); }
+.scrollhint__mouse { width: 1px; height: 32px; border: 0; border-radius: 0; background: rgba(244, 242, 239, .25); overflow: hidden; }
+.scrollhint__mouse::after { left: 0; top: -10px; width: 1px; height: 10px; border-radius: 0; animation: kmapHint 2.2s var(--ease) infinite; }
+@keyframes kmapHint { to { transform: translateY(42px); } }
