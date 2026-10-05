@@ -9,6 +9,7 @@ import { FussballWidget } from './FussballWidget'
 import { PlatzFinden } from './PlatzFinden'
 import { SponsorPitch } from './SponsorsStrip'
 import { FanGallery } from './FanGallery'
+import { AlbumTeaser } from './AlbumTeaser'
 import { WaIcon, IgIcon, MailIcon } from './Icons'
 
 // v13-F3: Reveals leichter — weniger Hub, kürzer. 40px/0.7s fühlte sich
@@ -119,6 +120,8 @@ export function Sections() {
         {/* v11-E7: Meisterfeier-Kacheln + Lightbox — dieselbe Lightbox öffnen
             die 3D-Schilder (v-website-polish). Nur echte Fotos. */}
         <FanGallery />
+        {/* v18-P: die Kurve → Sammelalbum (Check-in bei jedem Heimspiel) */}
+        <AlbumTeaser variante="rundgang" />
       </section>
 
       {/* Trenn-Polster (v8): klare „reiner Platz"-Beat zwischen Fanblock und
@@ -264,6 +267,8 @@ export function Sections() {
             auch wenn WebGL fehlt oder das 3D-Bundle nicht lädt. Sie stehen im
             prerenderten .scroll-root, also auch ohne JS im Quelltext. */}
         <p style={{ marginTop: '3rem', fontSize: '0.72rem', letterSpacing: '0.1em' }}>
+          <a href="/album" style={{ color: 'rgba(255,255,255,0.75)' }}>Sammelalbum</a>
+          <span style={{ color: 'rgba(255,255,255,0.35)', margin: '0 0.6rem' }}>·</span>
           <a href="/impressum.html" style={{ color: 'rgba(255,255,255,0.75)' }}>Impressum</a>
           <span style={{ color: 'rgba(255,255,255,0.35)', margin: '0 0.6rem' }}>·</span>
           <a href="/datenschutz.html" style={{ color: 'rgba(255,255,255,0.75)' }}>Datenschutz</a>

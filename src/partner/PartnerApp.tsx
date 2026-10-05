@@ -95,6 +95,7 @@ export function PartnerApp() {
       <footer className="pt-foot">
         <a href="/">Zur Vereinsseite</a>
         <a href="/live">Live-Ticker</a>
+        <a href="/album">Sammelalbum</a>
         <a href="/impressum">Impressum</a>
         <a href="/datenschutz">Datenschutz</a>
         <span>SV Agathenburg-Dollern · {CONTACT.email}</span>

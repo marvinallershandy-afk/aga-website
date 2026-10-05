@@ -17,6 +17,7 @@ import { PlayerGallery } from '../ui/PlayerGallery'
 import { FanGallery } from '../ui/FanGallery'
 import { FanChantToggle } from '../ui/FanChantToggle'
 import { MusicSectionPlayer } from '../ui/MusicSection'
+import { AlbumTeaser } from '../ui/AlbumTeaser'
 import { SponsorPitch } from '../ui/SponsorsStrip'
 import { PlatzFinden } from '../ui/PlatzFinden'
 import { WaIcon, IgIcon, MailIcon } from '../ui/Icons'
@@ -143,6 +144,8 @@ function FansBody() {
       )}
       <FanGallery />
       <FanChantToggle />
+      {/* v18-P: Zugang zum Sammelalbum (QR-Check-in bei Heimspielen) */}
+      <AlbumTeaser />
       <div className="kp-actions">
         <button className="btn btn--primary" onClick={() => openPlace('spieltag')}>
           Nächstes Spiel ansehen
@@ -219,7 +222,13 @@ function Body({ id }: { id: PlaceId }) {
     case 'fans':
       return <FansBody />
     case 'musik':
-      return <MusicSectionPlayer />
+      // v18-P: am Vereinsheim gibt's das Freibier — Album-Zugang dazu
+      return (
+        <>
+          <MusicSectionPlayer />
+          <AlbumTeaser />
+        </>
+      )
     case 'partner':
       return <PartnerBody />
     case 'anfahrt':

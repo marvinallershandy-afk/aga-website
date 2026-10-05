@@ -10,6 +10,7 @@ import { useMatchStatus } from './matchStatus'
 import { PLACE_SEO } from './panelText'
 import { ArrowRight, Map as MapIcon } from 'lucide-react'
 import { useMapScrollToTour } from './intro'
+import { AlbumTeaser } from '../ui/AlbumTeaser'
 // map.css kommt direkt aus index.html (vor dem JS verfügbar, s. dort)
 
 // ─────────────────────────────────────────────────────────────
@@ -33,7 +34,8 @@ function subline(id: PlaceId, matchLine: string): string {
     case 'fans':
       return 'Meister 2026'
     case 'musik':
-      return 'Partyraum · Album'
+      // v18-P: „Album" hieß hier die Musik — nicht mit dem Sammelalbum verwechseln
+      return 'Partyraum · Musik'
     case 'partner':
       return 'Bande sichern'
     case 'anfahrt':
@@ -257,7 +259,11 @@ export function MapView() {
       </p>
       <MapLoader />
       <MapDock />
+      {/* v18-P: ruhiger Einstieg ins Sammelalbum (nach dem Intro sichtbar) */}
+      <AlbumTeaser variante="karte" />
       <footer className="kmap__foot">
+        <a href="/album">Sammelalbum</a>
+        <span aria-hidden="true">·</span>
         <a href="/impressum.html">Impressum</a>
         <span aria-hidden="true">·</span>
         <a href="/datenschutz.html">Datenschutz</a>
