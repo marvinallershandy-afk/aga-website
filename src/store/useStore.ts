@@ -18,7 +18,10 @@ interface AppState {
 
   /** Für Karten-Detail-Modal. */
   selectedPlayer: Player | null
-  setSelectedPlayer: (p: Player | null) => void
+  /** v14-M: optionale Blätter-Liste fürs Modal (Vor/Zurück, Wischen) —
+   *  z. B. Startelf + Bank aus dem Taktik-Board. null = Einzelkarte. */
+  playerList: Player[] | null
+  setSelectedPlayer: (p: Player | null, list?: Player[] | null) => void
 
   /** Fanblock-Foto-Lightbox (v-website-polish): Index in FAN_PHOTOS des
    *  aktuell groß gezeigten Fotos, oder null. Wird von den 3D-Schildern im
@@ -120,7 +123,14 @@ export const useStore = create<AppState>((set) => ({
   setActiveSection: (i) => set((s) => (s.activeSection === i ? s : { activeSection: i })),
 
   selectedPlayer: null,
-  setSelectedPlayer: (p) => set({ selectedPlayer: p }),
+  playerList: null,
+  // Ohne list bleibt eine laufende Blätter-Liste nur erhalten, wenn der
+  // Spieler darin vorkommt (Vor/Zurück im Modal ruft ohne list).
+  setSelectedPlayer: (p, list) =>
+    set((s) => ({
+      selectedPlayer: p,
+      playerList: !p ? null : list !== undefined ? list : s.playerList?.some((x) => x.id === p.id) ? s.playerList : null,
+    })),
 
   fanPhoto: null,
   setFanPhoto: (i) => set({ fanPhoto: i }),

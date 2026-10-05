@@ -168,10 +168,11 @@ body {
   .team-sticky > div > .section__kicker { margin-bottom: 0.5rem; }
   .team-sticky .section__title { font-size: 2.15rem; white-space: normal; padding: 0 1.25rem; }
   .team-sticky .section__kicker { padding: 0 1.25rem; }
-  /* Fließtext weicht dem Deck — die Karten SIND hier der Inhalt */
+  /* Fließtext weicht dem Taktik-Board — die Aufstellung IST hier der Inhalt */
   .team-sticky .section__body { display: none; }
+  /* v14-M: ruhige, abgedunkelte Draufsicht hinter dem Board */
   .team-sticky > .section__scrim {
-    background: linear-gradient(180deg, rgba(8,7,10,0.78) 0%, rgba(8,7,10,0.35) 26%, rgba(8,7,10,0) 48%, rgba(8,7,10,0.2) 100%);
+    background: linear-gradient(180deg, rgba(8,7,10,0.86) 0%, rgba(8,7,10,0.62) 30%, rgba(8,7,10,0.58) 70%, rgba(8,7,10,0.8) 100%);
   }
 }
 

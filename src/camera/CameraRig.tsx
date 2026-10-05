@@ -42,7 +42,12 @@ function teamPresence(g: number): number {
 // Kamera quer zu versetzen, verschiebt eine View-Offset-Projektion das Bild
 // nach rechts — die Komposition der Keyframes bleibt erhalten, der Fokus-
 // punkt rückt nur aus der Bildmitte in die rechte Bühnenhälfte.
-const TEAM_VIEW_SHIFT = 0.15 // Anteil der Bildbreite
+const TEAM_VIEW_SHIFT = 0.17 // Anteil der Bildbreite
+// v14-M: Telefon hochkant — dort trägt das DOM-Taktik-Board die Aufstellung.
+// Dahinter steht die Kamera RUHIG in einer hohen Draufsicht auf den Platz
+// (keine Fahrt unter dem Board), weich ein-/ausgeblendet mit der Präsenz.
+const PHONE_TEAM_POS = new THREE.Vector3(-0.3, 12.5, 1.9)
+const PHONE_TEAM_LOOK = new THREE.Vector3(-0.3, 0, 0.1)
 function sponsorBoardX(focus: number): number {
   const panelW = SP_BOARD_W / SP_PANELS
   const boardIndex = 1 + THREE.MathUtils.clamp(focus, 0, 3) // Slot-Tafeln = Board 1..4
@@ -151,7 +156,9 @@ export function CameraRig() {
       // Der Blick ruht nacheinander auf jeder Fokus-Karte (Plateaus) und
       // gleitet dann weiter — die Keyframe-Blickkurve liefert die grobe
       // Richtung, die Fokus-Karte zieht den Blick zu sich.
-      const wf = focusLookAt(teamState.s, focusPt.current) * 0.5 * wMann
+      // v14-M: dezent — der Blick zieht nur noch leicht zur Fokus-Karte,
+      // die ruhige Bogenfahrt bleibt führend.
+      const wf = focusLookAt(teamState.s, focusPt.current) * 0.16 * wMann
       if (wf > 0.001) {
         look.current.x += (focusPt.current.x - look.current.x) * wf
         look.current.y += (focusPt.current.y - look.current.y) * wf
@@ -171,11 +178,19 @@ export function CameraRig() {
       pos.current.y += (1 - aspect) * 0.5 * (1 - wMann * 0.6) // leicht höher für mehr Kontext
     }
 
+    // v14-M: Telefon hochkant → ruhige Draufsicht hinter dem Taktik-Board.
+    const phone = aspect < 0.8 && state.size.width <= 640
+    if (phone && wMann > 0.001) {
+      const e = wMann * wMann * (3 - 2 * wMann)
+      pos.current.lerp(PHONE_TEAM_POS, e)
+      look.current.lerp(PHONE_TEAM_LOOK, e)
+    }
+
     // v14-D: Bildverschiebung für die Textspalte (nur Landscape, weich ein/aus)
     const persp2 = camera as THREE.PerspectiveCamera
     // Hochformat (Tablet): Text steht oben → Bild nach unten verschieben.
     const wantShift = aspect >= 1 ? TEAM_VIEW_SHIFT * wMann : 0
-    const wantShiftY = aspect < 1 ? 0.13 * wMann : 0
+    const wantShiftY = aspect < 1 && !phone ? 0.13 * wMann : 0
     viewShift.current = wantShift + wantShiftY
     if (viewShift.current > 0.0005) {
       const w = state.size.width
@@ -188,7 +203,8 @@ export function CameraRig() {
     // dezenter Idle-Sway für Lebendigkeit
     const t = state.clock.elapsedTime
     // v14-D: im Flyover ruhiger (die Fahrt selbst ist die Bewegung)
-    const sway = (1 - uNow * 0.6) * (1 - 0.65 * wMann) // oben mehr, unten ruhiger
+    // v14-M: in der Mannschaft praktisch still (ruhig, klar)
+    const sway = (1 - uNow * 0.6) * (1 - 0.85 * wMann) // oben mehr, unten ruhiger
     pos.current.x += Math.sin(t * 0.18) * 0.14 * sway
     pos.current.y += Math.sin(t * 0.23 + 1.3) * 0.08 * sway
 

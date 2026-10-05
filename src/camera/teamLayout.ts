@@ -7,20 +7,24 @@
 // dieselben Zahlen. Der DOM-Pfad bleibt damit three-frei.
 //
 // Weltkoordinaten (Kompass wie Scene.tsx): +x Ost, +z Süd. Das eigene
-// Tor liegt im Westen (x = −5.25), gespielt wird nach Osten. Die Elf
-// steht wie beim Anstoß in der eigenen Hälfte (x ∈ [−5.25, 0]).
+// Tor liegt im Westen (x = −5.25), gespielt wird nach Osten.
+// v14-M „Ganzer Platz": Die Elf steht über die VOLLE Feldlänge in ihrer
+// Formation (Sturm in der gegnerischen Hälfte, s. slotDepth), die Bank
+// sitzt AUSSERHALB der Südseitenlinie auf Höhe der Mittellinie (Unterstand),
+// der Trainerstab steht daneben in der Coaching-Zone. Aus Sicht der Totale
+// hinter dem eigenen Tor (Blick nach Osten) ist Süden = rechts.
 // ─────────────────────────────────────────────────────────────
 
-import { LINEUP, FORMATION_SLOTS, PLAYERS, STAFF, type Player, type Staff, type Slot } from '../data/content'
+import { LINEUP, FORMATION_SLOTS, PLAYERS, STAFF, slotDepth, type Player, type Staff, type Slot } from '../data/content'
 
 const HALF_LEN = 5.25 // halbe Platzlänge (PITCH.width / 2)
+const FULL_LEN = HALF_LEN * 2
+const LANE_Z = 2.75 // Slot-x ±1 → knapp innerhalb der Seitenlinien (±3.4)
 
-/** Slot (x −1…1 aus Sicht des eigenen Tores, y 0 Torlinie … 1 Mittellinie)
- *  → Weltposition. Aus Sicht des eigenen Tores (Blick nach Osten) liegt
- *  „links" im Norden (−z). Der Torwart steht 0.6 vor der Torlinie, die
- *  Spitzen knapp einen Meter vor der Mittellinie. */
+/** Slot → Weltposition über den ganzen Platz. Aus Sicht des eigenen Tores
+ *  (Blick nach Osten) liegt „links" im Norden (−z). */
 export function slotToWorld(slot: Slot): { x: number; z: number } {
-  return { x: -HALF_LEN + 0.32 + slot.y * 4.75, z: slot.x * 2.7 }
+  return { x: -HALF_LEN + slotDepth(slot) * FULL_LEN, z: slot.x * LANE_Z }
 }
 
 export interface TeamCard {
@@ -51,38 +55,55 @@ export const STARTELF: { player: Player; slot: Slot }[] = (() => {
 })()
 
 export const BANK: Player[] = LINEUP.bank.map((id) => byId.get(id)).filter((p): p is Player => !!p)
+/** Blätter-Liste fürs Karten-Modal: Startelf (TW → Sturm), dann Bank. */
+export const TEAM_PLAYERS: Player[] = [...STARTELF.map((e) => e.player), ...BANK]
 /** Trainerstab an der Seitenlinie: nur echte Namen (Platzhalter bleiben im DOM). */
 export const STAB: Staff[] = STAFF.filter((m) => !m.isPlaceholder)
 
 export const FORMATION_LABEL = LINEUP.formation
 export const MATCH_LABEL = LINEUP.matchLabel ?? null
 
-// Kartenmaße (Breite in Welt-Einheiten). Startelf groß, Bank/Stab kleiner.
-export const START_W = 0.9
-export const BANK_W = 0.5
-export const STAB_W = 0.56
+// Kartenmaße (Breite in Welt-Einheiten). Startelf so groß, dass zwischen
+// Nachbarn Luft bleibt (4er-Kette: ~0.5 Abstand), Bank/Stab deutlich kleiner.
+export const START_W = 0.8
+export const BANK_W = 0.34
+export const STAB_W = 0.38
 
-// Coaching-Zone: Südseitenlinie (z = +3.4) bis zur Reling (z ≈ 3.95).
-// Die Bank steht zwischen Linie und Reling, der Stab daneben Richtung
-// Mittellinie — so wie an einem echten Spieltag.
-const BENCH_Z = 3.7
-const BENCH_X0 = -3.1
-const BENCH_STEP = 0.54
-const STAB_STEP = 0.64
+// Unterstand an der Südseitenlinie (z = +3.4) vor der Reling (z ≈ 3.95),
+// mittig um die Mittellinie. Die Bank-Karten stehen VOR dem Unterstand
+// (zwischen Linie und Dach), der Trainerstab daneben Richtung Osten.
+const BENCH_STEP = 0.4
+const STAB_STEP = 0.44
+export const BENCH_Z = 3.6
+export const DUGOUT = (() => {
+  const n = Math.max(1, LINEUP.bank.length)
+  const len = (n - 1) * BENCH_STEP + 0.6
+  const x0 = -0.7 - len / 2 // Bank+Stab zusammen mittig um die Mittellinie
+  return { x0, x1: x0 + len, z: 3.78, depth: 0.26, height: 0.34 }
+})()
 
 const ROW_LINE: Record<Slot['role'], number> = { ANG: 0, MIT: 1, ABW: 2, TW: 3 }
 
 export const TEAM_CARDS: TeamCard[] = (() => {
-  const cards: TeamCard[] = STARTELF.map(({ player, slot }) => {
-    const w = slotToWorld(slot)
-    return { kind: 'start' as const, player, role: slot.role, x: w.x, z: w.z, w: START_W, line: ROW_LINE[slot.role] }
+  const pos = STARTELF.map(({ slot }) => slotToWorld(slot))
+  const cards: TeamCard[] = STARTELF.map(({ player, slot }, i) => {
+    const w = pos[i]
+    // Hintere Reihen minimal größer → in der Totale bleiben auch die Namen
+    // der Spitzen lesbar, die Perspektive (Torwart vorn groß) bleibt.
+    let cw = START_W * (0.95 + 0.25 * slotDepth(slot))
+    // Luft zum Nachbarn in derselben Reihe (z. B. Fünfer-Mittelfeld 3-5-2)
+    pos.forEach((o, j) => {
+      if (j !== i && Math.abs(o.x - w.x) < 0.7) cw = Math.min(cw, 0.74 * Math.abs(o.z - w.z))
+    })
+    return { kind: 'start' as const, player, role: slot.role, x: w.x, z: w.z, w: cw, line: ROW_LINE[slot.role] }
   })
+  const bx0 = DUGOUT.x0 + 0.3
   BANK.forEach((p, i) => {
-    cards.push({ kind: 'bank', player: p, role: p.position, x: BENCH_X0 + i * BENCH_STEP, z: BENCH_Z, w: BANK_W, line: 4 })
+    cards.push({ kind: 'bank', player: p, role: p.position, x: bx0 + i * BENCH_STEP, z: BENCH_Z, w: BANK_W, line: 4 })
   })
-  const stabX0 = BENCH_X0 + BANK.length * BENCH_STEP + 0.3
+  const stabX0 = DUGOUT.x1 + 0.35
   STAB.forEach((m, i) => {
-    cards.push({ kind: 'staff', staff: m, role: 'STAB', x: stabX0 + i * STAB_STEP, z: BENCH_Z, w: STAB_W, line: 4 })
+    cards.push({ kind: 'staff', staff: m, role: 'STAB', x: stabX0 + i * STAB_STEP, z: BENCH_Z - 0.05, w: STAB_W, line: 4 })
   })
   return cards
 })()

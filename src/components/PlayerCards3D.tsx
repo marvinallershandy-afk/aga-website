@@ -4,7 +4,7 @@ import * as THREE from 'three'
 import { whatsappUrl, whatsappReady } from '../data/content'
 import { useStore } from '../store/useStore'
 import { cameraState } from '../camera/CameraPath'
-import { TEAM_CARDS, TEAM_CENTER, teamState, focusCardAt, type TeamCard } from '../camera/teamLayout'
+import { TEAM_CARDS, TEAM_CENTER, TEAM_PLAYERS, DUGOUT, teamState, focusCardAt, type TeamCard } from '../camera/teamLayout'
 import { makePlayerCardTexture, makeStaffCardTexture, CARD_TEX_ASPECT } from '../three/playerCardTexture'
 
 // ─────────────────────────────────────────────────────────────
@@ -19,7 +19,11 @@ import { makePlayerCardTexture, makeStaffCardTexture, CARD_TEX_ASPECT } from '..
 //    etwas größer und bekommt Glanz; ein Licht-Teller am Boden folgt
 //  · Kontaktschatten (instanziert) erden jede Karte
 // Klick → Tap-Launch (Karte fliegt zur Kamera) → Flip-Detail-Modal.
-// Mobil (≤640px) gibt es KEIN 3D-Kartenfeld — dort trägt das DOM-Deck.
+// Mobil (≤640px) gibt es KEIN 3D-Kartenfeld — dort trägt das DOM-
+// Taktik-Board (v14-M).
+// v14-M „Ganzer Platz": Elf über die volle Feldlänge, Bank in einem
+// schlichten Unterstand AUSSERHALB der Südlinie auf Höhe der Mittellinie
+// (wächst mit der Bank-Reihe aus dem Rasen), Fokus nur noch dezent.
 // ─────────────────────────────────────────────────────────────
 
 const MANN_U = 2 / 7
@@ -60,6 +64,50 @@ function makeBlobTexture(inner: string, outer: string): THREE.CanvasTexture {
   return new THREE.CanvasTexture(cv)
 }
 
+// ─── Unterstand (Ersatzbank) ─────────────────────────────────
+// Schlicht: Rückwand, zwei Seitenscheiben, Dach mit roter Kante, rote
+// Sitzschale. Ursprung am Boden → scale.y lässt ihn aus dem Rasen wachsen.
+function Dugout({ groupRef }: { groupRef: React.RefObject<THREE.Group | null> }) {
+  const len = DUGOUT.x1 - DUGOUT.x0
+  const cx = (DUGOUT.x0 + DUGOUT.x1) / 2
+  const d = DUGOUT.depth
+  const h = DUGOUT.height
+  return (
+    <group ref={groupRef} position={[cx, 0, DUGOUT.z]} scale={[1, 0.001, 1]} visible={false}>
+      {/* Rückwand */}
+      <mesh position={[0, h / 2, d / 2 - 0.01]}>
+        <boxGeometry args={[len, h, 0.02]} />
+        <meshStandardMaterial color="#1b1c22" roughness={0.8} />
+      </mesh>
+      {/* Seitenscheiben */}
+      {[-1, 1].map((sx) => (
+        <mesh key={sx} position={[(sx * len) / 2, h / 2, 0]}>
+          <boxGeometry args={[0.02, h, d]} />
+          <meshStandardMaterial color="#3a4250" roughness={0.3} metalness={0.2} />
+        </mesh>
+      ))}
+      {/* Dach, leicht zur Spielfeldseite geneigt */}
+      <mesh position={[0, h + 0.008, -0.01]} rotation-x={0.08}>
+        <boxGeometry args={[len + 0.06, 0.016, d + 0.08]} />
+        <meshStandardMaterial color="#2a2d35" roughness={0.6} />
+      </mesh>
+      <mesh position={[0, h - 0.004, -d / 2 - 0.045]}>
+        <boxGeometry args={[len + 0.06, 0.03, 0.012]} />
+        <meshStandardMaterial color="#c8102e" roughness={0.5} emissive="#5a0612" emissiveIntensity={0.6} />
+      </mesh>
+      {/* Sitzschale */}
+      <mesh position={[0, 0.1, d / 2 - 0.07]}>
+        <boxGeometry args={[len - 0.08, 0.035, 0.09]} />
+        <meshStandardMaterial color="#b3122a" roughness={0.55} />
+      </mesh>
+      <mesh position={[0, 0.17, d / 2 - 0.025]}>
+        <boxGeometry args={[len - 0.08, 0.12, 0.02]} />
+        <meshStandardMaterial color="#b3122a" roughness={0.55} />
+      </mesh>
+    </group>
+  )
+}
+
 interface Placed extends TeamCard {
   tex: THREE.CanvasTexture
   phase: number
@@ -98,6 +146,7 @@ function CardField() {
     return g
   }, [])
   const groupRef = useRef<THREE.Group>(null)
+  const dugoutRef = useRef<THREE.Group>(null)
   const meshes = useRef<(THREE.Mesh | null)[]>([])
   const shadowRef = useRef<THREE.InstancedMesh>(null)
   const ringRef = useRef<THREE.Mesh>(null)
@@ -152,6 +201,17 @@ function CardField() {
       return
     }
     g.visible = true
+    // v14-M: Bank + Stab (line 4) kommen erst dazu, wenn die Kamera über
+    // die Nordseite schwenkt und die Südlinie quer im Bild hat — im
+    // Establishing-Shot stünden sie sonst unter der Textspalte. Der
+    // Unterstand wächst mit ihnen aus dem Rasen.
+    const benchR = smoothstep(0.2, 0.42, teamState.s)
+    const dg = dugoutRef.current
+    if (dg) {
+      const de = benchR * fo
+      dg.scale.y = Math.max(0.001, de)
+      dg.visible = de > 0.01
+    }
     const t = state.clock.elapsedTime
     glintT.current.value = t
     const camX = camera.position.x
@@ -166,7 +226,7 @@ function CardField() {
       const m = meshes.current[i]
       if (!m) continue
       const item = layout[i]
-      const lineReveal = THREE.MathUtils.clamp((rp - item.line * 0.12) / 0.4, 0, 1)
+      const lineReveal = item.line >= 4 ? benchR : THREE.MathUtils.clamp((rp - item.line * 0.12) / 0.4, 0, 1)
       const ease = lineReveal * lineReveal * (3 - 2 * lineReveal)
       const alpha = ease * fo
       const mat = m.material as THREE.MeshBasicMaterial
@@ -191,9 +251,9 @@ function CardField() {
       const fw = focusW.current[i]
       uniforms.current[i].uFocus.value = fw
 
-      const sc = item.w * (0.7 + 0.3 * ease) * (1 + 0.07 * fw)
-      const bob = Math.sin(t * 0.7 + item.phase) * 0.012
-      m.position.set(item.x, -(1 - ease) * 0.25 + 0.16 * fw + bob * fw, item.z)
+      const sc = item.w * (0.7 + 0.3 * ease) * (1 + 0.04 * fw)
+      const bob = Math.sin(t * 0.7 + item.phase) * 0.008
+      m.position.set(item.x, -(1 - ease) * 0.25 + 0.08 * fw + bob * fw, item.z)
       m.scale.set(sc, sc, sc)
       _euler.set(LEAN, yaw.current[i], 0)
       m.quaternion.setFromEuler(_euler)
@@ -236,7 +296,7 @@ function CardField() {
       }
       R.a += ((fi >= 0 ? 1 : 0) * fo - R.a) * kf
       r.position.set(R.x, 0.016, R.z)
-      ;(r.material as THREE.MeshBasicMaterial).opacity = R.a * 0.9
+      ;(r.material as THREE.MeshBasicMaterial).opacity = R.a * 0.6
       r.visible = R.a > 0.01
     }
   })
@@ -255,7 +315,7 @@ function CardField() {
             if (item.player) {
               launch.current = { i, t0: performance.now() }
               const p = item.player
-              setTimeout(() => setSelected(p), 230)
+              setTimeout(() => setSelected(p, TEAM_PLAYERS), 230)
             } else if (item.staff?.contactMessage) {
               // v13-E4: mailto-Fallback darf nicht in einen Blank-Tab
               const url = whatsappUrl(item.staff.contactMessage)
@@ -281,6 +341,7 @@ function CardField() {
           />
         </mesh>
       ))}
+      <Dugout groupRef={dugoutRef} />
       <instancedMesh ref={shadowRef} args={[undefined, undefined, layout.length]} frustumCulled={false} renderOrder={0}>
         <planeGeometry args={[1, 1]} />
         <meshBasicMaterial map={shadowTex} transparent depthWrite={false} toneMapped={false} />

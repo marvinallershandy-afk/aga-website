@@ -29,7 +29,9 @@ const STATIONS: Station[] = [
   //     eine eigene Unterkurve (TEAM_KEYS unten). Hier steht nur ihr erster
   //     Keyframe, damit STATIONS weiter 8 Einträge hat (u-Raster 1/7 bleibt
   //     für Anstoß, Fanblock, Partyraum, Sponsoren, Finale unverändert).
-  { pos: new THREE.Vector3(2.35, 4.45, -0.7), look: new THREE.Vector3(-2.6, 0.4, 0.0) },
+  //     v14-M: Start HOCH über dem gegnerischen Strafraum, Blick zurück über
+  //     die ganze Elf (Sturm vorn, Torwart hinten).
+  { pos: new THREE.Vector3(4.8, 6.2, -3.3), look: new THREE.Vector3(-0.6, 0.2, 0.6) },
   // 3 · FANBLOCK (v9-E2, zurückgeholt) — Schwenk in die Süd-/SO-Kurve:
   //     Blick von der Platzmitte auf die Fans + wehendes AGA-URKNALL-
   //     Banner (FanBlock.tsx, CX=3.6 / z≈+3.95). Emotionaler Beat. y knapp
@@ -102,23 +104,25 @@ export function floodSurgeAt(u: number, i: number): number {
 }
 
 
-// ─── v14-D: Startelf-Flyover (Unterkurve der Mannschafts-Station) ──────
-// Die Sektion hält den Bildschirm (Sticky-Text), während die Kamera tief
-// über die Elf gleitet: Start hoch hinter den Spitzen mit Blick aufs eigene
-// Tor, über Mittelfeld und Abwehr (Nordseite, damit die kameranahen Karten
-// rechts neben der Textspalte stehen), ein Bogen um den
-// Torwart herum, Ende in der Totale hinter dem eigenen Tor (Torwart groß
-// vorn, Bank und Trainerstab an der Südseitenlinie im Bild).
+// ─── v14-D/M: Startelf-Flyover (Unterkurve der Mannschafts-Station) ────
+// v14-M „Ganzer Platz, ruhig": Die Elf steht über die volle Feldlänge, die
+// Kamera bleibt HOCH und weit weg (y ≈ 6.2–7.3, Abstand zur Elf 8–12) und
+// beschreibt EINEN weiten, ruhigen Bogen über die (offene) Nordseite: Start über dem
+// gegnerischen Strafraum (Blick zurück über den Sturm), Zurückgleiten über
+// die Mittellinie, Ende in der erhöhten Totale hinter dem eigenen Tor —
+// der ganze Platz inkl. Unterstand an der Südlinie (= rechts) im Bild, wie
+// im abgenommenen Konzept. Wenige Keyframes, ein Drehsinn → kein Hin und Her.
 // Die Keyframes liegen IN der Hauptkurve (zwischen Anstoß und Fanblock):
 // eine einzige Catmull-Rom → die Tangenten an den Übergängen sind stetig,
-// Ein- und Ausflug laufen ohne Knick. Alle Höhen ≥ FIELD_FLOOR (1.45).
+// Ein- und Ausflug laufen ohne Knick. Alle Höhen ≥ FIELD_FLOOR (1.45),
+// ≤ MAX_FLIGHT_Y (7.6).
 const TEAM_KEYS: Station[] = [
   STATIONS[2],
-  { pos: new THREE.Vector3(0.25, 4.05, -2.3), look: new THREE.Vector3(-2.9, 0.4, -0.1) },
-  { pos: new THREE.Vector3(-1.55, 4.2, -3.0), look: new THREE.Vector3(-3.7, 0.4, -0.1) },
-  { pos: new THREE.Vector3(-3.45, 4.0, -3.25), look: new THREE.Vector3(-4.6, 0.45, 0.1) },
-  { pos: new THREE.Vector3(-5.95, 3.75, -2.6), look: new THREE.Vector3(-3.6, 0.5, 0.2) },
-  { pos: new THREE.Vector3(-8.3, 3.7, 0.85), look: new THREE.Vector3(-2.2, 0.35, 0.6) },
+  { pos: new THREE.Vector3(-2.2, 7.3, -8.8), look: new THREE.Vector3(-0.8, 0.0, 1.0) },
+  // Innen am NW-Flutlichtmast (−6.95 | −5.1, Kopf y 5.2) vorbei — der Mast
+  // bleibt links hinter der Kamera statt als schwarzer Block ins Bild zu ragen.
+  { pos: new THREE.Vector3(-7.0, 6.9, -2.4), look: new THREE.Vector3(0.0, -0.2, 1.0) },
+  { pos: new THREE.Vector3(-10.4, 6.2, 0.5), look: new THREE.Vector3(0.4, -0.5, 1.1) },
 ]
 const TEAM_SEGS = TEAM_KEYS.length - 1
 
