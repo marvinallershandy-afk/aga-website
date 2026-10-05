@@ -15,7 +15,31 @@ interface AuthState {
   loading: boolean
   signInWithMagicLink: (email: string) => Promise<{ error: string | null }>
   signInWithPassword: (email: string, password: string) => Promise<{ error: string | null }>
+  /** v15-P: Passwort für den eingeloggten Nutzer festlegen/ändern. nonce nur,
+   *  wenn Supabase „Secure password change" verlangt (Code per E-Mail). */
+  updatePassword: (password: string, nonce?: string) => Promise<{ error: string | null; needsCode?: boolean }>
+  /** v15-P: Bestätigungscode für die Passwort-Änderung anfordern. */
+  requestPasswordCode: () => Promise<{ error: string | null }>
   signOut: () => Promise<void>
+}
+
+// v15-P: Supabase-Fehlertexte (englisch) → verständliches Deutsch.
+// eslint-disable-next-line react-refresh/only-export-components
+export function authFehler(msg: string | null | undefined, code?: string): string | null {
+  if (!msg && !code) return null
+  const m = (msg ?? '').toLowerCase()
+  if (code === 'invalid_credentials' || m.includes('invalid login credentials'))
+    return 'E-Mail oder Passwort stimmt nicht. Noch kein Passwort? Einmal per Magic-Link anmelden und unter „Konto" festlegen.'
+  if (code === 'email_not_confirmed' || m.includes('email not confirmed')) return 'Die E-Mail-Adresse ist noch nicht bestätigt.'
+  if (code === 'same_password' || m.includes('should be different')) return 'Das ist schon dein aktuelles Passwort — bitte ein neues wählen.'
+  if (code === 'weak_password' || m.includes('password should')) return 'Das Passwort ist zu schwach. Bitte länger oder mit Zahlen/Sonderzeichen.'
+  if (code === 'reauthentication_needed' || m.includes('reauthentication')) return 'Zur Sicherheit bitte den Bestätigungscode aus der E-Mail eingeben.'
+  if (code === 'reauthentication_not_valid' || m.includes('nonce')) return 'Der Bestätigungscode passt nicht oder ist abgelaufen.'
+  if (code === 'over_email_send_rate_limit' || code === 'over_request_rate_limit' || m.includes('rate limit'))
+    return 'Zu viele Versuche — bitte kurz warten und es dann erneut probieren.'
+  if (m.includes('signups not allowed') || code === 'otp_disabled') return 'Diese Adresse ist nicht freigeschaltet.'
+  if (m.includes('failed to fetch') || m.includes('network')) return 'Keine Verbindung — bitte Internet prüfen.'
+  return msg ?? 'Unbekannter Fehler.'
 }
 
 const AuthContext = createContext<AuthState | undefined>(undefined)
@@ -48,30 +72,50 @@ export function devPreviewRolle(): Rolle | null {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [rolle, setRolle] = useState<Rolle | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [initialLoading, setInitialLoading] = useState(true)
+  // v15-P: Für welchen User wurde die Rolle zuletzt geprüft? Solange die
+  // Prüfung für den aktuellen User läuft, gilt „lädt" — sonst blitzte nach
+  // dem Passwort-Login kurz „Kein Zugang" auf.
+  const [checkedFor, setCheckedFor] = useState<string | null>(null)
 
   useEffect(() => {
     let active = true
+    let lastUser: string | null | undefined
 
-    supabase.auth.getSession().then(async ({ data }) => {
-      if (!active) return
-      setSession(data.session)
-      setRolle(data.session ? await checkRolle() : null)
-      setLoading(false)
-    })
-
-    const { data: sub } = supabase.auth.onAuthStateChange(async (_event, s) => {
+    // Rolle nur bei User-Wechsel neu prüfen (nicht bei Token-Refresh oder
+    // Passwort-Änderung). Bewusst NICHT im onAuthStateChange-Callback
+    // awaiten: Supabase hält dort den Auth-Lock (Deadlock-Gefahr bei
+    // weiteren Supabase-Aufrufen) → per setTimeout entkoppelt.
+    const apply = (s: Session | null) => {
       if (!active) return
       setSession(s)
-      setRolle(s ? await checkRolle() : null)
-      setLoading(false)
-    })
+      setInitialLoading(false)
+      const uid = s?.user.id ?? null
+      if (uid === lastUser) return
+      lastUser = uid
+      if (!uid) {
+        setRolle(null)
+        setCheckedFor(null)
+        return
+      }
+      setTimeout(async () => {
+        const r = await checkRolle()
+        if (!active || lastUser !== uid) return
+        setRolle(r)
+        setCheckedFor(uid)
+      }, 0)
+    }
+
+    supabase.auth.getSession().then(({ data }) => apply(data.session))
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => apply(s))
 
     return () => {
       active = false
       sub.subscription.unsubscribe()
     }
   }, [])
+
+  const loading = initialLoading || (!!session && checkedFor !== session.user.id)
 
   const value: AuthState = {
     session,
@@ -87,11 +131,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // kommen rein. Zusätzlich in Supabase Auth „Signups" abschalten.
         options: { emailRedirectTo: `${window.location.origin}/admin`, shouldCreateUser: false },
       })
-      return { error: error?.message ?? null }
+      return { error: error ? authFehler(error.message, error.code) : null }
     },
     signInWithPassword: async (email, password) => {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
-      return { error: error?.message ?? null }
+      return { error: error ? authFehler(error.message, error.code) : null }
+    },
+    updatePassword: async (password, nonce) => {
+      const { error } = await supabase.auth.updateUser(nonce ? { password, nonce } : { password })
+      if (!error) return { error: null }
+      const needsCode = error.code === 'reauthentication_needed' || /reauthentication/i.test(error.message)
+      return { error: authFehler(error.message, error.code), needsCode }
+    },
+    requestPasswordCode: async () => {
+      const { error } = await supabase.auth.reauthenticate()
+      return { error: error ? authFehler(error.message, error.code) : null }
     },
     signOut: async () => {
       await supabase.auth.signOut()

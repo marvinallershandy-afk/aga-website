@@ -1,0 +1,28 @@
+{
+  "name": "SVA Pflege",
+  "short_name": "SVA Pflege",
+  "description": "Vereins-Pflege des SV Agathenburg-Dollern: Aufstellung, Spiele, Live-Ticker.",
+  "id": "/admin",
+  "start_url": "/admin",
+  "scope": "/admin",
+  "display": "standalone",
+  "orientation": "any",
+  "lang": "de",
+  "dir": "ltr",
+  "background_color": "#0E0D0D",
+  "theme_color": "#0E0D0D",
+  "icons": [
+    { "src": "/brand/pflege/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/brand/pflege/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/brand/pflege/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Live-Ticker",
+      "short_name": "Live",
+      "description": "Spieltag: Tore, Karten und Endstand live eintragen",
+      "url": "/admin/live",
+      "icons": [{ "src": "/brand/pflege/live-96.png", "sizes": "96x96", "type": "image/png" }]
+    }
+  ]
+}

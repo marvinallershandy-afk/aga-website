@@ -15,11 +15,13 @@ import {
   MoreHorizontal,
   Radio,
   KeyRound,
+  UserRound,
 } from 'lucide-react'
 import { useAuth } from './auth/AuthProvider'
 import { cn } from './lib/utils'
 import { Button } from './components/ui/button'
 import { PublishButton } from './components/PublishButton'
+import { KontoDialog } from './components/KontoDialog'
 
 // ─────────────────────────────────────────────────────────────
 // v14-C „Vereins-Pflege": Der Admin pflegt die WEBSITE. Hauptnavigation nur
@@ -123,7 +125,8 @@ function Brand() {
   )
 }
 
-function UserBox() {
+// v15-P: „Konto" (Passwort festlegen/ändern) neben Abmelden.
+function UserBox({ onKonto }: { onKonto: () => void }) {
   const { user, signOut, rolle } = useAuth()
   return (
     <div className="border-t border-border pt-3">
@@ -131,15 +134,21 @@ function UserBox() {
         {user?.email ?? 'Vorschau'}
         {rolle === 'team' && <span className="ml-1.5 rounded bg-secondary px-1.5 py-0.5 text-[10px] uppercase">Team</span>}
       </p>
-      <Button variant="outline" className="w-full" onClick={() => signOut()}>
-        <LogOut className="h-4 w-4" /> Abmelden
-      </Button>
+      <div className="grid grid-cols-2 gap-2">
+        <Button variant="outline" className="w-full" onClick={onKonto}>
+          <UserRound className="h-4 w-4" /> Konto
+        </Button>
+        <Button variant="outline" className="w-full" onClick={() => signOut()}>
+          <LogOut className="h-4 w-4" /> Abmelden
+        </Button>
+      </div>
     </div>
   )
 }
 
 export function AdminLayout() {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [kontoOpen, setKontoOpen] = useState(false)
   const location = useLocation()
   const { rolle } = useAuth()
   const istAdmin = rolle !== 'team'
@@ -149,10 +158,16 @@ export function AdminLayout() {
       {/* Mobiler Header */}
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background/95 px-4 py-3 backdrop-blur md:hidden">
         <Brand />
-        <Button variant="ghost" size="icon" onClick={() => setMobileOpen((v) => !v)} aria-label="Menü">
-          {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon" onClick={() => setKontoOpen(true)} aria-label="Konto">
+            <UserRound className="h-5 w-5" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={() => setMobileOpen((v) => !v)} aria-label="Menü">
+            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </Button>
+        </div>
       </header>
+      <KontoDialog open={kontoOpen} onClose={() => setKontoOpen(false)} />
 
       {/* Mobiles Drawer (alles inkl. Veröffentlichen + Archiv) */}
       {mobileOpen && (
@@ -172,7 +187,12 @@ export function AdminLayout() {
             {istAdmin && <PublishButton size="compact" />}
             <div className="mt-auto space-y-2">
               {istAdmin && <ArchivLink onNavigate={() => setMobileOpen(false)} />}
-              <UserBox />
+              <UserBox
+                onKonto={() => {
+                  setMobileOpen(false)
+                  setKontoOpen(true)
+                }}
+              />
             </div>
           </aside>
         </div>
@@ -186,7 +206,7 @@ export function AdminLayout() {
           {istAdmin && <PublishButton size="compact" />}
           <div className="mt-auto space-y-2">
             {istAdmin && <ArchivLink />}
-            <UserBox />
+            <UserBox onKonto={() => setKontoOpen(true)} />
           </div>
         </aside>
 
