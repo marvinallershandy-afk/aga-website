@@ -184,3 +184,86 @@ Die Abstimmung wandert **auf die Website**: Die Instagram-Story verlinkt auf `ag
 5. **Mitspiel-Trichter**
 6. **Content-Maschine mit Tor-Videos**
 7. Nächste Saison: Live-Kommentar-Audio + KI-Ticker
+
+---
+
+# Update 05.10.2026 nach Marvins Feedback
+
+## A. Sammelalbum: Spezialkarten sind nicht nur Spieler
+Neben den Spielerkarten gibt es **Moment-Karten** und **Partner-Karten**:
+- **Meister 2026:** Motive aus den Meisterschaftsbildern, z. B. Pokal-Moment, Kurve, Bierdusche (ohne Kinder).
+- **Urknall-Pokal 2026:** Sieg beim Aspe-Haie-Pokal, kuratierte Fotos von picture by Nele.
+- **Fan-Karten:** die Kurve, die Fahne, „Dodos Raum" usw.
+- **Partner-Karten:** jeder Partner als eigene Sammelkarte, z. B. „Mr. Döner", „Altstadtcafé", „Butty". Für den Sponsor ist das eine **verkaufbare Leistung** („Deine Firma als Sammelkarte im SVA-Album"), und die Fans haben ihr Logo im Album.
+- Seltenheit gilt für alle Kartentypen. Moment-Karten sind meist Gold oder Spezial.
+
+**Belohnungen:**
+- 5. Check-in: Freibier oder Bratwurst.
+- 10. Check-in: Fanartikel. Bei ~13–15 Heimspielen pro Saison ist das für echte Stammzuschauer machbar, also das richtige Saisonziel.
+- Album komplett: Saison-Verlosung.
+
+## B. Tipp-Liga: mehr Messbares, noch krasser
+**Bonusfragen pro Spieltag** (3 Stück, wechselnd aus einem Pool):
+- Wie viele **gelbe Karten** bekommt der SVA? (0 / 1–2 / 3+)
+- Gibt es eine **Rote Karte**? (ja/nein)
+- **Tor vor der 20. Minute?**
+- **Tore in der 1. Halbzeit** (0 / 1 / 2+)
+- **Elfmeter im Spiel?**
+- **Zuschauerzahl** (über/unter X), automatisch aufgelöst über die Check-ins
+- **Wer trifft zuerst:** SVA / Gegner / niemand
+
+Pro richtiger Bonusfrage +1 Punkt.
+
+**„Deine Elf" erweitert:**
+- Gelb −1, Gelb-Rot −3, Rot −4 (wie gehabt).
+- **Neu:** „Kartensünder-Prognose": Wer aus deiner Elf eine Karte bekommt, bringt dir Minus.
+
+**Was es noch krasser macht:**
+- **Stammtisch-Ligen:** Freunde gründen per Code eine eigene Mini-Liga („Dodos Raum", „Feuerwehr Agathenburg", „Mama & Papa"). Das ist der stärkste Weiterempfehlungs-Effekt.
+- **Duell „Fans vs. Kabine":** Der Schnitt aller Fans gegen den Schnitt der Spieler. Gibt jede Woche Story-Content („Die Kabine liegt vorne!").
+- **Abzeichen:** Hellseher (3× exakt), Treuer Tipper (10 Spieltage am Stück), Kartenexperte usw.
+- **Erinnerung:** Samstagabend „Noch nicht getippt?" als Push oder Story-Sticker.
+
+## C. MOTM bleibt auf Instagram (Korrektur)
+Richtig: **Instagram bleibt der Hauptkanal** für Reichweite und Interaktion. Die Abstimmung (Story-Umfrage) und die Gewinnspiele mit Kommentaren (Mr. Döner) bleiben dort.
+Die Website **unterstützt** nur:
+- **Admin-Werkzeug „Auslosung":** Namen der Abstimmenden einfügen, auf ein **Glücksrad** tippen, und das Rad dreht sich groß und animiert. Ideal zum **Abfilmen für die Dienstags-Story** im Training. Mit Protokoll, damit es fair ist.
+- **MOTM-Karte automatisch:** Nach der Instagram-Abstimmung wird der Gewinner im Admin eingetragen. Daraus entstehen die Montags-Story-Grafik und die **Spezialkarte im Album**.
+
+---
+
+## D. Instagram + Website: das Zusammenspiel (Ziel 630 → 1.000 Follower bis Jahresende)
+
+**Rechnung:** etwa 12 Wochen, +370 Follower, also **~30 pro Woche**. Das ist machbar, wenn jeder Post Reichweite außerhalb der eigenen Follower holt.
+
+### Die 6 größten Hebel für Follower (Reihenfolge nach Wirkung)
+1. **Collab-Posts mit den Spielern:** Instagrams „Collab"-Funktion (bei Steckbrief- und Interview-Reels) zeigt den Post auch bei **allen Followern des Spielers**. 20 Spieler mit je ~300 Followern ergeben Tausende Neukontakte. **Größter Einzelhebel.**
+2. **Gewinnspiele mit „Folgen + 2 Freunde markieren"** (Mr. Döner, Altstadtcafé). Markieren bringt neue Leute. Teilnahmebedingung „folgt @svagathenburg".
+3. **Sponsoren, Gegner und Dorf markieren:** Partner, Gegnerverein, Gemeinde und lokale Seiten (Stade, Kreisliga-Seiten) teilen mit. Bei jedem Spieltag-Post den Gegner markieren.
+4. **Reels mit Gesichtern und Persönlichkeit** (Steckbrief, Frage der Woche, Interview) schlagen After-Movies deutlich. Das deckt sich mit euren Zahlen.
+   - **Statt After-Movie:** 15-s-„Top 3 Momente", ein **Pack-Opening** aus dem Album oder ein **Walkout-Reveal**.
+5. **Die Website liefert Content-Futter:** Walkout-Videos, Sammelkarten und Tor-Videos aus der Content-Maschine sind fertiges Reel- und Story-Material in Vereinsoptik.
+6. **Story-Links mit Ziel:** Jede Story mit Link-Sticker führt auf eine konkrete Seite (`/live`, `/album`, `/mitspielen`, `/partner`), immer mit `?utm_source=instagram`. So messen wir, was wirkt.
+
+### Euer Wochenplan + was die Website beisteuert
+| Tag | Instagram (bleibt) | Website/Admin liefert |
+|---|---|---|
+| **Mo** | MOTM-Gewinner (Story) | MOTM-Grafik per Klick + Spezialkarte im Album |
+| **Di** | Auslosung im Training (Story) | **Glücksrad** zum Abfilmen |
+| **Mi** | Spieler-Steckbrief (Reel, **als Collab mit dem Spieler**) | Steckbrief landet auf der Rückseite seiner Karte; Story-Link „Ganze Karte ansehen" |
+| **Do** | Frage der Woche (Reel) | Antworten sammeln → später Fun-Facts für Kommentar und Karten |
+| **Fr** | Spieltagsankündigung (Reel) | Ankündigungs-Grafik/Video per Klick; Story-Link **„Jetzt tippen"** (Tipp-Liga schließt mit dem Anpfiff) |
+| **Sa** | ruhig | Story „Noch nicht getippt?" + Album-Teaser („Diese Karte gibt's nur Sonntag am Platz") |
+| **So** | Spieltagsbegleitung (Story): Aufstellung, Tore, Endstand; Heimspiel: Interview mit Kommentar-Gewinnspiel | Aufstellungs-Grafik mit Walkout-Karten, **Tor-Videos per Klick**, Story-Link auf `/live`; am Platz QR-Check-in |
+
+### Was bewusst auf Instagram bleibt
+- Abstimmungen
+- Kommentar-Gewinnspiele
+- Interviews
+- Reels
+
+Die Website ist dabei das **Werkzeug und Zuhause**: Spieltag, Album, Tipp-Liga, Mitspielen, Partner. Sie macht aus Instagram-Aufmerksamkeit echte **Zuschauer, Spieler und Sponsoren**.
+
+## E. Gestrichen
+- **Einlaufkinder:** passt nicht zum Verein.
+- **Helfer-Schichtplan:** Es gibt feste Leute dafür.
