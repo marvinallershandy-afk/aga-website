@@ -863,3 +863,35 @@ html.is-map body {
 .kpanel .band-try,
 .kpanel .sponsor-ctas { margin-top: 0; }
 .kpanel .tboard { margin: 0; }
+
+/* ── v19-K (Audit B §2.1.2): Heimspiel-Hinweis auf der Karten-Totale ──
+   Ruhige Karte wie der Album-Teaser. Desktop unten rechts, mobil im unteren
+   Streifen; während er aktiv ist, weicht der Album-Teaser (data-heimspiel). */
+.hs-hint { display: block; color: var(--c-white); text-decoration: none; }
+.hs-hint__text { display: grid; gap: 2px; min-width: 0; }
+.hs-hint__kicker { font: 700 var(--t-micro)/1.2 var(--f-body); letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--c-red); }
+.hs-hint b { font: 400 var(--t-d4)/1.05 var(--f-display); text-transform: uppercase; letter-spacing: .01em; }
+.hs-hint small { font-size: var(--t-micro); letter-spacing: .02em; line-height: 1.4; color: var(--c-text-2); }
+.hs-hint__cta {
+  display: inline-flex; align-items: center; gap: var(--s-1); margin-top: var(--s-2);
+  font: 700 var(--t-micro)/1 var(--f-body); letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--c-white);
+}
+.hs-hint--karte {
+  position: fixed; right: var(--gutter); left: auto; bottom: calc(var(--s-5) + 28px); z-index: 21;
+  max-width: 320px; padding: var(--s-3) var(--s-4);
+  background: rgba(11, 10, 11, .82); border: var(--border); border-radius: var(--r-l);
+  transition: opacity var(--d-2) var(--ease), border-color var(--d-1) var(--ease);
+}
+.hs-hint--karte:hover { border-color: var(--c-line-strong); }
+.hs-hint--karte:focus-visible { outline: 2px solid var(--c-white); outline-offset: 2px; }
+.kmap[data-open] .hs-hint--karte,
+.kmap[data-intro] .hs-hint--karte { opacity: 0; pointer-events: none; }
+@media (max-width: 759px), (max-aspect-ratio: 1/1) {
+  .hs-hint--karte {
+    left: var(--gutter); right: var(--gutter); max-width: none;
+    bottom: calc(68px + env(safe-area-inset-bottom) + var(--s-3) + 22px);
+  }
+  /* Mobil ist unten nur Platz für EINE Karte — der Heimspiel-Hinweis hat im
+     72-h-Fenster Vorrang, der Album-Teaser weicht. */
+  .kmap[data-heimspiel] .alb-t--karte { display: none; }
+}
