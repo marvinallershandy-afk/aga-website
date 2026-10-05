@@ -18,6 +18,7 @@ import { useToast } from '../components/ui/toast'
 import { ContentEditor } from '../components/ContentEditor'
 import { DriveBrowser } from '../components/DriveBrowser'
 import type { ContentRow, ContentInput } from '../lib/db'
+import { friendlyError } from '../lib/db'
 import { useContent, useContentMutations } from '../lib/queries'
 import { statusMeta, DRIVE_MASTER_FOLDER_ID, driveFolderUrl } from '../lib/constants'
 import { formatDateShort } from '../lib/format'
@@ -47,7 +48,7 @@ export function Produktion() {
       { id: row.id, patch: { status } },
       {
         onSuccess: () => toast.success(`„${row.titel}" → ${statusMeta(status).label}`),
-        onError: (e) => toast.error(e instanceof Error ? e.message : 'Status-Update fehlgeschlagen.'),
+        onError: (e) => toast.error(friendlyError(e, 'Status-Update fehlgeschlagen.')),
       },
     )
   }
@@ -115,7 +116,7 @@ export function Produktion() {
       </div>
 
       {contentQ.error && !loading && (
-        <ErrorState className="mb-4" message={contentQ.error.message} onRetry={() => void contentQ.refetch()} />
+        <ErrorState className="mb-4" message={friendlyError(contentQ.error)} onRetry={() => void contentQ.refetch()} />
       )}
 
       {loading ? (

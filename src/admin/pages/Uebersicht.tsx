@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   CalendarDays,
@@ -11,10 +11,12 @@ import {
   AlertCircle,
   CircleDot,
   ChevronRight,
+  ChevronDown,
   Home,
   Bus,
   Radio,
   Inbox,
+  Presentation,
 } from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
 import type { SpielRow } from '../lib/db'
@@ -331,8 +333,25 @@ export function Uebersicht() {
         </CardContent>
       </Card>
 
-      <VorfuehrungKarte className="mt-6" />
+      <VorfuehrungAusklappbar />
     </>
+  )
+}
+
+// v19-S (Audit C): Vorführ-Spiel ist nur ein Test-Werkzeug und macht die
+// Übersicht mobil sehr lang — daher eingeklappt, erst auf Tipp sichtbar.
+function VorfuehrungAusklappbar() {
+  const [offen, setOffen] = useState(false)
+  return (
+    <div className="mt-6">
+      <Button variant="outline" className="w-full justify-between" onClick={() => setOffen((o) => !o)} aria-expanded={offen}>
+        <span className="flex items-center gap-2">
+          <Presentation className="h-4 w-4" /> Vorführ-Spiel {offen ? 'ausblenden' : 'zeigen'}
+        </span>
+        {offen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+      </Button>
+      {offen && <VorfuehrungKarte className="mt-3" />}
+    </div>
   )
 }
 

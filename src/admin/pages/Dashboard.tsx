@@ -17,6 +17,7 @@ import { Button } from '../components/ui/button'
 import { Skeleton } from '../components/ui/skeleton'
 import { EmptyState } from '../components/ui/empty-state'
 import { ErrorState } from '../components/ui/error-state'
+import { friendlyError } from '../lib/db'
 import { PageHeader } from './Placeholder'
 import { useContent, useIdeen, useInsights, useSpiele, useSponsoren } from '../lib/queries'
 import { STATUS, statusMeta, kanalLabel } from '../lib/constants'
@@ -82,7 +83,7 @@ export function Dashboard() {
       {loadError && !loading && (
         <ErrorState
           className="mb-4"
-          message={loadError.message}
+          message={friendlyError(loadError)}
           onRetry={() => {
             void contentQ.refetch()
             void ideenQ.refetch()

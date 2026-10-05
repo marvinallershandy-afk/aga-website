@@ -359,12 +359,32 @@ export function isMissingSchema(err: unknown): boolean {
   )
 }
 
+// v19-S (Audit C): Postgres-/PostgREST-Fehlercodes → deutsche Sätze. Greift,
+// wenn keine spezifischere Meldung (Constraint-Name) passt — damit nie ein
+// roher englischer DB-Fehler („permission denied for function …") in der
+// Ehrenamts-UI landet.
+const CODE_TEXTE: Record<string, string> = {
+  '42501': 'Dafür fehlt dir die Berechtigung. Mit dem Team-Zugang geht nicht alles — melde dich bei Marvin.',
+  '23505': 'Das gibt es schon — doppelter Eintrag.',
+  '23503': 'Das hängt noch an anderen Daten. Bitte dort zuerst entfernen.',
+  '23502': 'Ein Pflichtfeld fehlt noch.',
+  '23514': 'Die Eingabe passt nicht zu den Regeln. Bitte die Werte prüfen.',
+  '22P02': 'Ungültige Eingabe (falsches Format).',
+  '22001': 'Eingabe zu lang.',
+  '40001': 'Gerade hat jemand anderes gespeichert. Bitte noch einmal versuchen.',
+  '40P01': 'Gerade hat jemand anderes gespeichert. Bitte noch einmal versuchen.',
+  '57014': 'Das hat zu lange gedauert. Bitte noch einmal versuchen.',
+  PGRST301: 'Du bist nicht mehr angemeldet. Bitte neu anmelden.',
+  '401': 'Du bist nicht mehr angemeldet. Bitte neu anmelden.',
+}
+
 /** Verständliche Fehlermeldung für Ehrenamtliche statt Postgres-Jargon. */
 export function friendlyError(err: unknown, fallback = 'Das hat nicht geklappt.'): string {
   if (isMissingSchema(err)) {
     return 'Die Datenbank ist noch nicht auf dem neuen Stand (Migration fehlt). Bitte Marvin Bescheid geben.'
   }
   const msg = err instanceof Error ? err.message : (err as { message?: string } | null)?.message
+  const code = (err as { code?: string } | null)?.code
   if (msg && /sva_lineup_startelf_check|kein_doppelter/i.test(msg)) {
     return 'Aufstellung ungültig: genau 11 verschiedene Spieler in der Startelf, niemand doppelt auf der Bank.'
   }
@@ -375,6 +395,14 @@ export function friendlyError(err: unknown, fallback = 'Das hat nicht geklappt.'
   if (msg && /whatsapp_check/i.test(msg)) return 'WhatsApp-Nummer bitte nur mit Ziffern, z. B. 4915112345678.'
   if (msg && /slug/i.test(msg) && /unique|duplicate/i.test(msg)) return 'Diesen Spieler gibt es schon (gleicher Name).'
   if (msg && /failed to fetch|networkerror|load failed/i.test(msg)) return 'Keine Verbindung. Bitte Netz prüfen und nochmal versuchen.'
+  // v19-S: eigene DB-Ausnahmen (raise exception) sind bereits deutsch → zeigen.
+  if (code === 'P0001' && msg) return msg.replace(/^[a-z_]+:\s*/i, '')
+  // Bekannte PG-/PostgREST-Codes übersetzen.
+  if (code && CODE_TEXTE[code]) return CODE_TEXTE[code]
+  if (msg && /permission denied/i.test(msg)) return CODE_TEXTE['42501']
+  if (msg && /JWT|not authenticated|401/i.test(msg)) return CODE_TEXTE['401']
+  // Letzter Ausweg: nie einen rohen englischen PG-Satz zeigen.
+  if (msg && /^[\x00-\x7F]*$/.test(msg) && /(permission|denied|violates|constraint|function|relation|syntax|invalid input)/i.test(msg)) return fallback
   return msg || fallback
 }
 

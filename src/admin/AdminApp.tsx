@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClientProvider } from '@tanstack/react-query'
 import './admin.css'
@@ -8,7 +9,7 @@ import { AuthProvider } from './auth/AuthProvider'
 import { ProtectedRoute, NurAdmin } from './auth/ProtectedRoute'
 import { Login } from './auth/Login'
 import { AdminLayout } from './AdminLayout'
-// v14-C Vereins-Pflege (Hauptnavigation)
+// v14-C Vereins-Pflege (Hauptnavigation) — am Spieltag gebraucht, daher eager
 import { Uebersicht } from './pages/Uebersicht'
 import { Kader } from './pages/Kader'
 import { Aufstellung } from './pages/Aufstellung'
@@ -25,16 +26,23 @@ import { Live } from './pages/Live'
 import { TeamZugaenge } from './pages/TeamZugaenge'
 // v17-A Sammelalbum (Stickerheft, QR-Check-in)
 import { Album } from './pages/Album'
-// Archiv: Social Media (nicht mehr in der Hauptnavigation, Routen unverändert)
-import { Archiv } from './pages/Archiv'
-import { Dashboard } from './pages/Dashboard'
-import { Redaktionsplan } from './pages/Redaktionsplan'
-import { IdeenPool } from './pages/IdeenPool'
-import { Produktion } from './pages/Produktion'
-import { Matchday } from './pages/Matchday'
-import { SponsorenCrm } from './pages/SponsorenCrm'
-import { Insights } from './pages/Insights'
-import { Automationen } from './pages/Automationen'
+
+// v19-S (Audit C): Archiv/Social-Media-Seiten per lazy() aus dem mountAdmin-
+// Bundle lösen — am Platz-Handy wird nur geladen, was gebraucht wird
+// (mountAdmin 637 → grob 350 KB). Named Exports → default mappen.
+const Archiv = lazy(() => import('./pages/Archiv').then((m) => ({ default: m.Archiv })))
+const Dashboard = lazy(() => import('./pages/Dashboard').then((m) => ({ default: m.Dashboard })))
+const Redaktionsplan = lazy(() => import('./pages/Redaktionsplan').then((m) => ({ default: m.Redaktionsplan })))
+const IdeenPool = lazy(() => import('./pages/IdeenPool').then((m) => ({ default: m.IdeenPool })))
+const Produktion = lazy(() => import('./pages/Produktion').then((m) => ({ default: m.Produktion })))
+const Matchday = lazy(() => import('./pages/Matchday').then((m) => ({ default: m.Matchday })))
+const SponsorenCrm = lazy(() => import('./pages/SponsorenCrm').then((m) => ({ default: m.SponsorenCrm })))
+const Insights = lazy(() => import('./pages/Insights').then((m) => ({ default: m.Insights })))
+const Automationen = lazy(() => import('./pages/Automationen').then((m) => ({ default: m.Automationen })))
+
+function LadeSeite() {
+  return <div className="p-6 text-sm text-muted-foreground">Lädt …</div>
+}
 
 export function AdminApp() {
   return (
@@ -44,6 +52,7 @@ export function AdminApp() {
         <ConfirmProvider>
           <AuthProvider>
             <BrowserRouter basename="/admin">
+              <Suspense fallback={<LadeSeite />}>
               <Routes>
                 <Route path="/login" element={<Login />} />
                 <Route
@@ -80,6 +89,7 @@ export function AdminApp() {
                 </Route>
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
+              </Suspense>
             </BrowserRouter>
           </AuthProvider>
         </ConfirmProvider>
