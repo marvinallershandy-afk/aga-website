@@ -4,6 +4,7 @@ import { useStore } from '../store/useStore'
 import { POSITION_LABEL, type Player } from '../data/players'
 import { HoloCard } from './HoloCard'
 import { tierOf, loadCardAssets } from './cardArt'
+import { playerMedia } from '../data/playerMedia'
 import { shareStory, type ShareResult } from './storyShare'
 import { IgIcon } from './Icons'
 import { lockScroll, unlockScroll } from './PlayerGallery'
@@ -31,7 +32,7 @@ function ModalContent({ player, from = 0 }: { player: Player; from?: number }) {
     window.addEventListener('keydown', onKey, true)
     lockScroll()
     // Story-Assets vorladen → beim Teilen bleibt die Nutzergeste „frisch"
-    void loadCardAssets(player.cutoutUrl ?? null)
+    void loadCardAssets(playerMedia(player.id, player).figure)
     const prev = document.activeElement as HTMLElement | null
     panelRef.current?.querySelector<HTMLElement>('.flip-scene')?.focus()
     return () => {

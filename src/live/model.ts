@@ -222,31 +222,49 @@ export interface PlatzStand {
   tore: Map<string, number>
   /** Bank ohne eingewechselte Spieler */
   bank: string[]
+  /** v17-G: Tor-Minuten je Spieler („12'", „51'") in Reihenfolge */
+  torMinuten: Map<string, string[]>
+  /** v17-G: Wechsel, die nicht zur Aufstellung passen (Einwechsler stand schon
+   *  auf dem Platz / Ausgewechselter war nicht auf dem Platz) — ignoriert. */
+  inkonsistent: string[]
 }
 
 export function platzStand(
   lineup: { startelf: string[]; bank: string[] } | null,
   events: { id: string; type: TickerTyp; at: string; player?: string | null; player2?: string | null; minute?: number | null; extra?: number | null }[],
 ): PlatzStand {
-  const slots = [...(lineup?.startelf ?? [])]
+  // v17-G: doppelte Einträge in der Startelf nie zweimal zählen
+  const slots = (lineup?.startelf ?? []).map((id, i, a) => (a.indexOf(id) === i ? id : ''))
   const eingewechselt = new Map<string, string>()
   const ausgewechselt = new Map<string, string>()
   const gelb = new Set<string>()
   const rot = new Set<string>()
   const tore = new Map<string, number>()
+  const torMinuten = new Map<string, string[]>()
+  const inkonsistent: string[] = []
   for (const e of chronologisch(events)) {
     const m = minuteLabel(e.minute, e.extra)
     if (e.type === 'wechsel' && e.player && e.player2) {
+      // v17-G (Fehler „nur 10 Spieler“): Kommt ein Spieler „rein“, der schon auf
+      // dem Platz steht, entstand früher ein Duplikat im Slot-Array → die Elf
+      // (nach id gerendert) zeigte nur 10. Solche Wechsel bleiben ohne Wirkung.
       const i = slots.indexOf(e.player2)
-      if (i >= 0) slots[i] = e.player
+      if (i < 0 || slots.includes(e.player)) {
+        inkonsistent.push(e.id)
+        continue
+      }
+      slots[i] = e.player
       eingewechselt.set(e.player, m)
       ausgewechselt.set(e.player2, m)
     } else if (e.type === 'gelb' && e.player) gelb.add(e.player)
     else if ((e.type === 'rot' || e.type === 'gelbrot') && e.player) rot.add(e.player)
-    else if (e.type === 'tor' && e.player) tore.set(e.player, (tore.get(e.player) ?? 0) + 1)
+    else if (e.type === 'tor' && e.player) {
+      tore.set(e.player, (tore.get(e.player) ?? 0) + 1)
+      torMinuten.set(e.player, [...(torMinuten.get(e.player) ?? []), m])
+    }
   }
-  const bank = (lineup?.bank ?? []).filter((id) => !eingewechselt.has(id))
-  return { slots, eingewechselt, ausgewechselt, gelb, rot, tore, bank }
+  const bank = (lineup?.bank ?? []).filter((id) => !eingewechselt.has(id) && !slots.includes(id))
+  return { slots, eingewechselt, ausgewechselt, gelb, rot, tore, bank, torMinuten, inkonsistent }
 }
 
 // ── Paarung / Anzeige ───────────────────────────────────────

@@ -95,18 +95,15 @@ würden die Zellen < 64 px → dann zweiten Atlas einführen (Skript bricht mit 
     Grund: Chrome auf dem Mac meldet `hvc1` als abspielbar, zeigt aber dessen Alpha nicht.
   - `prefers-reduced-motion` → nur das Poster-WebP.
   - Ladefehler aller Quellen → Karte fällt auf das Foto zurück.
-- **3D-Aufstellung** (`/live`, `src/live/Aufstellung3D.tsx` + `src/live/lineup3d/scene.ts`):
-  Knopf „3D-Aufstellung“ über dem Taktik-Board. three.js wird erst beim Klick geladen
-  (dynamischer Import; `/live` ohne Klick unverändert three-frei). Stilisierter Rasen,
-  Startelf als Billboards, die den Atlas per UV sampeln (ein Videodekoder), Namensschild,
-  Kamera hinter dem eigenen Tor mit Orbit per Ziehen. Neues Tor im Ticker → Torschütze
-  leuchtet ~4 s golden (Umriss + Bodenring); Wechsel blenden den neuen Spieler ein. Spieler
-  ohne Walkout erscheinen als Trikot-Aufsteller mit Nummer.
+- ~~**3D-Aufstellung**~~ (`/live`) — **v17-G entfernt** (Code `Aufstellung3D.tsx` + `lineup3d/scene.ts`
+  gelöscht) und durch die Aufstellung im TV-Stil ersetzt (`src/live/aufstellung/`, siehe
+  `docs/GREENSCREEN.md`). `atlas.mp4` und `WALKOUT_ATLAS` bleiben vorerst liegen (ungenutzt).
+- **Quellenwahl** seit v17-G über `src/data/playerMedia.ts`: Greenscreen-Loop vor Dolly-Walkout.
 - **Admin** (`Kader`, Listenansicht): „Walkout vorhanden ✓“ je Spieler.
 
 ## Messwerte (05.10.2026)
 
-- 3D-Aufstellung, Produktions-Build: three.js 188 KB gzip + Szene 4,5 KB gzip + Atlas 702 KB
+- (historisch, v16-W) 3D-Aufstellung, Produktions-Build: three.js 188 KB gzip + Szene 4,5 KB gzip + Atlas 702 KB
   ≈ **0,9 MB** nach dem Klick (Ziel ≤ 3 MB). Vor dem Klick: kein three-Request.
 - Frametimes (Playwright, Chromium mit Metal-GPU, Dev-Server): Desktop 16,7 ms Ø / 17,6 ms p95,
   iPhone-13-Emulation 16,7 ms Ø / 17,6 ms p95 (60 fps); WebKit 16,5–17,2 ms Ø / 18 ms p95.

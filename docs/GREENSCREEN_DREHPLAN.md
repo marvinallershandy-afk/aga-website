@@ -20,6 +20,7 @@
 - **Handy auf Stativ, HOCHKANT**, Linse auf **Hüfthöhe** (ca. 1 m), **2,5–3 m** vom Spieler entfernt.
 - Der **ganze Körper** ist im Bild, von den Schuhen bis über den Kopf, mit etwas Luft oben und unten. Der Spieler steht in der Bildmitte.
 - **4K, 60 fps.** Auf dem iPhone: Einstellungen → Kamera → Video aufnehmen → 4K/60.
+- **HDR-Video aus** (Einstellungen → Kamera → Video aufnehmen → „HDR-Video“). Die Pipeline rechnet HDR zwar um, ohne HDR sind Farben und Grün aber verlässlicher.
 - **Fokus und Belichtung sperren:** auf den Spieler tippen und halten, bis „AE/AF-Sperre" erscheint. Danach nichts mehr ändern.
 - Kein Zoom, kein Filter, kein Porträtmodus. Die Kamera bleibt für alle Spieler an derselben Stelle.
 

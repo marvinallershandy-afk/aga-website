@@ -11,7 +11,7 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from '@dnd-kit/core'
-import { Save, RotateCcw, Eraser, Plus, X, AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react'
+import { Save, RotateCcw, Eraser, Plus, X, AlertTriangle, CheckCircle2, Loader2, Share2 } from 'lucide-react'
 import { PageHeader } from './Placeholder'
 import { Button } from '../components/ui/button'
 import { Card, CardContent } from '../components/ui/card'
@@ -32,6 +32,7 @@ import { formatAnstoss, relativZeit } from '../lib/format'
 import { hatErgebnis, matchLabelFor, naechstesSpiel, paarung } from '../lib/spiele'
 import { cn } from '../lib/utils'
 import { useAuth } from '../auth/AuthProvider'
+import { aufstellungAlsStory } from '../lib/aufstellungStory'
 
 // ─────────────────────────────────────────────────────────────
 // v14-C: Aufstellung — Formation, Startelf (11 Slots) und Bank.
@@ -86,6 +87,7 @@ export function Aufstellung() {
   const [picker, setPicker] = useState<Ziel | null>(null)
   const [dragId, setDragId] = useState<string | null>(null)
   const [frischGespeichert, setFrischGespeichert] = useState(false)
+  const [storyBusy, setStoryBusy] = useState(false)
 
   // Gespeicherten Stand übernehmen (inaktive/gelöschte Spieler fallen raus).
   // Nur einmal je gespeicherter Aufstellung — ein Hintergrund-Refetch (z. B.
@@ -329,6 +331,26 @@ export function Aufstellung() {
                   {frischGespeichert && !istAdmin && (
                     <p className="rounded-lg border border-green-600/40 bg-green-950/30 p-3 text-sm">Gespeichert — auf der Live-Seite sofort sichtbar.</p>
                   )}
+                  {/* v17-G: Story-PNG 1080×1920 im Design der TV-Aufstellung (/live) */}
+                  <Button
+                    variant="outline"
+                    className="h-12 w-full text-base"
+                    disabled={besetzt === 0 || storyBusy}
+                    onClick={async () => {
+                      setStoryBusy(true)
+                      try {
+                        const spiel = (spieleQ.data ?? []).find((s) => s.id === stand.spielId) ?? null
+                        const r = await aufstellungAlsStory({ formation: stand.formation, slots: stand.slots, bank: stand.bank, roster: rosterQ.data ?? [], spiel })
+                        toast.success(r === 'geladen' ? 'Story-Bild heruntergeladen.' : 'Story-Bild geteilt.')
+                      } catch (e) {
+                        toast.error(e instanceof Error ? e.message : 'Story-Bild konnte nicht erstellt werden.')
+                      } finally {
+                        setStoryBusy(false)
+                      }
+                    }}
+                  >
+                    {storyBusy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Share2 className="h-5 w-5" />} Aufstellung als Story
+                  </Button>
                 </CardContent>
               </Card>
             </div>

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { walkoutSources } from '../data/walkout'
+import { playerMedia } from '../data/playerMedia'
 import { prefersHevcAlpha } from './walkoutSupport'
 
 // ─────────────────────────────────────────────────────────────
@@ -26,7 +26,7 @@ interface Props {
 }
 
 export function WalkoutVideo({ id, className, style, onFail, onReady }: Props) {
-  const src = walkoutSources(id)
+  const src = playerMedia(id).loop // v17-G: Greenscreen-pose-loop → Dolly-Walkout
   const ref = useRef<HTMLVideoElement>(null)
   const [near, setNear] = useState(() => typeof IntersectionObserver === 'undefined')
   const [still] = useState(reducedMotion)
