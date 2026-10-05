@@ -26,6 +26,7 @@ import { PublishButton } from '../components/PublishButton'
 import { PflegeHinweis } from '../components/PflegeHinweis'
 // v18-T: Vorführ-Spiel (nur Admin)
 import { VorfuehrungKarte } from '../components/VorfuehrungKarte'
+import { FupaSyncKarte } from '../components/FupaSyncKarte'
 import {
   useLineup,
   usePublishLog,
@@ -330,6 +331,8 @@ export function Uebersicht() {
           )}
         </CardContent>
       </Card>
+
+      <FupaSyncKarte className="mt-6" />
 
       <VorfuehrungKarte className="mt-6" />
     </>
