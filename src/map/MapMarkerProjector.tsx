@@ -35,7 +35,8 @@ export function MapMarkerProjector() {
     // Live erst nach ein paar Frames in der Totale (Shader/Schatten fertig)
     if (!mapWorld.live && st.ready) {
       // Karte: erst in der Totale (Poster-deckungsgleich); Rundgang: sofort
-      if (st.mode === 'tour' || mapWorld.overview > 0.98) frames.current++
+      // v17-D: Intro steht im Hero-Bild → Poster darf dorthin überblenden
+      if (st.mode === 'tour' || st.intro !== 'off' || mapWorld.overview > 0.98) frames.current++
       if (frames.current >= 4) {
         mapWorld.live = true
         useStore.getState().setStageLive(true)
