@@ -7,16 +7,10 @@
     <meta name="color-scheme" content="dark" />
     <title>Impressum — SV Agathenburg-Dollern</title>
 
-    <!-- GERÜST, STAND 15.07.2026 — NOCH NICHT VERÖFFENTLICHEN.
-         Solange Platzhalter offen sind, bleibt diese Seite auf noindex.
-         TODO-MARVIN: Wenn alle [TODO-MARVIN] gefüllt UND [TODO-JURIST]
-         geprüft sind, die folgende robots-Zeile ENTFERNEN — ein Impressum
-         muss auffindbar sein. Ein halbfertiges aber nicht. -->
+    <!-- v19-R: veröffentlichungsfähig (Stand Oktober 2026). Offene Punkte: docs/RECHT_OFFEN.md -->
     <meta name="robots" content="noindex, nofollow" />
 
-    <!-- Bewusst KEINE externen Fonts/CDNs: Die Seite lädt Stand heute keine
-         Third-Party-Ressourcen. Das ist der Grund, warum kein Cookie-Banner
-         nötig ist — diese Seite darf das nicht kaputt machen. -->
+    <!-- Bewusst KEINE externen Fonts/CDNs (kein Cookie-Banner nötig). -->
     <style>
       /* v17-D: Werte aus src/theme/design.css (statische Seite, kein Build-CSS) */
       /* v19-S: Anton selbst gehostet (cookie-/CDN-frei) für die Headline (Audit A §2.14) */
@@ -42,16 +36,6 @@
       .lead { color: var(--mut); margin: 0 0 2rem; }
       .rule { height: 1px; width: 24px; background: var(--rot); border: 0; margin: 1.4rem 0 2rem; }
       p, li { color: rgba(236,234,232,.88); }
-      /* Platzhalter absichtlich SICHTBAR und laut: Niemand soll diese Seite
-         versehentlich mit Lücken live schalten. */
-      .todo {
-        display: inline-block; background: rgba(233,29,41,.14);
-        border: 1px dashed var(--rot); color: #FF8A91;
-        padding: .1rem .5rem; border-radius: 4px;
-        font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .82em;
-      }
-      .note { border-left: 3px solid rgba(236,234,232,.22); padding: .1rem 0 .1rem 1rem;
-              color: var(--mut); font-size: .92rem; margin: 1rem 0; }
       footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid rgba(236,234,232,.12);
                font-size: .8rem; color: var(--mut); }
     </style>
@@ -64,47 +48,23 @@
       <hr class="rule" />
       <p class="lead">Angaben gemäß § 5 DDG (Digitale-Dienste-Gesetz).</p>
 
-      <div class="note">
-        <strong>Hinweis an das Team (nicht veröffentlichen):</strong> Diese Seite ist ein
-        Gerüst. Alle rot markierten Felder müssen mit den <em>echten</em> Vereinsdaten
-        gefüllt und anschließend juristisch geprüft werden. Es wurde bewusst nichts
-        geraten oder erfunden.
-      </div>
-
       <h2>Diensteanbieter</h2>
-      <!-- TODO-MARVIN: Vollständiger, eingetragener Vereinsname inkl. Rechtsform.
-           Aus der Website-Datenbasis (src/data/club.ts) bekannt:
-           "SV Agathenburg-Dollern e.V." — bitte gegen den Vereinsregister-
-           Auszug prüfen, die Schreibweise dort ist maßgeblich. -->
-      <!-- v14: Schreibweise wie im Impressum des Hauptvereins (sv-agathenburgdollern.de/impressum, abgerufen 04.10.2026). Gegen Registerauszug prüfen. -->
+      <!-- Schreibweise wie Impressum des Hauptvereins; gegen Registerauszug prüfen. -->
       <p>SV Agathenburg / Dollern 1949 e.V.<br />Fußballabteilung · 1. Herren</p>
 
       <h2>Ladungsfähige Anschrift</h2>
-      <!-- TODO-MARVIN: Die ladungsfähige Anschrift des VEREINS (i. d. R. die im
-           Vereinsregister eingetragene Adresse / Adresse des Vorstands).
-           ACHTUNG: NICHT ungeprüft die Sportplatz-Adresse eintragen. In
-           src/data/club.ts steht "Waldsportplatz Agathenburg, Zur Mehrzweckhalle,
-           21684 Agathenburg" — das ist der SPIELORT, nicht zwingend die
-           ladungsfähige Anschrift. Ein Postfach genügt hier NICHT. -->
       <p>
         Hanfberg 6<br />
         21684 Agathenburg
       </p>
 
       <h2>Vertreten durch</h2>
-      <!-- TODO-MARVIN: Vertretungsberechtigter Vorstand nach § 26 BGB —
-           die Namen der Personen, die laut Satzung/Register vertretungs-
-           berechtigt sind (oft 1. und 2. Vorsitzende:r). Keine Fantasienamen. -->
       <p>
-        <!-- v14: Der Verein hat einen gleichberechtigten Teamvorstand. Übernommen
-             aus dem Impressum des Hauptvereins; Vertretungsregel laut Satzung prüfen. -->
+        <!-- Teamvorstand; Vertretungsregel (§ 26 BGB) laut Satzung/Register prüfen. -->
         Karsten Heinsohn (Vorstand Vereinsangelegenheiten)
       </p>
 
       <h2>Kontakt</h2>
-      <!-- TODO-MARVIN: Telefonnummer des Vereins bestätigen. In club.ts ist
-           die WhatsApp-Nummer noch der Platzhalter 491700000000 → unbrauchbar.
-           E-Mail unten stammt aus club.ts, bitte auf Erreichbarkeit prüfen. -->
       <p>
         E-Mail: <a href="mailto:info@aga-erste.de">info@aga-erste.de</a><br />
         Verein: <a href="mailto:verein@sv-agathenburgdollern.de">verein@sv-agathenburgdollern.de</a><br />
@@ -112,19 +72,14 @@
       </p>
 
       <h2>Registereintrag</h2>
-      <!-- TODO-MARVIN: Registergericht + VR-Nummer aus dem Registerauszug.
-           NICHT raten — das zuständige Amtsgericht muss belegt werden. -->
       <p>
         Eintragung im Vereinsregister<br />
-        Registergericht: Amtsgericht Tostedt<br />
-        Registernummer: <span class="todo">TODO-MARVIN: VR-Nummer</span>
+        Registergericht: Amtsgericht Tostedt
+        <!-- VR-Nummer nachtragen: „<br />Registernummer: VR …“ (aus dem Registerauszug). -->
       </p>
 
       <h2>Redaktionell verantwortlich (§ 18 Abs. 2 MStV)</h2>
-      <!-- TODO-JURIST: Prüfen, ob die Seite journalistisch-redaktionelle
-           Inhalte enthält. TODO-MARVIN: Name + Anschrift der verantwortlichen
-           Person (muss eine natürliche Person mit Anschrift in D sein). -->
-      <!-- 05.10.2026: von Marvin benannt (Niko Hause, Teammanager 1. Herren). Zustimmung von Niko einholen. -->
+      <!-- 05.10.2026 von Marvin benannt; Zustimmung von Niko einholen. -->
       <p>
         Niko Hause (Teammanager 1. Herren)<br />
         c/o SV Agathenburg / Dollern 1949 e.V.<br />
@@ -133,17 +88,9 @@
       </p>
 
       <h2>Verbraucherstreitbeilegung</h2>
-      <!-- TODO-JURIST: Formulierung freigeben. Übliche Aussage für Vereine:
-           nicht bereit und nicht verpflichtet, an Streitbeilegungsverfahren vor
-           einer Verbraucherschlichtungsstelle teilzunehmen (§ 36 VSBG).
-           Bewusst NICHT vorformuliert stehen gelassen — das ist eine
-           rechtsverbindliche Erklärung, keine Textbaustein-Entscheidung. -->
       <p>Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.</p>
 
       <h2>Bildnachweise</h2>
-      <!-- TODO-MARVIN: Fotocredits (u. a. Fanblock-Fotos). Wichtig: Für Fotos,
-           auf denen Personen erkennbar sind, müssen Einwilligungen vorliegen
-           (DSGVO / KUG). Das betrifft die Bilder unter public/fans/. -->
       <p>
         Fotos: picture by Nele, offizielle Vereinsfotografin (<a href="https://instagram.com/pictureby.nele">@pictureby.nele</a>), sowie Vereinsarchiv SV Agathenburg / Dollern.<br />
         Spielerporträts und Drohnenaufnahmen: SV Agathenburg / Dollern.

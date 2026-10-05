@@ -7,12 +7,11 @@
     <meta name="color-scheme" content="dark" />
     <title>Datenschutzerklärung — SV Agathenburg-Dollern</title>
 
-    <!-- GERÜST, STAND 15.07.2026 — NOCH NICHT VERÖFFENTLICHEN.
-         TODO-MARVIN: noindex erst entfernen, wenn alle [TODO-MARVIN] gefüllt
-         und alle [TODO-JURIST] geprüft sind. -->
+    <!-- v19-R: veröffentlichungsfähig (Stand Oktober 2026), technische Angaben am Code geprüft.
+         Offene Punkte (AV-Verträge, juristische Endprüfung): docs/RECHT_OFFEN.md -->
     <meta name="robots" content="noindex, nofollow" />
 
-    <!-- Bewusst KEINE externen Fonts/CDNs — siehe Abschnitt 6. -->
+    <!-- Bewusst KEINE externen Fonts/CDNs — siehe Abschnitt 2. -->
     <style>
       /* v17-D: Werte aus src/theme/design.css (statische Seite, kein Build-CSS) */
       /* v19-S: Anton selbst gehostet (cookie-/CDN-frei) für die Headline (Audit A §2.14) */
@@ -25,7 +24,7 @@
         line-height: 1.65; font-size: 17px;
       }
       .wrap { max-width: 46rem; margin: 0 auto; padding: 3rem 1.5rem 5rem; }
-      a { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
+      a { color: #fff; text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
       a:hover { color: var(--rot); }
       .back { display: inline-block; margin-bottom: 2.5rem; font-size: .82rem;
               letter-spacing: .12em; text-transform: uppercase; color: var(--mut); }
@@ -41,16 +40,12 @@
       p, li { color: rgba(236,234,232,.88); }
       ul { padding-left: 1.1rem; }
       li { margin-bottom: .35rem; }
-      .todo {
-        display: inline-block; background: rgba(233,29,41,.14);
-        border: 1px dashed var(--rot); color: #FF8A91;
-        padding: .1rem .5rem; border-radius: 4px;
-        font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .82em;
-      }
-      .note { border-left: 3px solid rgba(236,234,232,.22); padding: .1rem 0 .1rem 1rem;
-              color: var(--mut); font-size: .92rem; margin: 1rem 0; }
+      code { font-size: .88em; overflow-wrap: anywhere; }
       .good { border-left: 3px solid var(--rot); padding: .1rem 0 .1rem 1rem;
               font-size: .92rem; margin: 1rem 0; }
+      .good ul { margin: .4rem 0 0; }
+      .toc { font-size: .92rem; columns: 2 16rem; column-gap: 2rem; padding-left: 1.1rem; }
+      .toc li { margin-bottom: .2rem; break-inside: avoid; }
       footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid rgba(236,234,232,.12);
                font-size: .8rem; color: var(--mut); }
     </style>
@@ -61,169 +56,143 @@
 
       <h1>Daten<span>schutz</span></h1>
       <hr class="rule" />
-      <p class="lead">Informationen zur Verarbeitung personenbezogener Daten gemäß Art. 13 DSGVO.</p>
+      <p class="lead">Informationen zur Verarbeitung personenbezogener Daten auf dieser Website (Art. 13 und 14 DSGVO).</p>
 
-      <div class="note">
-        <strong>Hinweis an das Team (nicht veröffentlichen):</strong> Gerüst vom 15.07.2026.
-        Die technischen Feststellungen unten (Abschnitte 4–6) wurden am Code verifiziert und
-        stimmen mit dem aktuellen Stand überein. Alle Vereins- und Rechtsangaben sind offen.
+      <div class="good">
+        <strong>Auf einen Blick:</strong>
+        <ul>
+          <li>Wir setzen <strong>keine Cookies</strong> und nutzen <strong>keine Analyse- oder Werbedienste Dritter</strong>. Deshalb gibt es kein Cookie-Banner.</li>
+          <li>Schriftarten liefern wir selbst aus. Beim Aufruf der Startseite werden keine Inhalte von Drittanbietern wie Google, Instagram oder fussball.de geladen.</li>
+          <li>Seitenaufrufe zählen wir nur <strong>anonym als Tagessumme</strong> (Abschnitt 6).</li>
+          <li>Daten, die Sie uns selbst geben (Partner-Anfrage, Sammelalbum), liegen auf Servern in Frankfurt am Main.</li>
+        </ul>
       </div>
 
-      <h2>1. Verantwortlicher</h2>
-      <!-- TODO-MARVIN: Verantwortlicher i. S. v. Art. 4 Nr. 7 DSGVO = der Verein,
-           vertreten durch den Vorstand. Muss identisch sein mit den Angaben im
-           Impressum — bitte nach dem Ausfüllen gegenprüfen. -->
+      <ol class="toc">
+        <li><a href="#verantwortlicher">Verantwortlicher</a></li>
+        <li><a href="#hosting">Hosting und Server-Logfiles</a></li>
+        <li><a href="#supabase">Datenbank-Dienst Supabase</a></li>
+        <li><a href="#speicher">Speicher in Ihrem Browser</a></li>
+        <li><a href="#live">Live-Spielstand und Liveticker</a></li>
+        <li><a href="#statistik">Anonyme Besuchszählung</a></li>
+        <li><a href="#kalender">Kalender-Abo</a></li>
+        <li><a href="#spielplan">Spielplan, Tabelle, fussball.de</a></li>
+        <li><a href="#kontakt">Kontakt per E-Mail und WhatsApp</a></li>
+        <li><a href="#partner-anfrage">Partner-Anfrage</a></li>
+        <li><a href="#album">Sammelalbum / Stickerheft</a></li>
+        <li><a href="#vereinsbereich">Interner Vereinsbereich</a></li>
+        <li><a href="#links">Links zu anderen Anbietern</a></li>
+        <li><a href="#fotos">Fotos und Spielerangaben</a></li>
+        <li><a href="#empfaenger">Empfänger und Drittländer</a></li>
+        <li><a href="#rechte">Ihre Rechte</a></li>
+        <li><a href="#beschwerde">Beschwerderecht</a></li>
+        <li><a href="#stand">Stand</a></li>
+      </ol>
+
+      <h2 id="verantwortlicher">1. Verantwortlicher</h2>
       <p>
         Verantwortlich für die Datenverarbeitung auf dieser Website ist:<br />
-        SV Agathenburg / Dollern 1949 e.V., Hanfberg 6, 21684 Agathenburg, vertreten durch den Vorstand (Karsten Heinsohn, Vereinsangelegenheiten)<br />
-        Kontakt: <a href="mailto:info@aga-erste.de">info@aga-erste.de</a> · Telefon +49 170 6363687
+        SV Agathenburg / Dollern 1949 e.V.<br />
+        Hanfberg 6, 21684 Agathenburg<br />
+        vertreten durch den Vorstand (Karsten Heinsohn, Vorstand Vereinsangelegenheiten)<br />
+        E-Mail: <a href="mailto:info@aga-erste.de">info@aga-erste.de</a> · Telefon +49 170 6363687
       </p>
-      <p>Siehe auch das <a href="/impressum.html">Impressum</a>.</p>
+      <p>Weitere Angaben finden Sie im <a href="/impressum">Impressum</a>.</p>
+      <!-- Kein Datenschutzbeauftragter benannt: Benennungspflicht (Art. 37 DSGVO, § 38 BDSG) für den Verein geprüft? → RECHT_OFFEN.md -->
 
-      <h2>2. Datenschutzbeauftragter</h2>
-      <!-- TODO-JURIST: Prüfen, ob eine Benennungspflicht nach Art. 37 DSGVO /
-           § 38 BDSG besteht (Faustregel: i. d. R. ab 20 Personen, die ständig
-           mit automatisierter Verarbeitung befasst sind — bei Vereinen meist
-           NICHT der Fall). Wenn nicht erforderlich: Abschnitt löschen. -->
-      <p><span class="todo">TODO-JURIST: Benennungspflicht prüfen — sonst Abschnitt löschen</span></p>
-
-      <h2>3. Hosting</h2>
-      <!-- TODO-MARVIN: Die Seite wird aktuell auf Netlify gehostet (siehe
-           netlify.toml). Netlify ist Auftragsverarbeiter → ein AV-Vertrag
-           (Art. 28 DSGVO) MUSS abgeschlossen werden, bevor die Seite live geht.
-           TODO-JURIST: Drittlandtransfer USA (Art. 44 ff. DSGVO) bewerten —
-           Rechtsgrundlage/Angemessenheitsbeschluss bzw. Standardvertragsklauseln
-           benennen. Exakte Anbieter-Firmierung + Anschrift aus dem AVV übernehmen. -->
+      <h2 id="hosting">2. Hosting und Server-Logfiles</h2>
       <p>
-        Diese Website wird bei einem externen Dienstleister gehostet
-        (<span class="todo">TODO-MARVIN: Anbieter-Firmierung + Anschrift laut AV-Vertrag — aktuell Netlify</span>).
-        Der Anbieter verarbeitet die Daten als Auftragsverarbeiter weisungsgebunden nach Art. 28 DSGVO.
+        Diese Website wird bei <strong>Netlify, Inc.</strong>, 101 2nd Street, San Francisco, CA 94105, USA, gehostet.
+        Netlify liefert die Seiten über ein weltweites Servernetz aus und verarbeitet dabei die Daten in unserem Auftrag
+        (Auftragsverarbeitung nach Art. 28 DSGVO auf Grundlage des Data Processing Agreement von Netlify).
       </p>
-      <p><span class="todo">TODO-JURIST: Drittlandtransfer (USA) bewerten und Rechtsgrundlage benennen</span></p>
-      <p><span class="todo">TODO-MARVIN: AV-Vertrag mit dem Hoster abschließen — Pflicht VOR dem Livegang</span></p>
-
-      <h2>4. Server-Logfiles</h2>
       <p>
-        Beim Aufruf der Website werden durch den Hosting-Anbieter automatisch Daten
-        verarbeitet, die Ihr Browser übermittelt (u. a. IP-Adresse, Datum und Uhrzeit
-        des Zugriffs, aufgerufene Datei, übertragene Datenmenge, Referrer, Browsertyp
-        und Betriebssystem).
+        Bei jedem Aufruf der Website verarbeitet Netlify automatisch Daten, die Ihr Browser übermittelt: IP-Adresse,
+        Datum und Uhrzeit des Zugriffs, aufgerufene Adresse, übertragene Datenmenge, verweisende Seite (Referrer),
+        Browsertyp und Betriebssystem (Server-Logfiles). Wir führen diese Daten nicht mit anderen Daten zusammen und
+        werten sie nicht zu Werbe- oder Analysezwecken aus.
       </p>
       <p>
         <strong>Zweck:</strong> Auslieferung der Website, Betriebssicherheit und Abwehr von Angriffen.<br />
-        <strong>Rechtsgrundlage:</strong> Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse am
-        technisch fehlerfreien und sicheren Betrieb).<br />
-        <strong>Speicherdauer:</strong>
-        <span class="todo">TODO-MARVIN: konkrete Speicherdauer beim Hoster erfragen und eintragen</span>
+        <strong>Rechtsgrundlage:</strong> Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einem technisch fehlerfreien
+        und sicheren Betrieb).<br />
+        <strong>Speicherdauer:</strong> Die Logfiles werden vom Hosting-Anbieter nur so lange gespeichert, wie es für die
+        genannten Zwecke erforderlich ist, und anschließend gelöscht.<br />
+        <strong>Drittland:</strong> Netlify sitzt in den USA. Netlify ist nach eigenen Angaben nach dem
+        EU-U.S. Data Privacy Framework zertifiziert; für die Übermittlung besteht damit ein Angemessenheitsbeschluss der
+        EU-Kommission (Art. 45 DSGVO). Ergänzend verwendet Netlify die Standardvertragsklauseln der EU-Kommission
+        (Art. 46 Abs. 2 lit. c DSGVO).
+      </p>
+      <!-- Logfile-Speicherdauer bei Netlify erfragen und ggf. konkret nennen. -->
+
+      <h2 id="supabase">3. Datenbank-Dienst Supabase</h2>
+      <p>
+        Für einige Funktionen nutzen wir den Datenbank-Dienst <strong>Supabase</strong> (Datenbank, Anmeldung, Dateispeicher
+        und Server-Funktionen). Anbieter und unser Vertragspartner ist die <strong>Supabase Pte. Ltd.</strong>,
+        65 Chulia Street #38-02/03, OCBC Centre, Singapur 049513. Unsere Datenbank liegt im Rechenzentrum
+        <strong>Frankfurt am Main (EU)</strong>. Supabase verarbeitet die Daten als Auftragsverarbeiter nach Art. 28 DSGVO
+        auf Grundlage seines Data Processing Addendum.
+      </p>
+      <p>
+        Supabase wird nur in den unten beschriebenen Fällen angesprochen: Live-Spielstand (Abschnitt 5), Besuchszählung
+        (Abschnitt 6), Kalender-Abo (Abschnitt 7), Partner-Anfrage (Abschnitt 10), Sammelalbum (Abschnitt 11) und interner
+        Vereinsbereich (Abschnitt 12). Technisch bedingt erhält Supabase dabei – wie bei jedem Abruf im Internet – Ihre
+        IP-Adresse, Datum und Uhrzeit sowie Browser-Angaben. Cookies setzt Supabase dabei nicht.
+      </p>
+      <p>
+        <strong>Drittland:</strong> Auch wenn die Daten in Frankfurt gespeichert werden, kann ein Zugriff aus Ländern außerhalb
+        der EU (etwa Singapur oder USA, z. B. für Wartung und Support) nicht ausgeschlossen werden. Hierfür hat Supabase die
+        Standardvertragsklauseln der EU-Kommission vereinbart (Art. 46 Abs. 2 lit. c DSGVO).<br />
+        <strong>Datensicherung:</strong> Wir legen täglich eine Sicherungskopie unserer Vereinsdaten in einem nicht
+        öffentlichen Speicher bei Supabase ab. Sicherungen werden nach 30 Tagen automatisch gelöscht; gelöschte Daten
+        verschwinden daher spätestens 30 Tage später auch aus den Sicherungen.
       </p>
 
-      <h2>5. Einstellungen im lokalen Speicher (kein Tracking)</h2>
-      <!-- Verifiziert am Code (src/store/useStore.ts): Es werden ausschließlich
-           zwei Schlüssel im localStorage gesetzt, und zwar erst NACHDEM der/die
-           Nutzer:in selbst auf den Ton-/Fangesang-Schalter geklickt hat.
-           TODO-JURIST: Einordnung nach § 25 TDDDG bestätigen — Argument: für den
-           ausdrücklich gewünschten Dienst unbedingt erforderlich (§ 25 Abs. 2
-           Nr. 2 TDDDG), daher einwilligungsfrei. Keine Cookies, keine IDs. -->
+      <h2 id="speicher">4. Speicher in Ihrem Browser (keine Cookies)</h2>
       <p>
-        Diese Website setzt <strong>keine Cookies</strong> und bindet keine Analyse- oder
-        Tracking-Dienste Dritter ein (zur eigenen, anonymen Besuchszählung siehe Abschnitt 6c). Im lokalen Speicher (localStorage) Ihres Browsers werden
-        lediglich zwei von Ihnen selbst getroffene Einstellungen gespeichert:
+        Wir setzen keine Cookies. Einige Funktionen legen Werte im lokalen Speicher Ihres Browsers ab (<code>localStorage</code>
+        bzw. – nur bis zum Schließen des Tabs – <code>sessionStorage</code>). Das geschieht erst, wenn Sie die jeweilige Funktion
+        selbst nutzen, dient nur dieser Funktion und ist dafür unbedingt erforderlich. Eine Einwilligung ist dafür nach
+        § 25 Abs. 2 Nr. 2 TDDDG nicht nötig. Zu Werbe- oder Analysezwecken wird nichts gespeichert.
       </p>
       <ul>
-        <li><code>sva-sound</code> — ob der Ton ein- oder ausgeschaltet ist</li>
-        <li><code>sva-fanchant</code> — ob der Fangesang ein- oder ausgeschaltet ist</li>
+        <li><code>sva-sound</code>, <code>sva-fanchant</code> (localStorage): ob Sie Ton bzw. Fangesang ein- oder ausgeschaltet haben.</li>
+        <li><code>sva-album-auth</code> (localStorage): Ihre Login-Sitzung im Sammelalbum, damit Sie eingeloggt bleiben (Abschnitt 11).</li>
+        <li><code>sva-album-einwilligung</code> (localStorage): Zeitpunkt, zu dem Sie der Album-Teilnahme zugestimmt haben.</li>
+        <li><code>sva-album-c</code>, <code>sva-album-c-t</code> (localStorage): ein gescannter Check-in-Code samt Zeitpunkt, höchstens 6 Stunden lang, damit der Check-in auch nach dem Login klappt.</li>
+        <li><code>sva-album-offen</code> (sessionStorage): ob Ihr Stickerheft aufgeschlagen ist.</li>
+        <li><code>sva-bande-entwurf</code> (sessionStorage): Ihr Entwurf für eine Bandenwerbung (Firmenname, Zusatzzeile, ggf. ein Logo). Er bleibt in Ihrem Browser und wird <strong>nicht</strong> an uns übertragen.</li>
       </ul>
       <p>
-        Diese Werte werden erst gespeichert, wenn Sie den jeweiligen Schalter selbst
-        betätigen. Sie enthalten keine Kennung, mit der Sie identifiziert werden könnten,
-        verlassen Ihr Gerät nicht und werden nicht an uns übertragen. Sie können sie
-        jederzeit über die Einstellungen Ihres Browsers löschen.
+        Im internen Vereinsbereich (Abschnitt 12) speichert der Browser zusätzlich die Anmeldung der Vereinsverantwortlichen.
+        Sie können alle Werte jederzeit über die Einstellungen Ihres Browsers löschen; beim Löschen des Album-Kontos entfernen wir
+        die Album-Werte selbst.
       </p>
-      <p><span class="todo">TODO-JURIST: Einordnung als „unbedingt erforderlich" nach § 25 Abs. 2 Nr. 2 TDDDG bestätigen</span></p>
 
-      <h2>6. Keine Einbindung von Drittanbieter-Inhalten auf der Startseite</h2>
-      <div class="good">
-        <strong>Technisch geprüft am 15.07.2026, ergänzt am 05.10.2026:</strong> Die Startseite lädt beim Aufruf
-        <strong>keine Ressourcen von Drittanbietern</strong>. Schriftarten sind lokal
-        eingebunden (self-hosted), es werden keine externen Fonts, CDNs, Karten-Dienste
-        oder Social-Media-Widgets nachgeladen. Karten (Routenplanung), fussball.de und
-        Instagram sind ausschließlich als <em>Links</em> eingebunden — dabei fließen erst
-        dann Daten an den jeweiligen Anbieter, wenn Sie den Link bewusst anklicken und
-        die fremde Seite dadurch selbst aufrufen. Dort gilt die Datenschutzerklärung des
-        jeweiligen Anbieters. Ausnahmen sind der Spielstand rund um ein Spiel (Abschnitt 6a) und die
-        anonyme Besuchszählung (Abschnitt 6c) – beide über unseren Datenbank-Dienst Supabase.
-      </div>
+      <h2 id="live">5. Live-Spielstand und Liveticker</h2>
       <p>
-        Aus diesem Grund benötigt diese Website <strong>kein Cookie-Banner</strong> und keine
-        Einwilligungsabfrage.
-      </p>
-      <div class="note">
-        <strong>Wichtig fürs Team:</strong> Diese Aussage gilt nur, solange es so bleibt.
-        Sobald etwas eingebettet wird, das beim Laden externe Server kontaktiert
-        (z. B. Google Maps als iFrame, YouTube-Video, Instagram-Feed, Google Fonts,
-        ein Analytics-Tool), ist dieser Abschnitt falsch und es werden Einwilligung
-        (Art. 6 Abs. 1 lit. a DSGVO, § 25 Abs. 1 TDDDG) sowie ein Consent-Banner nötig.
-        Dann müssen dieser Abschnitt und die Startseite gemeinsam angepasst werden.
-      </div>
-
-      <h2>6a. Live-Spielstand und Liveticker (Supabase)</h2>
-      <!-- Verifiziert am Code (v15-L): src/live/api.ts (fetch ohne Cookies,
-           credentials: 'omit'), src/ui/MatchdayBar.tsx (Abruf nur 15 min vor
-           bis 3 h nach Anpfiff), src/live/LiveApp.tsx (/live). -->
-      <p>
-        Unsere Spieltag-Seite <a href="/live">/live</a> zeigt Spielstand, Liveticker und Aufstellung.
-        Dafür ruft Ihr Browser diese Daten beim Datenbank-Dienst <strong>Supabase</strong> ab
-        (Serverstandort Frankfurt am Main, EU). Das passiert
+        Unsere Spieltag-Seite <a href="/live">/live</a> zeigt Spielstand, Liveticker und Aufstellung. Dafür ruft Ihr Browser diese
+        Daten bei Supabase (Abschnitt 3) ab, und zwar
       </p>
       <ul>
-        <li>nur auf der Seite <code>/live</code> (dort etwa alle 15 Sekunden während eines Spiels, sonst alle paar Minuten, und nicht, solange der Tab im Hintergrund ist), und</li>
-        <li>auf der Startseite nur im Spieltagsfenster: von 15 Minuten vor bis 3 Stunden nach dem Anpfiff, alle 30 Sekunden, damit die Spieltag-Leiste den aktuellen Stand zeigt. Außerhalb dieses Fensters stellt die Startseite keine solche Verbindung her.</li>
+        <li>auf <code>/live</code> regelmäßig (während eines Spiels etwa alle 15 Sekunden, sonst alle paar Minuten; nicht, solange der Tab im Hintergrund ist), und</li>
+        <li>auf der Startseite nur im Spieltagsfenster – von 15 Minuten vor bis 3 Stunden nach dem Anpfiff alle 30 Sekunden –, damit die Spieltag-Leiste den aktuellen Stand zeigt. Außerhalb dieses Fensters stellt die Startseite keine solche Verbindung her.</li>
       </ul>
       <p>
-        Dabei werden keine Cookies gesetzt und keine Kennungen gespeichert. Technisch bedingt erhält
-        Supabase Ihre IP-Adresse, Datum und Uhrzeit sowie Browser-Angaben (wie bei jedem Abruf einer
-        Website). Abgerufen werden ausschließlich öffentliche Spieldaten (Spielstand, Ereignisse,
-        Aufstellung mit Namen, Rückennummern und Fotos der Spieler).
+        Abgerufen werden ausschließlich öffentliche Spieldaten (Spielstand, Ereignisse, Aufstellung mit Namen, Rückennummern und Fotos
+        der Spieler, Partner-Logos); Bilder werden dabei teils aus dem Dateispeicher von Supabase geladen. Es werden keine Cookies gesetzt
+        und keine Kennungen gespeichert.
       </p>
       <p>
         <strong>Zweck:</strong> aktuelle Anzeige des Spielgeschehens.<br />
-        <strong>Rechtsgrundlage:</strong> Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse, Vereinsmitglieder und
-        Fans aktuell über laufende Spiele zu informieren); der Abruf ist für den von Ihnen aufgerufenen
-        Dienst technisch erforderlich (§ 25 Abs. 2 Nr. 2 TDDDG).<br />
-        <strong>Anbieter:</strong> <span class="todo">TODO-MARVIN: Firmierung + Anschrift laut Supabase-DPA eintragen (Supabase Inc.) und AV-Vertrag (Art. 28 DSGVO) abschließen</span>
+        <strong>Rechtsgrundlage:</strong> Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse, Mitglieder und Fans aktuell über laufende
+        Spiele zu informieren).
       </p>
-      <p><span class="todo">TODO-JURIST: Drittlandbezug (US-Mutterkonzern trotz EU-Serverstandort) bewerten</span></p>
 
-      <h2>6b. Tabelle von fussball.de (erst nach Klick)</h2>
+      <h2 id="statistik">6. Anonyme Besuchszählung (ohne Cookies)</h2>
       <p>
-        Auf <a href="/live">/live</a> können Sie die aktuelle Tabelle bzw. den Spielplan als offizielles
-        Widget von <strong>fussball.de</strong> anzeigen lassen. Das Widget wird <strong>erst geladen, wenn Sie auf
-        „Aktuelle Tabelle von fussball.de laden“ tippen</strong> (2-Klick-Lösung). Vorher besteht keine
-        Verbindung zu fussball.de.
-      </p>
-      <p>
-        Mit dem Klick lädt Ihr Browser Inhalte von den Servern von fussball.de. Dabei werden insbesondere
-        Ihre IP-Adresse, Datum und Uhrzeit, Browser-Angaben und die Adresse unserer Seite an den Anbieter
-        übermittelt; ob fussball.de dabei Cookies setzt, liegt außerhalb unseres Einflusses.
-        Anbieter: <strong>DFB-Medien GmbH &amp; Co. KG</strong>,
-        <span class="todo">TODO-MARVIN: Anschrift laut Impressum von fussball.de prüfen/eintragen</span>.
-        Es gilt die Datenschutzerklärung von fussball.de.
-      </p>
-      <p>
-        <strong>Rechtsgrundlage:</strong> Ihre Einwilligung durch den Klick (Art. 6 Abs. 1 lit. a DSGVO,
-        § 25 Abs. 1 TDDDG). Sie gilt nur für den jeweiligen Seitenaufruf; ohne Klick wird nichts geladen.
-      </p>
-      <p><span class="todo">TODO-JURIST: 2-Klick-Lösung als Einwilligung ausreichend? Hinweistext vor dem Klick prüfen</span></p>
-
-      <h2 id="statistik">6c. Anonyme Besuchszählung (ohne Cookies)</h2>
-      <!-- Verifiziert am Code (v18-A): src/statistik/zaehlen.ts (ein POST je
-           Seitenaufruf an die RPC web_zaehlen, credentials: 'omit', kein
-           Storage), supabase/migrations/20261009100000_sva_statistik.sql
-           (Tabelle sva_statistik_tage: tag, pfad, quelle, geraet, zaehler). -->
-      <p>
-        Um zu sehen, ob unsere Website Zuschauer, Spieler und Partner erreicht, zählen wir Seitenaufrufe
-        <strong>anonym</strong>. Nach dem Laden einer Seite sendet Ihr Browser einmalig drei Angaben an unseren
-        Datenbank-Dienst <strong>Supabase</strong> (Serverstandort Frankfurt am Main, EU; siehe Abschnitt 6a):
+        Um zu sehen, ob unsere Website Zuschauer, Spieler und Partner erreicht, zählen wir Seitenaufrufe <strong>anonym</strong>.
+        Nach dem Laden einer Seite sendet Ihr Browser einmalig drei grobe Angaben an Supabase (Abschnitt 3):
       </p>
       <ul>
         <li>welche Seite bzw. welcher Bereich aufgerufen wurde (z. B. „Startseite“, „/live“),</li>
@@ -231,158 +200,205 @@
         <li>ob es ein Handy oder ein Computer ist.</li>
       </ul>
       <p>
-        Ebenso zählen wir, wie oft bestimmte Knöpfe genutzt werden (z. B. Kalender-Abo, Probetraining-Nachricht,
-        Partner-Anfrage, Instagram-Link). Gespeichert wird <strong>nur eine Summe pro Tag</strong> („heute 12 Aufrufe
-        der Startseite über Instagram vom Handy“). Wir speichern <strong>keine IP-Adressen, keine Browser-Kennungen,
-        keine Uhrzeiten einzelner Aufrufe</strong>, setzen <strong>keine Cookies</strong> und legen nichts im Speicher
-        Ihres Geräts ab. Ein Rückschluss auf einzelne Personen ist uns damit nicht möglich; auch ein wiederholter
-        Besuch wird nicht wiedererkannt. Technisch bedingt erhält Supabase bei der Übertragung – wie bei jedem
-        Abruf – Ihre IP-Adresse; sie fließt nicht in die Zählung ein.
+        Ebenso zählen wir, wie oft bestimmte Knöpfe genutzt werden (z. B. Kalender-Abo, Probetraining-Nachricht, Partner-Anfrage,
+        Album-Check-in, Instagram-Link). Gespeichert wird <strong>nur eine Summe pro Tag</strong> („heute 12 Aufrufe der Startseite über
+        Instagram vom Handy“). Wir speichern <strong>keine IP-Adressen, keine Browser-Kennungen und keine Uhrzeiten einzelner
+        Aufrufe</strong>, setzen <strong>keine Cookies</strong> und legen dafür nichts auf Ihrem Gerät ab. Ein Rückschluss auf einzelne
+        Personen ist uns damit nicht möglich; auch ein wiederholter Besuch wird nicht wiedererkannt. Ob es sich um ein automatisiertes
+        Programm (Bot) oder den In-App-Browser von Instagram/Facebook handelt, prüft Ihr Browser selbst anhand der Browserkennung; diese
+        wird nicht übertragen. Die bei der Übertragung technisch anfallende IP-Adresse fließt nicht in die Zählung ein.
       </p>
       <p>
-        <strong>Zweck:</strong> Reichweite der Vereinsarbeit verstehen (z. B. ob Instagram-Beiträge Besucher bringen)
-        und die Website verbessern.<br />
-        <strong>Rechtsgrundlage:</strong> Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einer datensparsamen
-        Reichweitenmessung). Auf Ihrem Gerät wird nichts gespeichert; ausgewertet werden nur Angaben, die Ihr
-        Browser der Seite ohnehin bereitstellt (verweisende Seite, Link-Zusatz, Bildschirmbreite), und nur als grobe Kategorie.<br />
-        <strong>Speicherdauer:</strong> Die anonymen Tagessummen werden aufbewahrt, solange sie für die Vereinsarbeit
-        nützlich sind; sie enthalten keine personenbezogenen Daten.<br />
-        <strong>Widerspruch:</strong> Sie können die Zählung verhindern, indem Sie Anfragen an <code>*.supabase.co</code>
-        in Ihrem Browser blockieren (z. B. mit einem Inhaltsblocker); die Website funktioniert weiter.
-      </p>
-      <p><span class="todo">TODO-JURIST: Einordnung nach § 25 TDDDG bestätigen (Auswertung von Referrer/Link-Zusatz und Bildschirmtyp im Browser, keine Speicherung auf dem Endgerät)</span></p>
-
-      <h2 id="kalender">6d. Kalender-Abo</h2>
-      <p>
-        Wenn Sie unseren Spielplan abonnieren (<code>/kalender.ics</code>) oder ein Spiel „in den Kalender“ eintragen, ruft
-        Ihre Kalender-App bzw. Ihr Browser die Termine regelmäßig von unserer Website ab; die Daten stellt unser
-        Datenbank-Dienst Supabase bereit. Dabei werden nur öffentliche Spieldaten übertragen; wir speichern keine
-        Angaben über Abonnenten. Wählen Sie „Google Kalender“ oder „Outlook“, öffnet sich die Seite des jeweiligen
-        Anbieters – dort gilt dessen Datenschutzerklärung.
+        <strong>Zweck:</strong> Reichweite der Vereinsarbeit verstehen (z. B. ob Instagram-Beiträge Besucher bringen) und die Website
+        verbessern.<br />
+        <strong>Rechtsgrundlage:</strong> Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einer datensparsamen Reichweitenmessung).
+        Auf Ihrem Gerät wird dafür nichts gespeichert oder ausgelesen, was nicht ohnehin für den Seitenaufruf übermittelt wird.<br />
+        <strong>Speicherdauer:</strong> Die Tagessummen enthalten keine personenbezogenen Daten und werden aufbewahrt, solange sie für die
+        Vereinsarbeit nützlich sind.<br />
+        <strong>Widerspruch:</strong> Sie können die Zählung verhindern, indem Sie Anfragen an <code>*.supabase.co</code> in Ihrem Browser
+        blockieren (z. B. mit einem Inhaltsblocker); die Startseite funktioniert weiter.
       </p>
 
-      <h2>7. Kontaktaufnahme</h2>
-      <!-- TODO-MARVIN: Sobald WhatsApp als Kontaktweg aktiv ist (club.ts:
-           whatsappReady), MUSS hier ein eigener Abschnitt zu WhatsApp
-           ergänzt werden — inkl. Drittlandtransfer. Aktuell fallen alle
-           CTAs auf E-Mail zurück, deshalb hier noch nicht beschrieben. -->
+      <h2 id="kalender">7. Kalender-Abo</h2>
       <p>
-        Wenn Sie uns per E-Mail kontaktieren, verarbeiten wir Ihre Angaben
-        (E-Mail-Adresse, Name, Inhalt der Nachricht) ausschließlich zur Bearbeitung
-        Ihres Anliegens.
+        Wenn Sie unseren Spielplan abonnieren (<code>/kalender.ics</code>) oder ein Spiel mit Apple Kalender eintragen, ruft Ihre
+        Kalender-App bzw. Ihr Browser die Termine – beim Abo regelmäßig – über unsere Website ab; die Daten stellt eine Server-Funktion bei
+        Supabase (Abschnitt 3) bereit. Übertragen werden nur öffentliche Spieldaten. Wir speichern keine Angaben über Abonnenten; die
+        Funktion protokolliert keine Abrufe.
       </p>
       <p>
-        <strong>Rechtsgrundlage:</strong> Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse
-        an der Beantwortung von Anfragen); bei Anfragen zur Mitgliedschaft zusätzlich
-        Art. 6 Abs. 1 lit. b DSGVO (Anbahnung eines Mitgliedschaftsverhältnisses).<br />
-        <strong>Speicherdauer:</strong> Löschung, sobald das Anliegen abschließend geklärt ist
-        und keine gesetzlichen Aufbewahrungsfristen entgegenstehen.
+        Wählen Sie „Google Kalender“ oder „Outlook“, öffnet sich erst durch Ihren Klick die Seite des jeweiligen Anbieters (Google bzw.
+        Microsoft); dort gilt dessen Datenschutzerklärung.<br />
+        <strong>Rechtsgrundlage:</strong> Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse, Fans über Spieltermine zu informieren).
       </p>
-      <p><span class="todo">TODO-MARVIN: Sobald die echte WhatsApp-Nummer aktiv ist, Abschnitt „WhatsApp" ergänzen</span></p>
 
-      <h2 id="partner-anfrage">7a. Partner-Anfrage (Formular auf /partner)</h2>
-      <!-- Verifiziert am Code (v16-S): src/partner/api.ts (fetch ohne Cookies,
-           credentials: 'omit'), RPC partner_anfrage() in
-           supabase/migrations/20261006100000_sva_partner.sql (Aufräumen,
-           IP-Hash, Webhook ohne Kontaktdaten). -->
+      <h2 id="spielplan">8. Spielplan, Tabelle und fussball.de</h2>
       <p>
-        Auf unserer Seite <a href="/partner">/partner</a> können Unternehmen eine Partner- bzw.
-        Sponsoring-Anfrage senden. Wir verarbeiten dabei: Name des Unternehmens, Name der
-        Ansprechperson, E-Mail-Adresse, freiwillig eine Telefonnummer, das gewählte Paket und
-        Ihre Nachricht. Stammt der Aufruf von einem Link mit Kanal-Kennzeichen (z. B.
-        <code>?utm_source=instagram</code>), speichern wir nur diesen Kanalnamen, keine Kennung von Ihnen.
+        Spielplan, Ergebnisse und Tabelle übernehmen wir aus öffentlichen Quellen (u. a. FuPa) auf unseren eigenen Servern und zeigen sie
+        als Teil unserer Website an. Dabei werden keine Daten von Besucherinnen und Besuchern an FuPa oder fussball.de übertragen. Links zu
+        fussball.de und FuPa öffnen die jeweilige Seite erst auf Ihren Klick (Abschnitt 13).
+      </p>
+      <h3 id="fussball-de">Tabelle von fussball.de (nur nach Klick)</h3>
+      <p>
+        Solange auf <a href="/live">/live</a> noch keine eigene Tabelle gepflegt ist, können wir dort stattdessen das offizielle Widget von
+        <strong>fussball.de</strong> anbieten. Es wird <strong>erst geladen, wenn Sie auf „Aktuelle Tabelle von fussball.de laden“ bzw.
+        „Spielplan laden“ tippen</strong>; vorher besteht keine Verbindung zu fussball.de. Mit dem Klick lädt Ihr Browser Inhalte von den
+        Servern von fussball.de; dabei werden insbesondere Ihre IP-Adresse, Datum und Uhrzeit, Browser-Angaben und die Adresse unserer Seite
+        übermittelt. Ob fussball.de dabei Cookies setzt, liegt außerhalb unseres Einflusses.
       </p>
       <p>
-        Zum Schutz vor Missbrauch (zu viele Anfragen in kurzer Zeit) speichern wir zusätzlich einen
-        <strong>täglich wechselnden, nicht umkehrbaren Hash-Wert</strong> Ihrer IP-Adresse, nicht die
-        IP-Adresse selbst. Dieser Wert wird nach <strong>7 Tagen</strong> automatisch gelöscht. Ein
-        unsichtbares Formularfeld und die Ausfüllzeit dienen dazu, automatisierte Spam-Einträge
-        auszusortieren; dafür werden keine weiteren Daten gespeichert.
+        <strong>Anbieter:</strong> DFB GmbH &amp; Co. KG, DFB-Campus, Kennedyallee 274, 60528 Frankfurt am Main. Es gilt die
+        Datenschutzerklärung von fussball.de.<br />
+        <strong>Rechtsgrundlage:</strong> Ihre Einwilligung durch den Klick (Art. 6 Abs. 1 lit. a DSGVO, § 25 Abs. 1 TDDDG). Sie gilt nur für
+        den jeweiligen Seitenaufruf; ohne Klick wird nichts geladen. Sie können sie jederzeit für die Zukunft widerrufen, indem Sie die Seite
+        neu laden.
+      </p>
+
+      <h2 id="kontakt">9. Kontakt per E-Mail und WhatsApp</h2>
+      <p>
+        Wenn Sie uns per E-Mail kontaktieren, verarbeiten wir Ihre Angaben (E-Mail-Adresse, Name, Inhalt der Nachricht) ausschließlich zur
+        Bearbeitung Ihres Anliegens.
       </p>
       <p>
-        Die Angaben werden über eine verschlüsselte Verbindung an unseren Datenbank-Dienst
-        <strong>Supabase</strong> (Serverstandort Frankfurt am Main, EU; siehe Abschnitt 6a) übertragen und
-        sind nur für die Vereinsverantwortlichen mit Admin-Zugang einsehbar. Cookies werden dabei
-        nicht gesetzt. Ist eine Benachrichtigung eingerichtet, erhalten wir eine kurze Meldung
-        (Unternehmen, Ansprechperson, Paket) ohne E-Mail-Adresse, Telefonnummer oder Nachricht.
-        <span class="todo">TODO-MARVIN: Wenn die Benachrichtigung über n8n/WhatsApp aktiv ist, Anbieter hier nennen</span>
+        Für Probetraining und das Mithelfen am Spieltag bieten wir einen kleinen Assistenten an. Er stellt eine Nachricht zusammen
+        (z. B. Mannschaft, Vorname, Jahrgang, Position), die <strong>wir nicht speichern</strong>. Erst wenn Sie auf „In WhatsApp öffnen“
+        bzw. „Per E-Mail senden“ tippen, öffnet sich WhatsApp oder Ihr E-Mail-Programm mit dem vorbereiteten Text; abgeschickt wird erst,
+        wenn Sie dort selbst auf Senden tippen. Beim Laden unserer Website wird keine Verbindung zu WhatsApp hergestellt.
       </p>
+      <p>
+        Wenn Sie uns über WhatsApp schreiben, verarbeitet auch WhatsApp (in der EU: WhatsApp Ireland Limited, ein Unternehmen der
+        Meta-Gruppe) Ihre Daten, u. a. Ihre Telefonnummer und Metadaten der Kommunikation; dabei können Daten auch in die USA übermittelt
+        werden. Hierfür gilt die Datenschutzerklärung von WhatsApp. Wenn Sie das nicht möchten, schreiben Sie uns bitte per E-Mail.
+      </p>
+      <p>
+        <strong>Rechtsgrundlage:</strong> Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an der Beantwortung von Anfragen); bei Anfragen
+        zu Probetraining oder Mitgliedschaft zusätzlich Art. 6 Abs. 1 lit. b DSGVO (Anbahnung eines Mitgliedschaftsverhältnisses).<br />
+        <strong>Speicherdauer:</strong> Löschung, sobald das Anliegen abschließend geklärt ist und keine gesetzlichen Aufbewahrungsfristen
+        entgegenstehen.
+      </p>
+
+      <h2 id="partner-anfrage">10. Partner-Anfrage (Formular auf /partner)</h2>
+      <p>
+        Auf unserer Seite <a href="/partner">/partner</a> können Unternehmen eine Partner- bzw. Sponsoring-Anfrage senden. Wir verarbeiten
+        dabei: Name des Unternehmens, Name der Ansprechperson, E-Mail-Adresse, freiwillig eine Telefonnummer, das gewählte Paket und Ihre
+        Nachricht. Stammt der Aufruf von einem Link mit Kanal-Kennzeichen (z. B. <code>?utm_source=instagram</code>), speichern wir nur diesen
+        Kanalnamen, keine Kennung von Ihnen. Einen Bandenentwurf mit Logo, den Sie vorher gestaltet haben, übertragen wir nicht
+        (Abschnitt 4).
+      </p>
+      <p>
+        Zum Schutz vor Missbrauch (zu viele Anfragen in kurzer Zeit) speichern wir zusätzlich einen <strong>täglich wechselnden, nicht
+        umkehrbaren Hash-Wert</strong> Ihrer IP-Adresse, nicht die IP-Adresse selbst. Dieser Wert wird nach <strong>7 Tagen</strong>
+        gelöscht. Ein für Menschen unsichtbares Formularfeld und die Ausfüllzeit dienen dazu, automatisierte Spam-Einträge auszusortieren;
+        dafür werden keine weiteren Daten gespeichert.
+      </p>
+      <p>
+        Die Angaben werden verschlüsselt an Supabase (Abschnitt 3) übertragen und sind nur für die Vereinsverantwortlichen mit Zugang zum
+        internen Bereich einsehbar. Cookies werden dabei nicht gesetzt. Ist eine Benachrichtigung eingerichtet, erhalten wir eine kurze
+        Meldung (Unternehmen, Ansprechperson, Paket) ohne E-Mail-Adresse, Telefonnummer oder Nachricht.
+      </p>
+      <!-- Wird die Benachrichtigung (n8n-Webhook) aktiviert, Empfänger-Dienst hier nennen. -->
       <p>
         <strong>Zweck:</strong> Beantwortung Ihrer Anfrage und Anbahnung einer Partnerschaft.<br />
-        <strong>Rechtsgrundlage:</strong> Art. 6 Abs. 1 lit. b DSGVO (vorvertragliche Maßnahmen auf Ihre Anfrage)
-        und Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an der Missbrauchsabwehr). Die Checkbox im
-        Formular bestätigt, dass Sie diesen Hinweis zur Kenntnis genommen haben.<br />
-        <strong>Speicherdauer:</strong> Abgelehnte Anfragen löschen wir automatisch 6 Monate nach der letzten
-        Bearbeitung, unbeantwortete bzw. nicht abgeschlossene spätestens nach 12 Monaten. Kommt eine
-        Partnerschaft zustande, bewahren wir die Angaben für deren Dauer und im Rahmen gesetzlicher
-        Aufbewahrungspflichten auf.<br />
-        <strong>Löschung:</strong> Sie können jederzeit verlangen, dass wir Ihre Anfrage vorzeitig löschen —
-        eine formlose E-Mail an die in Abschnitt 1 genannte Adresse genügt.
+        <strong>Rechtsgrundlage:</strong> Art. 6 Abs. 1 lit. b DSGVO (vorvertragliche Maßnahmen auf Ihre Anfrage) und Art. 6 Abs. 1 lit. f
+        DSGVO (berechtigtes Interesse an der Missbrauchsabwehr).<br />
+        <strong>Speicherdauer:</strong> Abgelehnte Anfragen löschen wir automatisch 6 Monate nach der letzten Bearbeitung, unbeantwortete
+        bzw. nicht abgeschlossene spätestens nach 12 Monaten. Kommt eine Partnerschaft zustande, bewahren wir die Angaben für deren Dauer
+        und im Rahmen gesetzlicher Aufbewahrungspflichten auf.<br />
+        <strong>Löschung:</strong> Sie können jederzeit verlangen, dass wir Ihre Anfrage vorzeitig löschen – eine formlose E-Mail an
+        <a href="mailto:info@aga-erste.de">info@aga-erste.de</a> genügt.
       </p>
-      <p><span class="todo">TODO-JURIST: Rechtsgrundlage und Fristen prüfen</span></p>
 
-      <h2 id="album">7b. Sammelalbum / Stickerheft (Seite /album)</h2>
-      <!-- Verifiziert am Code (v17-A): src/album/api.ts (eigener Speicher-
-           schlüssel sva-album-auth, Login per E-Mail-Link/Code), RPCs in
-           supabase/migrations/20261007100000_sva_album.sql (album_checkin,
-           album_konto_loeschen: Album-Daten weg, Check-ins nur noch anonym,
-           PIN-Fehlversuche nach 1 Tag gelöscht). -->
+      <h2 id="album">11. Sammelalbum / Stickerheft (Seite /album)</h2>
       <p>
-        Auf <a href="/album">/album</a> können Sie freiwillig am digitalen Stickerheft des Vereins teilnehmen: Bei Heimspielen
-        scannen Sie am Eingang einen QR-Code („Check-in“), erhalten Sticker für Ihr Heft und ab bestimmten Check-ins Gutscheine.
-        Dafür brauchen Sie ein Konto, das Sie nur mit Ihrer E-Mail-Adresse anlegen (kein Passwort). Wir verarbeiten:
+        Auf <a href="/album">/album</a> können Sie freiwillig am digitalen Stickerheft des Vereins teilnehmen: Bei Heimspielen scannen Sie
+        am Eingang einen QR-Code („Check-in“), erhalten Sticker für Ihr Heft und ab bestimmten Check-ins Gutscheine. Dafür brauchen Sie ein
+        Konto, das Sie nur mit Ihrer E-Mail-Adresse anlegen (kein Passwort). Wir verarbeiten:
       </p>
       <ul>
-        <li><strong>E-Mail-Adresse</strong> — für das Login per E-Mail-Link bzw. Code;</li>
-        <li><strong>Vorname und Anfangsbuchstabe des Nachnamens</strong> — steht auf Ihren Gutscheinen;</li>
+        <li><strong>E-Mail-Adresse</strong> – für das Login per E-Mail-Link bzw. Code;</li>
+        <li><strong>Vorname und Anfangsbuchstabe des Nachnamens</strong> – steht auf Ihren Gutscheinen;</li>
         <li><strong>Check-ins</strong> (welches Heimspiel, Zeitpunkt), <strong>Sticker</strong> in Ihrem Heft, <strong>Gutscheine</strong> (Code, Status, Zeitpunkt des Einlösens);</li>
-        <li>Ihre <strong>Einwilligungen</strong> (Zeitpunkt) und freiwillige Einstellungen: Anzeige in der Rangliste „Treueste Fans“ (nur „Vorname I.“) und Erinnerung vor Heimspielen per E-Mail;</li>
-        <li>falsche Eingaben der Stand-PIN beim Einlösen eines Gutscheins (Zeitpunkt) — nur zum Schutz vor Ausprobieren, nach einem Tag gelöscht.</li>
+        <li>Ihre <strong>Einwilligung</strong> (Zeitpunkt) und freiwillige Einstellungen: Anzeige in der Rangliste „Treueste Fans“ (nur „Vorname I.“) und Erinnerung vor Heimspielen per E-Mail;</li>
+        <li>falsche Eingaben der Stand-PIN beim Einlösen eines Gutscheins (Zeitpunkt) – nur zum Schutz vor Ausprobieren, nach einem Tag gelöscht;</li>
+        <li>beim Login technisch bedingt IP-Adresse und Zeitpunkt (Sicherheitsprotokoll des Anmeldedienstes von Supabase).</li>
       </ul>
       <p>
-        Damit Sie eingeloggt bleiben, speichert Ihr Browser die Login-Sitzung im lokalen Speicher (Schlüssel <code>sva-album-auth</code>),
-        dazu kurzzeitig einen gescannten Check-in-Code (höchstens 6 Stunden, damit der Check-in nach dem Login klappt) und den Hinweis,
-        dass Sie eingewilligt haben. Das ist für den von Ihnen gewünschten Dienst technisch erforderlich (§ 25 Abs. 2 Nr. 2 TDDDG).
-        Die Daten liegen bei unserem Datenbank-Dienst <strong>Supabase</strong> (Serverstandort Frankfurt am Main, EU; siehe Abschnitt 6a),
-        der auch die Login-E-Mails verschickt. <span class="todo">TODO-MARVIN: Falls ein eigener E-Mail-Versand (SMTP) eingerichtet wird, Anbieter hier nennen</span>
+        Die Daten liegen bei Supabase (Abschnitt 3). Die Login-E-Mails (Absender <code>login@aga-erste.de</code>) verschicken wir über den
+        E-Mail-Dienst <strong>Resend</strong> (Plus Five Five, Inc., 2261 Market Street #5039, San Francisco, CA 94114, USA). Resend erhält
+        dafür Ihre E-Mail-Adresse und den Inhalt der Login-Mail und verarbeitet sie als Auftragsverarbeiter nach Art. 28 DSGVO. Resend ist
+        nach eigenen Angaben nach dem EU-U.S. Data Privacy Framework zertifiziert (Art. 45 DSGVO); ergänzend sind Standardvertragsklauseln
+        vereinbart (Art. 46 Abs. 2 lit. c DSGVO). Zur Login-Sitzung im Browser siehe Abschnitt 4.
       </p>
       <p>
-        Die Zahl der Check-ins je Spiel veröffentlichen wir nur als <strong>Gesamtzahl</strong> (z. B. für Partner: „Ø Zuschauer pro Heimspiel“),
-        nie mit Namen. Partner, die einen Check-in, einen Sticker oder eine Belohnung „präsentieren“, erhalten <strong>keine</strong> Daten von Ihnen;
-        am Stand sieht der Helfer nur den Gutschein auf Ihrem Handy. Eine Weitergabe an Dritte findet nicht statt.
+        Die Zahl der Check-ins je Spiel veröffentlichen wir nur als <strong>Gesamtzahl</strong> (z. B. für Partner: „Ø Zuschauer pro
+        Heimspiel“), nie mit Namen. Partner, die einen Check-in, einen Sticker oder eine Belohnung „präsentieren“, erhalten <strong>keine</strong>
+        Daten von Ihnen; am Stand sieht der Helfer nur den Gutschein auf Ihrem Handy. Eine Weitergabe an Dritte findet nicht statt.
       </p>
       <p>
-        <strong>Zweck:</strong> Betrieb des Stickerhefts (Check-ins, Sticker, Belohnungen), Rangliste und — nur mit Ihrer Zustimmung —
+        <strong>Zweck:</strong> Betrieb des Stickerhefts (Check-ins, Sticker, Belohnungen), Rangliste und – nur mit Ihrer Zustimmung –
         Erinnerung vor Heimspielen.<br />
-        <strong>Rechtsgrundlage:</strong> Ihre Einwilligung (Art. 6 Abs. 1 lit. a DSGVO), die Sie beim Anlegen des Kontos erteilen; Rangliste und
-        E-Mail-Erinnerung sind jeweils eigene, freiwillige Einwilligungen. Die Sperre bei falscher Stand-PIN beruht auf unserem berechtigten
-        Interesse an der Missbrauchsabwehr (Art. 6 Abs. 1 lit. f DSGVO).<br />
-        <strong>Speicherdauer:</strong> bis Sie Ihr Konto löschen oder Ihre Einwilligung widerrufen; endet das Stickerheft-Angebot, löschen wir alle
-        Album-Daten.<br />
-        <strong>Löschung &amp; Widerruf:</strong> jederzeit selbst über „Konto“ → <strong>„Konto löschen“</strong> auf /album. Dann löschen wir sofort
-        Profil, Sticker und Gutscheine; Ihre Check-ins zählen nur noch anonym (ohne jeden Bezug zu Ihnen) in der Zuschauerzahl. Ein über das
-        Stickerheft angelegtes Login wird mitgelöscht. Rangliste und Erinnerung lassen sich im Konto einzeln abschalten.
+        <strong>Rechtsgrundlage:</strong> Ihre Einwilligung (Art. 6 Abs. 1 lit. a DSGVO), die Sie beim Anlegen des Kontos erteilen; Rangliste
+        und E-Mail-Erinnerung sind jeweils eigene, freiwillige Einwilligungen. Die Sperre bei falscher Stand-PIN und das Sicherheitsprotokoll
+        beim Login beruhen auf unserem berechtigten Interesse an der Missbrauchsabwehr (Art. 6 Abs. 1 lit. f DSGVO). Kinder und Jugendliche
+        unter 16 Jahren nehmen bitte nur mit Zustimmung ihrer Eltern teil (Art. 8 DSGVO).<br />
+        <strong>Speicherdauer:</strong> bis Sie Ihr Konto löschen oder Ihre Einwilligung widerrufen; endet das Stickerheft-Angebot, löschen wir
+        alle Album-Daten.<br />
+        <strong>Löschung &amp; Widerruf:</strong> jederzeit selbst über „Konto“ → <strong>„Konto löschen“</strong> auf /album. Dann löschen wir
+        sofort Profil, Sticker und Gutscheine; Ihre Check-ins zählen nur noch anonym (ohne jeden Bezug zu Ihnen) in der Zuschauerzahl. Ein über
+        das Stickerheft angelegtes Login wird mitgelöscht. Rangliste und Erinnerung lassen sich im Konto einzeln abschalten. Der Widerruf gilt
+        für die Zukunft; die bis dahin erfolgte Verarbeitung bleibt rechtmäßig.
       </p>
-      <p><span class="todo">TODO-JURIST: Einwilligungstext auf /album, Mindestalter (Kinder unter 16: Einwilligung der Eltern, Art. 8 DSGVO) und eine automatische Löschung inaktiver Konten prüfen</span></p>
+      <!-- Offen: Einwilligungstext /album und Löschung inaktiver Konten juristisch prüfen (RECHT_OFFEN.md). -->
 
-      <h2>8. Fotos auf dieser Website</h2>
-      <!-- TODO-MARVIN: Auf den Fanblock-/Kaderfotos sind Personen erkennbar.
-           Dafür braucht es eine Rechtsgrundlage (i. d. R. Einwilligung nach
-           Art. 6 Abs. 1 lit. a DSGVO, ggf. KUG) — schriftlich einholen und
-           dokumentieren, inkl. Widerrufsmöglichkeit. -->
-      <p><span class="todo">TODO-MARVIN: Rechtsgrundlage für Personenfotos (Einwilligungen) beschreiben</span></p>
-      <p><span class="todo">TODO-JURIST: Verhältnis DSGVO/KUG und Widerruf prüfen</span></p>
-
-      <h2>9. Empfänger der Daten</h2>
+      <h2 id="vereinsbereich">12. Interner Vereinsbereich</h2>
       <p>
-        Eine Weitergabe Ihrer Daten findet an den Hosting-Anbieter als
-        Auftragsverarbeiter (Abschnitt 3) sowie beim Abruf von Live-Daten an Supabase
-        (Abschnitt 6a), für die anonyme Besuchszählung und das Kalender-Abo (Abschnitte 6c, 6d) bzw. bei Nutzung des Stickerhefts (Abschnitt 7b) statt; an fussball.de nur nach Ihrem Klick (Abschnitt 6b). Eine darüber
-        hinausgehende Übermittlung erfolgt nicht.
-        <span class="todo">TODO-JURIST: bestätigen, sobald Abschnitt 3 gefüllt ist</span>
+        Vereinsverantwortliche pflegen die Inhalte dieser Website in einem geschützten Bereich. Für die Anmeldung verarbeiten wir deren
+        E-Mail-Adresse (Login per E-Mail-Link, Versand über Resend, oder per Passwort) sowie technisch bedingt IP-Adresse und Zeitpunkt der
+        Anmeldung; Veröffentlichungen der Website werden mit Person und Zeitpunkt protokolliert. Die Daten liegen bei Supabase
+        (Abschnitt 3).<br />
+        <strong>Rechtsgrundlage:</strong> Art. 6 Abs. 1 lit. b DSGVO (Mitwirkung im Verein) bzw. Art. 6 Abs. 1 lit. f DSGVO (berechtigtes
+        Interesse an einem sicheren Zugang).
       </p>
 
-      <h2>10. Ihre Rechte</h2>
+      <h2 id="links">13. Links zu anderen Anbietern</h2>
+      <p>
+        Unsere Website enthält Links, aber <strong>keine eingebetteten Inhalte</strong> folgender Anbieter: Instagram (Meta Platforms Ireland
+        Limited), WhatsApp (Abschnitt 9), Google Maps bzw. Apple Karten (Routenplanung), Google Kalender und Outlook (Abschnitt 7), fussball.de
+        und FuPa. Beim Laden unserer Seiten werden keine Daten an diese Anbieter übertragen. Erst wenn Sie einen Link anklicken, ruft Ihr Browser
+        die Seite des Anbieters auf, der dann – wie bei jedem Website-Besuch – Daten wie Ihre IP-Adresse erhält. Ab dann gilt die
+        Datenschutzerklärung des jeweiligen Anbieters, auf deren Verarbeitung wir keinen Einfluss haben.
+      </p>
+
+      <h2 id="fotos">14. Fotos und Spielerangaben</h2>
+      <p>
+        Auf dieser Website zeigen wir Fotos aus dem Vereinsleben, insbesondere Spieler- und Mannschaftsfotos (u. a. von unserer
+        Vereinsfotografin „picture by Nele“), Fotos von Spielen und Veranstaltungen sowie Namen, Rückennummern und Positionen unserer Spieler
+        im Kader, in Aufstellungen und im Sammelalbum.
+      </p>
+      <p>
+        <strong>Rechtsgrundlage:</strong> Spielerporträts, Mannschaftsfotos und Spielerangaben veröffentlichen wir mit Einwilligung der
+        abgebildeten Personen (Art. 6 Abs. 1 lit. a DSGVO), bei Minderjährigen mit Einwilligung der Erziehungsberechtigten. Fotos vom
+        Spielgeschehen und von Vereinsveranstaltungen veröffentlichen wir auf Grundlage unseres berechtigten Interesses an der Darstellung des
+        Vereinslebens (Art. 6 Abs. 1 lit. f DSGVO).<br />
+        <strong>Widerruf und Widerspruch:</strong> Wenn Sie auf einem Foto zu sehen sind und das nicht (mehr) möchten, schreiben Sie uns an
+        <a href="mailto:info@aga-erste.de">info@aga-erste.de</a>. Wir entfernen das Foto bzw. machen Sie unkenntlich. Eine erteilte
+        Einwilligung können Sie jederzeit mit Wirkung für die Zukunft widerrufen.
+      </p>
+
+      <h2 id="empfaenger">15. Empfänger und Übermittlung in Drittländer</h2>
+      <p>
+        Ihre Daten erhalten nur die oben genannten Dienstleister, die für uns als Auftragsverarbeiter tätig sind: Netlify (Hosting,
+        Abschnitt 2), Supabase (Datenbank, Abschnitt 3) und Resend (Login-E-Mails, Abschnitt 11). An fussball.de werden Daten nur nach Ihrem
+        Klick übertragen (Abschnitt 8). Innerhalb des Vereins haben nur die zuständigen Vereinsverantwortlichen Zugriff. Wir verkaufen keine
+        Daten und geben sie nicht zu Werbezwecken weiter.
+      </p>
+      <p>
+        Soweit dabei Daten in Länder außerhalb der EU übermittelt werden (USA, Singapur), stützen wir uns auf den Angemessenheitsbeschluss zum
+        EU-U.S. Data Privacy Framework (Netlify, Resend) bzw. auf die Standardvertragsklauseln der EU-Kommission (Supabase sowie ergänzend
+        Netlify und Resend). Eine Kopie der Garantien erhalten Sie auf Anfrage.
+      </p>
+
+      <h2 id="rechte">16. Ihre Rechte</h2>
       <p>Sie haben uns gegenüber folgende Rechte hinsichtlich Ihrer personenbezogenen Daten:</p>
       <ul>
         <li>Recht auf Auskunft (Art. 15 DSGVO)</li>
@@ -390,36 +406,40 @@
         <li>Recht auf Löschung (Art. 17 DSGVO)</li>
         <li>Recht auf Einschränkung der Verarbeitung (Art. 18 DSGVO)</li>
         <li>Recht auf Datenübertragbarkeit (Art. 20 DSGVO)</li>
-        <li>Recht auf Widerspruch gegen die Verarbeitung (Art. 21 DSGVO)</li>
-        <li>Recht auf Widerruf einer erteilten Einwilligung (Art. 7 Abs. 3 DSGVO)</li>
+        <li>Recht auf Widerruf einer erteilten Einwilligung mit Wirkung für die Zukunft (Art. 7 Abs. 3 DSGVO)</li>
       </ul>
       <p>
-        Zur Ausübung genügt eine formlose Nachricht an den Verantwortlichen (Abschnitt 1).
+        <strong>Widerspruchsrecht (Art. 21 DSGVO):</strong> Soweit wir Daten auf Grundlage unseres berechtigten Interesses verarbeiten
+        (Art. 6 Abs. 1 lit. f DSGVO), können Sie dieser Verarbeitung aus Gründen, die sich aus Ihrer besonderen Situation ergeben, jederzeit
+        widersprechen.
+      </p>
+      <p>
+        Zur Ausübung Ihrer Rechte genügt eine formlose Nachricht an <a href="mailto:info@aga-erste.de">info@aga-erste.de</a> oder an die
+        Anschrift in Abschnitt 1.
       </p>
 
-      <h2>11. Beschwerderecht bei der Aufsichtsbehörde</h2>
-      <!-- TODO-MARVIN: Zuständig ist die Aufsichtsbehörde am Sitz des Vereins.
-           Bewusst NICHT eingetragen, solange die Vereinsanschrift (Impressum)
-           nicht feststeht — die Zuständigkeit folgt aus dem Sitz. -->
+      <h2 id="beschwerde">17. Beschwerderecht bei der Aufsichtsbehörde</h2>
       <p>
-        Unbeschadet anderer Rechtsbehelfe haben Sie das Recht auf Beschwerde bei einer
-        Datenschutz-Aufsichtsbehörde (Art. 77 DSGVO).
+        Unbeschadet anderer Rechtsbehelfe haben Sie das Recht auf Beschwerde bei einer Datenschutz-Aufsichtsbehörde (Art. 77 DSGVO). Für uns
+        zuständig ist:
       </p>
-      <p>Die Landesbeauftragte für den Datenschutz Niedersachsen, Prinzenstraße 5, 30159 Hannover — <a href="https://www.lfd.niedersachsen.de" rel="noreferrer">www.lfd.niedersachsen.de</a></p>
-
-      <h2>12. Keine automatisierte Entscheidungsfindung</h2>
       <p>
-        Eine automatisierte Entscheidungsfindung einschließlich Profiling nach
-        Art. 22 DSGVO findet nicht statt.
+        Der Landesbeauftragte für den Datenschutz Niedersachsen<br />
+        Prinzenstraße 5, 30159 Hannover<br />
+        <a href="https://www.lfd.niedersachsen.de" rel="noreferrer">www.lfd.niedersachsen.de</a>
       </p>
 
-      <h2>13. Stand dieser Erklärung</h2>
+      <h2>18. Keine automatisierte Entscheidungsfindung</h2>
       <p>
-        <span class="todo">TODO-MARVIN: Datum eintragen, sobald die Erklärung freigegeben ist</span>
+        Eine automatisierte Entscheidungsfindung einschließlich Profiling nach Art. 22 DSGVO findet nicht statt. Die Verlosung der Sticker im
+        Sammelalbum ist ein Spielelement ohne rechtliche oder ähnlich erhebliche Wirkung.
       </p>
+
+      <h2 id="stand">19. Stand dieser Erklärung</h2>
+      <p>Oktober 2026. Wir passen diese Erklärung an, wenn sich die Website oder die Rechtslage ändert.</p>
 
       <footer>
-        <a href="/impressum.html">Impressum</a> ·
+        <a href="/impressum">Impressum</a> ·
         <a href="/">Startseite</a>
       </footer>
     </main>
