@@ -214,8 +214,9 @@ export const CONTACT = {
   // v15-L: Trainingsort ≠ Spielort (Kunde, 05.10.2026). Gepflegt im Admin
   // unter Verein & Links → „Trainingsort"; leer = nicht anzeigen.
   trainingOrt: 'Sportplatz an der B73, Am Paschberg 1, 21684 Agathenburg',
-  instagram: '@sva_fussball',
-  instagramUrl: 'https://instagram.com/sva_fussball',
+  // v15: Account der 1. Herren (Marvin, 05.10.2026)
+  instagram: '@svagathenburg',
+  instagramUrl: 'https://instagram.com/svagathenburg',
   // PLATZHALTER (Marvin trägt die echte Vereins-/Ansprechpartner-Nummer
   // ein, internationales Format ohne + und ohne führende 0).
   whatsapp: '491700000000',

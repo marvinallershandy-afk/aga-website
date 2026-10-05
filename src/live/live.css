@@ -361,3 +361,14 @@ img { display: block; }
 @media (prefers-reduced-motion: reduce) {
   .lv-puls, .lv-skel { animation: none; }
 }
+
+/* ── v15: eigene Tabelle ───────────────────────────────────── */
+.lv-tab-wrap { overflow-x: auto; }
+.lv-table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+.lv-table th { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: rgba(255,255,255,.5); font-weight: 600; text-align: center; padding: 6px 4px 10px; }
+.lv-table td { text-align: center; padding: 9px 4px; border-top: 1px solid var(--line); }
+.lv-table .lv-table__team { text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 0; width: 60%; }
+.lv-table__pkt { font-weight: 700; }
+.lv-table tr.is-self td { background: rgba(233,29,41,.16); font-weight: 700; }
+.lv-table tr.is-self td:first-child { box-shadow: inset 3px 0 0 #e91d29; }
+.lv-table__quelle { margin: 10px 0 0; font-size: 12px; color: rgba(255,255,255,.45); }

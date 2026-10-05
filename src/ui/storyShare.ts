@@ -1,6 +1,6 @@
 import type { Player } from '../data/players'
 import { POSITION_LABEL } from '../data/players'
-import { CLUB, NEXT_MATCH } from '../data/content'
+import { CLUB, CONTACT, NEXT_MATCH } from '../data/content'
 import { CARD_RATIO, POP_RATIO, FONT_BODY, FONT_DISPLAY, drawPlayerCard, loadCardAssets } from './cardArt'
 
 // ─────────────────────────────────────────────────────────────
@@ -14,7 +14,8 @@ import { CARD_RATIO, POP_RATIO, FONT_BODY, FONT_DISPLAY, drawPlayerCard, loadCar
 const W = 1080
 const H = 1920
 const SITE = 'aga-erste.de'
-const INSTA = '@sva_fussball'
+// v15: Handle aus der Pflege (Admin → Verein & Links), Fallback club.ts
+const INSTA = CONTACT.instagram.startsWith('@') ? CONTACT.instagram : `@${CONTACT.instagram}`
 
 /** „Nächstes Spiel: So 16.08. · 15:00 · vs TuS X" — nur mit echtem Anstoß. */
 export function nextMatchLine(now = new Date()): string | null {

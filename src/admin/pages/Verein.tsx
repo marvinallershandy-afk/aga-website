@@ -88,7 +88,7 @@ export function Verein() {
   const fehler = [
     f.fussballDe.trim() && !teamId && 'fussball.de: Link oder Team-ID nicht erkannt.',
     !fupaOk && 'FuPa: Link muss mit https://www.fupa.net/ beginnen.',
-    !instaOk && 'Instagram: nur der Name, z. B. sva_fussball.',
+    !instaOk && 'Instagram: nur der Name, z. B. svagathenburg.',
     !waOk && 'WhatsApp: Nummer nicht erkannt, z. B. 0151 12345678.',
     !mailOk && 'E-Mail sieht nicht richtig aus.',
     !wTabOk && 'fussball.de-Widget Tabelle: ID nicht erkannt (32 Zeichen).',
@@ -144,7 +144,7 @@ export function Verein() {
             <Feld id="v-ig" label="Instagram" fehler={!instaOk ? 'Nur der Name' : null} test={insta && instaOk ? `https://instagram.com/${insta}` : null}>
               <div className="flex h-12 items-center rounded-md border border-input bg-background pl-3 focus-within:ring-2 focus-within:ring-ring">
                 <span className="text-muted-foreground">@</span>
-                <input id="v-ig" className="h-full min-w-0 flex-1 bg-transparent px-1 text-base outline-none" value={f.instagram} onChange={(e) => set('instagram', e.target.value)} placeholder="sva_fussball" autoCapitalize="none" />
+                <input id="v-ig" className="h-full min-w-0 flex-1 bg-transparent px-1 text-base outline-none" value={f.instagram} onChange={(e) => set('instagram', e.target.value)} placeholder="svagathenburg" autoCapitalize="none" />
               </div>
             </Feld>
           </Abschnitt>

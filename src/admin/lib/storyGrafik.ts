@@ -7,6 +7,7 @@
 // ─────────────────────────────────────────────────────────────
 import { CARD_RATIO, POP_RATIO, FONT_BODY, FONT_DISPLAY, drawPlayerCard, ensureCardFonts, loadCardAssets, loadImage } from '../../ui/cardArt'
 import type { Player } from '../../data/players'
+import { CONTACT } from '../../data/content'
 import type { RosterRow, SpielRow } from './db'
 import { positionCode } from './pflege'
 
@@ -204,7 +205,9 @@ export async function renderErgebnisStory(d: StoryDaten): Promise<HTMLCanvasElem
   ctx.font = `700 28px ${FONT_BODY}`
   setSpacing(ctx, 4)
   ctx.fillStyle = 'rgba(255,255,255,0.62)'
-  ctx.fillText('aga-erste.de  ·  @sva_fussball', W / 2 + 2, H - 110)
+  // v15: Handle aus der Pflege statt fest verdrahtet
+  const insta = CONTACT.instagram.startsWith('@') ? CONTACT.instagram : `@${CONTACT.instagram}`
+  ctx.fillText(`aga-erste.de  ·  ${insta}`, W / 2 + 2, H - 110)
   setSpacing(ctx, 0)
   ctx.fillStyle = '#E91D29'
   ctx.fillRect(W / 2 - 60, H - 80, 120, 4)

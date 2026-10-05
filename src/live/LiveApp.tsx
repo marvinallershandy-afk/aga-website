@@ -15,7 +15,7 @@ import {
 } from './model'
 import { liveKonfiguriert } from './api'
 import { LiveBoard } from './LiveBoard'
-import { FussballDeWidget } from './FussballDeWidget'
+import { LiveTabelle } from './LiveTabelle'
 import { Icon } from './icons'
 
 // ─────────────────────────────────────────────────────────────
@@ -114,7 +114,7 @@ export function LiveApp() {
           {d && (
             <section className="lv-card lv-card--pad">
               <h2 className="lv-h2">Tabelle</h2>
-              <FussballDeWidget settings={d.settings} />
+              <LiveTabelle settings={d.settings} />
             </section>
           )}
         </>
@@ -154,7 +154,7 @@ export function LiveApp() {
               <h2 className="lv-h2" id="h-tab">
                 Tabelle
               </h2>
-              <FussballDeWidget settings={d!.settings} />
+              <LiveTabelle settings={d!.settings} />
               {d!.previous && <Zuletzt prev={d!.previous} />}
             </section>
           </main>
