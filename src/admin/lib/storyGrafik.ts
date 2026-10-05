@@ -5,7 +5,7 @@
 // (src/ui/cardArt.ts) und dieselbe Bildsprache (src/ui/storyShare.ts):
 // Schwarz, rotes Flutlicht, CI-Streifen, Anton/Archivo.
 // ─────────────────────────────────────────────────────────────
-import { CARD_RATIO, POP_RATIO, FONT_BODY, FONT_DISPLAY, drawPlayerCard, ensureCardFonts, loadCardAssets, loadImage } from '../../ui/cardArt'
+import { CARD_RATIO, FONT_BODY, FONT_DISPLAY, drawPlayerCard, ensureCardFonts, loadCardAssets, loadImage } from '../../ui/cardArt'
 import type { Player } from '../../data/players'
 import { CONTACT } from '../../data/content'
 import type { RosterRow, SpielRow } from './db'
@@ -179,12 +179,12 @@ export async function renderErgebnisStory(d: StoryDaten): Promise<HTMLCanvasElem
     const cw = 560
     const ch = cw * CARD_RATIO
     const cx = (W - cw) / 2
-    const cy = Math.max(y + 70, 900) + POP_RATIO * cw
+    const cy = Math.max(y + 70, 900) + 30
     ctx.textAlign = 'center'
     ctx.font = `800 30px ${FONT_BODY}`
     setSpacing(ctx, 10)
     ctx.fillStyle = '#E8C15A'
-    ctx.fillText('SPIELER DES SPIELS', W / 2 + 5, cy - POP_RATIO * cw - 26)
+    ctx.fillText('SPIELER DES SPIELS', W / 2 + 5, cy - 34)
     setSpacing(ctx, 0)
     const figur = await sameOrigin(d.motm.freisteller_url)
     const assets = await loadCardAssets(figur)

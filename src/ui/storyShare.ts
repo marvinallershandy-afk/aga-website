@@ -1,7 +1,7 @@
 import type { Player } from '../data/players'
 import { POSITION_LABEL } from '../data/players'
 import { CLUB, CONTACT, NEXT_MATCH } from '../data/content'
-import { CARD_RATIO, POP_RATIO, FONT_BODY, FONT_DISPLAY, drawPlayerCard, loadCardAssets } from './cardArt'
+import { CARD_RATIO, FONT_BODY, FONT_DISPLAY, drawPlayerCard, loadCardAssets } from './cardArt'
 
 // ─────────────────────────────────────────────────────────────
 // One-Tap Instagram-Story-Share. v14-D: das Story-Bild (1080×1920)
@@ -88,11 +88,11 @@ export async function renderStoryCanvas(player: Player): Promise<HTMLCanvasEleme
   ctx.fillText(`${CLUB.name.toUpperCase()} · 1. HERREN`, W / 2 + 3.5, 198)
   setSpacing(ctx, 0)
 
-  // Karte (mit Freisteller, Kopf ragt über die Kante)
+  // Karte (Freisteller im Rahmen, v15-P)
   const cw = 760
   const ch = cw * CARD_RATIO
   const cx = (W - cw) / 2
-  const cy = 300 + POP_RATIO * cw
+  const cy = 318
   ctx.save()
   ctx.shadowColor = 'rgba(0,0,0,0.7)'
   ctx.shadowBlur = 80

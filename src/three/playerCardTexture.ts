@@ -2,7 +2,6 @@ import * as THREE from 'three'
 import type { Player, Staff } from '../data/players'
 import {
   CARD_RATIO,
-  POP_RATIO,
   drawPlayerCard,
   drawStaffCard,
   loadCardAssets,
@@ -12,14 +11,14 @@ import {
 // ─────────────────────────────────────────────────────────────
 // v14-D „Karten 2.0" als 3D-Textur. Dasselbe Design wie die DOM-
 // HoloCard und der Story-Export (gemeinsamer Renderer ui/cardArt.ts):
-// Freisteller in Farbe (das alte Rot-Multiply ist entfallen), Kopf
-// ragt über die Oberkante → die Textur hat oben einen transparenten
-// Pop-Bereich. Auflösung pro Kartengröße wählbar (Nahsicht im
-// Flyover), Texturen werden pro Person + Auflösung gecacht.
+// Freisteller in Farbe (das alte Rot-Multiply ist entfallen). v15-P:
+// der Kopf bleibt IM Kartenrahmen → kein transparenter Pop-Bereich mehr,
+// die Textur ist exakt die Karte. Auflösung pro Kartengröße wählbar
+// (Nahsicht im Flyover), Texturen werden pro Person + Auflösung gecacht.
 // ─────────────────────────────────────────────────────────────
 
-/** Seitenverhältnis der Textur (Höhe / Breite) inkl. Pop-Bereich. */
-export const CARD_TEX_ASPECT = CARD_RATIO + POP_RATIO
+/** Seitenverhältnis der Textur (Höhe / Breite) = Kartenformat. */
+export const CARD_TEX_ASPECT = CARD_RATIO
 
 export interface CardTex {
   texture: THREE.CanvasTexture
@@ -65,7 +64,7 @@ export function makePlayerCardTexture(player: Player, width = 640, anisotropy = 
   const cv = makeCanvas(width)
   const tex = makeTexture(cv, anisotropy)
   const draw = (ctx: CanvasRenderingContext2D, a: CardAssets) =>
-    drawPlayerCard(ctx, 0, POP_RATIO * width, width, player, a)
+    drawPlayerCard(ctx, 0, 0, width, player, a)
   // Sofort ein Grundbild (Name/Nummer), dann mit Foto + Schriften final.
   paint(cv, tex, draw, EMPTY)
   void loadCardAssets(player.cutoutUrl ?? player.photoUrl).then((a) => paint(cv, tex, draw, a))
@@ -82,7 +81,7 @@ export function makeStaffCardTexture(member: Staff, width = 384, anisotropy = 8)
   const cv = makeCanvas(width)
   const tex = makeTexture(cv, anisotropy)
   const draw = (ctx: CanvasRenderingContext2D, a: CardAssets) =>
-    drawStaffCard(ctx, 0, POP_RATIO * width, width, member, a)
+    drawStaffCard(ctx, 0, 0, width, member, a)
   paint(cv, tex, draw, EMPTY)
   void loadCardAssets(member.cutoutUrl ?? member.photoUrl).then((a) => paint(cv, tex, draw, a))
   const out = { texture: tex }
