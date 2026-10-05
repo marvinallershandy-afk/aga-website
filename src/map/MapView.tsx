@@ -8,6 +8,8 @@ import { openPlace, closePlace, startTour } from './nav'
 import { PlaceIcon } from './MarkerIcons'
 import { useMatchStatus } from './matchStatus'
 import { PLACE_SEO } from './panelText'
+import { ArrowRight, Map as MapIcon } from 'lucide-react'
+import { useMapScrollToTour } from './intro'
 // map.css kommt direkt aus index.html (vor dem JS verfügbar, s. dort)
 
 // ─────────────────────────────────────────────────────────────
@@ -80,7 +82,9 @@ function Marker({ place, line, state }: { place: Place; line: string; state?: st
               <b>Trainingsplatz B73</b>
               <small>{place.label} · {line}</small>
             </span>
-            <span className="kmark__signArrow" aria-hidden="true">→</span>
+            <span className="kmark__signArrow" aria-hidden="true">
+              <ArrowRight size={16} strokeWidth={1.5} />
+            </span>
           </span>
         ) : (
           <>
@@ -158,18 +162,15 @@ function MapDock() {
   return (
     <nav className="kdock" aria-label="Schnellwahl">
       <button className="kdock__btn" data-active={!place} onClick={() => closePlace()}>
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-          <path d="M9 4 3 6.5v13L9 17l6 2.5 6-2.5V4l-6 2.5L9 4Z" strokeLinejoin="round" />
-          <path d="M9 4v13M15 6.5v13" />
-        </svg>
+        <MapIcon size={18} strokeWidth={1.5} aria-hidden="true" />
         Karte
       </button>
       <button className="kdock__btn" data-active={place === 'spieltag'} onClick={() => openPlace('spieltag')}>
-        <PlaceIcon id="spieltag" />
+        <PlaceIcon id="spieltag" size={18} />
         Live
       </button>
       <button className="kdock__btn kdock__btn--cta" data-active={place === 'training'} onClick={() => openPlace('training')}>
-        <PlaceIcon id="training" />
+        <PlaceIcon id="training" size={18} />
         Mitspielen
       </button>
     </nav>
@@ -199,7 +200,11 @@ function PlaceSeo() {
 
 export function MapView() {
   const place = useStore((s) => s.place)
+  const intro = useStore((s) => s.intro)
   const veilRef = useRef<HTMLDivElement>(null)
+
+  // v17-D: Scrollen auf der Karte startet nahtlos den Rundgang
+  useMapScrollToTour(!place && intro === 'off')
 
   // Schleier (Schnitt aus dem Partyraum) folgt mapWorld.veil
   useEffect(() => {
@@ -224,7 +229,7 @@ export function MapView() {
   }, [])
 
   return (
-    <div className="kmap" data-open={place ?? undefined}>
+    <div className="kmap" data-open={place ?? undefined} data-intro={intro !== 'off' || undefined}>
       <header className="kmap__head">
         <a className="kmap__brand" href="/" onClick={(e) => { e.preventDefault(); closePlace() }}>
           <img src="/brand/aga-logo.png" alt="" width="36" height="42" />
@@ -236,7 +241,7 @@ export function MapView() {
         <button className="kmap__tour" onClick={() => startTour()}>
           <span className="kmap__tourLong">Rundgang starten</span>
           <span className="kmap__tourShort">Rundgang</span>
-          <span aria-hidden="true">▸</span>
+          <ArrowRight size={14} strokeWidth={1.5} aria-hidden="true" />
         </button>
       </header>
 
@@ -245,7 +250,11 @@ export function MapView() {
       </h1>
 
       <MapMarkers />
-      <p className="kmap__hint" aria-hidden="true">Tipp auf einen Ort</p>
+      <p className="kmap__hint" aria-hidden="true">
+        <span className="kmap__hintD">Ort wählen · scrollen für den Rundgang</span>
+        <span className="kmap__hintM">Ort antippen · wischen für den Rundgang</span>
+        <span className="kmap__hintLine" />
+      </p>
       <MapLoader />
       <MapDock />
       <footer className="kmap__foot">
