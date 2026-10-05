@@ -31,7 +31,7 @@ Kontaktbogen (Clip-Gesicht · Clip-Körper · Hosennummer · Freisteller-Foto ·
 | Paul Matthes | p-matthes | 0226, 0227 | 0227 ab 5,0 s | Hose **44**, Gesicht | matthes 0,69 | **sicher** |
 | Tino Ebeling | p-ebeling-t | 0228, 0229 | 0228 ab 0,1 s | Hose **38**, dunkles TW-Trikot | (noah 0,66) | **sicher** |
 | Malte Pils | p-pils | 0230, 0231 | 0230 ab 0,1 s | grünes TW-Trikot, Bart | (noah 0,73) | **sicher** |
-| *Sam Luca Jochim?* | p-jochim | 0232, 0233 | 0232 ab 1,3 s | Hose **1?** (zweite Ziffer verdeckt: 17 oder 13); **kein Vergleichsfoto** im Kader | (elias 0,80) | **UNSICHER** — Alternative Justin Kalwa (13). Nicht live geschaltet. |
+| Isaak Warkehr | p-warkehr-i | 0232, 0233 | 0232 ab 1,3 s | Hose **1?** (zweite Ziffer verdeckt: 17 oder 13); **kein Vergleichsfoto** im Kader | (elias 0,80) | **von Marvin bestätigt** (05.10.2026) |
 | Niko Hause (Teammanager) | s-hause | 0234, 0235 | 0235 ab 4,6 s | schwarzes Stab-Outfit, **30** auf der Hose (wie auf seinem Foto), Gesicht | (elias 0,78) | **sicher** |
 | Julio Paruzel | p-paruzel | 0236, 0237 | 0237 ab 1,3 s | Hose **7**, Kinnbart | paruzel 0,67 | **sicher** |
 | Joshua Elsen | p-elsen | 0238, 0239 | 0239 ab 1,2 s | Hose **32**, Gesicht | (matthes 0,71) | **sicher** |
