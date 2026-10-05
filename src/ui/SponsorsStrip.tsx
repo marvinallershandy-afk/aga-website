@@ -3,6 +3,10 @@ import { motion } from 'framer-motion'
 // P1: Website-Daten aus der Fassade (Overlay/DB → sonst statischer Seed).
 import { SPONSORS, SPONSOR_PLACEHOLDER_SLOTS, NEXT_MATCH, CONTACT, whatsappUrl, whatsappReady } from '../data/content'
 import { useStore } from '../store/useStore'
+// v16-S: Partner-Logoleiste + Link auf /partner (eigenes Mini-Stylesheet,
+// damit cards.css unberührt bleibt).
+import { PARTNER_SPONSOREN } from '../data/partner'
+import './partner-leiste.css'
 
 // ─────────────────────────────────────────────────────────────
 // Sponsoren-Station (Geld-Station). v11-E6: die Partner/„dein-Logo"-
@@ -120,8 +124,33 @@ export function SponsorPitch() {
             Bande sichern · E-Mail
           </a>
         )}
+        {/* v16-S: Zahlen, Pakete und Anfrage-Formular auf der schlanken Seite */}
+        <a className="btn btn--ghost partner-link" href="/partner">
+          Alle Pakete &amp; Zahlen →
+        </a>
       </motion.div>
+
+      <PartnerLeiste />
     </>
+  )
+}
+
+// v16-S: kleine Leiste der echten Partner (Logo oder Name). Ohne Sponsoren
+// keine Leiste — die leeren Banden sprechen dann für sich.
+function PartnerLeiste() {
+  const liste = PARTNER_SPONSOREN.slice(0, 8)
+  if (!liste.length) return null
+  return (
+    <motion.div className="partner-leiste" {...reveal}>
+      <span className="partner-leiste__label">Schon dabei</span>
+      <ul className="partner-leiste__logos">
+        {liste.map((s) => (
+          <li key={s.name} className={s.logoUrl ? undefined : 'is-text'} title={s.name}>
+            {s.logoUrl ? <img src={s.logoUrl} alt={s.name} loading="lazy" decoding="async" /> : <span>{s.name}</span>}
+          </li>
+        ))}
+      </ul>
+    </motion.div>
   )
 }
 
