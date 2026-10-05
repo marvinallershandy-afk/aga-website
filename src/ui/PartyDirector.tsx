@@ -22,6 +22,7 @@ import { PARTY_HOP } from '../camera/partyPath'
 export function PartyDirector() {
   const gateOpen = useStore((s) => s.gateOpen)
   const fallback = useStore((s) => s.fallback)
+  const mode = useStore((s) => s.mode)
   const veilRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -29,6 +30,44 @@ export function PartyDirector() {
     const { setPartyOpen, setPartyNear, setPartyProgress } = useStore.getState()
     let raf = 0
     let inParty = false
+
+    // Schleier, Audio und „drin"-Zustand folgen p — gleich für beide Modi.
+    const apply = (p: number) => {
+      const veil = veilRef.current
+      if (veil) {
+        // Warmer Schleier als Hop-Sicherheitsnetz (Dreieck um PARTY_HOP)
+        const d = Math.abs(p - PARTY_HOP)
+        veil.style.opacity = String(Math.max(0, 0.75 * (1 - d / 0.09)))
+      }
+      // Audio folgt der Fahrt; Playback-Umschaltung am Hop
+      AudioManager.setPartyBlend(p)
+      const open = p >= PARTY_HOP
+      if (open !== inParty) {
+        inParty = open
+        setPartyOpen(open)
+        AudioManager.setMode(open ? 'party' : 'ambient')
+        document.body.classList.toggle('in-party', open)
+      }
+    }
+    const cleanup = () => {
+      if (inParty) {
+        setPartyOpen(false)
+        AudioManager.setMode('ambient')
+        document.body.classList.remove('in-party')
+      }
+    }
+
+    // v16-K: Karten-Modus — die Kamera (CameraRig) treibt p über den Store.
+    if (mode === 'map') {
+      apply(useStore.getState().partyProgress)
+      const unsub = useStore.subscribe((s, prev) => {
+        if (s.partyProgress !== prev.partyProgress) apply(s.partyProgress)
+      })
+      return () => {
+        unsub()
+        cleanup()
+      }
+    }
 
     const update = () => {
       raf = 0
@@ -57,20 +96,7 @@ export function PartyDirector() {
       const pOut = Math.min(1, Math.max(0, (rect.bottom - vh * 0.3) / (vh * 1.05)))
       const p = Math.min(pIn, pOut)
       setPartyProgress(p)
-
-      // Warmer Schleier als Hop-Sicherheitsnetz (Dreieck um PARTY_HOP)
-      const d = Math.abs(p - PARTY_HOP)
-      veil.style.opacity = String(Math.max(0, 0.75 * (1 - d / 0.09)))
-
-      // Audio folgt der Fahrt; Playback-Umschaltung am Hop
-      AudioManager.setPartyBlend(p)
-      const open = p >= PARTY_HOP
-      if (open !== inParty) {
-        inParty = open
-        setPartyOpen(open)
-        AudioManager.setMode(open ? 'party' : 'ambient')
-        document.body.classList.toggle('in-party', open)
-      }
+      apply(p)
     }
     const onScroll = () => {
       if (!raf) raf = requestAnimationFrame(update)
@@ -83,13 +109,9 @@ export function PartyDirector() {
       window.removeEventListener('resize', onScroll)
       if (raf) cancelAnimationFrame(raf)
       setPartyProgress(0)
-      if (inParty) {
-        setPartyOpen(false)
-        AudioManager.setMode('ambient')
-        document.body.classList.remove('in-party')
-      }
+      cleanup()
     }
-  }, [fallback, gateOpen])
+  }, [fallback, gateOpen, mode])
 
   if (fallback) return null
 

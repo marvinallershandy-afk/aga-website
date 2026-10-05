@@ -7,6 +7,7 @@ import { Scene } from './Scene'
 import { CameraRig } from '../camera/CameraRig'
 import { PerfMonitor } from '../perf/PerfMonitor'
 import { CinemaEffects } from '../cinema/CinemaEffects'
+import { MapMarkerProjector } from '../map/MapMarkerProjector'
 import { useStore } from '../store/useStore'
 import { getClampedPixelRatio, detectCinemaTier } from '../utils/device'
 import { HERO_FRAME } from '../camera/CameraPath'
@@ -82,6 +83,8 @@ export function Stage() {
           <ReadyFlag />
         </Suspense>
         <CameraRig />
+        {/* v16-K: nach dem Rig → Marker kleben an der Pose dieses Frames */}
+        <MapMarkerProjector />
         <CinemaEffects />
         <PerfMonitor />
       </Canvas>

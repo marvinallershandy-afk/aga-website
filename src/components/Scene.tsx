@@ -46,11 +46,17 @@ export function Scene() {
   const partyNear = useStore((s) => s.partyNear)
   const gateOpen = useStore((s) => s.gateOpen)
   const setPartyNear = useStore((s) => s.setPartyNear)
+  // v16-K: Ziel „Vereinsheim & Musik" (Deep-Link/Klick) → Raum sofort laden
+  const wantParty = useStore((s) => s.place === 'musik')
   useEffect(() => {
     if (!gateOpen) return
+    if (wantParty) {
+      setPartyNear(true)
+      return
+    }
     const t = window.setTimeout(() => setPartyNear(true), 1500)
     return () => window.clearTimeout(t)
-  }, [gateOpen, setPartyNear])
+  }, [gateOpen, setPartyNear, wantParty])
   return (
     <group>
       <fog attach="fog" args={[L.fog.color, L.fog.near, L.fog.far]} />

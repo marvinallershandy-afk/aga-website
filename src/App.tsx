@@ -15,20 +15,31 @@ import { ScrollHint } from './ui/ScrollHint'
 import { PlayerModal } from './ui/PlayerModal'
 import { FanLightbox } from './ui/FanLightbox'
 import { PerfOverlay } from './ui/PerfOverlay'
-import { EntranceGate } from './ui/EntranceGate'
 import { PartyDirector } from './ui/PartyDirector'
 import { Letterbox } from './ui/Letterbox'
 import { FxPanel } from './ui/FxPanel'
 import { AudioManager } from './audio/AudioManager'
+import { MapView, MapPoster } from './map/MapView'
+import { MapPanel } from './map/MapPanel'
+import { initNavFromUrl, useMapRouting } from './map/nav'
+
+// v16-K: Deep-Link (/#training, /mannschaft, /#rundgang …) VOR dem ersten
+// Render auswerten → die Karte öffnet direkt den richtigen Ort.
+initNavFromUrl()
 
 export default function App() {
   const fallback = useStore((s) => s.fallback)
   const setCaps = useStore((s) => s.setCaps)
   const setReady = useStore((s) => s.setReady)
+  const ready = useStore((s) => s.ready)
+  const setGateOpen = useStore((s) => s.setGateOpen)
   const togglePerf = useStore((s) => s.togglePerf)
   const toggleFxPanel = useStore((s) => s.toggleFxPanel)
   const gateOpen = useStore((s) => s.gateOpen)
   const soundOn = useStore((s) => s.soundOn)
+  const mode = useStore((s) => s.mode)
+
+  useMapRouting()
 
   // Ton-Schalter → AudioManager (global; Musik selbst lebt im Partyraum)
   useEffect(() => {
@@ -44,6 +55,12 @@ export default function App() {
     if (reducedMotion || !webglOK) setReady(true) // kein 3D-Ladevorgang
   }, [setCaps, setReady])
 
+  // v16-K: Das Eingangstor ist weg — die Karte (Poster + Marker) ist sofort
+  // da. „Tor offen" heißt jetzt: Bühne bereit (Audio, Partyraum-Vorladen).
+  useEffect(() => {
+    if (ready) setGateOpen(true)
+  }, [ready, setGateOpen])
+
   // Debug: „p" = Perf-Overlay, „e" = Kino-Effekt-Panel.
   // NUR im Dev-Build: in Produktion hingen die Hotkeys ungeschützt am window,
   // d. h. jeder Besucher konnte sich mit „p"/„e" die Debug-Panels einblenden
@@ -52,6 +69,7 @@ export default function App() {
   useEffect(() => {
     if (!import.meta.env.DEV) return
     const onKey = (e: KeyboardEvent) => {
+      if ((e.target as HTMLElement)?.closest?.('input, textarea')) return
       if (e.key.toLowerCase() === 'p') togglePerf()
       if (e.key.toLowerCase() === 'e') toggleFxPanel()
     }
@@ -59,14 +77,20 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey)
   }, [togglePerf, toggleFxPanel])
 
-  useScrollProgress(!fallback)
+  useScrollProgress(!fallback && mode === 'tour')
 
-  // Fanblock-Finale: Atmosphäre zieht leicht an (Gemurmel näher)
+  // Rundgang beginnt oben (Hero); zurück auf der Karte gibt es keinen Scroll.
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [mode])
+
+  // Fanblock: Atmosphäre zieht leicht an (Gemurmel näher) — im Rundgang
+  // am Finale, auf der Karte an der Kurve.
   useEffect(() => {
     // v14: nur bei Zustandswechsel melden (vorher bei JEDER Store-Änderung)
     let last: boolean | null = null
     return useStore.subscribe((s2) => {
-      const boost = s2.scrollProgress > 0.88
+      const boost = s2.mode === 'tour' ? s2.scrollProgress > 0.88 : s2.place === 'fans'
       if (boost === last) return
       last = boost
       AudioManager.setAtmoBoost(boost)
@@ -76,7 +100,7 @@ export default function App() {
   return (
     <>
       {fallback ? (
-        <StaticBackdrop />
+        mode === 'tour' && <StaticBackdrop />
       ) : (
         <StageBoundary>
           <Suspense fallback={null}>
@@ -84,13 +108,16 @@ export default function App() {
           </Suspense>
         </StageBoundary>
       )}
-      <EntranceGate />
+      {/* Poster der Karten-Totale: sofort sichtbar, bis die Live-3D-Karte
+          steht (im Fallback dauerhaft die Karte). */}
+      {(mode === 'map' || !fallback) && <MapPoster />}
       <PartyDirector />
       <Brandbar />
       {/* v15-L: nur im Spieltagsfenster sichtbar, sonst null + 0 Requests */}
       <MatchdayBar />
-      <Sections />
-      {!fallback && <ScrollHint />}
+      {mode === 'map' ? <MapView /> : <Sections />}
+      <MapPanel />
+      {!fallback && mode === 'tour' && <ScrollHint />}
       <Letterbox />
       <PlayerModal />
       <FanLightbox />
