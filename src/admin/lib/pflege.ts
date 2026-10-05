@@ -114,7 +114,7 @@ export const PUBLIC_BUCKET = 'sva_public'
 
 /** Lädt ein (bereits verkleinertes) Bild hoch und gibt die öffentliche URL zurück.
  *  Jeder Upload bekommt einen neuen Dateinamen → kein Cache-Problem. */
-export async function uploadPublicImage(blob: Blob, folder: 'spieler' | 'sponsoren', base: string): Promise<string> {
+export async function uploadPublicImage(blob: Blob, folder: 'spieler' | 'sponsoren' | 'album', base: string): Promise<string> {
   const ext = blob.type === 'image/png' ? 'png' : blob.type === 'image/jpeg' ? 'jpg' : 'webp'
   const safe = base.toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'bild'
   const path = `${folder}/${safe}-${Date.now().toString(36)}.${ext}`
