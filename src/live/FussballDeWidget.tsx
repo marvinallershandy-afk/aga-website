@@ -48,14 +48,14 @@ export function FussballDeWidget({ settings }: { settings: LiveSettings }) {
             </div>
           )}
           <WidgetFrame key={aktiv} widgetId={hat[aktiv]!} titel={aktiv === 'tabelle' ? 'Tabelle von fussball.de' : 'Spielplan von fussball.de'} />
-          <p className="lv-klein">Quelle: fussball.de (DFB-Medien GmbH &amp; Co. KG)</p>
+          <p className="lv-klein">Quelle: fussball.de (DFB GmbH &amp; Co. KG)</p>
         </>
       ) : (
         <>
           <p>
             Die aktuelle Tabelle kommt direkt von <b>fussball.de</b>. Erst wenn du auf den Knopf tippst, wird sie von dort geladen — dabei
-            werden Daten wie deine IP-Adresse an die DFB-Medien GmbH &amp; Co. KG übertragen.{' '}
-            <a href="/datenschutz">Mehr im Datenschutz</a>.
+            werden Daten wie deine IP-Adresse an die DFB GmbH &amp; Co. KG übertragen.{' '}
+            <a href="/datenschutz#fussball-de">Mehr im Datenschutz</a>.
           </p>
           <div className="lv-actions">
             {hat.tabelle && (
