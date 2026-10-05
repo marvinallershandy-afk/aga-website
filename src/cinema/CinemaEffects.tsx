@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
+import { PerformanceMonitor } from '@react-three/drei'
 import {
   EffectComposer,
   Bloom,
@@ -50,11 +51,16 @@ export function CinemaEffects() {
   // v14: Telefone bekamen bisher die HÖCHSTE Füllrate (min(dpr,2), weil die
   // reduzierte Kette nie „heavy" ist). Touch-Geräte jetzt hart auf 1.5 —
   // auf 3x-Displays optisch kaum zu unterscheiden, ~45 % weniger Pixel.
+  // v14-R: adaptive Auflösung — fällt die Bildrate (Akku-Sparmodus,
+  // schwache GPU, Hintergrundlast), senkt PerformanceMonitor den Faktor in
+  // Stufen bis 0,6; erholt sie sich, geht er wieder hoch. Nie unter DPR 1.
+  const [dprScale, setDprScale] = useState(1)
   useEffect(() => {
     const touch = window.matchMedia?.('(pointer: coarse)').matches ?? false
     const cap = touch ? 1.5 : heavy ? 1.6 : 2
-    setDpr(Math.min(window.devicePixelRatio, cap))
-  }, [heavy, setDpr])
+    const base = Math.min(window.devicePixelRatio, cap)
+    setDpr(Math.max(Math.min(1, base), base * dprScale))
+  }, [heavy, setDpr, dprScale])
 
   const chain: React.ReactElement[] = []
   if (fx.bloom)
@@ -88,7 +94,7 @@ export function CinemaEffects() {
   // v13-F1: Vignette + Korn dosiert — die alte Kombination drückte die
   // Ränder zu und ließ die ganze Bühne schwerer wirken, als sie ist.
   if (fx.vignette) chain.push(<Vignette key="vig" eskil={false} offset={0.26} darkness={0.42} />)
-  if (fx.grain) chain.push(<Noise key="grain" premultiply opacity={0.32} />)
+  if (fx.grain) chain.push(<Noise key="grain" premultiply opacity={0.18} />)
   chain.push(<ToneMapping key="tm" mode={ToneMappingMode.ACES_FILMIC} />)
   // v13-X1: SMAA als Abschluss (auf dem LDR-Bild) — der Composer hat kein
   // MSAA, ohne diese Pass flimmerten Linien/Banden. Mobil günstig.
@@ -97,6 +103,7 @@ export function CinemaEffects() {
   // v14: zweite RenderPass für die Partyraum-Szene (eigene Lichter), ohne
   // Clear und ohne Hintergrund → landet tiefenkorrekt im selben Puffer.
   const composerRef = useRef<EffectComposerImpl>(null)
+  const partyPassRef = useRef<RenderPass | null>(null)
   const camera = useThree((s) => s.camera)
   const scene = useThree((s) => s.scene)
   useEffect(() => {
@@ -117,20 +124,50 @@ export function CinemaEffects() {
       renderer.autoClear = auto
     }
     composer.addPass(pass, 1)
+    partyPassRef.current = pass
     return () => {
+      partyPassRef.current = null
       composer.removePass(pass)
       pass.dispose()
     }
   }, [camera])
+  // Die Raum-Pass zeichnet erst, wenn die Shader des Raums asynchron
+  // (KHR_parallel_shader_compile) fertig sind — sonst blockierte die erste
+  // Zeichnung den Main-Thread mitten in der Fahrt.
+  const gl = useThree((s) => s.gl)
+  const partyState = useRef<'idle' | 'compiling' | 'ready'>('idle')
   useFrame(() => {
     // gleiche Nacht-IBL wie draußen (NightEnvironment setzt sie auf scene)
     partyScene.environment = scene.environment
     partyScene.environmentIntensity = scene.environmentIntensity
+    const pass = partyPassRef.current
+    if (!pass) return
+    if (partyState.current === 'idle') {
+      pass.enabled = false
+      if (partyScene.children.length > 0) {
+        partyState.current = 'compiling'
+        gl.compileAsync(partyScene, camera)
+          .catch(() => undefined)
+          .then(() => {
+            partyState.current = 'ready'
+          })
+      }
+    } else if (partyState.current === 'ready' && !pass.enabled) {
+      pass.enabled = true
+    }
   })
 
   return (
+    <>
+    <PerformanceMonitor
+      flipflops={4}
+      onDecline={() => setDprScale((v) => Math.max(0.6, +(v - 0.15).toFixed(2)))}
+      onIncline={() => setDprScale((v) => Math.min(1, +(v + 0.1).toFixed(2)))}
+      onFallback={() => setDprScale(0.6)}
+    />
     <EffectComposer ref={composerRef} multisampling={0} enableNormalPass={false}>
       {chain}
     </EffectComposer>
+    </>
   )
 }

@@ -1,4 +1,5 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
+import { useStore } from '../store/useStore'
 import { createPortal } from '@react-three/fiber'
 import { partyScene } from '../three/partyScene'
 import { Ground } from './Ground'
@@ -28,11 +29,12 @@ import { LIGHTING } from '../theme/lighting'
 import { NightEnvironment } from '../theme/NightEnvironment'
 import { StaticShadows } from '../theme/StaticShadows'
 
-// Partyraum: eigener Chunk. v14: wird NICHT mehr erst kurz vor der Tür
-// gemountet — seine 11 Punktlichter zwangen beim Mount ALLE Materialien
-// zur Shader-Neukompilierung (gemessen ~1,3 s Hänger mitten in der Fahrt).
-// Jetzt suspendiert er die Haupt-Suspense mit → lädt und kompiliert
-// hinter dem Eingangstor, die Fahrt bleibt ruckelfrei.
+// Partyraum: eigener Chunk in EIGENER Szene (three/partyScene.ts). v14-R:
+// Weil seine Lichter dort isoliert sind, zwingt sein Mount die Außen-
+// Materialien NICHT mehr zur Neukompilierung → er muss nicht mehr hinter
+// dem Eingangstor laden. Er kommt ~1,5 s nach dem Öffnen im Leerlauf
+// (oder früher, wenn man schnell Richtung Musik scrollt) und wird erst
+// sichtbar, wenn seine Shader asynchron fertig sind (CinemaEffects).
 const PartyRoom = lazy(() => import('./PartyRoom'))
 
 // Die Bühne: der ECHTE Platz in Agathenburg (REFERENZ_MODELL.md)
@@ -41,6 +43,14 @@ const PartyRoom = lazy(() => import('./PartyRoom'))
 // Klinker-Hütte NW, Fanblock-Ecke SO. Flutlicht = Stilisierung.
 export function Scene() {
   const L = LIGHTING
+  const partyNear = useStore((s) => s.partyNear)
+  const gateOpen = useStore((s) => s.gateOpen)
+  const setPartyNear = useStore((s) => s.setPartyNear)
+  useEffect(() => {
+    if (!gateOpen) return
+    const t = window.setTimeout(() => setPartyNear(true), 1500)
+    return () => window.clearTimeout(t)
+  }, [gateOpen, setPartyNear])
   return (
     <group>
       <fog attach="fog" args={[L.fog.color, L.fog.near, L.fog.far]} />
@@ -100,7 +110,13 @@ export function Scene() {
       <GroundMist />
       <KickoffDirector />
       {/* v14: eigene Szene → eigene Lichter (siehe three/partyScene.ts) */}
-      {createPortal(<PartyRoom />, partyScene)}
+      {partyNear &&
+        createPortal(
+          <Suspense fallback={null}>
+            <PartyRoom />
+          </Suspense>,
+          partyScene,
+        )}
     </group>
   )
 }

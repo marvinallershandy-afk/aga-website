@@ -246,9 +246,9 @@ export function FanBlock() {
 
       {/* Bengalos, Funken, Handy-Blitze, Konfetti — alles GPU-animiert */}
       <group ref={fxRef}>
-        <BengaloSmoke flares={layout.flares} perFlare={lite ? 22 : 48} />
+        <BengaloSmoke flares={layout.flares} perFlare={lite ? 16 : 30} />
         <CurveGlows flares={layout.flares} phones={layout.phones} sparksPerFlare={lite ? 10 : 22} />
-        <Confetti count={lite ? 80 : 220} />
+        <Confetti count={lite ? 50 : 120} />
       </group>
       {/* die EINE gemeinsame, flackernde rote Bengalo-Lichtquelle */}
       <pointLight ref={lightRef} position={lightPos} color="#ff2f1f" intensity={0} distance={1.25} decay={2} />

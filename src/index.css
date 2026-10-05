@@ -26,7 +26,10 @@ html {
      Die Sektions-Zentren sind zugleich die komponierten Kamera-Posen
      (Anker werden aus den Zentren gemessen) → am Snap steht jede Station
      vollständig im Bild. */
-  scroll-snap-type: y proximity;
+  /* v14-R: KEIN Scroll-Snap mehr. Marvins Feedback: die Einrast-Punkte
+     fühlten sich wie Barrieren an, das Scrollen nicht intuitiv. Freies
+     Scrollen; die Kamera dämpft ohnehin weich nach (CameraRig). */
+  scroll-snap-type: none;
   scroll-padding-top: 0;
 }
 @media (prefers-reduced-motion: reduce) {

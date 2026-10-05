@@ -39,9 +39,6 @@ export function NextMatch() {
   )
 }
 
-// v12-E6: kompakte Vorteils-Pills statt drei Text-Kästen (weniger Text).
-const SPONSOR_PILLS = ['Logo am Spielfeldrand', 'Reichweite im Dorf & in der Story', 'Kein Preisschild — einfach fragen']
-
 // Die Claims der leeren Banden-Tafeln (in Sync mit Barrier.tsx-Slots).
 const BAND_CLAIMS = ['Diese Bande sucht dich', 'Hier fehlst noch du', 'Dein Logo am Spielfeld', 'Werde Teil der Kurve']
 
@@ -64,12 +61,7 @@ export function SponsorPitch() {
 
   return (
     <>
-      <motion.div className="sponsor-pills" {...reveal}>
-        {SPONSOR_PILLS.map((p) => (
-          <span className="sponsor-pill" key={p}>{p}</span>
-        ))}
-      </motion.div>
-
+      {/* v14-R: Argument-Pills raus — der Text darüber sagt dasselbe (Ruhe-Pass). */}
       {/* Banden-Karussell-Steuerung → fährt die 3D-Kamera an der Bande entlang */}
       <motion.div className="band-nav" {...reveal}>
         <button className="band-nav__arrow" onClick={() => setFocus(focus - 1)} aria-label="Bande davor">‹</button>
@@ -109,11 +101,6 @@ export function SponsorPitch() {
           />
           <span className="band-try__hint" aria-hidden="true">→ schau auf die Bande</span>
         </div>
-        <ol className="band-steps">
-          <li>Anfragen</li>
-          <li>Wir drucken</li>
-          <li>Sonntag hängt sie am Platz</li>
-        </ol>
       </motion.div>
 
       {/* v13-E4: ohne echte WA-Nummer gäbe es hier zwei E-Mail-Buttons —

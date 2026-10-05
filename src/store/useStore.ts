@@ -106,8 +106,10 @@ export interface CinemaFx {
 }
 
 export const FX_BY_TIER: Record<CinemaTier, CinemaFx> = {
-  full: { bloom: true, grade: true, vignette: true, grain: true, ca: true, mist: true, letterbox: true },
-  reduced: { bloom: false, grade: true, vignette: true, grain: true, ca: false, mist: false, letterbox: true },
+  // v14-R „Ruhe": Kino-Balken und chromatische Aberration aus (Feedback:
+  // zu voll/reizüberflutend; die Balken gehörten zu einem entfernten Beat).
+  full: { bloom: true, grade: true, vignette: true, grain: true, ca: false, mist: true, letterbox: false },
+  reduced: { bloom: false, grade: true, vignette: true, grain: false, ca: false, mist: false, letterbox: false },
 }
 
 export const useStore = create<AppState>((set) => ({

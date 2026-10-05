@@ -158,7 +158,7 @@ export function BengaloSmoke({ flares, perFlare }: { flares: THREE.Vector3[]; pe
         varying float vGrad;
         #include <fog_pars_fragment>
         void main(){
-          float a = texture2D(uTex, vUv).a * vAlpha * 0.72;
+          float a = texture2D(uTex, vUv).a * vAlpha * 0.5; // v14-R: ruhiger, Banner bleibt lesbar
           if (a < 0.003) discard;
           gl_FragColor = vec4(vCol * (0.8 + 0.4 * vGrad), a);
           #include <fog_fragment>
