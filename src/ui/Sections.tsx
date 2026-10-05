@@ -49,7 +49,9 @@ export function Sections() {
         <motion.p
           {...reveal}
           transition={{ ...reveal.transition, delay: 0.15 }}
-          style={{ marginTop: '2rem', fontFamily: 'var(--font-display)', fontSize: 'clamp(1rem,2.4vw,1.6rem)', color: 'var(--red)', letterSpacing: '0.05em' }}
+          // v17-D: Claim als ruhiges Label statt roter Display-Zeile
+          className="ds-label"
+          style={{ marginTop: 'var(--s-6)', color: 'var(--c-white)' }}
         >
           {CLUB.claim}
         </motion.p>
