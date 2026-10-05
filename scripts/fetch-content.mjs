@@ -22,11 +22,15 @@ import { writeFileSync, mkdirSync, rmSync, readFileSync, existsSync } from 'node
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createHash } from 'node:crypto'
+import { buildSportsEvents } from './site.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '..')
 const OUT = join(ROOT, 'src', 'data', 'generated', 'website-content.generated.ts')
 const PUBLIC_GEN = join(ROOT, 'public', 'generated')
+// v19-K (Audit B §2.8.3): Build-Artefakt mit SportsEvent-JSON-LD der nächsten
+// Heimspiele; prerender.mjs injiziert es in dist/index.html + dist/live.html.
+const SEO_EVENTS = join(ROOT, 'scripts', '.seo-events.json')
 const TIMEOUT_MS = 10_000
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024
 
@@ -384,8 +388,17 @@ async function fetchSpielplan() {
   }
 }
 
+function writeSeoEvents(events) {
+  try {
+    writeFileSync(SEO_EVENTS, JSON.stringify(Array.isArray(events) ? events : []))
+  } catch { /* nicht build-kritisch */ }
+}
+
 // ── Ablauf ──────────────────────────────────────────────────────────────────
 async function main() {
+  // v19-K: bei jedem Build frisch — leeren, bis echte Heimspiele feststehen
+  // (nichts erfinden). prerender.mjs liest das Ergebnis.
+  writeSeoEvents([])
   if (!url || !key) {
     writeOverlay(null)
     if (isCI) {
@@ -453,6 +466,8 @@ async function main() {
   const galerien = await mapGalerien(snap.galerien)
   const mannschaften = await fetchMannschaften()
   const schedule = await fetchSpielplan()
+  // v19-K (Audit B §2.8.3): SportsEvent-JSON-LD nur für kommende Heimspiele.
+  writeSeoEvents(buildSportsEvents(schedule.filter((m) => m.home)))
 
   const table = (snap.table ?? [])
     .filter((r) => str(r.team) && Number.isInteger(r.pos))

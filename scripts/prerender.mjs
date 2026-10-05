@@ -6,8 +6,11 @@
 import { chromium } from 'playwright'
 import { createServer } from 'node:http'
 import { readFileSync, writeFileSync, existsSync } from 'node:fs'
-import { join, extname } from 'node:path'
+import { join, extname, dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { DEFAULT_ORIGIN, SITE_ORIGIN, sportsEventsScript } from './site.mjs'
 
+const __dirname = dirname(fileURLToPath(import.meta.url))
 // v16-K: Zielordner per DIST=… (z. B. Mess-Builds außerhalb von dist/)
 const DIST = process.env.DIST || 'dist'
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.mp3': 'audio/mpeg', '.glb': 'model/gltf-binary', '.wasm': 'application/wasm', '.xml': 'application/xml', '.txt': 'text/plain', '.woff2': 'font/woff2', '.woff': 'font/woff' }
@@ -58,3 +61,49 @@ if (out === index) {
 }
 writeFileSync(indexPath, out)
 console.log(`Prerender ok: ${(html.length / 1024).toFixed(1)} kB Inhalts-DOM in ${indexPath}`)
+
+// ── v19-K (Audit B §2.8.3): SportsEvent-JSON-LD der nächsten Heimspiele in
+//    dist/index.html + dist/live.html injizieren (vor </head>). Quelle:
+//    scripts/.seo-events.json (von fetch-content.mjs, leer = nichts). ─────────
+function injectSeo(fileName) {
+  const p = join(DIST, fileName)
+  if (!existsSync(p)) return
+  let doc = readFileSync(p, 'utf8')
+  if (doc.includes('"SportsEvent"')) return // schon vorhanden (idempotent)
+  const script = sportsEventsScript(seoEvents)
+  if (!script) return
+  const next = doc.replace('</head>', `    ${script}\n  </head>`)
+  if (next !== doc) {
+    writeFileSync(p, next)
+    console.log(`SEO: SportsEvent-JSON-LD (${seoEvents.length}) in ${p}`)
+  }
+}
+let seoEvents = []
+try {
+  const sp = join(__dirname, '.seo-events.json')
+  if (existsSync(sp)) seoEvents = JSON.parse(readFileSync(sp, 'utf8'))
+} catch { seoEvents = [] }
+if (Array.isArray(seoEvents) && seoEvents.length) {
+  injectSeo('index.html')
+  injectSeo('live.html')
+} else {
+  console.log('SEO: keine kommenden Heimspiele → kein SportsEvent-JSON-LD (nichts erfunden).')
+}
+
+// ── v19-K (Audit B §2.8): Domain-Tausch an EINER Stelle. Ist SITE_ORIGIN per
+//    ENV gesetzt (≠ Default-Netlify-Domain), wird die Default-Domain im
+//    gebauten dist/ überall ersetzt — HTML-Köpfe (canonical/og/JSON-LD),
+//    sitemap.xml und robots.txt. Ohne ENV: No-op (identische Werte). ─────────
+if (SITE_ORIGIN !== DEFAULT_ORIGIN) {
+  const dateien = ['index.html', 'live.html', 'partner.html', 'album.html', 'galerie.html', 'impressum.html', 'datenschutz.html', '404.html', 'sitemap.xml', 'robots.txt']
+  let geaendert = 0
+  for (const f of dateien) {
+    const p = join(DIST, f)
+    if (!existsSync(p)) continue
+    const doc = readFileSync(p, 'utf8')
+    if (!doc.includes(DEFAULT_ORIGIN)) continue
+    writeFileSync(p, doc.split(DEFAULT_ORIGIN).join(SITE_ORIGIN))
+    geaendert++
+  }
+  console.log(`SITE_ORIGIN: ${DEFAULT_ORIGIN} → ${SITE_ORIGIN} in ${geaendert} Datei(en) ersetzt.`)
+}

@@ -8,8 +8,8 @@
     <meta name="theme-color" content="#0E0D0D" />
     <meta name="color-scheme" content="dark" />
 
-    <title>SV Agathenburg-Dollern — Fußball in Agathenburg seit 1949</title>
-    <meta name="description" content="Fußball in Agathenburg: Der SV Agathenburg-Dollern (seit 1949) — Probetraining Di & Do ab 19 Uhr, Kader als Sammelkarten, Vereins-Soundtrack AGA Urknall, Live-Tabelle. Komm vorbei am Sportplatz." />
+    <title>SV Agathenburg-Dollern — Fußball in Agathenburg & Dollern · Kreisliga Stade</title>
+    <meta name="description" content="Fußball in Agathenburg & Dollern, Kreisliga Stade: Der SV Agathenburg-Dollern (seit 1949). Probetraining in Stade/Agathenburg — Di & Do ab 19 Uhr, einfach vorbeikommen. Kader als Sammelkarten, Live-Tabelle und Spieltag am Waldsportplatz." />
 
     <!-- v13-E5: SITE-URL — aktuell die funktionierende Netlify-URL.
          MARVIN: Nach Domain-Kauf an DREI Stellen tauschen:
@@ -23,8 +23,8 @@
     <meta property="og:locale" content="de_DE" />
     <meta property="og:site_name" content="SV Agathenburg-Dollern" />
     <meta property="og:url" content="https://sva-agathenburg-dollern.netlify.app/" />
-    <meta property="og:title" content="SV Agathenburg-Dollern — Fußball in Agathenburg seit 1949" />
-    <meta property="og:description" content="Ein Dorf. Ein Verein. Ein Platz. Tipp dich über unser Vereinsgelände — Spieltag & Live-Ticker, Probetraining, Kader als Sammelkarten, Vereins-Soundtrack." />
+    <meta property="og:title" content="SV Agathenburg-Dollern — Fußball in Agathenburg & Dollern · Kreisliga Stade" />
+    <meta property="og:description" content="Ein Dorf. Ein Verein. Ein Platz. Fußball in der Kreisliga Stade — Spieltag & Live-Ticker, Probetraining in Stade/Agathenburg, Kader als Sammelkarten." />
     <meta property="og:image" content="https://sva-agathenburg-dollern.netlify.app/og-image.jpg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -32,7 +32,10 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content="https://sva-agathenburg-dollern.netlify.app/og-image.jpg" />
 
-    <!-- Struktur-Daten: Verein + Vereins-Soundtrack -->
+    <!-- Struktur-Daten: Verein (SportsTeam). v19-K: MusicGroup „AGA Urknall"
+         entfernt (verwässerte die SportsTeam-Entity, bringt den Vereinszielen
+         nichts). SportsEvent der nächsten Heimspiele wird beim Build injiziert
+         (scripts/prerender.mjs ← scripts/.seo-events.json aus fetch-content). -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -62,18 +65,7 @@
             }
           },
           "email": "info@aga-erste.de",
-          "memberOf": { "@type": "SportsOrganization", "name": "Kreisliga" }
-        },
-        {
-          "@type": "MusicGroup",
-          "name": "AGA Urknall",
-          "genre": "Stadion / Party",
-          "foundingDate": "2024",
-          "album": {
-            "@type": "MusicAlbum",
-            "name": "Heimspiel Überall",
-            "image": "/audio/cover.jpg"
-          }
+          "memberOf": { "@type": "SportsOrganization", "name": "Kreisliga Stade" }
         }
       ]
     }
