@@ -21,6 +21,8 @@ export interface StoryDaten {
   /** „Warkehr 12'" … in Reihenfolge */
   torschuetzen: string[]
   motm: RosterRow | null
+  /** v16-S: „Live-Ticker präsentiert von“ (Admin → Partner), optional. */
+  partner?: { name: string; logoUrl?: string } | null
 }
 
 function setSpacing(ctx: CanvasRenderingContext2D, px: number) {
@@ -176,7 +178,8 @@ export async function renderErgebnisStory(d: StoryDaten): Promise<HTMLCanvasElem
 
   // Spieler des Spiels
   if (d.motm) {
-    const cw = 560
+    // v16-S: mit Partner etwas kleinere Karte → Platz für „präsentiert von“
+    const cw = d.partner ? 450 : 560
     const ch = cw * CARD_RATIO
     const cx = (W - cw) / 2
     const cy = Math.max(y + 70, 900) + 30
@@ -198,6 +201,43 @@ export async function renderErgebnisStory(d: StoryDaten): Promise<HTMLCanvasElem
     ctx.fill()
     ctx.restore()
     drawPlayerCard(ctx, cx, cy, cw, alsPlayer(d.motm), assets, { hero: true })
+  }
+
+  // v16-S: „Live-Ticker präsentiert von“ — Logo auf weißer Plakette über dem Fuß
+  if (d.partner) {
+    const yLabel = H - 262
+    ctx.textAlign = 'center'
+    ctx.font = `800 22px ${FONT_BODY}`
+    setSpacing(ctx, 8)
+    ctx.fillStyle = 'rgba(255,255,255,0.55)'
+    ctx.fillText('LIVE-TICKER PRÄSENTIERT VON', W / 2 + 4, yLabel)
+    setSpacing(ctx, 0)
+    const pw = 360
+    const ph = 90
+    const px = (W - pw) / 2
+    const py = yLabel + 22
+    ctx.save()
+    ctx.shadowColor = 'rgba(0,0,0,0.5)'
+    ctx.shadowBlur = 24
+    ctx.shadowOffsetY = 8
+    ctx.fillStyle = '#fff'
+    ctx.beginPath()
+    ctx.roundRect(px, py, pw, ph, 18)
+    ctx.fill()
+    ctx.restore()
+    const logo = await loadImage(await sameOrigin(d.partner.logoUrl))
+    if (logo && logo.width > 0 && logo.height > 0) {
+      const s = Math.min((pw - 48) / logo.width, (ph - 24) / logo.height)
+      const lw = logo.width * s
+      const lh = logo.height * s
+      ctx.drawImage(logo, W / 2 - lw / 2, py + ph / 2 - lh / 2, lw, lh)
+    } else {
+      ctx.fillStyle = '#111'
+      fitText(ctx, d.partner.name.toUpperCase(), pw - 40, 40, (p) => `${p}px ${FONT_DISPLAY}`)
+      ctx.textBaseline = 'middle'
+      ctx.fillText(d.partner.name.toUpperCase(), W / 2, py + ph / 2 + 2)
+      ctx.textBaseline = 'alphabetic'
+    }
   }
 
   // Fuß

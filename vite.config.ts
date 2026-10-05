@@ -12,6 +12,8 @@ export default defineConfig({
       input: {
         main: fileURLToPath(new URL('./index.html', import.meta.url)),
         live: fileURLToPath(new URL('./live.html', import.meta.url)),
+        // v16-S: Partner-Seite /partner (eigene OG-Meta, kein three.js)
+        partner: fileURLToPath(new URL('./partner.html', import.meta.url)),
       },
     },
   },

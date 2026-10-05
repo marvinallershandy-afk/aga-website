@@ -70,6 +70,16 @@ const HOOKS: HookDef[] = [
       'n8n: Webhook → Google-Drive-Node lädt die Grafik in den Spieltagsordner (SVA Media / Saison … / Spieltag …). Supabase-Webhook auf INSERT storage.objects (bucket sm_grafiken).',
     tabelle: 'storage.objects (INSERT, bucket=sm_grafiken)',
   },
+  {
+    // v16-S: feuert die DB selbst (RPC partner_anfrage über pg_net) — nur Firma,
+    // Ansprechpartner, Paket, Quelle; Kontaktdaten stehen im Admin.
+    event: 'partner.anfrage',
+    titel: 'Neue Partner-Anfrage → sofort Bescheid',
+    wann: 'Wenn jemand auf /partner das Anfrage-Formular abschickt.',
+    rezept:
+      'n8n: Webhook → WhatsApp/E-Mail an Marvin: „Neue Partner-Anfrage von {firma} ({paket})" mit Link auf /admin/sponsoren?tab=anfragen. Braucht die Supabase-Extension pg_net.',
+    tabelle: 'sva_partner_anfragen (über RPC partner_anfrage)',
+  },
 ]
 
 function loadLocalUrls(): Record<string, string> {

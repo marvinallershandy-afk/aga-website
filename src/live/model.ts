@@ -108,6 +108,14 @@ export interface LiveData {
   staff: LiveStaff[]
   previous: PreviousMatch | null
   settings: LiveSettings
+  /** v16-S: „Live-Ticker präsentiert von“ (Admin → Partner). Fehlt vor der Migration. */
+  partner?: LivePartner | null
+}
+
+export interface LivePartner {
+  name: string
+  logoUrl?: string
+  url?: string
 }
 
 // ── Spielminute ─────────────────────────────────────────────

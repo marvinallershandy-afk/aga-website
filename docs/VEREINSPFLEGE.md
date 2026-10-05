@@ -61,6 +61,7 @@ Zuerst prüfen, was schon angewandt ist: Dashboard → Database → Migrations, 
 | 7 | `20261004101000_sva_web_snapshot.sql` | **ja** |
 | 8 | `20261004102000_sva_security_haertung.sql` | **ja** |
 | 9 | `20261005100000_sva_spieltag_live.sql` | **ja** (v15-L Live-Ticker, Rollen, Trainingsort — siehe `docs/SPIELTAG.md`) |
+| 10 | `20261006100000_sva_partner.sql` | **ja** (v16-S Partner-Bereich `/partner` — siehe `docs/PARTNER.md`) |
 
 Anwenden geht einzeln im SQL-Editor (Datei-Inhalt einfügen) oder per MCP `apply_migration`. `supabase db push` nur verwenden, wenn die Remote-Migrationshistorie zu den Dateinamen passt. Sonst versucht es die Baseline erneut.
 
@@ -112,7 +113,7 @@ WhatsApp-Nummer eintragen. Trainingszeit bestätigen. FuPa-Link setzen. Impressu
 - `src/ui/StaffCard.tsx` und `src/ui/PlatzFinden.tsx` importieren `CONTACT`/`whatsappUrl` direkt aus `club.ts` statt aus `content.ts`. Dort kommen WhatsApp-Nummer und Adresse aus dem Admin erst an, wenn die beiden Importe auf `../data/content` umgestellt sind (je eine Zeile).
 - Der Kontakt-Sektionstext (`SECTIONS` „Di & Do ab 19 Uhr“) ist Copy und keine Kontakt-Variable. Ändern lässt er sich über `sm_website_content` (Sektion `kontakt`), eine Admin-Maske dafür gibt es noch nicht.
 - Die Website rendert `LINEUP` noch nicht. Der Vertrag (`src/data/lineup.ts`) wird exakt befüllt, die Darstellung macht der Website-Strang.
-- Sponsoren-Feld `bande` liegt im Overlay (`OverlaySponsor`), wird von Bande und Streifen aber noch nicht ausgewertet.
+- ~~Sponsoren-Feld `bande` wird nicht ausgewertet~~ — seit v16-S zeigt die 3D-Bande nur Sponsoren mit „Auf der Bande“ (`BANDEN_SPONSOREN` in `content.ts`).
 - Neue Fotos haben keinen Freisteller (macOS-Vision-Pipeline läuft offline). Die Karte zeigt dann das Foto im Duotone-Rahmen.
 - „Nächstes Spiel“ wird zum Build-Zeitpunkt berechnet. Nach dem Anpfiff bleibt es bis zum nächsten Veröffentlichen stehen.
 

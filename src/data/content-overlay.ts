@@ -37,9 +37,49 @@ export interface LinksOverride {
   fupaUrl?: string
 }
 
+/** v16-S: Stufe auf der Partner-Wand (/partner). */
+export type SponsorStufe = 'hauptpartner' | 'partner' | 'unterstuetzer'
+
 /** v14-C: Sponsor aus dem Admin. `bande` = Logo auch auf der 3D-Bande
- *  (false = nur im Sponsoren-Streifen). Ist ein Sponsor im Sinne von club.ts. */
-export type OverlaySponsor = Sponsor & { bande?: boolean }
+ *  (false = nur im Sponsoren-Streifen). Ist ein Sponsor im Sinne von club.ts.
+ *  v16-S: + `stufe` (fehlt = 'partner'). */
+export type OverlaySponsor = Sponsor & { bande?: boolean; stufe?: SponsorStufe }
+
+/** v16-S: verkaufbares Partner-Paket (Admin → Partner → Pakete). */
+export interface PartnerPaket {
+  /** DB-ID — nur für die Paket-Auswahl im Anfrage-Formular. */
+  id: string
+  name: string
+  beschreibung?: string
+  leistungen: string[]
+  /** „ab … €" (ganze Euro). Fehlt = „Preis auf Anfrage". */
+  preisAb?: number
+  preisEinheit: 'Saison' | 'Spieltag' | 'Monat' | 'einmalig'
+  /** Gesamtplätze; fehlt = unbegrenzt (keine Anzeige). */
+  plaetze?: number
+  /** Noch freie Plätze (Plätze − aktive Sponsoren mit diesem Paket). */
+  frei?: number
+  hervorgehoben?: boolean
+}
+
+/** v16-S: Mediadaten — nur gepflegte Felder sind gesetzt. */
+export interface PartnerMediadaten {
+  instagramFollower?: number
+  reichweiteMonat?: number
+  zuschauerHeim?: number
+  websiteBesucheMonat?: number
+  heimspieleSaison?: number
+  /** ISO-Datum (YYYY-MM-DD) */
+  stand?: string
+}
+
+/** v16-S: Partner-Bereich aus web_snapshot().partner. */
+export interface PartnerOverlay {
+  pakete: PartnerPaket[]
+  mediadaten: PartnerMediadaten
+  /** „Live-Ticker präsentiert von" (Logo lokal unter /generated/sponsors). */
+  livePartner?: { name: string; logoUrl?: string; url?: string }
+}
 
 /** Textüberschreibung eines Abschnitts (nur Textfelder; id ordnet zu). */
 export interface SectionCopyOverride {
@@ -70,4 +110,6 @@ export interface WebsiteContentOverlay {
   contact?: ContactOverride
   /** v14-C: fussball.de/FuPa-Links aus dem Admin (Verein & Links). */
   links?: LinksOverride
+  /** v16-S: Partner-Bereich (/partner): Pakete, Mediadaten, Live-Partner. */
+  partner?: PartnerOverlay
 }

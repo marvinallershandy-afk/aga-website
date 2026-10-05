@@ -52,7 +52,8 @@ const NAV: NavItem[] = [
   { to: '/spiele', label: 'Spiele', icon: CalendarDays, team: true },
   { to: '/kader', label: 'Kader', icon: Users },
   { to: '/tabelle', label: 'Tabelle', icon: ListOrdered },
-  { to: '/sponsoren', label: 'Sponsoren', icon: Handshake },
+  // v16-S: Bereich „Partner“ (Sponsoren, Pakete, Zahlen, Anfragen) — Pfad bleibt
+  { to: '/sponsoren', label: 'Partner', icon: Handshake },
   { to: '/verein', label: 'Verein & Links', icon: Link2 },
   { to: '/team', label: 'Team & Zugänge', icon: KeyRound },
 ]

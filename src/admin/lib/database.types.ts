@@ -743,6 +743,8 @@ export type Database = {
       }
       sm_sponsoren: {
         Row: {
+          stufe: string
+          partner_paket_id: string | null
           bande: boolean
           sortierung: number
           website_url: string | null
@@ -761,6 +763,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          stufe?: string
+          partner_paket_id?: string | null
           bande?: boolean
           sortierung?: number
           website_url?: string | null
@@ -779,6 +783,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          stufe?: string
+          partner_paket_id?: string | null
           bande?: boolean
           sortierung?: number
           website_url?: string | null
@@ -1102,6 +1108,145 @@ export type Database = {
         }
         Relationships: []
       }
+      // v16-S: Partner-Bereich (Migration 20261006100000, von Hand ergänzt)
+      sva_partner_pakete: {
+        Row: {
+          beschreibung: string | null
+          created_at: string
+          hervorgehoben: boolean
+          id: string
+          leistungen: string[]
+          name: string
+          plaetze: number | null
+          preis_ab: number | null
+          preis_einheit: string
+          sichtbar: boolean
+          sortierung: number
+          updated_at: string
+        }
+        Insert: {
+          beschreibung?: string | null
+          created_at?: string
+          hervorgehoben?: boolean
+          id?: string
+          leistungen?: string[]
+          name: string
+          plaetze?: number | null
+          preis_ab?: number | null
+          preis_einheit?: string
+          sichtbar?: boolean
+          sortierung?: number
+          updated_at?: string
+        }
+        Update: {
+          beschreibung?: string | null
+          created_at?: string
+          hervorgehoben?: boolean
+          id?: string
+          leistungen?: string[]
+          name?: string
+          plaetze?: number | null
+          preis_ab?: number | null
+          preis_einheit?: string
+          sichtbar?: boolean
+          sortierung?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sva_partner_info: {
+        Row: {
+          heimspiele_saison: number | null
+          id: number
+          instagram_follower: number | null
+          live_partner_id: string | null
+          reichweite_monat: number | null
+          stand: string | null
+          updated_at: string
+          updated_by: string | null
+          website_besuche_monat: number | null
+          zuschauer_heim: number | null
+        }
+        Insert: {
+          heimspiele_saison?: number | null
+          id?: number
+          instagram_follower?: number | null
+          live_partner_id?: string | null
+          reichweite_monat?: number | null
+          stand?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          website_besuche_monat?: number | null
+          zuschauer_heim?: number | null
+        }
+        Update: {
+          heimspiele_saison?: number | null
+          id?: number
+          instagram_follower?: number | null
+          live_partner_id?: string | null
+          reichweite_monat?: number | null
+          stand?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          website_besuche_monat?: number | null
+          zuschauer_heim?: number | null
+        }
+        Relationships: []
+      }
+      sva_partner_anfragen: {
+        Row: {
+          ansprechpartner: string
+          created_at: string
+          datenschutz_ok: boolean
+          email: string
+          firma: string
+          id: string
+          ip_hash: string | null
+          nachricht: string | null
+          notiz: string | null
+          paket_id: string | null
+          paket_name: string | null
+          quelle: string | null
+          status: string
+          telefon: string | null
+          updated_at: string
+        }
+        Insert: {
+          ansprechpartner: string
+          created_at?: string
+          datenschutz_ok: boolean
+          email: string
+          firma: string
+          id?: string
+          ip_hash?: string | null
+          nachricht?: string | null
+          notiz?: string | null
+          paket_id?: string | null
+          paket_name?: string | null
+          quelle?: string | null
+          status?: string
+          telefon?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ansprechpartner?: string
+          created_at?: string
+          datenschutz_ok?: boolean
+          email?: string
+          firma?: string
+          id?: string
+          ip_hash?: string | null
+          nachricht?: string | null
+          notiz?: string | null
+          paket_id?: string | null
+          paket_name?: string | null
+          quelle?: string | null
+          status?: string
+          telefon?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       sva_publish_log: {
         Row: {
           angefordert_at: string
@@ -1204,6 +1349,21 @@ export type Database = {
       rezept_speichern: { Args: { p_rezept: Json }; Returns: string }
       web_snapshot: { Args: never; Returns: Json }
       web_live: { Args: never; Returns: Json }
+      partner_anfrage: {
+        Args: {
+          p_firma: string
+          p_name: string
+          p_email: string
+          p_telefon?: string | null
+          p_paket_id?: string | null
+          p_nachricht?: string | null
+          p_datenschutz?: boolean
+          p_website?: string | null
+          p_dauer_ms?: number | null
+          p_quelle?: string | null
+        }
+        Returns: Json
+      }
       is_sva_team: { Args: never; Returns: boolean }
       sva_meine_rolle: { Args: never; Returns: string | null }
       sva_array_distinct: { Args: { a: string[] }; Returns: boolean }

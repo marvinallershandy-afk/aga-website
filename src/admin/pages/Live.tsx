@@ -35,6 +35,7 @@ import { hatErgebnis, naechstesSpiel, paarung } from '../lib/spiele'
 import { fetchLineupFuerSpiel, liveQueue, neueId, setMotm, type TickerInsert } from '../lib/live'
 import { spielLage, useTicker, type AdminEvent } from '../lib/useTicker'
 import { teileStory } from '../lib/storyGrafik'
+import { fetchLivePartner } from '../lib/partner'
 import { laufendeMinute, minuteLabel, platzStand, TYP_LABEL, type TickerTyp } from '../../live/model'
 import { cn } from '../lib/utils'
 
@@ -683,7 +684,9 @@ function NachDemSpiel({ spiel, tore, kandidaten, events, byId, istAdmin, onMotm 
           onClick={async () => {
             setBusy(true)
             try {
-              const r = await teileStory({ spiel, toreSva: tore[0], toreGegner: tore[1], torschuetzen, motm })
+              // v16-S: „Live-Ticker präsentiert von“ kommt mit auf die Grafik
+              const partner = await fetchLivePartner()
+              const r = await teileStory({ spiel, toreSva: tore[0], toreGegner: tore[1], torschuetzen, motm, partner })
               toast.success(r === 'geladen' ? 'Story-Grafik heruntergeladen.' : 'Story-Grafik geteilt.')
             } catch (e) {
               toast.error(friendlyError(e, 'Grafik konnte nicht erstellt werden.'))
