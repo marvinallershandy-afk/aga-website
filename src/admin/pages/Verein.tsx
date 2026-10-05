@@ -37,11 +37,12 @@ interface Form {
   email: string
   training: string
   adresse: string
+  amPlatz: string
   saison: string
   rechtstexteOk: boolean
 }
 
-const LEER: Form = { widgetTabelle: '', widgetSpielplan: '', trainingOrt: '', fussballDe: '', fupa: '', instagram: '', whatsapp: '', email: '', training: '', adresse: '', saison: '', rechtstexteOk: false }
+const LEER: Form = { widgetTabelle: '', widgetSpielplan: '', trainingOrt: '', fussballDe: '', fupa: '', instagram: '', whatsapp: '', email: '', training: '', adresse: '', amPlatz: '', saison: '', rechtstexteOk: false }
 
 export function Verein() {
   const toast = useToast()
@@ -64,6 +65,7 @@ export function Verein() {
       email: s.email ?? '',
       training: s.training ?? '',
       adresse: s.adresse ?? '',
+      amPlatz: s.am_platz ?? '',
       saison: s.saison ?? '',
       rechtstexteOk: s.rechtstexte_ok,
     }
@@ -111,6 +113,7 @@ export function Verein() {
         email: f.email.trim() || null,
         training: f.training.trim() || null,
         adresse: f.adresse.trim() || null,
+        am_platz: f.amPlatz.trim() || null,
         saison: f.saison.trim() || null,
         rechtstexte_ok: f.rechtstexteOk,
       })
@@ -214,6 +217,13 @@ export function Verein() {
               testLabel="Karte"
             >
               <Textarea id="v-adr" className="text-base" rows={2} value={f.adresse} onChange={(e) => set('adresse', e.target.value)} placeholder="Waldsportplatz Agathenburg, Zur Mehrzweckhalle, 21684 Agathenburg" />
+            </Feld>
+            <Feld
+              id="v-amplatz"
+              label="Was dich am Platz erwartet"
+              hint="Erscheint im Spieltag-Panel der Karte. Leer = wird nicht gezeigt. Keine Pflicht — nur was wirklich stimmt (z. B. Grill, Eintritt, Parken, Kinder/Hunde)."
+            >
+              <Textarea id="v-amplatz" className="text-base" rows={3} value={f.amPlatz} onChange={(e) => set('amPlatz', e.target.value.slice(0, 500))} placeholder="Bratwurst & Kaltgetränke ab 14 Uhr · Eintritt frei, Spende willkommen · Parken an der Mehrzweckhalle · Kinder und Hunde erwünscht" />
             </Feld>
             <Feld id="v-saison" label="Aktuelle Saison" hint="Die Tabelle zeigt nur Zeilen dieser Saison.">
               <Input id="v-saison" className="h-12 w-32 text-base" value={f.saison} onChange={(e) => set('saison', e.target.value)} placeholder="2026/27" />

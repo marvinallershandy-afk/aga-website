@@ -63,6 +63,14 @@ Netlify leitet um (302, `netlify.toml`):
 | **aga-erste.de/story** | `/?utm_source=instagram&utm_medium=story` | Instagram-Story → **Link-Sticker** |
 | aga-erste.de/qr | `/?utm_source=qr&utm_medium=platz` | QR-Codes auf Plakaten am Platz |
 | aga-erste.de/wa | `/?utm_source=whatsapp` | WhatsApp-Gruppen / Status |
+| **aga-erste.de/sonntag** | `/live?utm_source=instagram&utm_medium=story` | Spieltags-**Story** → Live-Seite (Zuschauer) |
+| **aga-erste.de/kicken** | `/probetraining?utm_source=instagram&utm_medium=bio` | **Bio** → Probetraining-Assistent (Spieler) |
+| **aga-erste.de/bande** | `/partner?utm_source=instagram&utm_medium=bio` | **Bio** → Partner/Bande (Sponsoren) |
+
+Die drei Ziel-Kurz-Links (v19-K) trennen die drei Vereinsziele sauber in der
+Statistik: `/sonntag` = Zuschauer am Spieltag, `/kicken` = Spieler-Gewinnung,
+`/bande` = Sponsoren. `/kicken` öffnet auf der Karte den Probetraining-Assistenten
+direkt (Alias `/probetraining`).
 
 Eigene Links gehen auch: `…/live?utm_source=instagram&utm_medium=post` (Medium aus der Liste oben).
 Bis die Domain umgezogen ist, gelten dieselben Pfade auf der Netlify-Adresse.
@@ -114,7 +122,7 @@ Ansprechpartner anlegen, dann „Website veröffentlichen“.
    `20261009090000_sva_alltag.sql` (Kalender-RPC, Mannschaften),
    `20261009100000_sva_statistik.sql` (Zählung, Auswertung).
 2. Edge Function: `npx supabase functions deploy kalender --project-ref fwiivwmoyagcdrjvhaou --use-api --no-verify-jwt`
-3. Netlify deployen (Redirects `/kalender.ics`, `/kalender-alle.ics`, `/ig`, `/story`, `/qr`, `/wa`).
+3. Netlify deployen (Redirects `/kalender.ics`, `/kalender-alle.ics`, `/ig`, `/story`, `/qr`, `/wa`, `/sonntag`, `/kicken`, `/bande`).
 4. Prüfen:
    ```sql
    select public.web_zaehlen('/', 'direkt', 'desktop');            -- true

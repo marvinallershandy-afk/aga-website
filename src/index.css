@@ -151,6 +151,13 @@ body {
   /* Die linke Textspalte; rechts lebt die 3D-Bühne */
   max-width: min(100%, 720px);
 }
+/* v19-K (Audit A §2.6.3): In der Spieler-Strecke lief „UNSERE MANNSCHAFT" in
+   der großen Display-Größe in die Nav/die durchlaufenden Karten. Eine Stufe
+   kleiner — der Fließtext bleibt, die Karte behält die Bildmitte. */
+.section--team-fly .team-sticky > div > .section__title,
+.section--team-fly .team-sticky .section__title {
+  font-size: clamp(2.2rem, 6vw, 4.6rem);
+}
 .team-sticky > .section__scrim {
   /* volle Bildbreite, auch wenn die Textspalte schmaler ist */
   right: auto;
@@ -305,6 +312,14 @@ body::before {
   pointer-events: none;
   background: linear-gradient(180deg, rgba(6,5,8,.62), rgba(6,5,8,.28) 55%, transparent);
 }
+/* v19-K (Audit A §2.6.1): Im Rundgang (= nicht auf der Karte, .is-map fehlt)
+   laufen die hellen Hintergrund-Spielerkarten in die Nav-Zeile. Deshalb dort
+   der obere Scrim kräftiger und etwas höher, damit Logo/Nav sauber über den
+   durchlaufenden Karten stehen. */
+html:not(.is-map) body::before {
+  height: clamp(84px, 13vh, 132px);
+  background: linear-gradient(180deg, rgba(6,5,8,.82), rgba(6,5,8,.5) 48%, rgba(6,5,8,.16) 78%, transparent);
+}
 
 .brandbar {
   position: fixed;
@@ -358,9 +373,19 @@ body::before {
   border: 1px solid rgba(255, 255, 255, 0.14);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
   pointer-events: auto;
-  max-width: calc(100vw - 1.2rem);
+  /* v19-K (Audit A §2.12.2): etwas mehr Abstand zur Viewport-Kante, damit die
+     rote MITMACHEN-Pill rechts nicht an den Bildschirmrand klebt. */
+  max-width: calc(100vw - 1.75rem);
 }
 @media (max-width: 640px) { .mobile-dock { display: flex; } }
+/* v19-K (Audit A §2.12.1): Dock-Safe-Area. Nur im Rundgang (Dock sichtbar,
+   .is-map fehlt) bekommen die Sektionen unten Platz, damit das fixe Dock keine
+   Inhalte am Sektionsende verdeckt (z. B. „Zum Sammelalbum" im Fanblock). */
+@media (max-width: 640px) {
+  html:not(.is-map) .section {
+    padding-bottom: calc(4.2rem + env(safe-area-inset-bottom, 0px));
+  }
+}
 .mobile-dock__dot {
   display: flex;
   align-items: center;

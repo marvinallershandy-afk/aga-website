@@ -116,13 +116,205 @@
   status = 302
   force = true
 
-# SPA-Fallback: deckt sowohl den 3D-Onepager als auch /admin/* ab.
+# v19-K (Audit B §2.10): Ziel-Kurz-Links je Vereinsziel für Instagram/Plakate.
+# 302 + force wie /ig; Zuordnung in der Statistik (docs/STATISTIK.md §2).
+#   /sonntag → Spieltag (Story)   /kicken → Probetraining (Bio)   /bande → Partner (Bio)
 [[redirects]]
-  from = "/*"
+  from = "/sonntag"
+  to = "/live?utm_source=instagram&utm_medium=story"
+  status = 302
+  force = true
+
+[[redirects]]
+  from = "/kicken"
+  to = "/probetraining?utm_source=instagram&utm_medium=bio"
+  status = 302
+  force = true
+
+[[redirects]]
+  from = "/bande"
+  to = "/partner?utm_source=instagram&utm_medium=bio"
+  status = 302
+  force = true
+
+# ── SPA-Rewrites + echte 404 (v19-K, Audit A §2.13 / C §5) ─────
+# Früher bog ein einziges /* → /index.html (200) ALLE unbekannten Pfade auf
+# die Startkarte um — vertippte/geteilte Links zeigten kommentarlos die Karte
+# (kein 404-Signal). Jetzt: Admin + alle Onepager-Deep-Link-Aliase (Quelle:
+# src/map/places.ts aliases + Rundgang-Slugs) werden explizit auf den SPA-
+# Einstieg index.html gerewritet (200, clientseitiges Routing via src/map/nav.ts),
+# und NUR der Rest fällt auf die gebrandete 404-Seite (Status 404).
+# Reihenfolge: erster Treffer gewinnt, der 404-Catch-all steht zuletzt.
+# WICHTIG: Beim Erweitern der Aliase in places.ts diese Liste mitpflegen.
+
+# Admin-Cockpit (eigene clientseitige Unterrouten /admin/statistik …)
+[[redirects]]
+  from = "/admin"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/admin/*"
   to = "/index.html"
   status = 200
 
-# ── Cache-Kontrolle (v13-E10) ─────────────────────────────────
+# Onepager-Deep-Link-Aliase → 3D-Karte (index.html), clientseitig aufgelöst.
+[[redirects]]
+  from = "/anfahrt"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/fanblock"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/fans"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/kader"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/kontakt"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/mannschaft"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/meisterfeier"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/mitmachen"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/mitspielen"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/musik"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/partyraum"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/probetraining"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/route"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/rundgang"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/spielplan"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/spieltag"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/sponsor"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/sponsoren"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/tabelle"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/team"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/tour"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/training"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/vereinsheim"
+  to = "/index.html"
+  status = 200
+
+# Alles andere: echte 404 mit gebrandeter Seite (public/404.html).
+[[redirects]]
+  from = "/*"
+  to = "/404.html"
+  status = 404
+
+# ── Sicherheits-Header (v19-K, Audit C §5) ────────────────────
+# Auf ALLE Antworten. Setzt KEIN Cache-Control → kein Konflikt mit den
+# Cache-Regeln unten. CSP zunächst als Report-Only (nur Konsolen-Report, blockt
+# nichts) — three.js nutzt WASM (draco) + Blob-Worker, /live bindet den
+# fussball.de-Widget-Iframe ein, Live/Statistik sprechen Supabase an. Nach ~1
+# Woche Beobachtung ohne Fehlalarme scharf schalten (Report-Only → CSP).
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    Content-Security-Policy-Report-Only = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://fwiivwmoyagcdrjvhaou.supabase.co; worker-src 'self' blob:; child-src 'self' blob:; media-src 'self'; frame-src 'self' https://www.fussball.de https://www.fupa.net; form-action 'self'; manifest-src 'self'"
+
+# ── Cache-Kontrolle (v13-E10 · v19-K Audit C §5) ──────────────
+# HTML-Einstiege NIE lange cachen (Bundle-Hashes wechseln je Deploy — sonst
+# hängen Besucher nach dem Veröffentlichen auf toten Asset-Hashes). Diese
+# Regeln stehen VOR /galerie/* & Co.: Netlify nimmt die zuerst definierte
+# passende Regel → /galerie (HTML) bekommt no-cache, /galerie/<bild> bleibt
+# langlebig. Der frühere Bug: /galerie wurde von /galerie/* mit 7 Tagen erfasst.
+[[headers]]
+  for = "/"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+[[headers]]
+  for = "/galerie"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+[[headers]]
+  for = "/live"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+[[headers]]
+  for = "/partner"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+[[headers]]
+  for = "/album"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+[[headers]]
+  for = "/impressum"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+[[headers]]
+  for = "/datenschutz"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+[[headers]]
+  for = "/404.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
 # Vite-Assets tragen Content-Hashes im Dateinamen → für immer cachebar.
 [[headers]]
   for = "/assets/*"

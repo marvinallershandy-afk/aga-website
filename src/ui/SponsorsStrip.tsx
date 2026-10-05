@@ -6,7 +6,6 @@ import { PARTNER_SPONSOREN } from '../data/partner'
 import { BANDE_SLOTS, BANDE_SPONSOREN, FREIER_SLOT, fokusZuSlot, slotZuFokus } from '../data/bandeLayout'
 import { EntwurfFelder } from '../partner/bande/EntwurfFelder'
 import { PartnerTafel } from '../partner/bande/PartnerTafel'
-import { LEER_CLAIMS } from '../partner/bande/tafel'
 import { entwurfAktiv, useEntwurf } from '../partner/bande/entwurf'
 import '../partner/bande/bande.css'
 
@@ -37,11 +36,15 @@ function BandeNav() {
   const slot = fokusZuSlot(focus)
   const geh = (d: number) => setFocus(slotZuFokus((slot + d + BANDE_SLOTS) % BANDE_SLOTS))
   const sponsor = BANDE_SPONSOREN[slot]
+  // v19-K (Audit A §2.2.1): Bei freien Tafeln NICHT den Claim der 3D-Tafel
+  // (LEER_CLAIMS) wiederholen — der stand sonst als DOM-Label exakt über dem
+  // identischen Text der 3D-Bande („Doppeltext", wirkte wie Rendering-Fehler).
+  // Freie Tafel = neutrales Label, die Freigabe steht in der Sub-Zeile.
   const titel = sponsor
     ? sponsor.name
     : slot === FREIER_SLOT && entwurfAktiv(e)
       ? e.name.trim() || 'Dein Entwurf'
-      : LEER_CLAIMS[slot % LEER_CLAIMS.length].replace('\n', ' ')
+      : 'Freie Bande'
   return (
     <div className="bk-nav">
       <button type="button" className="bk-nav__pfeil" onClick={() => geh(-1)} aria-label="Tafel links">

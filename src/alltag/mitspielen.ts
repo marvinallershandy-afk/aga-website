@@ -66,3 +66,27 @@ export function trainingFuer(m: Mannschaft): { wann: string; wo?: string } {
   if (m.training) return { wann: m.training }
   return { wann: CONTACT.training, wo: CONTACT.trainingOrt || undefined }
 }
+
+// ── v19-K (Audit B §4.7): „Mithelfen am Spieltag" — vierte Option im Assistenten.
+// Kein Team, kein Probetraining: eine fertige WhatsApp-/Mail-Vorlage für Helfer.
+// Nichts erfunden — nur ein offenes Angebot mitzuhelfen.
+export function helferNachricht(vorname?: string): string {
+  const v = (vorname ?? '').trim().slice(0, 40)
+  return [
+    'Hallo SV Agathenburg-Dollern!',
+    `${v ? `Ich bin ${v} und würde` : 'Ich würde'} am Spieltag gern mithelfen – z. B. Grill, Getränke, Auf- und Abbau oder an der Kasse.`,
+    'Wo könnt ihr Hände gebrauchen?',
+  ].join('\n')
+}
+
+/** Ziel-Link für Helfer: Haupt-WhatsApp (Verein & Links) → sonst E-Mail. */
+export function helferLink(vorname?: string): { href: string; kanal: 'whatsapp' | 'mail' } {
+  const text = helferNachricht(vorname)
+  if (whatsappReady && NUMMER.test(CONTACT.whatsapp)) {
+    return { href: `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(text)}`, kanal: 'whatsapp' }
+  }
+  return {
+    href: `mailto:${CONTACT.email}?subject=${encodeURIComponent('Mithelfen am Spieltag')}&body=${encodeURIComponent(text)}`,
+    kanal: 'mail',
+  }
+}

@@ -6,12 +6,13 @@ import { MAP_POSTER } from './posterData'
 import { registerMarker, markerLayer, mapWorld } from './mapWorld'
 import { openPlace, closePlace, startTour } from './nav'
 import { PlaceIcon } from './MarkerIcons'
-import { useMatchStatus } from './matchStatus'
+import { useMatchStatus, heimspielFenster } from './matchStatus'
 import { PLACE_SEO } from './panelText'
 import { ArrowRight, Map as MapIcon } from 'lucide-react'
 import { useMapScrollToTour } from './intro'
 import { AlbumTeaser } from '../ui/AlbumTeaser'
 import { InstagramZeile } from '../ui/InstagramZeile'
+import { HeimspielHinweis } from '../ui/HeimspielHinweis'
 // map.css kommt direkt aus index.html (vor dem JS verfügbar, s. dort)
 
 // ─────────────────────────────────────────────────────────────
@@ -209,6 +210,11 @@ export function MapView() {
   // v17-D: Scrollen auf der Karte startet nahtlos den Rundgang
   useMapScrollToTour(!place && intro === 'off')
 
+  // v19-K (Audit B §2.1.2): Heimspiel innerhalb 72 h → ruhiger Hinweis.
+  // Minutengenauigkeit ist für ein 72-h-Fenster unnötig; bei jedem Render neu
+  // berechnet (Panel öffnen/schließen rendert MapView ohnehin).
+  const heimKickoff = heimspielFenster(Date.now())
+
   // Schleier (Schnitt aus dem Partyraum) folgt mapWorld.veil
   useEffect(() => {
     let raf = 0
@@ -232,7 +238,7 @@ export function MapView() {
   }, [])
 
   return (
-    <div className="kmap" data-open={place ?? undefined} data-intro={intro !== 'off' || undefined}>
+    <div className="kmap" data-open={place ?? undefined} data-intro={intro !== 'off' || undefined} data-heimspiel={heimKickoff ? '' : undefined}>
       <header className="kmap__head">
         <a className="kmap__brand" href="/" onClick={(e) => { e.preventDefault(); closePlace() }}>
           <img src="/brand/aga-logo.png" alt="" width="36" height="42" />
@@ -260,6 +266,8 @@ export function MapView() {
       </p>
       <MapLoader />
       <MapDock />
+      {/* v19-K: Heimspiel-Hinweis ab 72 h (verdrängt den Album-Teaser-Slot) */}
+      {heimKickoff && <HeimspielHinweis kickoff={heimKickoff} />}
       {/* v18-P: ruhiger Einstieg ins Sammelalbum (nach dem Intro sichtbar) */}
       <AlbumTeaser variante="karte" />
       <footer className="kmap__foot">

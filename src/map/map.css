@@ -355,6 +355,13 @@ html.is-map body {
   .kmap__tourShort { display: inline; }
   .kmap__tour { padding: 0 var(--s-3); min-height: 36px; }
 }
+/* v19-K (Audit A §2.10.2): Claim im Kopf nicht abschneiden. Auf sehr schmalen
+   Geräten reicht die Breite nicht für „Ein Dorf. Ein Verein. Ein Platz." neben
+   Name + Rundgang-Knopf — statt „EIN PL…" (Bastel-Look) den Claim ganz
+   weglassen (er steht weiterhin im Hero/Rundgang). */
+@media (max-width: 420px) {
+  .kmap__brand small { display: none; }
+}
 
 /* ── Hinweis „scrollen = Rundgang", Lade-Zeile, Fuß ─────────── */
 .kmap__hint {
@@ -859,3 +866,71 @@ html.is-map body {
 .kpanel .band-try,
 .kpanel .sponsor-ctas { margin-top: 0; }
 .kpanel .tboard { margin: 0; }
+
+/* ── v19-K (Audit B §2.1.2): Heimspiel-Hinweis auf der Karten-Totale ──
+   Ruhige Karte wie der Album-Teaser. Desktop unten rechts, mobil im unteren
+   Streifen; während er aktiv ist, weicht der Album-Teaser (data-heimspiel). */
+.hs-hint { display: block; color: var(--c-white); text-decoration: none; }
+.hs-hint__text { display: grid; gap: 2px; min-width: 0; }
+.hs-hint__kicker { font: 700 var(--t-micro)/1.2 var(--f-body); letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--c-red); }
+.hs-hint b { font: 400 var(--t-d4)/1.05 var(--f-display); text-transform: uppercase; letter-spacing: .01em; }
+.hs-hint small { font-size: var(--t-micro); letter-spacing: .02em; line-height: 1.4; color: var(--c-text-2); }
+.hs-hint__cta {
+  display: inline-flex; align-items: center; gap: var(--s-1); margin-top: var(--s-2);
+  font: 700 var(--t-micro)/1 var(--f-body); letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--c-white);
+}
+.hs-hint--karte {
+  position: fixed; right: var(--gutter); left: auto; bottom: calc(var(--s-5) + 28px); z-index: 21;
+  max-width: 320px; padding: var(--s-3) var(--s-4);
+  background: rgba(11, 10, 11, .82); border: var(--border); border-radius: var(--r-l);
+  transition: opacity var(--d-2) var(--ease), border-color var(--d-1) var(--ease);
+}
+.hs-hint--karte:hover { border-color: var(--c-line-strong); }
+.hs-hint--karte:focus-visible { outline: 2px solid var(--c-white); outline-offset: 2px; }
+.kmap[data-open] .hs-hint--karte,
+.kmap[data-intro] .hs-hint--karte { opacity: 0; pointer-events: none; }
+@media (max-width: 759px), (max-aspect-ratio: 1/1) {
+  .hs-hint--karte {
+    left: var(--gutter); right: var(--gutter); max-width: none;
+    bottom: calc(68px + env(safe-area-inset-bottom) + var(--s-3) + 22px);
+  }
+  /* Mobil ist unten nur Platz für EINE Karte — der Heimspiel-Hinweis hat im
+     72-h-Fenster Vorrang, der Album-Teaser weicht. */
+  .kmap[data-heimspiel] .alb-t--karte { display: none; }
+}
+
+/* ── v19-K (Audit B §2.2): „Was dich am Platz erwartet" + Mini-Spielplan ──
+   Beide im Spieltag-Panel. „Am Platz" nur wenn im Admin gepflegt (sonst
+   rendert die Komponente nichts), der Mini-Spielplan nur mit Build-Daten. */
+.kp-amplatz {
+  padding: var(--s-4);
+  border: var(--border); border-radius: var(--r-l);
+  background: var(--c-ink);
+  display: grid; gap: var(--s-2);
+}
+.kp-amplatz__kicker {
+  font: 700 var(--t-micro)/1.2 var(--f-body); letter-spacing: var(--ls-label);
+  text-transform: uppercase; color: var(--c-red);
+}
+.kp-amplatz p { margin: 0; font-size: var(--t-body); line-height: var(--lh-body); color: var(--c-white); }
+
+.kp-spielplan { display: grid; gap: var(--s-3); }
+.kp-spielplan__kicker {
+  font: 700 var(--t-micro)/1.2 var(--f-body); letter-spacing: var(--ls-label);
+  text-transform: uppercase; color: var(--c-text-2);
+}
+.kp-spielplan ul { list-style: none; margin: 0; padding: 0; display: grid; }
+.kp-spielplan li {
+  display: grid; grid-template-columns: 22px auto 1fr; align-items: center; gap: var(--s-3);
+  padding: var(--s-2) 0; border-top: var(--border); font-size: var(--t-small);
+}
+.kp-spielplan li:first-child { border-top: 0; }
+.kp-spielplan__ha {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 6px;
+  font: 700 var(--t-micro)/1 var(--f-body); letter-spacing: .02em;
+  color: var(--c-text-2); background: rgba(244,242,239,.08); border: var(--border);
+}
+.kp-spielplan__ha[data-home] { color: var(--c-white); background: var(--c-red); border-color: var(--c-red); }
+.kp-spielplan__dm { color: var(--c-text-2); white-space: nowrap; }
+.kp-spielplan__opp { color: var(--c-white); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

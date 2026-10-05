@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0B0A0B" />
+    <meta name="color-scheme" content="dark" />
+    <title>Abseits — Seite nicht gefunden · SV Agathenburg-Dollern</title>
+    <!-- Fehlerseite: nicht indexieren. -->
+    <meta name="robots" content="noindex, nofollow" />
+    <!-- Bewusst KEINE externen Fonts/CDNs (cookie-/Third-Party-frei, wie
+         impressum.html/datenschutz.html). Werte aus src/theme/design.css. -->
+    <style>
+      :root { --rot: #E91D29; --bg: #0B0A0B; --fg: #F4F2EF; --mut: rgba(244,242,239,.62); --line: rgba(244,242,239,.14); }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0; background: var(--bg); color: var(--fg);
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        line-height: 1.6; display: flex; min-height: 100%;
+      }
+      .wrap {
+        margin: auto; width: 100%; max-width: 42rem;
+        padding: 2.5rem 1.5rem 3rem; text-align: center;
+      }
+      .foto {
+        position: relative; margin: 0 auto 2rem; max-width: 30rem;
+        border-radius: 14px; overflow: hidden; border: 1px solid var(--line);
+        box-shadow: 0 24px 60px rgba(0,0,0,.5);
+      }
+      .foto img { display: block; width: 100%; height: auto; }
+      .foto::after {
+        content: ""; position: absolute; inset: 0;
+        background: linear-gradient(180deg, rgba(11,10,11,0) 40%, rgba(11,10,11,.55));
+      }
+      .credit {
+        margin: .7rem 0 0; font-size: .72rem; letter-spacing: .08em;
+        text-transform: uppercase; color: var(--mut);
+      }
+      .kicker {
+        display: inline-flex; align-items: center; gap: .6rem;
+        font-size: .78rem; font-weight: 700; letter-spacing: .22em;
+        text-transform: uppercase; color: var(--rot); margin: 0 0 .8rem;
+      }
+      .kicker::before { content: ""; width: 34px; height: 2px; background: var(--rot); }
+      h1 {
+        font-family: "Anton", "Arial Narrow", system-ui, sans-serif;
+        font-weight: 400; font-size: clamp(2.6rem, 11vw, 4.5rem); line-height: .96;
+        margin: 0 0 .6rem; text-transform: uppercase; letter-spacing: .01em;
+      }
+      .lead { color: rgba(236,234,232,.82); margin: 0 auto 2rem; max-width: 34ch; font-size: 1.05rem; }
+      .btns { display: flex; flex-wrap: wrap; gap: .8rem; justify-content: center; }
+      .btn {
+        display: inline-flex; align-items: center; gap: .5rem; min-height: 48px;
+        padding: 0 1.4rem; border-radius: 10px; font-weight: 700; font-size: .92rem;
+        letter-spacing: .02em; text-decoration: none; cursor: pointer;
+        transition: transform .12s ease, background-color .2s ease, border-color .2s ease;
+      }
+      .btn:active { transform: translateY(1px); }
+      .btn--primary { background: var(--rot); color: #fff; }
+      .btn--primary:hover { background: #ff2a37; }
+      .btn--ghost { color: var(--fg); border: 1px solid var(--line); background: rgba(255,255,255,.03); }
+      .btn--ghost:hover { border-color: rgba(244,242,239,.4); }
+      footer {
+        margin-top: 3rem; font-size: .76rem; letter-spacing: .06em; color: var(--mut);
+      }
+      footer a { color: var(--mut); text-decoration: none; }
+      footer a:hover { color: #fff; }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <figure class="foto">
+        <img src="/brand/aga-404.jpg" alt="Spieler des SV Agathenburg-Dollern laufen zu den Fans" width="960" height="640" />
+      </figure>
+      <p class="credit">Foto: picture by Nele</p>
+      <p class="kicker">Fehler 404</p>
+      <h1>Abseits!</h1>
+      <p class="lead">Diese Seite gibt es nicht. Vielleicht ein Vertipper oder ein alter Link — zurück ins Spiel geht so:</p>
+      <div class="btns">
+        <a class="btn btn--primary" href="/">Zur Karte</a>
+        <a class="btn btn--ghost" href="/live">Zum nächsten Spiel</a>
+      </div>
+      <footer>
+        <a href="/">SV Agathenburg-Dollern</a> · <a href="/impressum.html">Impressum</a> · <a href="/datenschutz.html">Datenschutz</a>
+      </footer>
+    </main>
+  </body>
+</html>

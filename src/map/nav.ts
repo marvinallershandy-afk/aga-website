@@ -15,7 +15,24 @@ import { placeFromSlug, TOUR_SLUGS, type PlaceId } from './places'
 const MARK = { sva: 1 }
 const RESERVED_PATHS = ['admin', 'live', 'partner', 'impressum', 'datenschutz', 'album', 'galerie']
 
+// v19-K (Audit B §2.5.1): Kam der Einstieg über den Alias „probetraining"
+// (/probetraining oder /#probetraining, auch via Kurz-Link /kicken), merken wir
+// das einmalig — der Trainings-Ort öffnet dann den Assistenten direkt.
+let probePending = false
+function markProbe() {
+  const hash = window.location.hash.replace(/^#/, '').toLowerCase()
+  const seg = window.location.pathname.replace(/^\/+|\/+$/g, '').toLowerCase()
+  if (hash === 'probetraining' || seg === 'probetraining') probePending = true
+}
+/** Einmalig: true, wenn gerade über „probetraining" eingestiegen wurde. */
+export function consumeProbe(): boolean {
+  const v = probePending
+  probePending = false
+  return v
+}
+
 function parse(): { mode: ViewMode; place: PlaceId | null } {
+  markProbe()
   const hash = window.location.hash.replace(/^#/, '')
   if (TOUR_SLUGS.includes(hash.toLowerCase())) return { mode: 'tour', place: null }
   const fromHash = placeFromSlug(hash)

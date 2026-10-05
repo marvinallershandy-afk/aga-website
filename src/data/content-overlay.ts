@@ -22,6 +22,9 @@ export interface ContactOverride {
   training?: string
   /** v15-L: Trainingsort (≠ Spielort `address`). */
   trainingOrt?: string
+  /** v19-K: „Was dich am Platz erwartet" (Grill/Eintritt/Parken/Kinder).
+   *  Freitext aus Verein & Links. Leer = Block unsichtbar. */
+  amPlatz?: string
   /** Anzeigeform mit @, z. B. '@sva_fussball'. */
   instagram?: string
   instagramUrl?: string
@@ -156,6 +159,19 @@ export interface WebsiteContentOverlay {
   galerien?: Galerie[]
   /** v18-A: Mannschaften im Probetraining-Assistenten (web_mitspielen()). */
   mannschaften?: MannschaftOverlay[]
+  /** v19-K: Mini-Spielplan (nächste bis 5 Spiele mit H/A) aus web_kalender(true). */
+  schedule?: ScheduleMatch[]
+}
+
+/** v19-K (Audit B §2.2): eine Zeile im Mini-Spielplan. */
+export interface ScheduleMatch {
+  opponent: string
+  home: boolean
+  /** ISO-String mit Offset. */
+  kickoff: string
+  /** vorformatiert „So · 12.10. · 15:00 Uhr" (Build). */
+  date: string
+  competition?: string
 }
 
 /** v18-A: Mannschaft für „Probetraining“ — whatsapp leer = Haupt-WhatsApp. */

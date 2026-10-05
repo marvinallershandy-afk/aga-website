@@ -59,3 +59,8 @@ scripts/mail/patch.json
 shots-rundgang/
 _rundgang/
 shots-v19-seiten/
+
+# v19-K: Audit-Screenshots + Wegwerf-Runner (nicht committen)
+shots-v19-karte/
+scripts/_v19k-shots.mjs
+scripts/.seo-events.json

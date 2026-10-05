@@ -1289,6 +1289,7 @@ export type Database = {
       sva_settings: {
         Row: {
           adresse: string | null
+          am_platz: string | null
           email: string | null
           fupa_url: string | null
           fussball_de_team_id: string | null
@@ -1306,6 +1307,7 @@ export type Database = {
         }
         Insert: {
           adresse?: string | null
+          am_platz?: string | null
           email?: string | null
           fupa_url?: string | null
           fussball_de_team_id?: string | null
@@ -1323,6 +1325,7 @@ export type Database = {
         }
         Update: {
           adresse?: string | null
+          am_platz?: string | null
           email?: string | null
           fupa_url?: string | null
           fussball_de_team_id?: string | null
