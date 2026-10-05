@@ -157,6 +157,18 @@
   pointer-events: none;
 }
 .holo__figure[data-ready] { opacity: 1; }
+/* v16-W: Walkout-Video (freigestellt, Alpha) im selben Fenster. Ein
+   drop-shadow statt zwei — das Video zeichnet sich 30× pro Sekunde neu. */
+.holo__walkout {
+  position: absolute;
+  height: auto;
+  max-width: none;
+  aspect-ratio: 1 / 2;
+  object-fit: contain;
+  background: transparent;
+  filter: drop-shadow(0 1.2cqw 2.4cqw rgba(0,0,0,.55));
+  pointer-events: none;
+}
 .holo__nophoto { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; }
 .holo__nophoto img { position: absolute; width: 50%; top: 22%; left: 25%; opacity: .5; filter: drop-shadow(0 3cqw 6cqw rgba(0,0,0,.55)); }
 .holo__nophoto span {

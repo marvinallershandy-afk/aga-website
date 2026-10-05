@@ -2,7 +2,8 @@ import type { Staff } from '../data/players'
 import { ROLE_LABEL } from '../data/players'
 import { CLUB, whatsappUrl, whatsappReady } from '../data/content'
 import { WaIcon, MailIcon } from './Icons'
-import { CardFigure, lastNameSize, requestGyro } from './HoloCard'
+import { CardFigure, CardWalkout, lastNameSize, requestGyro } from './HoloCard'
+import { useWalkout } from './walkoutSupport'
 import { FIGURE } from './cardArt'
 
 // v14-D: Trainerstab-Karte im Karten-2.0-System (gleicher Körper, Freisteller,
@@ -14,6 +15,7 @@ export function StaffCard({ member }: { member: Staff }) {
   const first = parts.slice(0, -1).join(' ')
   const last = parts.slice(-1)[0] ?? ''
   const figure = member.cutoutUrl ?? null
+  const walk = useWalkout(member.id)
   return (
     <div className="staff-card2">
       <div
@@ -27,7 +29,9 @@ export function StaffCard({ member }: { member: Staff }) {
           <div className="holo__frame" />
           <div className="holo__plate" />
         </div>
-        {figure ? (
+        {walk.has ? (
+          <CardWalkout id={member.id} headU={FIGURE.headStaff} onFail={walk.fail} />
+        ) : figure ? (
           <CardFigure key={figure} src={figure} headU={FIGURE.headStaff} />
         ) : (
           <div className="holo__nophoto" aria-hidden="true">
