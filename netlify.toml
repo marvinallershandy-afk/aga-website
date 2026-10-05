@@ -52,6 +52,18 @@
   to = "/partner.html"
   status = 200
 
+# v17-A: Sammelalbum als eigene HTML-Datei (QR-Einstieg /album?c=…).
+# Query-Strings bleiben bei 200-Rewrites erhalten.
+[[redirects]]
+  from = "/album"
+  to = "/album.html"
+  status = 200
+
+[[redirects]]
+  from = "/album/"
+  to = "/album.html"
+  status = 200
+
 # SPA-Fallback: deckt sowohl den 3D-Onepager als auch /admin/* ab.
 [[redirects]]
   from = "/*"
@@ -75,6 +87,11 @@
 
 [[headers]]
   for = "/partner.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/album.html"
   [headers.values]
     Cache-Control = "public, max-age=0, must-revalidate"
 

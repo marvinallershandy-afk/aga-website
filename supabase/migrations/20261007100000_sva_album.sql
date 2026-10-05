@@ -91,7 +91,8 @@ insert into public.sva_album_einstellungen (id) values (1) on conflict (id) do n
 -- ── 2. Karten-Katalog ───────────────────────────────────────────────────────
 create table if not exists public.sva_album_karten (
   id uuid primary key default gen_random_uuid(),
-  typ text not null check (typ in ('spieler', 'moment', 'partner', 'fan')),
+  -- trainer = Trainerstab-Seite im Heft (zählt NICHT für „Album komplett“)
+  typ text not null check (typ in ('spieler', 'trainer', 'moment', 'partner', 'fan')),
   -- Spielerkarte → Kader-Eintrag (mehrere Versionen je Spieler möglich:
   -- Bronze-Basis + Silber/Gold/Spezial). Partnerkarte → Sponsor.
   roster_id uuid references public.sm_roster(id) on delete set null,
@@ -112,7 +113,7 @@ comment on table public.sva_album_karten is 'Sammelalbum-Katalog. Öffentlich nu
 create index if not exists sva_album_karten_saison_idx on public.sva_album_karten (aktiv, saison, seltenheit);
 create unique index if not exists sva_album_karten_spieler_uniq
   on public.sva_album_karten (roster_id, seltenheit, coalesce(saison, ''))
-  where typ = 'spieler' and roster_id is not null;
+  where typ in ('spieler', 'trainer') and roster_id is not null;
 alter table public.sva_album_karten enable row level security;
 
 -- ── 3. Check-in-Codes je Heimspiel ──────────────────────────────────────────
@@ -585,10 +586,11 @@ begin
                                            else 'MIT' end,
                             'fotoUrl',   r.foto_url,
                             'cutoutUrl', r.freisteller_url,
-                            'kapitaen',  case when r.kapitaen then true end)) end,
+                            'kapitaen',  case when r.kapitaen then true end,
+                            'rolle',     case when r.rolle <> 'spieler' then r.rolle end)) end,
                'partner', case when sp.id is not null then jsonb_strip_nulls(jsonb_build_object(
                             'name', sp.name, 'logoUrl', sp.logo_url, 'url', sp.website_url)) end
-             )) order by case k.typ when 'spieler' then 0 when 'moment' then 1 when 'partner' then 2 else 3 end,
+             )) order by case k.typ when 'spieler' then 0 when 'trainer' then 1 when 'moment' then 2 when 'partner' then 3 else 4 end,
                          k.sortierung, r.sortierung nulls last, k.titel,
                          case k.seltenheit when 'bronze' then 1 when 'silber' then 2 when 'gold' then 3 else 4 end)
         from public.sva_album_karten k
@@ -976,6 +978,7 @@ declare
   v_saison text := public.sva_album_saison();
   v_n integer := 0;
   v_m integer := 0;
+  v_t integer := 0;
 begin
   perform public.sva_album_admin_pruefen();
   insert into public.sva_album_karten (typ, roster_id, titel, untertitel, bild_url, seltenheit, saison, sortierung)
@@ -984,22 +987,34 @@ begin
               when 'ABW' then 'Abwehr' when 'ABWEHR' then 'Abwehr'
               when 'ANG' then 'Angriff' when 'STURM' then 'Angriff' when 'ANGRIFF' then 'Angriff'
               else 'Mittelfeld' end,
-         coalesce(r.freisteller_url, r.foto_url), 'bronze', v_saison, r.sortierung
+         coalesce(r.foto_url, r.freisteller_url), 'bronze', v_saison, r.sortierung
     from public.sm_roster r
    where r.aktiv and r.rolle = 'spieler'
      and not exists (select 1 from public.sva_album_karten k
                       where k.typ = 'spieler' and k.roster_id = r.id and k.seltenheit = 'bronze'
                         and coalesce(k.saison, '') = v_saison);
   get diagnostics v_n = row_count;
+  -- Trainerstab-Seite (zählt nicht für „Album komplett“)
   insert into public.sva_album_karten (typ, roster_id, titel, untertitel, bild_url, seltenheit, saison, sortierung)
-  select 'spieler', r.id, r.name, 'Kapitän', coalesce(r.freisteller_url, r.foto_url), 'gold', v_saison, r.sortierung
+  select 'trainer', r.id, r.name,
+         case r.rolle when 'trainer' then 'Trainer' when 'co-trainer' then 'Co-Trainer'
+                      when 'torwart-trainer' then 'Torwart-Trainer' else 'Teammanager' end,
+         coalesce(r.foto_url, r.freisteller_url), 'bronze', v_saison, r.sortierung
+    from public.sm_roster r
+   where r.aktiv and r.rolle <> 'spieler'
+     and not exists (select 1 from public.sva_album_karten k
+                      where k.typ = 'trainer' and k.roster_id = r.id and k.seltenheit = 'bronze'
+                        and coalesce(k.saison, '') = v_saison);
+  get diagnostics v_t = row_count;
+  insert into public.sva_album_karten (typ, roster_id, titel, untertitel, bild_url, seltenheit, saison, sortierung)
+  select 'spieler', r.id, r.name, 'Kapitän', coalesce(r.foto_url, r.freisteller_url), 'gold', v_saison, r.sortierung
     from public.sm_roster r
    where r.aktiv and r.rolle = 'spieler' and r.kapitaen
      and not exists (select 1 from public.sva_album_karten k
                       where k.typ = 'spieler' and k.roster_id = r.id and k.seltenheit = 'gold'
                         and coalesce(k.saison, '') = v_saison);
   get diagnostics v_m = row_count;
-  return jsonb_build_object('bronze', v_n, 'gold', v_m, 'saison', v_saison);
+  return jsonb_build_object('bronze', v_n, 'gold', v_m, 'trainer', v_t, 'saison', v_saison);
 end;
 $$;
 

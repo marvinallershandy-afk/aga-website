@@ -77,7 +77,7 @@ ok(e0.gewicht_bronze === 70 && e0.gewicht_silber === 22 && e0.gewicht_gold === 7
 
 // ── Katalog ────────────────────────────────────────────────────────────────
 let r = await rpc(admin, `select album_admin_spielerkarten()`)
-ok(r.bronze === 24 && r.gold === 1 && r.saison === '2026/27', 'Spielerkarten aus Kader: 24 Bronze + 1 Gold (Kapitän) ' + JSON.stringify(r))
+ok(r.bronze === 24 && r.gold === 1 && r.trainer === 3 && r.saison === '2026/27', 'Sticker aus Kader: 24 Bronze + 1 Gold (Kapitän) + 3 Trainerstab ' + JSON.stringify(r))
 r = await rpc(admin, `select album_admin_spielerkarten()`)
 ok(r.bronze === 0 && r.gold === 0, 'Spielerkarten zweimal erzeugen → keine Doppelten')
 await expectErr(fan1(`select album_admin_spielerkarten()`), 'Fan darf keine Spielerkarten erzeugen', /album_kein_admin/)
@@ -94,7 +94,8 @@ await expectErr(admin(`insert into sva_album_karten (typ, titel, seltenheit) val
 await expectErr(admin(`insert into sva_album_karten (typ, titel, bild_url) values ('fan', 'Böse', 'javascript:alert(1)')`), 'Bild-URL nur https:// oder /')
 
 let kat = await rpc(asAnon, `select album_katalog()`)
-ok(kat.karten.length === 28 && kat.saison === '2026/27', 'anon: Katalog der Saison (24+1+3, ohne alte Saison) → ' + kat.karten.length)
+ok(kat.karten.length === 31 && kat.saison === '2026/27', 'anon: Katalog der Saison (24+1+3 Stab+3, ohne alte Saison) → ' + kat.karten.length)
+ok(kat.karten.find((k) => k.typ === 'trainer')?.spieler?.rolle === 'trainer' && kat.karten[0].spieler.fotoUrl?.endsWith('.webp'), 'Katalog: Trainerstab mit Rolle, Sticker mit Foto')
 ok(kat.karten[0].typ === 'spieler' && kat.karten[0].spieler?.slug === 'p-pils' && kat.karten[0].spieler.position === 'TW', 'Katalog: Spieler zuerst, mit Slug/Position')
 ok(kat.karten.some((k) => k.typ === 'partner' && k.partner?.name === 'Mr. Döner'), 'Katalog: Partnerkarte mit Sponsor')
 ok(kat.regeln.chancen.bronze === 70 && kat.regeln.chancen.spezial === 1 && kat.regeln.kartenProPack === 3 && kat.regeln.belohnungen.length === 3, 'Katalog: Regeln (Chancen, Pack-Größe, Belohnungen)')

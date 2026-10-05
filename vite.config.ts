@@ -14,6 +14,8 @@ export default defineConfig({
         live: fileURLToPath(new URL('./live.html', import.meta.url)),
         // v16-S: Partner-Seite /partner (eigene OG-Meta, kein three.js)
         partner: fileURLToPath(new URL('./partner.html', import.meta.url)),
+        // v17-A: Sammelalbum /album (Fan-Login, QR-Check-in, kein three.js)
+        album: fileURLToPath(new URL('./album.html', import.meta.url)),
       },
     },
   },
