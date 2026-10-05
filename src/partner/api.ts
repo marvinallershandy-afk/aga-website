@@ -3,6 +3,7 @@
 // anon-Key aus der Vite-Env (öffentlicher Client-Key). Keine Cookies.
 // Die RPC validiert, bremst (Rate-Limit) und speichert serverseitig.
 // ─────────────────────────────────────────────────────────────
+import { zaehleEreignis } from '../statistik/zaehlen'
 
 const URL_BASE = import.meta.env.VITE_SUPABASE_URL as string | undefined
 const KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
@@ -74,7 +75,10 @@ export async function sendeAnfrage(d: AnfrageDaten, signal?: AbortSignal): Promi
   } catch {
     throw new AnfrageFehler('netz', 'Keine Verbindung. Bitte prüf dein Netz und versuch es noch mal.')
   }
-  if (r.ok) return
+  if (r.ok) {
+    zaehleEreignis('partner-anfrage') // v18-A: Ziel „Sponsoren“
+    return
+  }
   let msg = ''
   let code = ''
   try {

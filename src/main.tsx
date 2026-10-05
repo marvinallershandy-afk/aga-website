@@ -1,6 +1,10 @@
 import '@fontsource/anton/400.css'
 import '@fontsource-variable/archivo/index.css'
 
+// v18-A: cookiefreie Zählung — Modul früh laden (merkt utm_*/Referrer, bevor
+// das Karten-Routing die Adresse normalisiert); gezählt wird erst im Leerlauf.
+import { starteZaehlung } from './statistik/zaehlen'
+
 const rootEl = document.getElementById('root')!
 
 // Routen-Weiche, ohne den öffentlichen 3D-Onepager anzufassen:
@@ -49,5 +53,6 @@ if (!isAdmin && authReturn) {
         <App />
       </StrictMode>,
     )
+    starteZaehlung()
   })
 }

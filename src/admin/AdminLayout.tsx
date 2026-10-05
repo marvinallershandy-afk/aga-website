@@ -18,6 +18,7 @@ import {
   UserRound,
   BookOpen,
   Camera,
+  BarChart3,
 } from 'lucide-react'
 import { useAuth } from './auth/AuthProvider'
 import { cn } from './lib/utils'
@@ -60,6 +61,8 @@ const NAV: NavItem[] = [
   { to: '/album', label: 'Album', icon: BookOpen },
   // v17-D: Galerien der Vereinsfotografin (Karte → Fans, /galerie)
   { to: '/galerien', label: 'Galerien', icon: Camera },
+  // v18-A: anonyme Besuchszählung (Quellen, Ziele)
+  { to: '/statistik', label: 'Statistik', icon: BarChart3 },
   { to: '/verein', label: 'Verein & Links', icon: Link2 },
   { to: '/team', label: 'Team & Zugänge', icon: KeyRound },
 ]

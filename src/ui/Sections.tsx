@@ -10,6 +10,10 @@ import { PlatzFinden } from './PlatzFinden'
 import { SponsorPitch } from './SponsorsStrip'
 import { FanGallery } from './FanGallery'
 import { WaIcon, IgIcon, MailIcon } from './Icons'
+// v18-A: Kalender-Abo + Probetraining-Assistent (src/alltag/)
+import { KalenderKnopf } from '../alltag/Kalender'
+import { ProbetrainingKnopf } from '../alltag/Probetraining'
+import { AlltagFuss } from '../alltag/Fuss'
 
 // v13-F3: Reveals leichter — weniger Hub, kürzer. 40px/0.7s fühlte sich
 // bei jedem Vorbeiscrollen wie Gewicht an, das erst hochgestemmt wird.
@@ -143,6 +147,9 @@ export function Sections() {
         <div className="section__scrim" />
         <Header kicker={tabelle.kicker} title={tabelle.title} body={tabelle.body} />
         <FussballWidget />
+        <div style={{ marginTop: 'var(--s-5)', maxWidth: 420, pointerEvents: 'auto' }}>
+          <KalenderKnopf variante="zeile" adresse={CONTACT.address} />
+        </div>
       </section>
 
       {/* 5 · SPONSOREN (die Geld-Station, jetzt direkt vor „Mitmachen") —
@@ -195,14 +202,7 @@ export function Sections() {
               {CONTACT.training}
               {CONTACT.trainingOrt ? <> · {CONTACT.trainingOrt.split(',')[0]}</> : null}
             </p>
-            <a
-              className="btn btn--primary"
-              href={whatsappUrl('Hallo! Ich würde gern beim Probetraining vorbeikommen.')}
-              target={whatsappReady ? '_blank' : undefined}
-              rel={whatsappReady ? 'noreferrer' : undefined}
-            >
-              Probetraining: einfach da sein
-            </a>
+            <ProbetrainingKnopf className="btn btn--primary" label="Probetraining: einfach da sein" icon={false} />
           </div>
           <div className="wanted-card">
             <h3>Helfer & Fans</h3>
@@ -258,6 +258,7 @@ export function Sections() {
 
         {/* v12-E7: „Wo wir kicken" (Karte + Route) = zweiter Beat / Finale-Rauszoom. */}
         <PlatzFinden />
+        <AlltagFuss />
         {/* Pflicht-Links: Impressum/Datenschutz müssen leicht erkennbar und
             unmittelbar erreichbar sein (§ 5 DDG). Bewusst echte <a>-Links auf
             statische HTML-Seiten statt In-App-Routen — die bleiben erreichbar,

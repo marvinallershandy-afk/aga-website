@@ -62,6 +62,9 @@ Zuerst prüfen, was schon angewandt ist: Dashboard → Database → Migrations, 
 | 8 | `20261004102000_sva_security_haertung.sql` | **ja** |
 | 9 | `20261005100000_sva_spieltag_live.sql` | **ja** (v15-L Live-Ticker, Rollen, Trainingsort — siehe `docs/SPIELTAG.md`) |
 | 10 | `20261006100000_sva_partner.sql` | **ja** (v16-S Partner-Bereich `/partner` — siehe `docs/PARTNER.md`) |
+| … | `20261007100000` … `20261008110000` | Album, Galerien (siehe `docs/ALBUM.md`, `docs/DESIGN.md`) |
+| 11 | `20261009090000_sva_alltag.sql` | **ja** (v18-A Kalender-Abo + Mannschaften fürs Probetraining — siehe `docs/STATISTIK.md`) |
+| 12 | `20261009100000_sva_statistik.sql` | **ja** (v18-A cookiefreie Statistik — siehe `docs/STATISTIK.md`) |
 
 Anwenden geht einzeln im SQL-Editor (Datei-Inhalt einfügen) oder per MCP `apply_migration`. `supabase db push` nur verwenden, wenn die Remote-Migrationshistorie zu den Dateinamen passt. Sonst versucht es die Baseline erneut.
 
@@ -75,6 +78,7 @@ select has_function_privilege('anon', 'public.is_sm_admin()', 'execute');  -- mu
 
 ### 4. Edge Functions deployen
 ```bash
+npx supabase functions deploy kalender --project-ref fwiivwmoyagcdrjvhaou --use-api --no-verify-jwt   # v18-A, öffentlich
 supabase link --project-ref fwiivwmoyagcdrjvhaou
 supabase functions deploy publish-site        # neu (verify_jwt bleibt an)
 supabase functions deploy drive-bridge        # Sicherheits-Fix folderId

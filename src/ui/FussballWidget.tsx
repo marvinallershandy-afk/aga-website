@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 // P1: Website-Daten aus der Fassade (Overlay/DB → sonst statischer Seed).
-import { CLUB, CONTACT, fussballDeTeamUrl, FORM, LAST_MATCH, NEXT_MATCH, nextKickoff, TABLE_PREVIEW, PLAYERS, type FormResult } from '../data/content'
+// v18-A: „In den Kalender“ = gemeinsame Kalender-Komponente (Google/Apple/
+// Outlook-Auswahl statt Blob-Download, der sich am Handy nicht öffnen ließ).
+import { KalenderKnopf } from '../alltag/Kalender'
+import { CONTACT, fussballDeTeamUrl, FORM, LAST_MATCH, NEXT_MATCH, nextKickoff, TABLE_PREVIEW, PLAYERS, type FormResult } from '../data/content'
 
 // ─────────────────────────────────────────────────────────────
 // v11-E5: SAISON-COCKPIT (löst die reine Tabelle ab).
 // v12-E5: nutzt die VOLLE Breite — Tabelle links, Form/Spiele/Torschützen
 // rechts, alles auf einem Bild. Nächstes-Spiel mit Live-Countdown +
-// „In Kalender" (ICS).
+// „In den Kalender" (v18-A: Auswahl-Sheet, src/alltag/Kalender.tsx).
 // v14: Jeder Block erscheint NUR mit echten Daten (Admin-Pflege → Build).
 // Ohne Daten führt das Cockpit direkt zu fussball.de — keine
 // Beispiel-Vereine, keine erfundene Formkurve, kein Fake-Ergebnis mehr.
@@ -73,28 +76,6 @@ function Countdown({ target }: { target: Date }) {
       ))}
     </div>
   )
-}
-
-function downloadICS(start: Date, opponent: string, home: boolean) {
-  const stamp = (x: Date) => x.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
-  const end = new Date(start.getTime() + 2 * 3600 * 1000)
-  // v14: Auswärts stand vorher „SVA vs SVA" im Kalender.
-  const summary = home ? `${CLUB.shortName} vs ${opponent}` : `${opponent} vs ${CLUB.shortName}`
-  const ics = [
-    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//SVA//Spiel//DE', 'BEGIN:VEVENT',
-    `DTSTART:${stamp(start)}`, `DTEND:${stamp(end)}`,
-    `SUMMARY:${summary}`,
-    `LOCATION:${home ? CONTACT.address : opponent}`,
-    `DESCRIPTION:${home ? 'Heimspiel' : 'Auswärtsspiel'} SV Agathenburg-Dollern — aktuelle Infos auf fussball.de.`,
-    'END:VEVENT', 'END:VCALENDAR',
-  ].join('\r\n')
-  const blob = new Blob([ics], { type: 'text/calendar' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = home ? 'sva-heimspiel.ics' : 'sva-auswaertsspiel.ics'
-  a.click()
-  URL.revokeObjectURL(url)
 }
 
 export function FussballWidget() {
@@ -218,9 +199,11 @@ export function FussballWidget() {
                   <>
                     <Countdown target={kickoff} />
                     <div className="match-card__cta">
-                      <button className="btn btn--sm btn--primary" onClick={() => downloadICS(kickoff, NEXT_MATCH.opponent, NEXT_MATCH.home)}>
-                        In Kalender
-                      </button>
+                      <KalenderKnopf
+                        className="btn btn--sm btn--primary"
+                        adresse={CONTACT.address}
+                        spiel={{ gegner: NEXT_MATCH.opponent, heim: NEXT_MATCH.home, anstoss: kickoff.toISOString(), ort: NEXT_MATCH.home ? CONTACT.address : undefined }}
+                      />
                       <span className="match-card__meta">
                         {kickoff.toLocaleString('de-DE', {
                           weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',

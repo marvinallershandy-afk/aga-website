@@ -315,6 +315,38 @@ async function mapPartner(p) {
   return { pakete, mediadaten, ...(livePartner ? { livePartner } : {}) }
 }
 
+// v18-A: Mannschaften für den Probetraining-Assistenten — eigene RPC
+// web_mitspielen() (Migration 20261009090000). Fehlt sie: Seed bleibt aktiv.
+const MANNSCHAFT_ID = /^[a-z0-9][a-z0-9-]{0,39}$/
+const WA_NUMMER = /^[1-9]\d{7,14}$/
+async function fetchMannschaften() {
+  try {
+    const r = await fetchWithTimeout(`${url}/rest/v1/rpc/web_mitspielen`, {
+      method: 'POST',
+      headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: '{}',
+    })
+    if (!r.ok) {
+      console.log(`fetch-content: web_mitspielen() nicht verfügbar (HTTP ${r.status}) → Mannschaften-Seed bleibt.`)
+      return []
+    }
+    const list = await r.json()
+    return (Array.isArray(list) ? list : [])
+      .filter((m) => m && str(m.id) && MANNSCHAFT_ID.test(str(m.id)) && str(m.name))
+      .map((m) => ({
+        id: str(m.id),
+        name: str(m.name),
+        ...(str(m.hinweis) ? { hinweis: str(m.hinweis) } : {}),
+        ...(str(m.training) ? { training: str(m.training) } : {}),
+        ...(str(m.kontakt) ? { kontakt: str(m.kontakt) } : {}),
+        ...(WA_NUMMER.test(str(m.whatsapp)) ? { whatsapp: str(m.whatsapp) } : {}),
+      }))
+  } catch (e) {
+    console.log(`fetch-content: web_mitspielen() nicht erreichbar (${e?.message || e}) → Mannschaften-Seed bleibt.`)
+    return []
+  }
+}
+
 // ── Ablauf ──────────────────────────────────────────────────────────────────
 async function main() {
   if (!url || !key) {
@@ -382,6 +414,7 @@ async function main() {
   }
   const partner = await mapPartner(snap.partner)
   const galerien = await mapGalerien(snap.galerien)
+  const mannschaften = await fetchMannschaften()
 
   const table = (snap.table ?? [])
     .filter((r) => str(r.team) && Number.isInteger(r.pos))
@@ -433,6 +466,7 @@ async function main() {
   if (links) overlay.links = links
   if (partner) overlay.partner = partner
   if (galerien.length) overlay.galerien = galerien
+  if (mannschaften.length) overlay.mannschaften = mannschaften
 
   const hasData = Object.keys(overlay).length > 2
   if (!hasData) {
@@ -449,7 +483,7 @@ async function main() {
       `sponsors=${sponsors.length}, table=${table.length}, form=${form.length}, nextMatch=${!!nextMatch}, lastMatch=${!!lastMatch}, ` +
       `sections=${sections.length}, contact=${!!contact}, links=${!!links}, ` +
       `partner=${partner ? `${partner.pakete.length} Pakete/${Object.keys(partner.mediadaten).length} Zahlen` : '—'}, ` +
-      `galerien=${galerien.length}, bilder=${downloads}).`,
+      `galerien=${galerien.length}, mannschaften=${mannschaften.length}, bilder=${downloads}).`,
   )
 }
 

@@ -18,6 +18,8 @@ import { liveKonfiguriert } from './api'
 import { TvAufstellung } from './aufstellung/TvAufstellung'
 import { LiveTabelle } from './LiveTabelle'
 import { Icon } from './icons'
+// v18-A: gemeinsame Kalender-Komponente (Spiel + Abo)
+import { KalenderKnopf } from '../alltag/Kalender'
 
 // ─────────────────────────────────────────────────────────────
 // v15-L: Öffentliche Live-Seite /live — der Spieltag lebt hier, nicht im
@@ -164,8 +166,12 @@ export function LiveApp() {
         </>
       )}
 
+      <div style={{ marginTop: 'var(--s-5)' }}>
+        <KalenderKnopf variante="zeile" adresse={d?.settings.address || VEREIN_ADRESSE} />
+      </div>
       <footer className="lv-foot">
         <a href="/">Zur Vereinsseite</a>
+        <a href="/probetraining">Mitspielen</a>
         <a href="/impressum">Impressum</a>
         <a href="/datenschutz">Datenschutz</a>
         <span>Eigener Liveticker des Vereins · ohne Gewähr</span>
@@ -271,6 +277,9 @@ function Hero({ m, now, players, adresse, prev, onTeilen }: { m: LiveMatch; now:
         <button type="button" className="lv-btn lv-btn--ghost" onClick={onTeilen}>
           <Icon name="teilen" /> Teilen
         </button>
+        {m.status === 'geplant' && (
+          <KalenderKnopf className="lv-btn lv-btn--ghost" adresse={adresse} spiel={{ id: m.id, gegner: m.opponent, heim: m.home, anstoss: m.kickoff, ort: m.home ? adresse : m.venue, wettbewerb: m.competition }} />
+        )}
       </div>
     </section>
   )

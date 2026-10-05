@@ -18,6 +18,8 @@ import { Sponsoren } from './pages/Sponsoren'
 import { Verein } from './pages/Verein'
 // v17-D: Galerien „Spieltag in Bildern“
 import { Galerien } from './pages/Galerien'
+// v18-A: anonyme Statistik (Instagram-Zuordnung, Ziele)
+import { Statistik } from './pages/Statistik'
 // v15-L Spieltag-Modus
 import { Live } from './pages/Live'
 import { TeamZugaenge } from './pages/TeamZugaenge'
@@ -62,6 +64,7 @@ export function AdminApp() {
                   <Route path="sponsoren" element={<NurAdmin><Sponsoren /></NurAdmin>} />
                   <Route path="album" element={<NurAdmin><Album /></NurAdmin>} />
                   <Route path="galerien" element={<NurAdmin><Galerien /></NurAdmin>} />
+                  <Route path="statistik" element={<NurAdmin><Statistik /></NurAdmin>} />
                   <Route path="verein" element={<NurAdmin><Verein /></NurAdmin>} />
                   <Route path="team" element={<NurAdmin><TeamZugaenge /></NurAdmin>} />
 

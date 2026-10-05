@@ -123,7 +123,7 @@
            Nr. 2 TDDDG), daher einwilligungsfrei. Keine Cookies, keine IDs. -->
       <p>
         Diese Website setzt <strong>keine Cookies</strong> und bindet keine Analyse- oder
-        Tracking-Dienste ein. Im lokalen Speicher (localStorage) Ihres Browsers werden
+        Tracking-Dienste Dritter ein (zur eigenen, anonymen Besuchszählung siehe Abschnitt 6c). Im lokalen Speicher (localStorage) Ihres Browsers werden
         lediglich zwei von Ihnen selbst getroffene Einstellungen gespeichert:
       </p>
       <ul>
@@ -147,7 +147,8 @@
         Instagram sind ausschließlich als <em>Links</em> eingebunden — dabei fließen erst
         dann Daten an den jeweiligen Anbieter, wenn Sie den Link bewusst anklicken und
         die fremde Seite dadurch selbst aufrufen. Dort gilt die Datenschutzerklärung des
-        jeweiligen Anbieters. Einzige Ausnahme ist der Spielstand rund um ein Spiel (Abschnitt 6a).
+        jeweiligen Anbieters. Ausnahmen sind der Spielstand rund um ein Spiel (Abschnitt 6a) und die
+        anonyme Besuchszählung (Abschnitt 6c) – beide über unseren Datenbank-Dienst Supabase.
       </div>
       <p>
         Aus diesem Grund benötigt diese Website <strong>kein Cookie-Banner</strong> und keine
@@ -210,6 +211,52 @@
         § 25 Abs. 1 TDDDG). Sie gilt nur für den jeweiligen Seitenaufruf; ohne Klick wird nichts geladen.
       </p>
       <p><span class="todo">TODO-JURIST: 2-Klick-Lösung als Einwilligung ausreichend? Hinweistext vor dem Klick prüfen</span></p>
+
+      <h2 id="statistik">6c. Anonyme Besuchszählung (ohne Cookies)</h2>
+      <!-- Verifiziert am Code (v18-A): src/statistik/zaehlen.ts (ein POST je
+           Seitenaufruf an die RPC web_zaehlen, credentials: 'omit', kein
+           Storage), supabase/migrations/20261009100000_sva_statistik.sql
+           (Tabelle sva_statistik_tage: tag, pfad, quelle, geraet, zaehler). -->
+      <p>
+        Um zu sehen, ob unsere Website Zuschauer, Spieler und Partner erreicht, zählen wir Seitenaufrufe
+        <strong>anonym</strong>. Nach dem Laden einer Seite sendet Ihr Browser einmalig drei Angaben an unseren
+        Datenbank-Dienst <strong>Supabase</strong> (Serverstandort Frankfurt am Main, EU; siehe Abschnitt 6a):
+      </p>
+      <ul>
+        <li>welche Seite bzw. welcher Bereich aufgerufen wurde (z. B. „Startseite“, „/live“),</li>
+        <li>woher der Aufruf grob kam (z. B. „Instagram“, „Google“, „direkt“ – aus dem Link-Zusatz <code>utm_source</code> oder der verweisenden Seite),</li>
+        <li>ob es ein Handy oder ein Computer ist.</li>
+      </ul>
+      <p>
+        Ebenso zählen wir, wie oft bestimmte Knöpfe genutzt werden (z. B. Kalender-Abo, Probetraining-Nachricht,
+        Partner-Anfrage, Instagram-Link). Gespeichert wird <strong>nur eine Summe pro Tag</strong> („heute 12 Aufrufe
+        der Startseite über Instagram vom Handy“). Wir speichern <strong>keine IP-Adressen, keine Browser-Kennungen,
+        keine Uhrzeiten einzelner Aufrufe</strong>, setzen <strong>keine Cookies</strong> und legen nichts im Speicher
+        Ihres Geräts ab. Ein Rückschluss auf einzelne Personen ist uns damit nicht möglich; auch ein wiederholter
+        Besuch wird nicht wiedererkannt. Technisch bedingt erhält Supabase bei der Übertragung – wie bei jedem
+        Abruf – Ihre IP-Adresse; sie fließt nicht in die Zählung ein.
+      </p>
+      <p>
+        <strong>Zweck:</strong> Reichweite der Vereinsarbeit verstehen (z. B. ob Instagram-Beiträge Besucher bringen)
+        und die Website verbessern.<br />
+        <strong>Rechtsgrundlage:</strong> Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einer datensparsamen
+        Reichweitenmessung). Auf Ihrem Gerät wird nichts gespeichert; ausgewertet werden nur Angaben, die Ihr
+        Browser der Seite ohnehin bereitstellt (verweisende Seite, Link-Zusatz, Bildschirmbreite), und nur als grobe Kategorie.<br />
+        <strong>Speicherdauer:</strong> Die anonymen Tagessummen werden aufbewahrt, solange sie für die Vereinsarbeit
+        nützlich sind; sie enthalten keine personenbezogenen Daten.<br />
+        <strong>Widerspruch:</strong> Sie können die Zählung verhindern, indem Sie Anfragen an <code>*.supabase.co</code>
+        in Ihrem Browser blockieren (z. B. mit einem Inhaltsblocker); die Website funktioniert weiter.
+      </p>
+      <p><span class="todo">TODO-JURIST: Einordnung nach § 25 TDDDG bestätigen (Auswertung von Referrer/Link-Zusatz und Bildschirmtyp im Browser, keine Speicherung auf dem Endgerät)</span></p>
+
+      <h2 id="kalender">6d. Kalender-Abo</h2>
+      <p>
+        Wenn Sie unseren Spielplan abonnieren (<code>/kalender.ics</code>) oder ein Spiel „in den Kalender“ eintragen, ruft
+        Ihre Kalender-App bzw. Ihr Browser die Termine regelmäßig von unserer Website ab; die Daten stellt unser
+        Datenbank-Dienst Supabase bereit. Dabei werden nur öffentliche Spieldaten übertragen; wir speichern keine
+        Angaben über Abonnenten. Wählen Sie „Google Kalender“ oder „Outlook“, öffnet sich die Seite des jeweiligen
+        Anbieters – dort gilt dessen Datenschutzerklärung.
+      </p>
 
       <h2>7. Kontaktaufnahme</h2>
       <!-- TODO-MARVIN: Sobald WhatsApp als Kontaktweg aktiv ist (club.ts:
@@ -327,7 +374,7 @@
       <p>
         Eine Weitergabe Ihrer Daten findet an den Hosting-Anbieter als
         Auftragsverarbeiter (Abschnitt 3) sowie beim Abruf von Live-Daten an Supabase
-        (Abschnitt 6a) bzw. bei Nutzung des Stickerhefts (Abschnitt 7b) statt; an fussball.de nur nach Ihrem Klick (Abschnitt 6b). Eine darüber
+        (Abschnitt 6a), für die anonyme Besuchszählung und das Kalender-Abo (Abschnitte 6c, 6d) bzw. bei Nutzung des Stickerhefts (Abschnitt 7b) statt; an fussball.de nur nach Ihrem Klick (Abschnitt 6b). Eine darüber
         hinausgehende Übermittlung erfolgt nicht.
         <span class="todo">TODO-JURIST: bestätigen, sobald Abschnitt 3 gefüllt ist</span>
       </p>
