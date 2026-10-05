@@ -8,6 +8,8 @@ import { HoloCard } from './HoloCard'
 import { StaffCard } from './StaffCard'
 import { shareStory } from './storyShare'
 import { X, ArrowUpRight } from 'lucide-react'
+// v18-A: Kader-Ende → Probetraining-Assistent
+import { ProbetrainingKnopf } from '../alltag/Probetraining'
 
 // ─────────────────────────────────────────────────────────────
 // „Alle Spieler anzeigen" — Vollbild-Overlay über den ganzen Kader,
@@ -150,6 +152,12 @@ export function PlayerGallery({ open, onClose }: { open: boolean; onClose: () =>
                     <StaffCard key={m.id} member={m} />
                   ))}
                 </div>
+              </section>
+
+              <section className="al-mitspielen" aria-label="Mitspielen">
+                <h4>Du willst mitspielen?</h4>
+                <p>Probetraining ist bei uns unkompliziert: Mannschaft wählen, Nachricht abschicken, vorbeikommen.</p>
+                <ProbetrainingKnopf className="btn btn--primary" icon={false} />
               </section>
             </div>
           </motion.div>

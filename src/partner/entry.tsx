@@ -4,6 +4,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './partner.css'
 import { PartnerApp } from './PartnerApp'
+import { starteZaehlung } from '../statistik/zaehlen'
 
 // v16-S: Einstieg von partner.html (Netlify: /partner → /partner.html).
 // Eigenes schlankes Bundle: kein three.js, kein Supabase-SDK, keine
@@ -14,3 +15,4 @@ createRoot(document.getElementById('root')!).render(
     <PartnerApp />
   </StrictMode>,
 )
+starteZaehlung() // v18-A: cookiefreie Tageszählung (nach dem ersten Bild)

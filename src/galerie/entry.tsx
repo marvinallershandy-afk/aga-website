@@ -4,6 +4,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './galerie-page.css'
 import { GalerieApp } from './GalerieApp'
+import { starteZaehlung } from '../statistik/zaehlen'
 
 // v17-D: Einstieg von galerie.html (Netlify: /galerie → /galerie.html).
 // Eigenes schlankes Bundle: kein three.js, kein Supabase-SDK, keine
@@ -13,3 +14,4 @@ createRoot(document.getElementById('root')!).render(
     <GalerieApp />
   </StrictMode>,
 )
+starteZaehlung() // v18-A: cookiefreie Tageszählung (nach dem ersten Bild)

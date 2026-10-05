@@ -20,6 +20,10 @@ import { MusicSectionPlayer } from '../ui/MusicSection'
 import { SponsorPitch } from '../ui/SponsorsStrip'
 import { PlatzFinden } from '../ui/PlatzFinden'
 import { WaIcon, IgIcon, MailIcon } from '../ui/Icons'
+// v18-A: Kalender-Abo + Probetraining-Assistent (src/alltag/)
+import { KalenderKnopf } from '../alltag/Kalender'
+import { ProbetrainingKnopf } from '../alltag/Probetraining'
+import { AlltagFuss } from '../alltag/Fuss'
 
 // ─────────────────────────────────────────────────────────────
 // v16-K: Orts-Panel der Karte. Desktop: Karte/Drawer rechts, mobil:
@@ -59,13 +63,11 @@ function SpieltagBody() {
         </span>
         <ArrowRight size={20} strokeWidth={1.5} aria-hidden="true" />
       </a>
+      <KalenderKnopf variante="zeile" adresse={CONTACT.address} />
       <FussballWidget />
     </>
   )
 }
-
-const PROBE_TEXT =
-  'Hallo SV Agathenburg-Dollern! Ich würde gern zum Probetraining kommen.\n\nAlter: \nPosition: \nErfahrung (z. B. letzte Mannschaft / Pause seit): '
 
 function TrainingBody() {
   const ort = CONTACT.trainingOrt
@@ -87,7 +89,7 @@ function TrainingBody() {
         )}
       </dl>
       <div className="kp-actions">
-        <WaButton text={PROBE_TEXT} label="Probetraining anfragen" />
+        <ProbetrainingKnopf className="btn btn--primary" icon={false} />
         {ort && (
           <a className="btn btn--ghost" href={mapsDir(ort)} target="_blank" rel="noreferrer">
             Route zum Trainingsplatz
@@ -101,12 +103,7 @@ function TrainingBody() {
       <div className="kp-card">
         <b>Unter 18?</b>
         <p>Für Jugendliche gibt’s eigene Teams und Trainer. Schreib uns kurz, wir verbinden dich mit der Jugend.</p>
-        <a
-          className="btn btn--ghost btn--sm"
-          href={`mailto:${CONTACT.email}?subject=${encodeURIComponent('Jugend / U18: Ich will mitspielen')}&body=${encodeURIComponent('Hallo! Ich bin unter 18 und würde gern mitspielen.\n\nAlter: \nWohnort: ')}`}
-        >
-          Jugend kontaktieren
-        </a>
+        <ProbetrainingKnopf className="btn btn--ghost btn--sm" label="Jugend kontaktieren" mannschaft="jugend" icon={false} />
       </div>
     </>
   )
@@ -213,6 +210,7 @@ function AnfahrtBody() {
           {CONTACT.instagram}
         </a>
       </div>
+      <AlltagFuss />
       <p className="kp-legal">
         <a href="/impressum.html">Impressum</a> · <a href="/datenschutz.html">Datenschutz</a>
       </p>

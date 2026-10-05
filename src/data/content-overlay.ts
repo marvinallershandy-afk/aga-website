@@ -143,4 +143,18 @@ export interface WebsiteContentOverlay {
   partner?: PartnerOverlay
   /** v17-D: Galerien „Spieltag in Bildern“ (Admin → Galerien). */
   galerien?: Galerie[]
+  /** v18-A: Mannschaften im Probetraining-Assistenten (web_mitspielen()). */
+  mannschaften?: MannschaftOverlay[]
+}
+
+/** v18-A: Mannschaft für „Probetraining“ — whatsapp leer = Haupt-WhatsApp. */
+export interface MannschaftOverlay {
+  id: string
+  name: string
+  hinweis?: string
+  /** leer = Trainingszeiten/-ort aus Verein & Links */
+  training?: string
+  /** Vorname für die Anrede */
+  kontakt?: string
+  whatsapp?: string
 }
