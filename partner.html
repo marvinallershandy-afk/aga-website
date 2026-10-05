@@ -24,14 +24,9 @@
     <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content="https://sva-agathenburg-dollern.netlify.app/og/partner.jpg" />
-    <!-- v19-S (Audit C): LCP-Hero vorab laden (Seed-Galerie; passt zur img-srcset/sizes) -->
-    <link
-      rel="preload"
-      as="image"
-      href="/galerie/urknall-pokal-2026/02-siegerfoto-800.webp"
-      imagesrcset="/galerie/urknall-pokal-2026/02-siegerfoto-800.webp 800w, /galerie/urknall-pokal-2026/02-siegerfoto.webp 2000w"
-      imagesizes="(min-width: 1120px) 1120px, 100vw"
-    />
+    <!-- v19-S (Audit C): LCP-Hero vorab laden — mobil klein (76 KB), Desktop groß -->
+    <link rel="preload" as="image" href="/galerie/urknall-pokal-2026/02-siegerfoto-800.webp" media="(max-width: 760px)" />
+    <link rel="preload" as="image" href="/galerie/urknall-pokal-2026/02-siegerfoto.webp" media="(min-width: 761px)" />
     <!-- v17-D: Designsystem-Tokens zuerst -->
     <link rel="stylesheet" href="/src/theme/design.css" />
     <style>
