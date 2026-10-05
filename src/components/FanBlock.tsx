@@ -217,12 +217,22 @@ export function FanBlock() {
   // außerhalb komplett unsichtbar (kein eingefrorener Rauch in der
   // Totalen, keine Draw-Calls).
   const fxRef = useRef<THREE.Group>(null)
+  // v19-3D (§2.11): Konfetti-Puls-Zustand — füllt sich beim Ankommen, klingt
+  // in ~2,5 s ab. Dauer-Konfetti wirkte in Standbildern wie Bildrauschen.
+  const burst = useRef(0)
+  const wasActive = useRef(false)
   useFrame((_, dt) => {
     const d = Math.abs(cameraState.u - FAN_U)
     const fade = 1 - THREE.MathUtils.smoothstep(d, ACTIVE_WINDOW * 0.55, ACTIVE_WINDOW)
     const fx = fxRef.current
     if (fx) fx.visible = fade > 0.002
     curveClock.uFx.value = fade
+    // Konfetti-Puls: beim Eintritt in die Station auslösen, dann abklingen
+    const active = d < ACTIVE_WINDOW * 0.75
+    if (active && !wasActive.current) burst.current = 2.6
+    wasActive.current = active
+    burst.current = Math.max(0, burst.current - dt)
+    curveClock.uConfetti.value = reduced ? 0 : THREE.MathUtils.smoothstep(burst.current, 0, 0.6) * fade
     const light = lightRef.current
     if (d >= ACTIVE_WINDOW) {
       if (light && light.intensity !== 0) light.intensity = 0
@@ -250,7 +260,7 @@ export function FanBlock() {
 
       {/* Bengalos, Funken, Handy-Blitze, Konfetti — alles GPU-animiert */}
       <group ref={fxRef}>
-        <BengaloSmoke flares={layout.flares} perFlare={lite ? 16 : 30} />
+        <BengaloSmoke flares={layout.flares} perFlare={lite ? 12 : 20} />
         <CurveGlows flares={layout.flares} phones={layout.phones} sparksPerFlare={lite ? 10 : 22} />
         <Confetti count={lite ? 50 : 120} />
       </group>

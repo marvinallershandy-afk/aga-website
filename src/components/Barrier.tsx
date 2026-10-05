@@ -26,6 +26,13 @@ const RAIL_H = 0.11
 const HW = PITCH.width / 2 + OFF
 const HH = PITCH.height / 2 + OFF
 
+// v19-3D (§2.1.3): Lücke in der OST-Reling vor dem Vereinsheim-Eingang.
+// Der Rundgang biegt hier „um die Ecke" zur Tür (z≈−2.5) — vorher lief
+// das Quer-Geländer dem Tür-Halt quer durchs Bild („durch den Zaun
+// gefilmt"). Die Lücke räumt die Sichtlinie frei.
+const EAST_GAP_N = -3.0
+const EAST_GAP_S = -1.7
+
 const BOARD_Y = 0.17
 const BOARD_Z = HH - 0.02
 const BOARD_D = 0.03
@@ -58,7 +65,9 @@ export function Barrier() {
       items.push([x, -HH], [x, HH])
     }
     for (let z = -HH + step; z < HH; z += step) {
-      items.push([-HW, z], [HW, z])
+      items.push([-HW, z])
+      // Ost-Pfosten in der Tür-Lücke auslassen
+      if (z < EAST_GAP_N || z > EAST_GAP_S) items.push([HW, z])
     }
     return items
   }, [])
@@ -88,9 +97,18 @@ export function Barrier() {
           <meshStandardMaterial color="#9aa2ac" metalness={0.75} roughness={0.3} />
         </mesh>
       ))}
-      {[-1, 1].map((s) => (
-        <mesh key={`x${s}`} position={[s * HW, RAIL_H, 0]} rotation-x={Math.PI / 2}>
-          <cylinderGeometry args={[0.016, 0.016, HH * 2, 6]} />
+      {/* West-Handlauf: durchgehend */}
+      <mesh position={[-HW, RAIL_H, 0]} rotation-x={Math.PI / 2}>
+        <cylinderGeometry args={[0.016, 0.016, HH * 2, 6]} />
+        <meshStandardMaterial color="#9aa2ac" metalness={0.75} roughness={0.3} />
+      </mesh>
+      {/* Ost-Handlauf: in zwei Segmenten mit Tür-Lücke (v19-3D §2.1.3) */}
+      {[
+        [-HH, EAST_GAP_N],
+        [EAST_GAP_S, HH],
+      ].map(([z0, z1]) => (
+        <mesh key={z0} position={[HW, RAIL_H, (z0 + z1) / 2]} rotation-x={Math.PI / 2}>
+          <cylinderGeometry args={[0.016, 0.016, z1 - z0, 6]} />
           <meshStandardMaterial color="#9aa2ac" metalness={0.75} roughness={0.3} />
         </mesh>
       ))}
@@ -110,9 +128,18 @@ export function Barrier() {
           rotation-y={Math.PI}
         >
           <planeGeometry args={[PANEL_W - TAFEL_FUGE, BANDE_H]} />
-          <meshStandardMaterial map={t.tex} emissiveMap={t.tex} emissive="#ffffff" emissiveIntensity={0.2} roughness={0.6} />
+          <meshStandardMaterial map={t.tex} emissiveMap={t.tex} emissive="#ffffff" emissiveIntensity={0.34} roughness={0.6} />
         </mesh>
       ))}
+      {/* v19-3D (§2.2.3): schmales Rim-Light an der Banden-Oberkante (emissiv,
+          kein dynamisches Licht → kein globaler Shader-Mehraufwand) → die
+          Tafeln heben sich klar vom Wald dahinter ab, „Nachtspiel an der
+          Bande" statt leerer Ecke. Die Emissiv-Anhebung der Tafeln (s. o.)
+          trägt den Rest. */}
+      <mesh position={[0, BOARD_Y + BANDE_H / 2 + 0.004, BOARD_Z - BOARD_D / 2 - 0.003]}>
+        <boxGeometry args={[BANDE_W, 0.012, 0.012]} />
+        <meshBasicMaterial color={[1.35, 1.28, 1.12]} toneMapped={false} />
+      </mesh>
       {/* Standfüße der Bande */}
       {Array.from({ length: 6 }, (_, i) => -PITCH.width * 0.4 + (i * PITCH.width * 0.8) / 5).map((x) => (
         <mesh key={x} position={[x, 0.03, BOARD_Z]}>

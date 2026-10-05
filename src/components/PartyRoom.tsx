@@ -23,23 +23,45 @@ const ZS = ROOM.zSouth // 4.8 (Südwand, hinten)
 const ZC = ROOM.zCenter // 1.6 (Mitte, für Boden/Decke/Seitenwände)
 
 // Stilisierte Figur (wie im Fanblock — keine Gesichter).
-function Person({ pos, jersey, h = 0.19, rot = 0, seated = false, lean = 0 }: {
-  pos: [number, number, number]; jersey: string; h?: number; rot?: number; seated?: boolean; lean?: number
+// v19-3D (§2.5.1): ZWEI Beine statt einer dunklen Mittel-Säule (vorher
+// lasen die Figuren als „auf schwarzem Pfosten"). Sitzende: Oberschenkel
+// nach vorn, Unterschenkel bis auf den Boden → sie sitzen sichtbar auf
+// Bank/Hocker (seatH = Sitzhöhe).
+function Person({ pos, jersey, h = 0.19, rot = 0, seated = false, lean = 0, seatH = 0.18 }: {
+  pos: [number, number, number]; jersey: string; h?: number; rot?: number; seated?: boolean; lean?: number; seatH?: number
 }) {
   const legH = seated ? h * 0.2 : h * 0.54
-  const base = seated ? 0.18 : 0
+  const base = seated ? seatH : 0
   // v14-E2: deterministische Haut-/Haar-Varianz aus der Position — auch das
   // Partyraum-Personal ist Publikum, keine Schaufensterpuppen.
   const seed = Math.abs(Math.sin(pos[0] * 12.9898 + pos[2] * 78.233)) * 43758.5453
   const skin = SKIN_TONES[Math.floor((seed % 1) * SKIN_TONES.length)]
   const hairPick = (seed * 7.13) % 1
   const hair = hairPick < 0.78 ? HAIR_TONES[Math.floor(((seed * 3.7) % 1) * HAIR_TONES.length)] : null
+  const trouser = '#2a2630'
   return (
     <group position={[pos[0], pos[1] + base, pos[2]]} rotation-y={rot} rotation-z={lean}>
-      <mesh position={[0, legH / 2, 0]}>
-        <cylinderGeometry args={[h * 0.11, h * 0.13, legH, 6]} />
-        <meshStandardMaterial color="#17141a" roughness={0.95} />
-      </mesh>
+      {seated
+        ? [-1, 1].map((s) => (
+            <group key={s} position={[s * h * 0.09, 0, 0]}>
+              {/* Oberschenkel nach vorn */}
+              <mesh position={[0, 0.002, h * 0.13]} rotation-x={Math.PI / 2}>
+                <cylinderGeometry args={[h * 0.07, h * 0.075, h * 0.26, 6]} />
+                <meshStandardMaterial color={trouser} roughness={0.95} />
+              </mesh>
+              {/* Unterschenkel nach unten auf den Boden */}
+              <mesh position={[0, -base / 2 + 0.004, h * 0.25]}>
+                <cylinderGeometry args={[h * 0.055, h * 0.07, base, 6]} />
+                <meshStandardMaterial color={trouser} roughness={0.95} />
+              </mesh>
+            </group>
+          ))
+        : [-1, 1].map((s) => (
+            <mesh key={s} position={[s * h * 0.08, legH / 2, 0]}>
+              <cylinderGeometry args={[h * 0.068, h * 0.085, legH, 6]} />
+              <meshStandardMaterial color={trouser} roughness={0.95} />
+            </mesh>
+          ))}
       <mesh position={[0, legH + h * 0.18, 0]}>
         <cylinderGeometry args={[h * 0.16, h * 0.13, h * 0.36, 7]} />
         <meshStandardMaterial color={jersey} roughness={0.85} />
@@ -91,27 +113,6 @@ function ZapfArm() {
       <mesh ref={ref} position={[0.04, 0.135, 0.04]}>
         <cylinderGeometry args={[0.011, 0.011, 0.1, 5]} />
         <meshStandardMaterial color="#1d1a1c" roughness={0.85} />
-      </mesh>
-    </group>
-  )
-}
-
-// Prosten: Gast hebt periodisch das Glas
-function ProstArm() {
-  const ref = useRef<THREE.Group>(null)
-  useFrame((state) => {
-    const t = state.clock.elapsedTime
-    if (ref.current) ref.current.rotation.z = -0.5 - Math.max(0, Math.sin(t * 0.9)) * 0.5
-  })
-  return (
-    <group ref={ref} position={[0.62, 0.33, 0.42]}>
-      <mesh position={[0, 0.045, 0]}>
-        <cylinderGeometry args={[0.009, 0.009, 0.09, 5]} />
-        <meshStandardMaterial color="#d8d4c9" roughness={0.85} />
-      </mesh>
-      <mesh position={[0, 0.1, 0]}>
-        <cylinderGeometry args={[0.013, 0.011, 0.045, 6]} />
-        <meshStandardMaterial color="#e8a832" emissive="#c8871a" emissiveIntensity={0.7} roughness={0.3} />
       </mesh>
     </group>
   )
@@ -305,6 +306,85 @@ function makeWoodTexture(): THREE.CanvasTexture {
   return t
 }
 
+// v19-3D (§2.5.3): Kork-Pinnwand-Textur (Modul-Cache).
+let corkTex: THREE.CanvasTexture | null = null
+function makeCorkTexture(): THREE.CanvasTexture {
+  if (corkTex) return corkTex
+  const cv = document.createElement('canvas')
+  cv.width = 128
+  cv.height = 96
+  const ctx = cv.getContext('2d')!
+  ctx.fillStyle = '#9a7246'
+  ctx.fillRect(0, 0, 128, 96)
+  for (let i = 0; i < 2600; i++) {
+    const r = Math.random()
+    ctx.fillStyle = `rgba(${90 + r * 60},${64 + r * 44},${30 + r * 30},${0.08 + r * 0.14})`
+    ctx.fillRect(Math.random() * 128, Math.random() * 96, 1.4, 1.4)
+  }
+  const t = new THREE.CanvasTexture(cv)
+  t.colorSpace = THREE.SRGBColorSpace
+  corkTex = t
+  return t
+}
+
+// v19-3D (§2.5.3): Pinnwand mit Mannschafts-/Jubel-Fotos (picture by Nele)
+// an der bislang leeren West-Wand — füllt die rechte Raumhälfte und greift
+// das Goldrahmen-Foto-Motiv aus dem Fanblock auf.
+function Pinnwand() {
+  const photos = useTexture([
+    '/clubhouse/jubel-umarmung.jpg',
+    '/clubhouse/jubel-traube.jpg',
+    '/clubhouse/lauf.jpg',
+  ])
+  photos.forEach((t) => (t.colorSpace = THREE.SRGBColorSpace))
+  const cork = useMemo(makeCorkTexture, [])
+  // auf der West-Wand (x=−HX), Südhälfte; zeigt nach +x in den Raum
+  const polas: { z: number; y: number; rot: number; w: number }[] = [
+    { z: 1.98, y: 0.92, rot: -0.06, w: 0.3 },
+    { z: 2.46, y: 0.86, rot: 0.05, w: 0.28 },
+    { z: 2.2, y: 0.52, rot: 0.03, w: 0.3 },
+  ]
+  return (
+    <group position={[-HX + 0.016, 0, 2.2]} rotation-y={Math.PI / 2}>
+      {/* Korkbrett mit dunklem Rahmen */}
+      <mesh position={[0, 0.72, -0.01]}>
+        <planeGeometry args={[0.92, 0.66]} />
+        <meshStandardMaterial color="#241a12" roughness={0.8} />
+      </mesh>
+      <mesh>
+        <planeGeometry args={[0.86, 0.6]} />
+        <meshStandardMaterial map={cork} roughness={0.95} />
+      </mesh>
+      {polas.map((p, i) => {
+        const hgt = p.w * 0.72
+        return (
+          <group key={i} position={[p.z - 2.2, p.y, 0.004]} rotation-z={p.rot}>
+            {/* Polaroid-Rand */}
+            <mesh position={[0, -p.w * 0.07, -0.001]}>
+              <planeGeometry args={[p.w + 0.03, hgt + 0.08]} />
+              <meshStandardMaterial color="#efe9df" roughness={0.9} />
+            </mesh>
+            <mesh>
+              <planeGeometry args={[p.w, hgt]} />
+              <meshStandardMaterial map={photos[i]} emissiveMap={photos[i]} emissive="#ffffff" emissiveIntensity={0.5} roughness={0.7} />
+            </mesh>
+            {/* Pinnnadel */}
+            <mesh position={[0, hgt / 2 + 0.01, 0.004]}>
+              <sphereGeometry args={[0.009, 8, 6]} />
+              <meshStandardMaterial color="#c41824" roughness={0.4} />
+            </mesh>
+          </group>
+        )
+      })}
+      {/* kleines „picture by Nele"-Schild */}
+      <mesh position={[0.3, 0.44, 0.003]} rotation-z={-0.02}>
+        <planeGeometry args={[0.2, 0.05]} />
+        <meshStandardMaterial color="#141013" emissive="#141013" emissiveIntensity={0.6} roughness={0.8} />
+      </mesh>
+    </group>
+  )
+}
+
 export default function PartyRoom() {
   const cover = useTexture('/audio/cover.jpg')
   cover.colorSpace = THREE.SRGBColorSpace
@@ -410,6 +490,9 @@ export default function PartyRoom() {
 
       {/* v13-K3: Pokal-Vitrine als Blickfang am Ende des Saals */}
       <TrophyCase />
+
+      {/* v19-3D (§2.5.3): Pinnwand mit Nele-Fotos an der West-Wand */}
+      <Pinnwand />
 
       {/* ── SEITENTÜR (Audit #25): angedeutete Tür in der West-Wand,
              links neben der Bar. Flache Laibung + Türblatt + „NOTAUSGANG"-
@@ -528,17 +611,33 @@ export default function PartyRoom() {
           <boxGeometry args={[1.4, 0.03, 0.16]} />
           <meshStandardMaterial color="#3c2c1e" roughness={0.9} />
         </mesh>
+        {/* v19-3D (§2.5.2): Flaschen statt „Wachsmalstifte" — dunkles
+            Glas (tiefe Flaschentöne, glänzend), Schulter + schmaler Hals +
+            Kapsel. Spitzlicht aus den Raumlampen statt Eigenglühen. */}
         {[-0.55, -0.35, -0.12, 0.1, 0.32, 0.55].map((x, i) => {
-          const c = ['#3a6b35', '#7a3020', '#c8a038', '#3a5a7a', '#6a3a5a', '#4a4a30'][i]
+          const glass = ['#1f3a22', '#3a1a12', '#273b1c', '#14202e', '#2a1626', '#1c2416'][i]
+          const cap = ['#9a7420', '#8a8a8a', '#9a7420', '#8a8a8a', '#9a7420', '#8a8a8a'][i]
           return (
             <group key={x}>
-              <mesh position={[x, 0.055, 0]}>
-                <cylinderGeometry args={[0.017, 0.019, 0.08, 6]} />
-                <meshStandardMaterial color={c} roughness={0.3} emissive="#181008" emissiveIntensity={0.4} />
+              {/* Rumpf */}
+              <mesh position={[x, 0.05, 0]}>
+                <cylinderGeometry args={[0.019, 0.019, 0.07, 12]} />
+                <meshStandardMaterial color={glass} roughness={0.12} metalness={0.25} />
               </mesh>
+              {/* Schulter */}
+              <mesh position={[x, 0.092, 0]}>
+                <cylinderGeometry args={[0.009, 0.019, 0.02, 12]} />
+                <meshStandardMaterial color={glass} roughness={0.12} metalness={0.25} />
+              </mesh>
+              {/* Hals */}
               <mesh position={[x, 0.115, 0]}>
-                <cylinderGeometry args={[0.006, 0.014, 0.045, 5]} />
-                <meshStandardMaterial color={c} roughness={0.3} emissive="#181008" emissiveIntensity={0.4} />
+                <cylinderGeometry args={[0.008, 0.008, 0.03, 10]} />
+                <meshStandardMaterial color={glass} roughness={0.12} metalness={0.25} />
+              </mesh>
+              {/* Kapsel */}
+              <mesh position={[x, 0.133, 0]}>
+                <cylinderGeometry args={[0.0085, 0.0085, 0.008, 10]} />
+                <meshStandardMaterial color={cap} roughness={0.4} metalness={0.6} />
               </mesh>
             </group>
           )
@@ -550,16 +649,27 @@ export default function PartyRoom() {
       <Person pos={[1.44, 0, 0.42]} jersey="#1d1a1c" h={0.215} rot={Math.PI / 2 + 0.1} lean={0.05} />
       <Person pos={[1.46, 0, 1.15]} jersey="#7a1016" h={0.208} rot={Math.PI / 2 - 0.15} />
       <ZapfArm />
-      {/* Gäste: sitzen auf Hockern vor dem Tresen, einer prostet */}
+      {/* Gäste: sitzen auf Hockern vor dem Tresen */}
       <Person pos={[0.68, 0, 0.28]} jersey="#c41824" rot={-Math.PI / 2} seated lean={-0.04} />
       <Person pos={[0.66, 0, 0.95]} jersey="#d8d4c9" rot={-Math.PI / 2 + 0.4} seated lean={0.06} />
-      <ProstArm />
-      {/* Hocker */}
+      {/* Hocker — v19-3D (§2.5.1): Sitzfläche + drei dünne Beine statt
+          massiver dunkler Säule, damit die Gäste sichtbar daraufsitzen */}
       {[0.28, 0.95].map((z) => (
-        <mesh key={z} position={[0.67, 0.09, z]}>
-          <cylinderGeometry args={[0.05, 0.05, 0.18, 7]} />
-          <meshStandardMaterial color="#2c2320" roughness={0.9} />
-        </mesh>
+        <group key={z} position={[0.67, 0, z]}>
+          <mesh position={[0, 0.175, 0]}>
+            <cylinderGeometry args={[0.06, 0.055, 0.02, 10]} />
+            <meshStandardMaterial color="#3a2d24" roughness={0.75} metalness={0.15} />
+          </mesh>
+          {[0, 1, 2].map((k) => {
+            const a = (k / 3) * Math.PI * 2
+            return (
+              <mesh key={k} position={[Math.cos(a) * 0.04, 0.085, Math.sin(a) * 0.04]} rotation-z={Math.cos(a) * 0.12} rotation-x={-Math.sin(a) * 0.12}>
+                <cylinderGeometry args={[0.007, 0.007, 0.17, 5]} />
+                <meshStandardMaterial color="#26201c" roughness={0.6} metalness={0.3} />
+              </mesh>
+            )
+          })}
+        </group>
       ))}
 
       {/* ── TISCHE + BÄNKE (Audit #26): Biertisch-Garnituren im langen Saal,
@@ -571,12 +681,12 @@ export default function PartyRoom() {
       {/* v13-K3: der lange Saal war ab z≈3.5 leer — eine Garnitur mehr
           und Gäste bis fast zur Vitrine, der Raum wirkt bewohnt. */}
       <BierGarnitur pos={[0.75, 0, 2.35]} rot={-0.85} />
-      <Person pos={[-0.62, 0, 1.75]} jersey="#c41824" rot={-1.2} seated lean={0.04} />
-      <Person pos={[-0.62, 0, 2.2]} jersey="#d8d4c9" rot={-1.9} seated lean={-0.05} />
-      <Person pos={[-1.28, 0, 3.1]} jersey="#2f5d8a" rot={1.4} seated lean={0.05} />
-      <Person pos={[-1.28, 0, 3.45]} jersey="#3a6b35" rot={1.6} seated lean={-0.03} />
-      <Person pos={[0.5, 0, 2.05]} jersey="#c41824" rot={2.4} seated lean={0.03} />
-      <Person pos={[1.02, 0, 2.6]} jersey="#231F20" rot={-0.7} seated lean={-0.04} />
+      <Person pos={[-0.62, 0, 1.75]} jersey="#c41824" rot={-1.2} seated seatH={0.12} lean={0.04} />
+      <Person pos={[-0.62, 0, 2.2]} jersey="#d8d4c9" rot={-1.9} seated seatH={0.12} lean={-0.05} />
+      <Person pos={[-1.28, 0, 3.1]} jersey="#2f5d8a" rot={1.4} seated seatH={0.12} lean={0.05} />
+      <Person pos={[-1.28, 0, 3.45]} jersey="#3a6b35" rot={1.6} seated seatH={0.12} lean={-0.03} />
+      <Person pos={[0.5, 0, 2.05]} jersey="#c41824" rot={2.4} seated seatH={0.12} lean={0.03} />
+      <Person pos={[1.02, 0, 2.6]} jersey="#231F20" rot={-0.7} seated seatH={0.12} lean={-0.04} />
       {/* zwei stehen an der Vitrine und schauen auf den Pokal */}
       <Person pos={[-0.28, 0, 4.35]} jersey="#c41824" h={0.21} rot={0.25} lean={0.05} />
       <Person pos={[0.24, 0, 4.42]} jersey="#d8d4c9" h={0.2} rot={-0.3} lean={-0.04} />

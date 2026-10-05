@@ -35,7 +35,11 @@ const BENCH_YAW_LIMIT = 0.9
 const LEAN = -0.07 // leichte Rücklage → Karte „schaut" zur erhöhten Kamera
 // v18-R: Rang jeder Startelf-Karte in der Spieler-Fahrt (für die Fokus-Blende)
 const ORDER_OF = new Map(TEAM_ORDER.map((ci, k) => [ci, k]))
-const DIM = 0.38 // Helligkeit der Nachbarn, während die Kamera an einer Karte hält
+const DIM = 0.32 // Helligkeit der Nachbarn, während die Kamera an einer Karte hält
+// v19-3D (§2.6.2): die Nachbarkarten werden leicht kühl gedimmt, damit der
+// warme diagonale Foil-Sweep nicht plastikhaft heraussticht (voll nur auf
+// der fokussierten Karte).
+const DIM_TINT = new THREE.Vector3(0.92, 0.96, 1.0)
 
 function smoothstep(a: number, b: number, x: number) {
   const t = THREE.MathUtils.clamp((x - a) / (b - a), 0, 1)
@@ -229,8 +233,13 @@ function CardField({ startTex }: { startTex: number }) {
       const alpha = ease * fo
       const mat = m.material as THREE.MeshBasicMaterial
       mat.opacity = alpha
-      // abdunkeln statt durchsichtig (keine „Geisterkarten")
-      if (mat.color.r !== dim) mat.color.setScalar(dim)
+      // abdunkeln statt durchsichtig (keine „Geisterkarten"); v19-3D (§2.6.2):
+      // gedimmte Nachbarn leicht kühl, fokussierte Karte neutral-voll
+      if (dim > 0.985) {
+        if (mat.color.r !== 1) mat.color.setScalar(1)
+      } else {
+        mat.color.setRGB(dim * DIM_TINT.x, dim * DIM_TINT.y, dim * DIM_TINT.z)
+      }
       mat.depthWrite = alpha > 0.9
       m.visible = alpha > 0.01
 

@@ -55,32 +55,32 @@ function makePinTexture(): THREE.CanvasTexture {
 }
 
 function makeLabelTexture(): THREE.CanvasTexture {
-  const W = 512, H = 128
+  const W = 768, H = 192
   const cv = document.createElement('canvas')
   cv.width = W; cv.height = H
   const ctx = cv.getContext('2d')!
   // Pille
-  const r = 26
+  const r = 40
   ctx.beginPath()
-  ctx.moveTo(r, 8)
-  ctx.arcTo(W - 4, 8, W - 4, H - 8, r)
-  ctx.arcTo(W - 4, H - 8, 4, H - 8, r)
-  ctx.arcTo(4, H - 8, 4, 8, r)
-  ctx.arcTo(4, 8, W - 4, 8, r)
+  ctx.moveTo(r, 12)
+  ctx.arcTo(W - 6, 12, W - 6, H - 12, r)
+  ctx.arcTo(W - 6, H - 12, 6, H - 12, r)
+  ctx.arcTo(6, H - 12, 6, 12, r)
+  ctx.arcTo(6, 12, W - 6, 12, r)
   ctx.closePath()
   ctx.fillStyle = 'rgba(20,16,15,0.92)'
   ctx.fill()
-  ctx.lineWidth = 3
+  ctx.lineWidth = 5
   ctx.strokeStyle = COLORS.red
   ctx.stroke()
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
   ctx.fillStyle = '#fff'
-  ctx.font = '800 34px Archivo, system-ui, sans-serif'
-  ctx.fillText('SV AGATHENBURG-DOLLERN', W / 2, 48)
-  ctx.fillStyle = 'rgba(255,255,255,0.72)'
-  ctx.font = '600 24px Archivo, system-ui, sans-serif'
-  ctx.fillText('Waldsportplatz · Hier sind wir', W / 2, 88)
+  ctx.font = '800 54px Archivo, system-ui, sans-serif'
+  ctx.fillText('SV AGATHENBURG-DOLLERN', W / 2, 74)
+  ctx.fillStyle = 'rgba(255,255,255,0.74)'
+  ctx.font = '600 36px Archivo, system-ui, sans-serif'
+  ctx.fillText('Waldsportplatz · Hier sind wir', W / 2, 132)
   const tex = new THREE.CanvasTexture(cv)
   tex.colorSpace = THREE.SRGBColorSpace
   tex.anisotropy = 4
@@ -141,14 +141,15 @@ export function LocationMarker() {
         <meshBasicMaterial color={COLORS.red} transparent opacity={0.9} depthWrite={false} toneMapped={false} />
       </mesh>
 
-      {/* Billboard-Stapel: Pin + Label */}
+      {/* Billboard-Stapel: Pin + Label — v19-3D (§2.4.2): größer, damit das
+          Ortslabel in der Finale-Vogelperspektive lesbar ist (vorher winzig) */}
       <group ref={billboard} position={[0, 1.35, 0]}>
         <mesh>
-          <planeGeometry args={[1.0, 1.5]} />
+          <planeGeometry args={[1.35, 2.025]} />
           <meshBasicMaterial ref={pinMat} map={pinTex} transparent opacity={0} depthWrite={false} toneMapped={false} />
         </mesh>
-        <mesh position={[0, 1.15, 0]}>
-          <planeGeometry args={[2.1, 0.525]} />
+        <mesh position={[0, 1.5, 0]}>
+          <planeGeometry args={[3.3, 0.825]} />
           <meshBasicMaterial ref={labelMat} map={labelTex} transparent opacity={0} depthWrite={false} toneMapped={false} />
         </mesh>
       </group>

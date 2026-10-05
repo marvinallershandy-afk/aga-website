@@ -1,11 +1,14 @@
 import { useMemo } from 'react'
 import * as THREE from 'three'
 import { PITCH } from '../utils/constants'
+import { zeichneLeer } from '../partner/bande/tafel'
+import { schriftenBereit } from '../partner/bande/tafel'
 
 // Ballfangzäune hinter beiden Toren (hohe Maschendraht-Wände mit
 // dunklen Pfosten) — nach REFERENZ (dji_…0155…/f020, IMG_6082).
-// Am Ost-Zaun ein blaues Banner (Referenz: mohr-sports-Platz) als
-// neutraler „DEIN BANNER?"-Slot.
+// Am Ost-Zaun eine freie CI-Bandentafel (schwarz, rote Kante, Claim in
+// Anton — docs/DESIGN.md §8a) statt des alten gestrichelten
+// „DEIN BANNER?"-Platzhalters (v19-3D §2.10.3).
 
 const FENCE_X = PITCH.width / 2 + 0.95
 const WIDTH = 2.6
@@ -34,27 +37,26 @@ function getMeshTexture() {
   return meshTex
 }
 
+// v19-3D (§2.10.3): freie CI-Bandentafel statt gestrichelter Platzhalter-
+// Box. Gleiche Zeichnung wie die 3D-Bande (tafel.ts zeichneLeer): schwarz,
+// rote Kante links, Claim in Anton, Einladung in Archivo. Anton wird
+// asynchron nachgeladen und die Textur einmal aktualisiert.
 let bannerTex: THREE.CanvasTexture | null = null
 function getBannerTexture() {
   if (bannerTex) return bannerTex
   const cv = document.createElement('canvas')
-  // v10-E1: hochauflösend (1280×288 ≈ Banner-Proportion) → scharf.
   cv.width = 1280; cv.height = 288
   const ctx = cv.getContext('2d')!
-  ctx.fillStyle = '#8f1620' // CI: Banner-Slot in Vereinsrot
-  ctx.fillRect(0, 0, 1280, 288)
-  ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 8
-  ctx.setLineDash([30, 20]); ctx.strokeRect(28, 28, 1224, 232); ctx.setLineDash([])
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
-  ctx.fillStyle = '#fff'
-  ctx.font = '800 128px Archivo, system-ui, sans-serif'
-  ctx.fillText('DEIN BANNER?', 640, 128)
-  ctx.font = '700 44px Archivo, system-ui, sans-serif'
-  ctx.fillStyle = 'rgba(255,255,255,0.85)'
-  ctx.fillText('WERDE SPONSOR · PER WHATSAPP', 640, 214)
-  bannerTex = new THREE.CanvasTexture(cv)
-  bannerTex.colorSpace = THREE.SRGBColorSpace
-  bannerTex.anisotropy = 16
+  zeichneLeer(ctx, 0, 0, 1280, 288, 1) // Claim „HIER FEHLT DEIN NAME"
+  const t = new THREE.CanvasTexture(cv)
+  t.colorSpace = THREE.SRGBColorSpace
+  t.anisotropy = 16
+  bannerTex = t
+  schriftenBereit().then(() => {
+    ctx.clearRect(0, 0, 1280, 288)
+    zeichneLeer(ctx, 0, 0, 1280, 288, 1)
+    t.needsUpdate = true
+  })
   return bannerTex
 }
 

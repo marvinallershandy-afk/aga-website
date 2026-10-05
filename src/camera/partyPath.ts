@@ -79,9 +79,12 @@ const HALF = ROOM.width / 2
 // auf dem Platz, sondern VOR DER TÜR (DOOR_STAND, nördlich des Zaun-Endes
 // z≈−1.75, gerade Sichtlinie auf die Öffnung). Der Rundgang hält dort,
 // geht rein, kommt auf demselben Weg wieder heraus und steht wieder hier.
+// v19-3D (§2.1.3/§2.1.4): etwas höher + leicht nach unten geneigt, damit
+// das schwarze Dachband oben aus dem Bild wandert und die neue Tür-Bühne
+// (Schild, Leuchte, Bank, Foto) mittig im Bild sitzt.
 export const DOOR_STAND = {
-  pos: new THREE.Vector3(5.12, 0.58, -2.66),
-  look: new THREE.Vector3(6.45, 0.2, -2.5),
+  pos: new THREE.Vector3(5.12, 0.66, -2.66),
+  look: new THREE.Vector3(6.45, 0.13, -2.5),
 } as const
 
 const approachPos = new THREE.CatmullRomCurve3(

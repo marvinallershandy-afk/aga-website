@@ -64,3 +64,6 @@ shots-v19-seiten/
 shots-v19-karte/
 scripts/_v19k-shots.mjs
 scripts/.seo-events.json
+
+# v19-3D: Beweis-Shots (lokal, nicht committen)
+shots-v19-3d/

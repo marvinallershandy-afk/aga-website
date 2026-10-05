@@ -224,6 +224,114 @@ function makeGableSignTexture(): THREE.CanvasTexture {
   return tex
 }
 
+// v19-3D (§2.10.4): kleine Klinker-Fugen-Textur für den Schornstein.
+let chimneyTex: THREE.CanvasTexture | null = null
+function getChimneyTexture(): THREE.CanvasTexture {
+  if (chimneyTex) return chimneyTex
+  const cv = document.createElement('canvas')
+  cv.width = 64
+  cv.height = 80
+  const ctx = cv.getContext('2d')!
+  ctx.fillStyle = '#5f4336'
+  ctx.fillRect(0, 0, 64, 80)
+  ctx.fillStyle = '#4a332a'
+  for (let r = 0; r < 8; r++) {
+    const y = r * 10
+    const off = r % 2 ? 11 : 0
+    ctx.fillRect(0, y + 9, 64, 1.5) // Lagerfuge
+    for (let x = -off; x < 64; x += 22) ctx.fillRect(x + 20, y, 1.5, 10) // Stoßfuge
+  }
+  const t = new THREE.CanvasTexture(cv)
+  t.colorSpace = THREE.SRGBColorSpace
+  t.wrapS = t.wrapT = THREE.RepeatWrapping
+  t.repeat.set(1, 1)
+  t.anisotropy = 4
+  chimneyTex = t
+  return chimneyTex
+}
+
+// v19-3D (§2.1.1): feine Putz-Textur für die Korpus-Boxen (Material-Tiefe
+// statt uniformem Grau) — leichtes Korn + vertikale Verschmutzungs-/
+// Licht-Variation. Eine kleine Textur, alle Wandboxen teilen sie.
+let plasterTex: THREE.CanvasTexture | null = null
+function getPlasterTexture(): THREE.CanvasTexture {
+  if (plasterTex) return plasterTex
+  const W = 128
+  const H = 128
+  const cv = document.createElement('canvas')
+  cv.width = W
+  cv.height = H
+  const ctx = cv.getContext('2d')!
+  ctx.fillStyle = '#d8d4c8'
+  ctx.fillRect(0, 0, W, H)
+  // feines Korn
+  const img = ctx.getImageData(0, 0, W, H)
+  for (let i = 0; i < img.data.length; i += 4) {
+    const n = ((Math.sin(i * 91.7) * 43758.5453) % 1) * 18 - 9
+    img.data[i] += n
+    img.data[i + 1] += n
+    img.data[i + 2] += n
+  }
+  ctx.putImageData(img, 0, 0)
+  // sanfte vertikale Schlieren (Regenablauf/Licht) — unregelmäßig
+  for (let k = 0; k < 7; k++) {
+    const x = (Math.sin(k * 12.9) * 0.5 + 0.5) * W
+    const g = ctx.createLinearGradient(x, 0, x, H)
+    g.addColorStop(0, 'rgba(90,86,78,0)')
+    g.addColorStop(0.5, 'rgba(90,86,78,0.08)')
+    g.addColorStop(1, 'rgba(60,56,50,0.14)')
+    ctx.fillStyle = g
+    ctx.fillRect(x - 6, 0, 12, H)
+  }
+  const t = new THREE.CanvasTexture(cv)
+  t.colorSpace = THREE.SRGBColorSpace
+  t.wrapS = t.wrapT = THREE.RepeatWrapping
+  t.repeat.set(3, 1)
+  t.anisotropy = 4
+  plasterTex = t
+  return plasterTex
+}
+
+// v19-3D (§2.1.2): Foto-Texturen im Modul-Cache (nicht useMemo) — async
+// geladen, bis dahin dunkler Platzhalter (kein Pop beim ersten Bild).
+const photoCache = new Map<string, THREE.Texture>()
+function getPhotoTexture(url: string): THREE.Texture {
+  const hit = photoCache.get(url)
+  if (hit) return hit
+  const tex = new THREE.TextureLoader().load(url, (t) => {
+    t.colorSpace = THREE.SRGBColorSpace
+    t.anisotropy = 8
+    t.needsUpdate = true
+  })
+  tex.colorSpace = THREE.SRGBColorSpace
+  photoCache.set(url, tex)
+  return tex
+}
+
+// v19-3D (§2.1.2): beleuchtetes „VEREINSHEIM"-Türschild.
+let doorSignTex: THREE.CanvasTexture | null = null
+function getDoorSignTexture(): THREE.CanvasTexture {
+  if (doorSignTex) return doorSignTex
+  const cv = document.createElement('canvas')
+  cv.width = 512
+  cv.height = 84
+  const ctx = cv.getContext('2d')!
+  ctx.fillStyle = '#16100f'
+  ctx.fillRect(0, 0, 512, 84)
+  ctx.fillStyle = '#E91D29'
+  ctx.fillRect(0, 0, 10, 84)
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillStyle = '#f2eee6'
+  ctx.font = '400 50px Anton, "Arial Narrow", sans-serif'
+  ctx.fillText('VEREINSHEIM', 266, 46)
+  const t = new THREE.CanvasTexture(cv)
+  t.colorSpace = THREE.SRGBColorSpace
+  t.anisotropy = 8
+  doorSignTex = t
+  return doorSignTex
+}
+
 function GableEnds() {
   const geo = useMemo(() => {
     const half = DEPTH / 2 + 0.01
@@ -254,10 +362,10 @@ export function Clubhouse() {
 
   return (
     <group position={[CLUBHOUSE_POS.x, 0, CLUBHOUSE_POS.z]}>
-      {/* Hauptkorpus — weiße Fassade */}
+      {/* Hauptkorpus — weiße Fassade (v19-3D §2.1.1: Putz-Textur) */}
       <mesh position={[0, EAVES / 2, 0]}>
         <boxGeometry args={[DEPTH, EAVES, LEN]} />
-        <meshStandardMaterial color="#d6d2c6" roughness={0.92} />
+        <meshStandardMaterial map={getPlasterTexture()} color="#d6d2c6" roughness={0.92} />
       </mesh>
       <GableEnds />
       {/* Flaches Satteldach (First entlang z) */}
@@ -309,11 +417,20 @@ export function Clubhouse() {
           <meshBasicMaterial map={gableSign} color={[1.25, 1.25, 1.25]} toneMapped={false} />
         </mesh>
       </group>
-      {/* Ziegel-Schornstein */}
-      <mesh position={[0, EAVES + RISE + 0.1, 0.55]}>
-        <boxGeometry args={[0.16, 0.28, 0.2]} />
-        <meshStandardMaterial color="#7a4030" roughness={0.95} />
-      </mesh>
+      {/* Ziegel-Schornstein (v19-3D §2.10.4: gedämpftes Klinkerbraun statt
+          sattem Rot + Klinker-Fugen-Textur + Betonkappe → liest als
+          Schornstein, nicht als roter Platzhalter-Klotz) */}
+      <group position={[0, EAVES + RISE, 0.55]}>
+        <mesh position={[0, 0.095, 0]}>
+          <boxGeometry args={[0.15, 0.24, 0.19]} />
+          <meshStandardMaterial map={getChimneyTexture()} color="#6a4a3c" roughness={0.95} />
+        </mesh>
+        {/* Betonkappe mit Überstand */}
+        <mesh position={[0, 0.225, 0]}>
+          <boxGeometry args={[0.19, 0.03, 0.23]} />
+          <meshStandardMaterial color="#8c8880" roughness={0.9} />
+        </mesh>
+      </group>
       {/* Fassade mit Material-Tiefe (Fenster, Sockel, Putz) — Platzseite */}
       <mesh position={[-DEPTH / 2 - 0.004, EAVES / 2, 0]} rotation-y={-Math.PI / 2}>
         <planeGeometry args={[LEN, EAVES]} />
@@ -343,11 +460,11 @@ export function Clubhouse() {
             bemalten Glow-Quad („durch die Wand"-Gefühl, Marvins Kritik). */}
         <mesh position={[0, ANNEX_H / 2, (-2.4 + -1.6) / 2]}>
           <boxGeometry args={[ANNEX_D, ANNEX_H, 0.8]} />
-          <meshStandardMaterial color="#ccc8bd" roughness={0.92} />
+          <meshStandardMaterial map={getPlasterTexture()} color="#ccc8bd" roughness={0.92} />
         </mesh>
         <mesh position={[0, ANNEX_H / 2, (-1.4 + 2.4) / 2]}>
           <boxGeometry args={[ANNEX_D, ANNEX_H, 3.8]} />
-          <meshStandardMaterial color="#ccc8bd" roughness={0.92} />
+          <meshStandardMaterial map={getPlasterTexture()} color="#ccc8bd" roughness={0.92} />
         </mesh>
         {/* Windfang-Interieur: Holzboden, Decke, warm glühende Rückwand
             (die Glow-Textur ist jetzt eine LICHTQUELLE im Raum, kein
@@ -403,7 +520,13 @@ export function Clubhouse() {
             als dunkler Slab verdeckt. Hellgrau statt fast-schwarz. */}
         <mesh position={[-0.17, ANNEX_H + 0.028, 0]}>
           <boxGeometry args={[0.28, 0.024, ANNEX_LEN]} />
-          <meshStandardMaterial color="#6f7178" roughness={0.85} metalness={0.05} />
+          <meshStandardMaterial color="#7e808a" roughness={0.85} metalness={0.05} />
+        </mesh>
+        {/* v19-3D (§2.1.4): warm angestrahlte Vordach-Unterseite (Bounce) —
+            nimmt dem Tür-Anflug das „schwarze Dachband füllt das halbe Bild" */}
+        <mesh position={[-0.17, ANNEX_H + 0.014, 0]} rotation-x={Math.PI / 2}>
+          <planeGeometry args={[0.26, ANNEX_LEN - 0.02]} />
+          <meshStandardMaterial color="#8a8070" emissive="#3a2a18" emissiveIntensity={0.5} roughness={1} />
         </mesh>
         {[-2.35, -1.35, -0.3, 0.75, 1.5, 2.25].map((z) => (
           <mesh key={z} position={[-0.29, (ANNEX_H + 0.03) / 2, z]}>
@@ -454,6 +577,79 @@ export function Clubhouse() {
         {/* v13-K1: Staub-Motten im Türlicht — die Licht-Schleuse wirkt wie
             ein Ort mit Atmosphäre, nicht wie eine Textur (1 Draw-Call). */}
         <DoorDust />
+
+        {/* ── v19-3D (§2.1.2): TÜR-BÜHNE ──────────────────────────────
+            Der Rundgang-Halt `musik-tuer` schaut von Westen genau hierher;
+            vorher war es Leere. Jetzt: Türleuchte mit warmem Kegel,
+            „VEREINSHEIM"-Schild, Bierbank + Getränkekisten, Fußmatte und
+            ein gerahmtes Mannschaftsfoto (Meister 2026) — ein Ziel-Bild. */}
+        <group position={[0, 0, -1.5]}>
+          {/* beleuchtetes VEREINSHEIM-Schild, auf der Wand südlich der Tür */}
+          <mesh position={[-ANNEX_D / 2 - 0.004, 0.205, 0.33]} rotation-y={-Math.PI / 2}>
+            <planeGeometry args={[0.22, 0.036]} />
+            <meshBasicMaterial map={getDoorSignTexture()} color={[1.25, 1.2, 1.1]} toneMapped={false} />
+          </mesh>
+          {/* Türleuchte: kleines Gehäuse + warme Linse über der Tür */}
+          <group position={[-ANNEX_D / 2 - 0.018, 0.225, 0]}>
+            <mesh position={[0.01, 0.018, 0]}>
+              <boxGeometry args={[0.03, 0.012, 0.05]} />
+              <meshStandardMaterial color="#20201f" roughness={0.6} metalness={0.3} />
+            </mesh>
+            <mesh position={[-0.004, 0.005, 0]} rotation-x={Math.PI / 2}>
+              <circleGeometry args={[0.013, 10]} />
+              <meshBasicMaterial color={[2.4, 2.0, 1.35]} toneMapped={false} side={THREE.DoubleSide} />
+            </mesh>
+            {/* warmer Lichtkegel unter der Leuchte (emissiv, kein dynamisches
+                Licht — die bestehende Tür-LightPool wärmt den Boden) */}
+            <mesh position={[-0.03, -0.09, 0]} rotation-x={Math.PI / 2}>
+              <planeGeometry args={[0.1, 0.12]} />
+              <meshBasicMaterial color="#ffbe78" transparent opacity={0.3} blending={THREE.AdditiveBlending} depthWrite={false} toneMapped={false} />
+            </mesh>
+          </group>
+          {/* gerahmtes Mannschaftsfoto (Meister 2026, „picture by Nele") —
+              nördlich der Tür auf der Wand */}
+          <group position={[-ANNEX_D / 2 - 0.004, 0.16, -0.34]} rotation-y={-Math.PI / 2}>
+            <mesh position={[0, 0, -0.004]}>
+              <planeGeometry args={[0.235, 0.17]} />
+              <meshStandardMaterial color="#201712" roughness={0.6} />
+            </mesh>
+            <mesh>
+              <planeGeometry args={[0.205, 0.14]} />
+              <meshStandardMaterial
+                map={getPhotoTexture('/clubhouse/mannschaft.jpg')}
+                emissiveMap={getPhotoTexture('/clubhouse/mannschaft.jpg')}
+                emissive="#ffffff"
+                emissiveIntensity={0.3}
+                roughness={0.7}
+              />
+            </mesh>
+          </group>
+          {/* Fußmatte vor der Tür */}
+          <mesh position={[-ANNEX_D / 2 - 0.085, 0.005, 0]} rotation-x={-Math.PI / 2}>
+            <planeGeometry args={[0.13, 0.085]} />
+            <meshStandardMaterial color="#2a2420" roughness={1} />
+          </mesh>
+          {/* Bierbank südlich der Tür */}
+          <group position={[-ANNEX_D / 2 - 0.16, 0, 0.26]}>
+            <mesh position={[0, 0.055, 0]}>
+              <boxGeometry args={[0.1, 0.016, 0.34]} />
+              <meshStandardMaterial color="#7a5e38" roughness={0.9} />
+            </mesh>
+            {[-0.13, 0.13].map((z) => (
+              <mesh key={z} position={[0, 0.027, z]}>
+                <boxGeometry args={[0.08, 0.055, 0.02]} />
+                <meshStandardMaterial color="#4f3c22" roughness={0.9} />
+              </mesh>
+            ))}
+          </group>
+          {/* gestapelte Getränkekisten nördlich der Tür */}
+          {[[0, 0.03, -0.32], [0, 0.088, -0.32], [0.075, 0.03, -0.33]].map((c, i) => (
+            <mesh key={i} position={[-ANNEX_D / 2 - 0.14 + c[0], c[1], c[2]]} rotation-y={i === 2 ? 0.3 : 0}>
+              <boxGeometry args={[0.1, 0.055, 0.14]} />
+              <meshStandardMaterial color={i % 2 ? '#1f2a3a' : '#7a1d1d'} roughness={0.85} />
+            </mesh>
+          ))}
+        </group>
       </group>
 
       {/* Terrasse: Biertisch-Andeutungen entlang der langen Terrasse */}

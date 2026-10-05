@@ -341,7 +341,9 @@ function tourFrame(r: Rig, state: FrameState, delta: number) {
     const targetBx = sponsorBoardX(st.sponsorFocus)
     r.smoothedSponsorX = THREE.MathUtils.damp(r.smoothedSponsorX, targetBx, 3.5, delta)
     const bx = r.smoothedSponsorX
-    r.pos.x += (bx + 0.1 - r.pos.x) * wSp
+    // v19-3D (§2.2.3): Kamera frontal vor die Tafel (pos.x == look.x) statt
+    // mit 0.1-Versatz — die Tafel bleibt parallel zur Bildkante.
+    r.pos.x += (bx - r.pos.x) * wSp
     r.look.x += (bx - r.look.x) * wSp
   }
 

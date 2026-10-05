@@ -53,6 +53,48 @@ function getGlowTexture() {
   return glowTex
 }
 
+// v19-3D (§2.3): Der Lampenkopf bekommt statt des großen radialen Glow-
+// Blobs („gemalte Lichtschmiere über den Bäumen") eine KLEINE, kompakte
+// Blende mit anamorphem Glare — enger heißer Kern + langer dünner
+// Horizontalstreifen + kurzer Vertikalstreifen (Linsen-Reflex). Der
+// selektive Bloom (Composer, Threshold 1.0) trägt den weichen Hof.
+let glareTex: THREE.CanvasTexture | null = null
+function getGlareTexture() {
+  if (glareTex) return glareTex
+  const S = 256
+  const cv = document.createElement('canvas')
+  cv.width = cv.height = S
+  const ctx = cv.getContext('2d')!
+  ctx.fillStyle = '#000'
+  ctx.fillRect(0, 0, S, S)
+  ctx.globalCompositeOperation = 'lighter'
+  const c = S / 2
+  // enger heißer Kern
+  const core = ctx.createRadialGradient(c, c, 0, c, c, S * 0.11)
+  core.addColorStop(0, 'rgba(255,248,230,1)')
+  core.addColorStop(0.4, 'rgba(255,232,186,0.75)')
+  core.addColorStop(1, 'rgba(255,220,160,0)')
+  ctx.fillStyle = core
+  ctx.fillRect(0, 0, S, S)
+  // langer dünner Horizontalstreifen (anamorph)
+  const hg = ctx.createLinearGradient(0, c, S, c)
+  hg.addColorStop(0, 'rgba(255,228,180,0)')
+  hg.addColorStop(0.5, 'rgba(255,236,200,0.9)')
+  hg.addColorStop(1, 'rgba(255,228,180,0)')
+  ctx.fillStyle = hg
+  ctx.fillRect(0, c - 2.5, S, 5)
+  // kurzer Vertikalstreifen
+  const vg = ctx.createLinearGradient(c, S * 0.2, c, S * 0.8)
+  vg.addColorStop(0, 'rgba(255,228,180,0)')
+  vg.addColorStop(0.5, 'rgba(255,236,200,0.7)')
+  vg.addColorStop(1, 'rgba(255,228,180,0)')
+  ctx.fillStyle = vg
+  ctx.fillRect(c - 2, S * 0.2, 4, S * 0.6)
+  ctx.globalCompositeOperation = 'source-over'
+  glareTex = new THREE.CanvasTexture(cv)
+  return glareTex
+}
+
 // v14-E3: Der Kegel ist kein bemaltes Dreieck mehr, sondern „Licht in
 // Luft": ein Shader mit (1) Höhen-Gradient wie bisher, (2) FRESNEL-
 // Kantenauflösung — an der Silhouette schaut man durch wenig Medium,
@@ -154,7 +196,7 @@ function Mast({ index, x, z }: MastProps) {
     if (panelMatRef.current) panelMatRef.current.emissiveIntensity = 3.4 * lvl + 7 * surge
     // Faktor ~2.4 gegenüber dem alten Textur-Kegel: Fresnel+Noise nehmen
     // im Mittel wieder weg, was der Gradient allein zu viel hätte.
-    coneMat.uniforms.uOpacity.value = 0.38 * lvl + 0.42 * surge
+    coneMat.uniforms.uOpacity.value = 0.3 * lvl + 0.36 * surge
     coneMat.uniforms.uTime.value = state.clock.elapsedTime
     if (glowMatRef.current) glowMatRef.current.opacity = Math.min(1, 0.9 * lvl + 0.8 * surge)
     if (poolRef.current) {
@@ -182,6 +224,20 @@ function Mast({ index, x, z }: MastProps) {
               <boxGeometry args={[0.07, 0.85, 0.6]} />
               <meshStandardMaterial color="#101014" metalness={0.5} roughness={0.55} />
             </mesh>
+            {/* v19-3D (§2.3): umlaufende Blende/Visor — der Kopf liest in der
+                Totale als gebautes Gehäuse statt als flache schwarze Karte */}
+            {[-1, 1].map((sy) => (
+              <mesh key={`v${sy}`} position={[0.028, sy * 0.44, 0]}>
+                <boxGeometry args={[0.11, 0.03, 0.64]} />
+                <meshStandardMaterial color="#17171c" metalness={0.5} roughness={0.5} />
+              </mesh>
+            ))}
+            {[-1, 1].map((sz) => (
+              <mesh key={`h${sz}`} position={[0.028, 0, sz * 0.31]}>
+                <boxGeometry args={[0.11, 0.9, 0.03]} />
+                <meshStandardMaterial color="#17171c" metalness={0.5} roughness={0.5} />
+              </mesh>
+            ))}
             {/* Leuchtfläche nur vorn (zum Platz) */}
             <mesh position={[0.037, 0, 0]} rotation-y={Math.PI / 2}>
               <planeGeometry args={[0.6, 0.85]} />
@@ -196,11 +252,13 @@ function Mast({ index, x, z }: MastProps) {
               />
             </mesh>
           </group>
-          {/* Glow-Sprite = Fake-Bloom */}
-          <sprite position={[0.3, 0.1, 0]} scale={[1.3, 1.0, 1]}>
+          {/* v19-3D (§2.3): kompakter anamorpher Glare statt großem radialem
+              Blob — enger Kern + dünne Streifen. Der Composer-Bloom macht den
+              weichen Hof, nicht ein bildschirmbreites Sprite. */}
+          <sprite position={[0.3, 0.1, 0]} scale={[0.95, 0.42, 1]}>
             <spriteMaterial
               ref={glowMatRef}
-              map={getGlowTexture()}
+              map={getGlareTexture()}
               transparent
               opacity={0.9}
               depthWrite={false}
@@ -212,7 +270,7 @@ function Mast({ index, x, z }: MastProps) {
 
       {/* Volumen-Kegel (Fresnel-Shader, s.o.) */}
       <mesh position={cone.mid} quaternion={cone.quat} material={coneMat}>
-        <coneGeometry args={[1.9, cone.len, 24, 1, true]} />
+        <coneGeometry args={[1.55, cone.len, 24, 1, true]} />
       </mesh>
 
       {/* Licht-Lache + Erdung */}
