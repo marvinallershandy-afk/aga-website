@@ -160,6 +160,9 @@ export interface TableRow {
   sp: number
   pkt: number
   self?: boolean
+  /** v15-T: Tore / Gegentore (optional; daraus zeigt die Website die Tordifferenz). */
+  goals?: number
+  against?: number
 }
 export const TABLE_PREVIEW: TableRow[] = []
 

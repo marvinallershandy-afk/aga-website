@@ -302,7 +302,16 @@ async function main() {
 
   const table = (snap.table ?? [])
     .filter((r) => str(r.team) && Number.isInteger(r.pos))
-    .map((r) => ({ pos: r.pos, team: str(r.team), sp: int(r.sp) ?? 0, pkt: int(r.pkt) ?? 0, ...(r.self ? { self: true } : {}) }))
+    .map((r) => {
+      // v15-T: Tore/Gegentore mitnehmen → Website zeigt die Tordifferenz.
+      const goals = int(r.goals)
+      const against = int(r.against)
+      return {
+        pos: r.pos, team: str(r.team), sp: int(r.sp) ?? 0, pkt: int(r.pkt) ?? 0,
+        ...(goals != null && against != null ? { goals, against } : {}),
+        ...(r.self ? { self: true } : {}),
+      }
+    })
 
   const n = snap.nextMatch
   const nextMatch =

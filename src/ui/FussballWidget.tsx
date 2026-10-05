@@ -45,6 +45,12 @@ function ScorerFace({ name, photoUrl }: { name: string; photoUrl: string | null 
 
 function pad(n: number) { return String(n).padStart(2, '0') }
 
+function fmtDiff(goals?: number, against?: number) {
+  if (goals == null || against == null) return '–'
+  const d = goals - against
+  return d > 0 ? `+${d}` : d < 0 ? `−${-d}` : '0'
+}
+
 function Countdown({ target }: { target: Date }) {
   const [now, setNow] = useState(() => Date.now())
   useEffect(() => {
@@ -96,6 +102,8 @@ export function FussballWidget() {
   // Torschützen nur mit echten Zahlen (sonst drei Spieler mit 0 Toren).
   const hasGoals = topScorers.some((p) => p.stats.goals > 0)
   const hasTable = TABLE_PREVIEW.length > 0
+  // v15-T: Tordifferenz nur, wenn wirklich Tore gepflegt sind (sonst überall „0“).
+  const hasDiff = TABLE_PREVIEW.some((r) => (r.goals ?? 0) > 0 || (r.against ?? 0) > 0)
   const hasForm = FORM.length > 0
   // null = kein echter Termin hinterlegt → Countdown/ICS bleiben aus.
   const kickoff = nextKickoff()
@@ -115,7 +123,11 @@ export function FussballWidget() {
           {hasTable ? (
             <table className="cockpit-table">
               <thead>
-                <tr><th>#</th><th>Team</th><th>Sp</th><th>Pkt</th></tr>
+                <tr>
+                  <th>#</th><th>Team</th><th className="cockpit-table__c">Sp</th>
+                  {hasDiff && <th className="cockpit-table__c" title="Tordifferenz">Diff</th>}
+                  <th className="cockpit-table__c">Pkt</th>
+                </tr>
               </thead>
               <tbody>
                 {TABLE_PREVIEW.map((r) => (
@@ -123,6 +135,7 @@ export function FussballWidget() {
                     <td className="cockpit-table__pos">{r.pos}</td>
                     <td>{r.team}</td>
                     <td className="cockpit-table__c">{r.sp}</td>
+                    {hasDiff && <td className="cockpit-table__c">{fmtDiff(r.goals, r.against)}</td>}
                     <td className="cockpit-table__c">{r.pkt}</td>
                   </tr>
                 ))}
