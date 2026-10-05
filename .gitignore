@@ -48,3 +48,7 @@ scripts/_*.mjs
 
 # v14: Build-Artefakte des DB-Fetch (scripts/fetch-content.mjs)
 public/generated/
+scripts/mail/*.jpg
+scripts/mail/*.png
+scripts/mail/v2-*.html
+scripts/mail/patch-*.json
