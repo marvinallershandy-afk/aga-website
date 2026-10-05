@@ -144,3 +144,5 @@
   .bk-buehne { order: 2; }
   .bk-steuer > .bk-flach { order: 3; }
 }
+.bk-pitch--rundgang .bk-direkt { display: none; }
+.bk-pitch--rundgang .bk-leiste__tafeln li:nth-child(n + 4) { display: none; }
