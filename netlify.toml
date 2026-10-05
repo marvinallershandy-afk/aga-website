@@ -30,6 +30,17 @@
   to = "/datenschutz.html"
   status = 200
 
+# v15-L: Live-Seite als eigene HTML-Datei (eigene OG-Meta, kein three.js).
+[[redirects]]
+  from = "/live"
+  to = "/live.html"
+  status = 200
+
+[[redirects]]
+  from = "/live/"
+  to = "/live.html"
+  status = 200
+
 # SPA-Fallback: deckt sowohl den 3D-Onepager als auch /admin/* ab.
 [[redirects]]
   from = "/*"
@@ -45,6 +56,12 @@
 
 # Große, selten wechselnde Medien: lange cachen, aber revalidierbar
 # (Dateinamen sind NICHT gehasht — bei Austausch greift der ETag).
+# v15-L: live.html nie lange cachen (Bundle-Hashes wechseln mit jedem Deploy).
+[[headers]]
+  for = "/live.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
 [[headers]]
   for = "/audio/*"
   [headers.values]

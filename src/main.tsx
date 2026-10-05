@@ -5,12 +5,17 @@ const rootEl = document.getElementById('root')!
 
 // Routen-Weiche, ohne den öffentlichen 3D-Onepager anzufassen:
 //   /admin* → Admin-Sub-App (Supabase/Tailwind, eigenes Bundle)
+//   /live   → v15-L Live-Seite (React + fetch, eigenes schlankes Bundle).
+//             In Produktion liefert Netlify /live direkt als live.html aus
+//             (eigene OG-Meta, kein vorgerenderter Onepager); dieser Zweig
+//             greift im Dev-Server und als Rückfallebene.
 //   sonst   → bestehender Onepager (three/R3F, eigenes Bundle)
 // Beide Zweige laden dynamisch → getrennte Chunks. Der Onepager lädt niemals
 // Supabase/Tailwind, der Admin niemals three.js. Wichtig: index.css/cards.css
 // (u. a. `scroll-snap-type` auf <html>) werden NUR im Onepager-Zweig geladen,
 // damit sie das Admin-Scrolling nicht kapern.
 const isAdmin = window.location.pathname.startsWith('/admin')
+const isLive = /^\/live(\/|\.html)?$/.test(window.location.pathname)
 
 // v14: Magic-Link-Rückkehr abfangen. Ist die Ziel-URL nicht in Supabases
 // Redirect-Allowlist, schickt Supabase auf die Site-URL (Startseite) — die
@@ -24,6 +29,9 @@ if (!isAdmin && authReturn) {
   window.location.replace('/admin' + window.location.search + window.location.hash)
 } else if (isAdmin) {
   import('./admin/mountAdmin').then(({ mountAdmin }) => mountAdmin(rootEl))
+} else if (isLive) {
+  rootEl.innerHTML = '' // vorgerenderten Onepager-DOM nicht aufblitzen lassen
+  import('./live/mountLive').then(({ mountLive }) => mountLive(rootEl))
 } else {
   Promise.all([
     import('./index.css'),

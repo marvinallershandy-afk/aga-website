@@ -8,6 +8,11 @@
 // Sponsoren, Verein & Links) plus Stichproben im Archiv.
 //   node scripts/admin-audit.mjs               → desktop + mobile
 //   SCHEMA=alt node scripts/admin-audit.mjs    → DB ohne Migrationen 20261004*
+//   ONLY=live node scripts/admin-audit.mjs      → nur v15-L: Live-Ticker (mobil),
+//                                                 Team-Rolle, Team & Zugänge, Verein
+// v15-L: sva_ticker / sm_spiele-PATCH / sm_admins werden im Live-Teil ZUSTANDS-
+// BEHAFTET gemockt (In-Memory), damit Ticker, Rückgängig, Offline-Warteschlange
+// und „Spieler des Spiels" wirklich durchgeklickt werden können.
 // Dev-Server vorher starten: npx vite --port 5184 --strictPort
 import { chromium } from 'playwright'
 import fs from 'node:fs'
@@ -185,26 +190,77 @@ Object.assign(DUMP, {
   sva_publish_log: [
     { id: 'pl1', angefordert_at: T(-2), angefordert_von: 'marvin@aga-erste.de', status: 'ok', detail: null },
   ],
+  // v15-L
+  sm_admins: [
+    { id: 'a1', email: 'marvin@aga-erste.de', rolle: 'admin', name: 'Marvin', angelegt_von: null, created_at: T(-90) },
+    { id: 'a2', email: 'preview@audit.local', rolle: 'admin', name: null, angelegt_von: null, created_at: T(-30) },
+    { id: 'a3', email: 'niko@aga-erste.de', rolle: 'team', name: 'Niko (Teammanager)', angelegt_von: 'marvin@aga-erste.de', created_at: T(-3) },
+  ],
+  sva_ticker: [],
 })
+// v15-L: Live-Teil — heutiges Heimspiel in 10 Minuten
+const LIVE_MODE = process.env.ONLY === 'live'
+const NETZ = { aus: false }
+if (LIVE_MODE) {
+  const sp2 = DUMP.sm_spiele.find((s) => s.id === 'sp2')
+  sp2.anstoss = new Date(Date.now() + 10 * 60000).toISOString()
+  DUMP.sva_lineup[0].created_at = T(-0.05)
+}
 // SCHEMA=alt: Datenbank im Stand VOR den Migrationen 20261004* (sva_* fehlen).
 const ALT_SCHEMA = process.env.SCHEMA === 'alt'
 
 const errors = []
 const clicks = []
 
-async function setupRoutes(ctx, { altSchema = false } = {}) {
+async function setupRoutes(ctx, opts = {}) {
+  const { altSchema = false } = opts
   await ctx.route('**/rest/v1/**', async (route) => {
     const req = route.request()
     const url = new URL(req.url())
     const table = url.pathname.split('/rest/v1/')[1]?.split('?')[0]
+    // v15-L: Funkloch am Platz simulieren (setOffline greift bei gerouteten Requests nicht)
+    if (opts.stateful && NETZ.aus) return route.abort('internetdisconnected')
     if (table === 'rpc/sm_spieltagspaket') {
       return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(PAKET_ROWS) })
     }
     if (altSchema && table?.startsWith('sva_')) {
       return route.fulfill({ status: 404, contentType: 'application/json', body: JSON.stringify({ code: 'PGRST205', message: `Could not find the table 'public.${table}' in the schema cache` }) })
     }
+    // v15-L: zustandsbehaftete Mocks für Ticker, Spiele-PATCH und Zugänge
+    if (opts.stateful && table && ['sva_ticker', 'sm_spiele', 'sm_admins'].includes(table) && req.method() !== 'GET') {
+      const eq = (k) => (url.searchParams.get(k) || '').replace('eq.', '')
+      const m = req.method()
+      if (m === 'POST') {
+        const body = req.postDataJSON()
+        for (const row of Array.isArray(body) ? body : [body]) {
+          if (table === 'sva_ticker' && DUMP.sva_ticker.some((r) => r.id === row.id)) {
+            return route.fulfill({ status: 409, contentType: 'application/json', body: JSON.stringify({ code: '23505', message: 'duplicate key value violates unique constraint "sva_ticker_pkey"' }) })
+          }
+          DUMP[table].push({ created_at: new Date().toISOString(), id: row.id ?? `n${Date.now()}`, ...row })
+        }
+        return route.fulfill({ status: 201, body: '' })
+      }
+      if (m === 'DELETE') {
+        DUMP[table] = DUMP[table].filter((r) => r.id !== eq('id'))
+        return route.fulfill({ status: 204, body: '' })
+      }
+      if (m === 'PATCH') {
+        const patch = req.postDataJSON()
+        DUMP[table] = DUMP[table].map((r) => (r.id === eq('id') ? { ...r, ...patch } : r))
+        return route.fulfill({ status: 204, body: '' })
+      }
+    }
+    if (table === 'rpc/sva_meine_rolle') {
+      return route.fulfill({ status: 200, contentType: 'application/json', body: '"admin"' })
+    }
     if (req.method() === 'GET' && table && DUMP[table]) {
       let rows = DUMP[table]
+      // einfache eq-Filter (spiel_id, id) für Ticker/Aufstellung je Spiel
+      for (const k of ['spiel_id', 'id']) {
+        const v = url.searchParams.get(k)
+        if (v && v.startsWith('eq.')) rows = rows.filter((r) => String(r[k]) === v.slice(3))
+      }
+      if (table === 'sva_ticker') rows = [...rows].sort((a, b) => +new Date(a.zeitpunkt) - +new Date(b.zeitpunkt))
       // sva_lineup / sva_publish_log: jüngste zuerst (wie .order(... desc))
       const accept = req.headers()['accept'] || ''
       const body = accept.includes('vnd.pgrst.object') ? rows[0] ?? null : rows
@@ -459,8 +515,191 @@ async function run(label, viewport, opts = {}) {
   await browser.close()
 }
 
+// ═════════════════════════════════════════════════════════════════════════════
+// v15-L: Live-Ticker am Spielfeldrand (mobil), Offline-Warteschlange,
+// Rückgängig, Spieler des Spiels + Story-Grafik, Team-Rolle, Team & Zugänge.
+// ═════════════════════════════════════════════════════════════════════════════
+async function runLive() {
+  const label = 'live'
+  const browser = await chromium.launch()
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, acceptDownloads: true })
+  await setupRoutes(ctx, { stateful: true })
+  const page = await ctx.newPage()
+  page.on('pageerror', (e) => errors.push(`[${label}] pageerror: ${e.message}`))
+  page.on('console', (m) => {
+    if (m.type() !== 'error') return
+    const t = m.text()
+    if (/status of 40[34]|ERR_INTERNET_DISCONNECTED|Failed to fetch/.test(t)) return
+    errors.push(`[${label}] console: ${t.slice(0, 300)}`)
+  })
+  let n = 0
+  const shot = async (name, full = false) => {
+    const file = `${label}-${String(n).padStart(2, '0')}-${name}.png`
+    await page.waitForTimeout(350)
+    await page.screenshot({ path: `${OUT}/${file}`, fullPage: full })
+    console.log(file)
+    n++
+  }
+  const check = async (desc, fn) => {
+    try {
+      const ok = await fn()
+      clicks.push(`[${label}] ${ok ? 'OK ' : 'FEHLER'}  ${desc}`)
+    } catch (e) {
+      clicks.push(`[${label}] FEHLER  ${desc} (${String(e).slice(0, 120)})`)
+    }
+  }
+  const tap = async (loc, desc) => {
+    try {
+      await loc.first().click({ timeout: 4000 })
+      clicks.push(`[${label}] OK  ${desc}`)
+      await page.waitForTimeout(350)
+    } catch (e) {
+      clicks.push(`[${label}] FEHLER  ${desc} (${String(e).slice(0, 100)})`)
+    }
+  }
+  const dialog = () => page.getByRole('dialog')
+  const confirmDialog = async (name) => tap(page.getByRole('dialog').getByRole('button', { name }), `Bestätigen: ${name}`)
+
+  await page.goto(`${BASE}/admin/live?preview`, { waitUntil: 'networkidle' })
+  await page.evaluate(() => localStorage.removeItem('sva_live_queue_v1'))
+  await page.reload({ waitUntil: 'networkidle' })
+  await page.waitForTimeout(600)
+  await shot('vor-anpfiff', true)
+  await check('Live: Standard-Spiel = heutiges Spiel (TuS Fischbek)', async () => (await page.getByRole('combobox', { name: 'Spiel wählen' }).inputValue()) === 'sp2')
+
+  await tap(page.getByTestId('phase'), 'Live: ANPFIFF')
+  await page.waitForTimeout(800)
+  await check('Live: Anpfiff gesendet (Mock-DB hat 1 Ereignis)', async () => DUMP.sva_ticker.length === 1 && DUMP.sva_ticker[0].typ === 'anpfiff')
+  // Uhr stellen auf 23. Minute
+  await tap(page.getByRole('button', { name: /Uhr/ }), 'Live: Uhr stellen öffnen')
+  for (let i = 0; i < 22; i++) await dialog().getByRole('button', { name: 'mehr' }).click()
+  await shot('uhr-stellen')
+  await tap(dialog().getByRole('button', { name: /Auf 23\. Minute stellen/ }), 'Live: Uhr auf 23. Minute')
+  await page.waitForTimeout(900)
+  await check('Live: Minute zeigt 23\'', async () => (await page.getByText("23'", { exact: true }).count()) > 0)
+
+  // TOR mit Schütze + Vorlage
+  await tap(page.getByTestId('btn-tor'), 'Live: TOR SVA')
+  await tap(dialog().getByRole('button', { name: /Warkehr/ }).first(), 'Tor: Schütze Warkehr')
+  await tap(dialog().getByRole('button', { name: /Paruzel/ }).last(), 'Tor: Vorlage Paruzel')
+  await tap(dialog().getByRole('button', { name: 'Kopfball' }), 'Tor: Zusatz Kopfball')
+  await shot('tor-auswahl')
+  await tap(page.getByTestId('tor-speichern'), 'Tor eintragen')
+  await page.waitForTimeout(900)
+  await check('Live: Spielstand 1:0', async () => (await page.getByTestId('live-score').innerText()).replace(/\s/g, '') === '1:0')
+
+  // Gelb
+  await tap(page.getByRole('button', { name: 'GELB' }), 'Live: GELB')
+  await tap(dialog().getByRole('button', { name: /Neuber/ }).first(), 'Gelb: Neuber antippen (sofort)')
+  await page.waitForTimeout(700)
+
+  // Offline: Gegentor bleibt ausstehend
+  NETZ.aus = true
+  await page.evaluate(() => window.dispatchEvent(new Event('offline')))
+  await tap(page.getByRole('button', { name: 'GEGENTOR' }), 'Live: GEGENTOR (offline)')
+  await tap(dialog().getByRole('button', { name: 'Konter' }), 'Gegentor: Chip Konter')
+  await tap(dialog().getByRole('button', { name: 'Gegentor eintragen' }), 'Gegentor eintragen')
+  await page.waitForTimeout(1200)
+  await check('Live: offline → 1:1 sofort sichtbar (optimistisch)', async () => (await page.getByTestId('live-score').innerText()).replace(/\s/g, '') === '1:1')
+  await check('Live: offline → „wartet“-Hinweis', async () => /wartet/.test(await page.getByTestId('sync').innerText()))
+  await check('Live: offline → Mock-DB hat Gegentor noch NICHT', async () => !DUMP.sva_ticker.some((r) => r.typ === 'gegentor'))
+  await check('Live: Warteschlange im localStorage', async () => (await page.evaluate(() => JSON.parse(localStorage.getItem('sva_live_queue_v1') || '[]').length)) === 1)
+  await shot('offline-ausstehend', true)
+  NETZ.aus = false
+  await page.evaluate(() => window.dispatchEvent(new Event('online')))
+  await page.waitForTimeout(2500)
+  await check('Live: wieder online → nachgesendet', async () => DUMP.sva_ticker.some((r) => r.typ === 'gegentor'))
+  await check('Live: „Alles gesendet“', async () => /Alles gesendet/.test(await page.getByTestId('sync').innerText()))
+  await shot('wieder-online-gesendet', true)
+
+  // Wechsel
+  await tap(page.getByRole('button', { name: 'WECHSEL' }), 'Live: WECHSEL')
+  await tap(dialog().getByRole('button', { name: /Kalwa/ }).first(), 'Wechsel: raus Kalwa')
+  await tap(dialog().getByRole('button', { name: /Pejas/ }).last(), 'Wechsel: rein Pejas')
+  await shot('wechsel-auswahl')
+  await tap(dialog().getByRole('button', { name: 'Wechsel eintragen' }), 'Wechsel eintragen')
+  await page.waitForTimeout(800)
+  // Kommentar + Rückgängig
+  await tap(page.getByRole('button', { name: 'KOMMENTAR' }), 'Live: KOMMENTAR')
+  await tap(dialog().getByRole('button', { name: 'Pfosten!' }), 'Kommentar: Schnell-Chip Pfosten')
+  await page.waitForTimeout(700)
+  const vorUndo = DUMP.sva_ticker.length
+  await tap(page.getByTestId('undo'), 'Live: Rückgängig')
+  await shot('rueckgaengig-bestaetigen')
+  await confirmDialog('Rückgängig')
+  await page.waitForTimeout(1000)
+  await check('Live: Rückgängig löscht letztes Ereignis', async () => DUMP.sva_ticker.length === vorUndo - 1 && !DUMP.sva_ticker.some((r) => r.text === 'Pfosten!'))
+  await shot('live-1hz-verlauf', true)
+
+  // Halbzeit → Wiederanpfiff → Tor → Abpfiff
+  await tap(page.getByTestId('phase'), 'Live: HALBZEIT')
+  await page.waitForTimeout(700)
+  await shot('halbzeit')
+  await tap(page.getByTestId('phase'), 'Live: WIEDERANPFIFF')
+  await page.waitForTimeout(700)
+  await tap(page.getByTestId('btn-tor'), 'Live: TOR SVA (2. HZ)')
+  await tap(dialog().getByRole('button', { name: /Biedermann/ }).first(), 'Tor: Schütze Biedermann')
+  await tap(page.getByTestId('tor-speichern'), 'Tor eintragen')
+  await page.waitForTimeout(700)
+  await shot('live-2hz', true)
+  await tap(page.getByTestId('phase'), 'Live: ABPFIFF')
+  await confirmDialog('Abpfiff')
+  await page.waitForTimeout(1000)
+  await check('Live: nach Abpfiff Endstand 2:1', async () => (await page.getByTestId('live-score').innerText()).replace(/\s/g, '') === '2:1')
+  await tap(page.getByRole('button', { name: /Biedermann/ }).first(), 'Spieler des Spiels: Biedermann')
+  await page.waitForTimeout(900)
+  await check('Live: MOTM gespeichert (sm_spiele PATCH)', async () => !!DUMP.sm_spiele.find((s) => s.id === 'sp2')?.motm_roster_id)
+  await shot('nach-abpfiff-motm', true)
+  try {
+    const [dl] = await Promise.all([page.waitForEvent('download', { timeout: 15000 }), page.getByTestId('story').click()])
+    await dl.saveAs(`${OUT}/live-story-grafik.png`)
+    clicks.push(`[${label}] OK  Story-Grafik heruntergeladen → live-story-grafik.png`)
+  } catch (e) {
+    clicks.push(`[${label}] FEHLER  Story-Grafik (${String(e).slice(0, 120)})`)
+  }
+
+  // Team-Rolle
+  await page.goto(`${BASE}/admin/?preview=team`, { waitUntil: 'networkidle' })
+  await page.waitForTimeout(500)
+  await shot('team-uebersicht', true)
+  await tap(page.getByRole('button', { name: /^Mehr$/ }), 'Team: Drawer öffnen')
+  await check('Team: Drawer ohne Kader/Sponsoren/Veröffentlichen', async () => (await page.getByRole('link', { name: 'Kader' }).count()) === 0 && (await page.getByRole('button', { name: /veröffentlichen/i }).count()) === 0)
+  await shot('team-drawer')
+  await page.goto(`${BASE}/admin/kader?preview=team`, { waitUntil: 'networkidle' })
+  await check('Team: /kader → „Nur für Admins“', async () => (await page.getByText('Nur für Admins').count()) > 0)
+  await shot('team-kader-gesperrt')
+  await page.goto(`${BASE}/admin/spiele?preview=team`, { waitUntil: 'networkidle' })
+  await check('Team: kein „+ Spiel“', async () => (await page.getByRole('button', { name: /^Spiel$/ }).count()) === 0)
+  await tap(page.getByRole('button', { name: /Güldenstern/ }), 'Team: Spiel öffnen')
+  await check('Team: Editor nur Ergebnis', async () => (await page.getByText('Ergebnis eintragen').count()) > 0 && (await page.locator('#s-gegner').isDisabled()))
+  await shot('team-spiel-ergebnis')
+  await page.keyboard.press('Escape')
+
+  // Admin: Team & Zugänge, Verein
+  await page.goto(`${BASE}/admin/team?preview`, { waitUntil: 'networkidle' })
+  await page.waitForTimeout(400)
+  await shot('team-zugaenge', true)
+  await page.getByLabel('E-Mail *').fill('co-trainer@aga-erste.de')
+  await page.getByLabel('Name (optional)').fill('Adolf (Co-Trainer)')
+  await shot('team-zugaenge-eingabe')
+  await tap(page.getByRole('button', { name: 'Zugang anlegen' }), 'Zugänge: anlegen')
+  await page.waitForTimeout(700)
+  await check('Zugänge: neuer Team-Zugang in sm_admins', async () => DUMP.sm_admins.some((a) => a.email === 'co-trainer@aga-erste.de' && a.rolle === 'team'))
+  await page.goto(`${BASE}/admin/verein?preview`, { waitUntil: 'networkidle' })
+  await page.waitForTimeout(400)
+  await page.getByLabel('Widget-ID Tabelle').fill(`<div id="widget1"></div><script>new fussballdeWidgetAPI().showWidget('widget1', '02ep29ca1o000000vs5489b2vvp292br');</script>`)
+  await page.waitForTimeout(300)
+  await check('Verein: Widget-ID aus Einbettungs-Code erkannt', async () => (await page.getByText('ID erkannt: 02EP29CA1O000000VS5489B2VVP292BR').count()) > 0)
+  await page.locator('#v-tort').scrollIntoViewIfNeeded()
+  await shot('verein-widgets-trainingsort', true)
+
+  await browser.close()
+}
+
 if (ALT_SCHEMA) {
   await run('alt-schema', { viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 }, { altSchema: true })
+} else if (LIVE_MODE) {
+  await runLive()
 } else {
   await run('desktop', { viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 })
   await run('mobile', { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true })

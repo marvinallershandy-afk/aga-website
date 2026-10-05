@@ -5,7 +5,7 @@ import { queryClient } from './lib/queries'
 import { ToastProvider } from './components/ui/toast'
 import { ConfirmProvider } from './components/ui/confirm'
 import { AuthProvider } from './auth/AuthProvider'
-import { ProtectedRoute } from './auth/ProtectedRoute'
+import { ProtectedRoute, NurAdmin } from './auth/ProtectedRoute'
 import { Login } from './auth/Login'
 import { AdminLayout } from './AdminLayout'
 // v14-C Vereins-Pflege (Hauptnavigation)
@@ -16,6 +16,9 @@ import { Spiele } from './pages/Spiele'
 import { Tabelle } from './pages/Tabelle'
 import { Sponsoren } from './pages/Sponsoren'
 import { Verein } from './pages/Verein'
+// v15-L Spieltag-Modus
+import { Live } from './pages/Live'
+import { TeamZugaenge } from './pages/TeamZugaenge'
 // Archiv: Social Media (nicht mehr in der Hauptnavigation, Routen unverändert)
 import { Archiv } from './pages/Archiv'
 import { Dashboard } from './pages/Dashboard'
@@ -46,22 +49,25 @@ export function AdminApp() {
                   }
                 >
                   <Route index element={<Uebersicht />} />
-                  <Route path="kader" element={<Kader />} />
+                  {/* v15-L: Team-Zugang darf Aufstellung, Spiele (Ergebnis) und Live */}
                   <Route path="aufstellung" element={<Aufstellung />} />
                   <Route path="spiele" element={<Spiele />} />
-                  <Route path="tabelle" element={<Tabelle />} />
-                  <Route path="sponsoren" element={<Sponsoren />} />
-                  <Route path="verein" element={<Verein />} />
+                  <Route path="live" element={<Live />} />
+                  <Route path="kader" element={<NurAdmin><Kader /></NurAdmin>} />
+                  <Route path="tabelle" element={<NurAdmin><Tabelle /></NurAdmin>} />
+                  <Route path="sponsoren" element={<NurAdmin><Sponsoren /></NurAdmin>} />
+                  <Route path="verein" element={<NurAdmin><Verein /></NurAdmin>} />
+                  <Route path="team" element={<NurAdmin><TeamZugaenge /></NurAdmin>} />
 
-                  <Route path="archiv" element={<Archiv />} />
-                  <Route path="social" element={<Dashboard />} />
-                  <Route path="redaktionsplan" element={<Redaktionsplan />} />
-                  <Route path="ideen" element={<IdeenPool />} />
-                  <Route path="produktion" element={<Produktion />} />
-                  <Route path="matchday" element={<Matchday />} />
-                  <Route path="sponsoren-crm" element={<SponsorenCrm />} />
-                  <Route path="insights" element={<Insights />} />
-                  <Route path="automationen" element={<Automationen />} />
+                  <Route path="archiv" element={<NurAdmin><Archiv /></NurAdmin>} />
+                  <Route path="social" element={<NurAdmin><Dashboard /></NurAdmin>} />
+                  <Route path="redaktionsplan" element={<NurAdmin><Redaktionsplan /></NurAdmin>} />
+                  <Route path="ideen" element={<NurAdmin><IdeenPool /></NurAdmin>} />
+                  <Route path="produktion" element={<NurAdmin><Produktion /></NurAdmin>} />
+                  <Route path="matchday" element={<NurAdmin><Matchday /></NurAdmin>} />
+                  <Route path="sponsoren-crm" element={<NurAdmin><SponsorenCrm /></NurAdmin>} />
+                  <Route path="insights" element={<NurAdmin><Insights /></NurAdmin>} />
+                  <Route path="automationen" element={<NurAdmin><Automationen /></NurAdmin>} />
                 </Route>
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>

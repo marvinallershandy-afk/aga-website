@@ -60,6 +60,7 @@ Zuerst prüfen, was schon angewandt ist: Dashboard → Database → Migrations, 
 | 6 | `20261004100000_sva_vereinspflege.sql` | **ja** |
 | 7 | `20261004101000_sva_web_snapshot.sql` | **ja** |
 | 8 | `20261004102000_sva_security_haertung.sql` | **ja** |
+| 9 | `20261005100000_sva_spieltag_live.sql` | **ja** (v15-L Live-Ticker, Rollen, Trainingsort — siehe `docs/SPIELTAG.md`) |
 
 Anwenden geht einzeln im SQL-Editor (Datei-Inhalt einfügen) oder per MCP `apply_migration`. `supabase db push` nur verwenden, wenn die Remote-Migrationshistorie zu den Dateinamen passt. Sonst versucht es die Baseline erneut.
 

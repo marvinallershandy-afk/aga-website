@@ -13,7 +13,10 @@ import {
   ChevronRight,
   Home,
   Bus,
+  Radio,
 } from 'lucide-react'
+import { useAuth } from '../auth/AuthProvider'
+import type { SpielRow } from '../lib/db'
 import { PageHeader } from './Placeholder'
 import { Card, CardContent } from '../components/ui/card'
 import { Button } from '../components/ui/button'
@@ -120,10 +123,49 @@ export function Uebersicht() {
   aufgaben.sort((a, b) => Number(b.wichtig) - Number(a.wichtig))
 
   const svaZeile = tabelle.find((t) => t.self)
+  const { rolle } = useAuth()
+
+  // v15-L: Spieltag in Sicht (läuft, heute oder in den nächsten 48 h)?
+  const spieltag = spiele.find((s) => s.status === 'live' || s.status === 'halbzeit') ??
+    (naechstes && new Date(naechstes.anstoss).getTime() - Date.now() < 48 * 3600_000 ? naechstes : null)
+
+  // v15-L: Team-Zugang — nur, was am Spieltag zählt
+  if (rolle === 'team') {
+    return (
+      <>
+        <PageHeader title="Übersicht" subtitle="Spieltag im Blick: Aufstellung, Live-Ticker, Ergebnis." />
+        {spieltag && <SpieltagBanner spiel={spieltag} />}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <StatusKarte icon={CalendarDays} titel="Nächstes Spiel" to="/spiele" laden={spieleQ.isPending}>
+            {naechstes ? (
+              <>
+                <p className="font-display text-xl leading-tight tracking-wide">{paarung(naechstes)}</p>
+                <p className="text-sm text-muted-foreground">{formatAnstoss(naechstes.anstoss)}</p>
+              </>
+            ) : (
+              <p className="text-muted-foreground">Kein Spiel eingetragen</p>
+            )}
+            {offen.length > 0 && <p className="mt-2 text-sm text-primary">Ergebnis fehlt: {offen.map((o) => o.gegner).join(', ')}</p>}
+          </StatusKarte>
+          <StatusKarte icon={LayoutGrid} titel="Aufstellung" to="/aufstellung" laden={lineupQ.isPending}>
+            {lineup ? (
+              <>
+                <p className="font-display text-xl leading-tight tracking-wide">{lineup.formation}</p>
+                <p className="text-sm text-muted-foreground">{lineup.match_label || 'ohne Spielbezug'} · gespeichert {relativZeit(lineup.created_at)}</p>
+              </>
+            ) : (
+              <p className="text-muted-foreground">Noch keine Aufstellung</p>
+            )}
+          </StatusKarte>
+        </div>
+      </>
+    )
+  }
 
   return (
     <>
       <PageHeader title="Übersicht" subtitle="Alles, was die Website aktuell hält — auf einen Blick." />
+      {spieltag && <SpieltagBanner spiel={spieltag} />}
 
       {schemaFehlt && <PflegeHinweis schema className="mb-4" />}
 
@@ -289,5 +331,28 @@ function StatusKarte({
         </Button>
       </CardContent>
     </Card>
+  )
+}
+
+/** v15-L: Spieltag-Hinweis mit Direktweg zum Ticker. */
+function SpieltagBanner({ spiel }: { spiel: SpielRow }) {
+  const live = spiel.status === 'live' || spiel.status === 'halbzeit'
+  return (
+    <Link
+      to="/live"
+      className={cn(
+        'mb-4 flex min-h-[64px] items-center gap-3 rounded-lg border px-4 py-3',
+        live ? 'border-primary bg-primary/20' : 'border-primary/40 bg-primary/10',
+      )}
+    >
+      <Radio className={cn('h-6 w-6 shrink-0 text-primary', live && 'animate-pulse motion-reduce:animate-none')} />
+      <span className="min-w-0 flex-1">
+        <span className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">{live ? 'Läuft gerade' : 'Spieltag'}</span>
+        <span className="block truncate font-medium">
+          {paarung(spiel)} · {live ? `${(spiel.heim ? spiel.live_tore_sva : spiel.live_tore_gegner) ?? 0}:${(spiel.heim ? spiel.live_tore_gegner : spiel.live_tore_sva) ?? 0}` : formatAnstoss(spiel.anstoss)}
+        </span>
+      </span>
+      <span className="shrink-0 font-display text-lg tracking-wide text-primary">Ticker →</span>
+    </Link>
   )
 }

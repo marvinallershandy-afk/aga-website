@@ -20,6 +20,8 @@ export interface ContactOverride {
   mapsQuery?: string
   email?: string
   training?: string
+  /** v15-L: Trainingsort (≠ Spielort `address`). */
+  trainingOrt?: string
   /** Anzeigeform mit @, z. B. '@sva_fussball'. */
   instagram?: string
   instagramUrl?: string

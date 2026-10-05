@@ -18,6 +18,7 @@ import { formatAnstoss } from '../lib/format'
 import { ergebnisArt, ergebnisOffen, ergebnisText, hatErgebnis, naechstesSpiel, paarung } from '../lib/spiele'
 import { fussballDeUrl } from '../lib/pflege'
 import { cn } from '../lib/utils'
+import { useAuth } from '../auth/AuthProvider'
 
 // ─────────────────────────────────────────────────────────────
 // v14-C: Spielplan, vereinfacht. Drei Blöcke:
@@ -31,6 +32,8 @@ const WETTBEWERB = 'Kreisliga Stade'
 
 export function Spiele() {
   const toast = useToast()
+  // v15-L: Team-Zugang trägt nur Ergebnisse ein (Anlegen/Stammdaten = Admin)
+  const istAdmin = useAuth().rolle !== 'team'
   const spieleQ = useSpiele()
   const settingsQ = useSettings()
   const { create, update, remove } = useSpieleMutations()
@@ -67,9 +70,11 @@ export function Spiele() {
                 </a>
               </Button>
             )}
-            <Button className="flex-1 sm:flex-none" onClick={() => setEditor({ open: true, row: null })}>
-              <Plus className="h-4 w-4" /> Spiel
-            </Button>
+            {istAdmin && (
+              <Button className="flex-1 sm:flex-none" onClick={() => setEditor({ open: true, row: null })}>
+                <Plus className="h-4 w-4" /> Spiel
+              </Button>
+            )}
           </div>
         }
       />
@@ -86,9 +91,11 @@ export function Spiele() {
           title="Noch keine Spiele"
           description="Trag das nächste Spiel ein — die Website zeigt dann Gegner, Anstoß und Countdown."
           action={
-            <Button onClick={() => setEditor({ open: true, row: null })}>
-              <Plus className="h-4 w-4" /> Erstes Spiel anlegen
-            </Button>
+            istAdmin ? (
+              <Button onClick={() => setEditor({ open: true, row: null })}>
+                <Plus className="h-4 w-4" /> Erstes Spiel anlegen
+              </Button>
+            ) : undefined
           }
         />
       ) : (
@@ -143,6 +150,7 @@ export function Spiele() {
       <SpielFormular
         open={editor.open}
         row={editor.row}
+        nurErgebnis={!istAdmin}
         onClose={() => setEditor((e) => ({ ...e, open: false }))}
         onSave={speichern}
         onDelete={async (id) => {
@@ -171,6 +179,11 @@ function SpielListe({ rows, hervorheben, onOpen }: { rows: SpielRow[]; hervorheb
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate font-medium">
+                  {(s.status === 'live' || s.status === 'halbzeit') && (
+                    <span className="mr-2 rounded bg-primary px-1.5 py-0.5 text-[10px] font-bold uppercase text-white">
+                      {s.status === 'halbzeit' ? 'Halbzeit' : 'Live'}
+                    </span>
+                  )}
                   {paarung(s)}
                   {hervorheben === s.id && <span className="ml-2 rounded bg-primary px-1.5 py-0.5 text-[10px] font-bold uppercase text-white">Nächstes</span>}
                 </span>
@@ -274,12 +287,15 @@ function toForm(row: SpielRow | null): Form {
 function SpielFormular({
   open,
   row,
+  nurErgebnis = false,
   onClose,
   onSave,
   onDelete,
 }: {
   open: boolean
   row: SpielRow | null
+  /** v15-L: Team-Zugang — nur das Ergebnis ist änderbar */
+  nurErgebnis?: boolean
   onClose: () => void
   onSave: (input: SpielInput, id?: string) => Promise<void>
   onDelete: (id: string) => Promise<void>
@@ -307,6 +323,11 @@ function SpielFormular({
     setSaving(true)
     setError(null)
     try {
+      if (nurErgebnis && row) {
+        await onSave({ tore_sva: f.toreSva === '' ? null : Number(f.toreSva), tore_gegner: f.toreGegner === '' ? null : Number(f.toreGegner) }, row.id)
+        onClose()
+        return
+      }
       await onSave(
         {
           gegner: f.gegner.trim(),
@@ -347,10 +368,10 @@ function SpielFormular({
     <Modal
       open={open}
       onClose={onClose}
-      title={row ? 'Spiel bearbeiten' : 'Spiel hinzufügen'}
+      title={nurErgebnis ? 'Ergebnis eintragen' : row ? 'Spiel bearbeiten' : 'Spiel hinzufügen'}
       footer={
         <>
-          {row && (
+          {row && !nurErgebnis && (
             <Button variant="ghost" className="mr-auto text-muted-foreground" onClick={loeschen} disabled={saving}>
               <Trash2 className="h-4 w-4" /> Löschen
             </Button>
@@ -364,6 +385,8 @@ function SpielFormular({
         </>
       }
     >
+      <fieldset disabled={nurErgebnis} className="space-y-4 disabled:opacity-60">
+      {nurErgebnis && <p className="text-xs text-muted-foreground">Mit dem Team-Zugang trägst du nur das Ergebnis ein.</p>}
       <div className="space-y-1.5">
         <Label htmlFor="s-gegner">Gegner *</Label>
         <Input id="s-gegner" className="h-12 text-base" value={f.gegner} onChange={(e) => set('gegner', e.target.value)} placeholder="z. B. TuS Harsefeld" />
@@ -412,6 +435,7 @@ function SpielFormular({
         <Label htmlFor="s-wb">Wettbewerb</Label>
         <Input id="s-wb" className="h-12 text-base" value={f.wettbewerb} onChange={(e) => set('wettbewerb', e.target.value)} placeholder={WETTBEWERB} />
       </div>
+      </fieldset>
 
       <fieldset className={cn('rounded-lg border p-3', istVergangen ? 'border-primary/50' : 'border-border')}>
         <legend className="px-1 text-xs uppercase tracking-wide text-muted-foreground">Ergebnis {istVergangen ? '' : '(nach dem Spiel)'}</legend>

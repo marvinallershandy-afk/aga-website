@@ -387,19 +387,28 @@ export type Database = {
       }
       sm_admins: {
         Row: {
+          angelegt_von: string | null
           created_at: string
           email: string
           id: string
+          name: string | null
+          rolle: string
         }
         Insert: {
+          angelegt_von?: string | null
           created_at?: string
           email: string
           id?: string
+          name?: string | null
+          rolle?: string
         }
         Update: {
+          angelegt_von?: string | null
           created_at?: string
           email?: string
           id?: string
+          name?: string | null
+          rolle?: string
         }
         Relationships: []
       }
@@ -668,46 +677,67 @@ export type Database = {
       }
       sm_spiele: {
         Row: {
+          anpfiff_at: string | null
           anstoss: string
           created_at: string
           gegner: string
           heim: boolean
           id: string
+          live_tore_gegner: number
+          live_tore_sva: number
+          live_updated_at: string | null
+          motm_roster_id: string | null
           notizen: string | null
           ort: string | null
           spieltag_nr: number | null
+          status: string
           tore_gegner: number | null
           tore_sva: number | null
           updated_at: string
           wettbewerb: string | null
+          wiederanpfiff_at: string | null
         }
         Insert: {
+          anpfiff_at?: string | null
           anstoss: string
           created_at?: string
           gegner: string
           heim?: boolean
           id?: string
+          live_tore_gegner?: number
+          live_tore_sva?: number
+          live_updated_at?: string | null
+          motm_roster_id?: string | null
           notizen?: string | null
           ort?: string | null
           spieltag_nr?: number | null
+          status?: string
           tore_gegner?: number | null
           tore_sva?: number | null
           updated_at?: string
           wettbewerb?: string | null
+          wiederanpfiff_at?: string | null
         }
         Update: {
+          anpfiff_at?: string | null
           anstoss?: string
           created_at?: string
           gegner?: string
           heim?: boolean
           id?: string
+          live_tore_gegner?: number
+          live_tore_sva?: number
+          live_updated_at?: string | null
+          motm_roster_id?: string | null
           notizen?: string | null
           ort?: string | null
           spieltag_nr?: number | null
+          status?: string
           tore_gegner?: number | null
           tore_sva?: number | null
           updated_at?: string
           wettbewerb?: string | null
+          wiederanpfiff_at?: string | null
         }
         Relationships: []
       }
@@ -1030,6 +1060,48 @@ export type Database = {
           },
         ]
       }
+      sva_ticker: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          minute: number | null
+          nachspielzeit: number | null
+          roster_id: string | null
+          roster_id_2: string | null
+          spiel_id: string
+          text: string | null
+          typ: string
+          zeitpunkt: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          minute?: number | null
+          nachspielzeit?: number | null
+          roster_id?: string | null
+          roster_id_2?: string | null
+          spiel_id: string
+          text?: string | null
+          typ: string
+          zeitpunkt?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          minute?: number | null
+          nachspielzeit?: number | null
+          roster_id?: string | null
+          roster_id_2?: string | null
+          spiel_id?: string
+          text?: string | null
+          typ?: string
+          zeitpunkt?: string
+        }
+        Relationships: []
+      }
       sva_publish_log: {
         Row: {
           angefordert_at: string
@@ -1060,11 +1132,14 @@ export type Database = {
           email: string | null
           fupa_url: string | null
           fussball_de_team_id: string | null
+          fussball_de_widget_spielplan: string | null
+          fussball_de_widget_tabelle: string | null
           id: number
           instagram: string | null
           rechtstexte_ok: boolean
           saison: string | null
           training: string | null
+          training_ort: string | null
           updated_at: string
           updated_by: string | null
           whatsapp: string | null
@@ -1074,11 +1149,14 @@ export type Database = {
           email?: string | null
           fupa_url?: string | null
           fussball_de_team_id?: string | null
+          fussball_de_widget_spielplan?: string | null
+          fussball_de_widget_tabelle?: string | null
           id?: number
           instagram?: string | null
           rechtstexte_ok?: boolean
           saison?: string | null
           training?: string | null
+          training_ort?: string | null
           updated_at?: string
           updated_by?: string | null
           whatsapp?: string | null
@@ -1088,11 +1166,14 @@ export type Database = {
           email?: string | null
           fupa_url?: string | null
           fussball_de_team_id?: string | null
+          fussball_de_widget_spielplan?: string | null
+          fussball_de_widget_tabelle?: string | null
           id?: number
           instagram?: string | null
           rechtstexte_ok?: boolean
           saison?: string | null
           training?: string | null
+          training_ort?: string | null
           updated_at?: string
           updated_by?: string | null
           whatsapp?: string | null
@@ -1122,6 +1203,9 @@ export type Database = {
       }
       rezept_speichern: { Args: { p_rezept: Json }; Returns: string }
       web_snapshot: { Args: never; Returns: Json }
+      web_live: { Args: never; Returns: Json }
+      is_sva_team: { Args: never; Returns: boolean }
+      sva_meine_rolle: { Args: never; Returns: string | null }
       sva_array_distinct: { Args: { a: string[] }; Returns: boolean }
       sm_spieltagspaket: {
         Args: { p_spiel_id: string }

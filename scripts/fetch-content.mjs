@@ -219,6 +219,8 @@ function mapContact(st) {
   }
   if (str(st.email)) c.email = str(st.email)
   if (str(st.training)) c.training = str(st.training)
+  // v15-L: Trainingsort ≠ Spielort (address = Waldsportplatz, Anfahrt/Karte)
+  if (str(st.trainingOrt)) c.trainingOrt = str(st.trainingOrt)
   if (str(st.instagram)) {
     const h = str(st.instagram).replace(/^@/, '')
     c.instagram = `@${h}`

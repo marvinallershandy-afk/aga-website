@@ -211,6 +211,9 @@ export const CONTACT = {
   // PLATZHALTER (Marvin bestätigen): Trainingszeit gegen die offizielle
   // Vereinsseite prüfen. Aktuell plausibler Herren-Abendslot.
   training: 'Di & Do, ab 19:00 Uhr',
+  // v15-L: Trainingsort ≠ Spielort (Kunde, 05.10.2026). Gepflegt im Admin
+  // unter Verein & Links → „Trainingsort"; leer = nicht anzeigen.
+  trainingOrt: 'Sportplatz an der B73, Am Paschberg 1, 21684 Agathenburg',
   instagram: '@sva_fussball',
   instagramUrl: 'https://instagram.com/sva_fussball',
   // PLATZHALTER (Marvin trägt die echte Vereins-/Ansprechpartner-Nummer

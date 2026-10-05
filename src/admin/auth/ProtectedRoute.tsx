@@ -13,6 +13,8 @@ function devPreview(): boolean {
   if (new URLSearchParams(window.location.search).has('preview')) {
     try {
       sessionStorage.setItem('sm_preview', '1')
+      // v15-L: ?preview=team → Vorschau mit Team-Rolle (siehe AuthProvider)
+      sessionStorage.setItem('sm_preview_rolle', new URLSearchParams(window.location.search).get('preview') === 'team' ? 'team' : 'admin')
     } catch {
       /* ignore */
     }
@@ -46,8 +48,8 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center">
         <h2 className="text-2xl">Kein Zugang</h2>
         <p className="max-w-sm text-muted-foreground">
-          Dieser Account ist nicht als SVA-Admin freigeschaltet. Bitte melde dich mit einem
-          freigeschalteten Konto an.
+          Dieser Account ist nicht für die Vereins-Pflege freigeschaltet. Ein Admin kann dich unter
+          „Team &amp; Zugänge“ eintragen.
         </p>
         <Button variant="outline" onClick={() => signOut()}>
           Abmelden
@@ -56,5 +58,24 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
     )
   }
 
+  return <>{children}</>
+}
+
+/** v15-L: Bereiche nur für Admins. Team-Zugänge sehen einen freundlichen Hinweis. */
+export function NurAdmin({ children }: { children: ReactNode }) {
+  const { rolle } = useAuth()
+  if (rolle === 'team') {
+    return (
+      <div className="flex flex-col items-center gap-3 py-16 text-center">
+        <h2 className="font-display text-2xl tracking-wide">Nur für Admins</h2>
+        <p className="max-w-sm text-muted-foreground">
+          Mit dem Team-Zugang pflegst du Aufstellung, Ergebnisse und den Live-Ticker. Alles andere macht ein Admin.
+        </p>
+        <Button asChild variant="outline">
+          <a href="/admin/">Zur Übersicht</a>
+        </Button>
+      </div>
+    )
+  }
   return <>{children}</>
 }

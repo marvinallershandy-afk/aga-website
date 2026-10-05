@@ -31,6 +31,7 @@ import { POSITION_CODES, positionCode } from '../lib/pflege'
 import { formatAnstoss, relativZeit } from '../lib/format'
 import { hatErgebnis, matchLabelFor, naechstesSpiel, paarung } from '../lib/spiele'
 import { cn } from '../lib/utils'
+import { useAuth } from '../auth/AuthProvider'
 
 // ─────────────────────────────────────────────────────────────
 // v14-C: Aufstellung — Formation, Startelf (11 Slots) und Bank.
@@ -63,6 +64,7 @@ const nachname = (name: string) => name.trim().split(/\s+/).slice(-1)[0] ?? name
 
 export function Aufstellung() {
   const toast = useToast()
+  const istAdmin = useAuth().rolle !== 'team'
   const confirm = useConfirm()
   const rosterQ = useRoster()
   const spieleQ = useSpiele()
@@ -318,11 +320,14 @@ export function Aufstellung() {
                     {save.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
                     {besetzt !== 11 ? `Noch ${11 - besetzt} Spieler aufstellen` : !dirty && gespeichert ? 'Gespeichert' : 'Aufstellung speichern'}
                   </Button>
-                  {frischGespeichert && (
+                  {frischGespeichert && istAdmin && (
                     <div className="space-y-2 rounded-lg border border-green-600/40 bg-green-950/30 p-3">
-                      <p className="text-sm">Gespeichert. Damit Besucher sie sehen, jetzt die Website veröffentlichen:</p>
+                      <p className="text-sm">Gespeichert. Auf /live sofort sichtbar — für den Onepager jetzt die Website veröffentlichen:</p>
                       <PublishButton size="compact" />
                     </div>
+                  )}
+                  {frischGespeichert && !istAdmin && (
+                    <p className="rounded-lg border border-green-600/40 bg-green-950/30 p-3 text-sm">Gespeichert — auf der Live-Seite sofort sichtbar.</p>
                   )}
                 </CardContent>
               </Card>

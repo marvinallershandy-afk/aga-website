@@ -103,6 +103,12 @@ function nonEmpty<T extends object>(o: T | undefined): Partial<T> {
 }
 export const CONTACT: Contact = { ...STATIC_CONTACT, ...nonEmpty(ov?.contact) }
 
+/** v15-L: „Di & Do, ab 19:00 Uhr · Sportplatz an der B73" — Trainingszeit mit
+ *  Kurzform des Trainingsorts (erster Teil vor dem Komma). Der Spielort
+ *  (CONTACT.address) bleibt für Anfahrt/Karte. */
+export const TRAINING_ORT_KURZ: string = (CONTACT.trainingOrt ?? '').split(',')[0].trim()
+export const TRAINING_ZEILE: string = TRAINING_ORT_KURZ ? `${CONTACT.training} · ${TRAINING_ORT_KURZ}` : CONTACT.training
+
 const DUMMY_WHATSAPP = '491700000000'
 export const whatsappReady: boolean =
   CONTACT.whatsapp !== DUMMY_WHATSAPP && /^[1-9]\d{7,14}$/.test(CONTACT.whatsapp)
