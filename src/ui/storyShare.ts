@@ -2,6 +2,7 @@ import type { Player } from '../data/players'
 import { POSITION_LABEL } from '../data/players'
 import { CLUB, CONTACT, NEXT_MATCH } from '../data/content'
 import { CARD_RATIO, FONT_BODY, FONT_DISPLAY, drawPlayerCard, loadCardAssets } from './cardArt'
+import { hdCutout } from './hdCutout'
 
 // ─────────────────────────────────────────────────────────────
 // One-Tap Instagram-Story-Share. v14-D: das Story-Bild (1080×1920)
@@ -35,7 +36,7 @@ function setSpacing(ctx: CanvasRenderingContext2D, px: number) {
 
 /** Zeichnet das Story-Bild und liefert den Canvas zurück. */
 export async function renderStoryCanvas(player: Player): Promise<HTMLCanvasElement> {
-  const assets = await loadCardAssets(player.cutoutUrl ?? null)
+  const assets = await loadCardAssets(hdCutout(player.cutoutUrl ?? null))
   const canvas = document.createElement('canvas')
   canvas.width = W
   canvas.height = H

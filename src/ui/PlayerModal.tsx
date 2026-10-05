@@ -7,6 +7,8 @@ import { tierOf, loadCardAssets } from './cardArt'
 import { shareStory, type ShareResult } from './storyShare'
 import { IgIcon } from './Icons'
 import { lockScroll, unlockScroll } from './PlayerGallery'
+import { hdCutout } from './hdCutout'
+import { X, ChevronLeft, ChevronRight } from 'lucide-react'
 
 const close = () => useStore.getState().setSelectedPlayer(null)
 
@@ -31,7 +33,7 @@ function ModalContent({ player, from = 0 }: { player: Player; from?: number }) {
     window.addEventListener('keydown', onKey, true)
     lockScroll()
     // Story-Assets vorladen → beim Teilen bleibt die Nutzergeste „frisch"
-    void loadCardAssets(player.cutoutUrl ?? null)
+    void loadCardAssets(hdCutout(player.cutoutUrl ?? null))
     const prev = document.activeElement as HTMLElement | null
     panelRef.current?.querySelector<HTMLElement>('.flip-scene')?.focus()
     return () => {
@@ -191,7 +193,9 @@ export function PlayerModal() {
             if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.4) go(dx < 0 ? 1 : -1)
           }}
         >
-          <button className="modal-close" onClick={close} aria-label="Schließen">×</button>
+          <button className="modal-close" onClick={close} aria-label="Schließen">
+            <X size={18} strokeWidth={1.5} aria-hidden="true" />
+          </button>
           {nav && list && (
             <>
               <span className="modal-count" aria-live="polite">
@@ -205,7 +209,7 @@ export function PlayerModal() {
                 }}
                 aria-label={`Vorheriger Spieler: ${list[(idx - 1 + list.length) % list.length].name}`}
               >
-                ‹
+                <ChevronLeft size={22} strokeWidth={1.5} aria-hidden="true" />
               </button>
               <button
                 className="modal-nav modal-nav__next"
@@ -215,7 +219,7 @@ export function PlayerModal() {
                 }}
                 aria-label={`Nächster Spieler: ${list[(idx + 1) % list.length].name}`}
               >
-                ›
+                <ChevronRight size={22} strokeWidth={1.5} aria-hidden="true" />
               </button>
             </>
           )}
