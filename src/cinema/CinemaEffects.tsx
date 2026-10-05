@@ -14,6 +14,8 @@ import { ToneMappingMode, BlendFunction, RenderPass, type EffectComposer as Effe
 import { partyScene } from '../three/partyScene'
 import { useStore } from '../store/useStore'
 import { GradeEffect } from './GradeEffect'
+import { TiltEdgeEffect } from './TiltEdgeEffect'
+import { mapWorld } from '../map/mapWorld'
 
 // ─────────────────────────────────────────────────────────────
 // Die Kino-Ebene (v5): Post-Processing-Kette, jeder Effekt einzeln
@@ -35,6 +37,16 @@ function Grade() {
   const effect = useMemo(() => new GradeEffect(), [])
   useFrame(() => {
     if (ref.current) ref.current.warmth = useStore.getState().partyProgress
+  })
+  return <primitive ref={ref} object={effect} />
+}
+
+// v16-K: Tilt-Shift-Rand der Karten-Totale (Stärke folgt mapWorld.tilt)
+function TiltEdge() {
+  const ref = useRef<TiltEdgeEffect>(null)
+  const effect = useMemo(() => new TiltEdgeEffect(), [])
+  useFrame(() => {
+    if (ref.current) ref.current.strength = mapWorld.tilt
   })
   return <primitive ref={ref} object={effect} />
 }
@@ -63,6 +75,8 @@ export function CinemaEffects() {
   }, [heavy, setDpr, dprScale])
 
   const chain: React.ReactElement[] = []
+  // v16-K: MUSS der erste Effekt sein (liest inputBuffer = Szenenfarbe).
+  chain.push(<TiltEdge key="tilt" />)
   if (fx.bloom)
     chain.push(
       // Loop 1: größerer, weicherer Halo (Referenzframe-Messlatte)

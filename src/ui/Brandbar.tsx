@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useStore } from '../store/useStore'
 // P1: Sektionstexte aus der Fassade (sm_website_content-Overlay → sonst Seed).
 import { SECTIONS } from '../data/content'
+import { toMap } from '../map/nav'
 
 // v10-E4: Ton-Steuerung als eigenes, dezentes Fixed-Control unten rechts —
 // NICHT mehr als Emoji in der Nav-Zeile (die unter mix-blend-mode:difference
@@ -67,6 +68,10 @@ function MobileDock() {
   const mitmachen = SECTIONS[SECTIONS.length - 1]
   return (
     <nav className="mobile-dock" aria-label="Kapitel">
+      {/* v16-K: zurück zur Vereinsgelände-Karte */}
+      <button className="mobile-dock__map" onClick={() => toMap()} aria-label="Zur Karte">
+        Karte
+      </button>
       {dots.map((s, i) => (
         <button
           key={s.id}
@@ -92,6 +97,7 @@ export function Brandbar() {
   const soundOn = useStore((s) => s.soundOn)
   const setSoundOn = useStore((s) => s.setSoundOn)
   const gateOpen = useStore((s) => s.gateOpen)
+  const tour = useStore((s) => s.mode === 'tour')
   // v14: Tor öffnet stumm → der Ton-Knopf lädt die ersten Sekunden
   // ausgeklappt („Ton an") ein und schrumpft dann aufs Icon.
   const [hint, setHint] = useState(false)
@@ -103,11 +109,33 @@ export function Brandbar() {
   }, [gateOpen])
   return (
     <>
+      {/* v16-K: Kopf + Kapitel-Navigation nur im Rundgang — auf der Karte
+          sind die Marker die Navigation. */}
+      {tour && (
       <header className="brandbar">
-        <a href="#top" className="brandbar__logo" style={{ textDecoration: 'none', pointerEvents: 'auto' }}>
+        <a
+          href="/"
+          className="brandbar__logo"
+          style={{ textDecoration: 'none', pointerEvents: 'auto' }}
+          onClick={(e) => {
+            e.preventDefault()
+            toMap()
+          }}
+          title="Zur Karte"
+        >
           SV<b>A</b>
         </a>
         <nav className="brandbar__nav">
+          <a
+            href="/"
+            className="brandbar__map"
+            onClick={(e) => {
+              e.preventDefault()
+              toMap()
+            }}
+          >
+            ← Karte
+          </a>
           {SECTIONS.map((s, i) => (
             <a
               key={s.id}
@@ -127,6 +155,7 @@ export function Brandbar() {
           ))}
         </nav>
       </header>
+      )}
 
       {/* Ton an/aus — dezentes, permanent erreichbares Audio-Control */}
       <button
@@ -144,7 +173,7 @@ export function Brandbar() {
         <span className="audio-toggle__label" aria-hidden="true">Ton an</span>
       </button>
 
-      <MobileDock />
+      {tour && <MobileDock />}
     </>
   )
 }

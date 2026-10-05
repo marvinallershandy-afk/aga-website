@@ -9,6 +9,7 @@ import { buildClothGeometry, createClothMaterial } from '../three/clothMaterial'
 import { useStore } from '../store/useStore'
 import { FAN_PHOTOS } from '../data/club'
 import { cameraState, STATION_COUNT } from '../camera/CameraPath'
+import { mapWorld } from '../map/mapWorld'
 import {
   CX, HH, SIGN_SPOTS, SIGN_W, SIGN_H, TEAM_X, TEAM_Z,
   buildCurveLayout, instanceMatrix, type Person,
@@ -225,6 +226,9 @@ export function FanBlock() {
     const light = lightRef.current
     if (d >= ACTIVE_WINDOW) {
       if (light && light.intensity !== 0) light.intensity = 0
+      // v16-K: in der Karten-Totale feiern die Fans ruhig weiter (nur die
+      // Menge bewegt sich — Rauch/Fackeln/Licht bleiben aus).
+      if (mapWorld.fansIdle > 0.01) curveClock.uTime.value += Math.min(dt, 0.05) * 0.6 * (reduced ? 0.4 : 1)
       return
     }
     const t = (curveClock.uTime.value += Math.min(dt, 0.05) * (reduced ? 0.4 : 1))

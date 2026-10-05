@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { Player } from '../data/players'
+import type { PlaceId } from '../map/places'
 
 export interface PerfStats {
   fps: number
@@ -7,7 +8,17 @@ export interface PerfStats {
   triangles: number
 }
 
+/** v16-K: Startseite ist die Vereinsgelände-Karte ('map'); der lineare
+ *  Scroll-Rundgang ('tour') ist die Option dahinter. */
+export type ViewMode = 'map' | 'tour'
+
 interface AppState {
+  /** v16-K: Karte (Hub) oder Rundgang (Scroll-Onepager). */
+  mode: ViewMode
+  /** v16-K: geöffneter Ort auf der Karte (Panel offen, Kamera dort) oder null. */
+  place: PlaceId | null
+  setNav: (nav: { mode?: ViewMode; place?: PlaceId | null }) => void
+
   /** 0..1 normalisierter Scroll-Fortschritt über die ganze Seite (Ziel-Wert). */
   scrollProgress: number
   setScrollProgress: (p: number) => void
@@ -29,6 +40,10 @@ interface AppState {
    *  am App-Root (analog PlayerModal). */
   fanPhoto: number | null
   setFanPhoto: (i: number | null) => void
+
+  /** v16-K: Live-3D-Karte hat in der Totale gerendert → Poster blendet aus. */
+  stageLive: boolean
+  setStageLive: (v: boolean) => void
 
   /** 3D-Assets geladen → Loader ausblenden. */
   ready: boolean
@@ -116,6 +131,15 @@ export const FX_BY_TIER: Record<CinemaTier, CinemaFx> = {
 }
 
 export const useStore = create<AppState>((set) => ({
+  mode: 'map',
+  place: null,
+  setNav: (nav) =>
+    set((s) => {
+      const mode = nav.mode ?? s.mode
+      const place = mode === 'tour' ? null : nav.place !== undefined ? nav.place : s.place
+      return mode === s.mode && place === s.place ? s : { mode, place }
+    }),
+
   scrollProgress: 0,
   setScrollProgress: (p) => set({ scrollProgress: p }),
 
@@ -134,6 +158,9 @@ export const useStore = create<AppState>((set) => ({
 
   fanPhoto: null,
   setFanPhoto: (i) => set({ fanPhoto: i }),
+
+  stageLive: false,
+  setStageLive: (v) => set((s) => (s.stageLive === v ? s : { stageLive: v })),
 
   ready: false,
   setReady: (v) => set({ ready: v }),

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useStore } from '../store/useStore'
-import { cameraState, KICKOFF_U } from '../camera/CameraPath'
+import { cameraState, KICKOFF_U } from '../camera/rigState'
 
 // ─────────────────────────────────────────────────────────────
 // Letterbox-Balken (21:9) für den Anstoß-Beat (v5 Kino-Ebene):
