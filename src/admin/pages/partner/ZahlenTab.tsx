@@ -32,6 +32,8 @@ export function ZahlenTab() {
   const insights = useInsights()
   const [werte, setWerte] = useState<Record<Key, string>>({ instagram_follower: '', reichweite_monat: '', zuschauer_heim: '', website_besuche_monat: '', heimspiele_saison: '' })
   const [stand, setStand] = useState('')
+  // v19-S: Ansprechpartner über dem /partner-Formular (leer = kein Block)
+  const [kontakt, setKontakt] = useState({ name: '', rolle: '', foto: '', telefon: '' })
   const [fehler, setFehler] = useState<string | null>(null)
 
   useEffect(() => {
@@ -45,6 +47,12 @@ export function ZahlenTab() {
       heimspiele_saison: d.heimspiele_saison?.toString() ?? '',
     })
     setStand(d.stand ?? '')
+    setKontakt({
+      name: d.ansprechpartner_name ?? '',
+      rolle: d.ansprechpartner_rolle ?? '',
+      foto: d.ansprechpartner_foto_url ?? '',
+      telefon: d.ansprechpartner_telefon ?? '',
+    })
   }, [info.data])
 
   const letzteInsta = useMemo(
@@ -64,6 +72,12 @@ export function ZahlenTab() {
       if (t && !/^\d+$/.test(t)) return setFehler(`${f.label}: bitte nur eine ganze Zahl, z. B. 2840.`)
       input[f.key] = t ? Number(t) : null
     }
+    const foto = kontakt.foto.trim()
+    if (foto && !/^https:\/\/\S+$/.test(foto)) return setFehler('Foto-URL: bitte eine vollständige https-Adresse (oder leer lassen).')
+    input.ansprechpartner_name = kontakt.name.trim() || null
+    input.ansprechpartner_rolle = kontakt.rolle.trim() || null
+    input.ansprechpartner_foto_url = foto || null
+    input.ansprechpartner_telefon = kontakt.telefon.trim() || null
     setFehler(null)
     try {
       await save.mutateAsync({ ...input, stand: stand || new Date().toISOString().slice(0, 10) })
@@ -96,6 +110,33 @@ export function ZahlenTab() {
           <Label htmlFor="md-stand">Stand</Label>
           <Input id="md-stand" type="date" className="h-12 text-base" value={stand} onChange={(e) => setStand(e.target.value)} />
           <p className="text-xs text-muted-foreground">Erscheint als „Stand: Oktober 2026“. Leer = heute.</p>
+        </div>
+      </div>
+      <div className="space-y-3 border-t pt-5">
+        <div>
+          <h3 className="text-sm font-semibold">Ansprechpartner (über dem Formular)</h3>
+          <p className="text-xs text-muted-foreground">
+            Steht auf /partner direkt über dem Anfrage-Formular — Firmen kaufen von Menschen. <b className="text-foreground">Nur sichtbar, wenn ein Name gesetzt ist.</b> Leer lassen = kein Block.
+          </p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="ap-name">Name</Label>
+            <Input id="ap-name" className="h-12 text-base" value={kontakt.name} maxLength={80} onChange={(e) => setKontakt((k) => ({ ...k, name: e.target.value }))} placeholder="z. B. Vorname Nachname" />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="ap-rolle">Rolle</Label>
+            <Input id="ap-rolle" className="h-12 text-base" value={kontakt.rolle} maxLength={80} onChange={(e) => setKontakt((k) => ({ ...k, rolle: e.target.value }))} placeholder="z. B. Sponsoring" />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="ap-foto">Foto-URL</Label>
+            <Input id="ap-foto" className="h-12 text-base" inputMode="url" value={kontakt.foto} maxLength={500} onChange={(e) => setKontakt((k) => ({ ...k, foto: e.target.value }))} placeholder="https://… (optional)" />
+            <p className="text-xs text-muted-foreground">Öffentliche https-Adresse. Der Build lädt das Bild lokal. Leer = Initialen.</p>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="ap-tel">Telefon</Label>
+            <Input id="ap-tel" className="h-12 text-base" type="tel" inputMode="tel" value={kontakt.telefon} maxLength={40} onChange={(e) => setKontakt((k) => ({ ...k, telefon: e.target.value }))} placeholder="optional" />
+          </div>
         </div>
       </div>
       {fehler && (

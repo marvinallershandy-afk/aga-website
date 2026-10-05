@@ -77,12 +77,23 @@ export interface PartnerMediadaten {
   stand?: string
 }
 
+/** v19-S: Ansprechpartner auf /partner (web_partner_kontakt()). Leer = kein Block. */
+export interface PartnerKontakt {
+  name: string
+  rolle?: string
+  /** lokal unter /generated/partner-kontakt/… (Build lädt die Foto-URL herunter) */
+  fotoUrl?: string
+  telefon?: string
+}
+
 /** v16-S: Partner-Bereich aus web_snapshot().partner. */
 export interface PartnerOverlay {
   pakete: PartnerPaket[]
   mediadaten: PartnerMediadaten
   /** „Live-Ticker präsentiert von" (Logo lokal unter /generated/sponsors). */
   livePartner?: { name: string; logoUrl?: string; url?: string }
+  /** v19-S: Ansprechpartner über dem Formular (web_partner_kontakt()). */
+  ansprechpartner?: PartnerKontakt
 }
 
 /** Textüberschreibung eines Abschnitts (nur Textfelder; id ordnet zu). */

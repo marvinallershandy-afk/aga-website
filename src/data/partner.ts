@@ -38,6 +38,9 @@ export const MEDIADATEN: PartnerMediadaten = ov?.partner?.mediadaten ?? {}
  *  Follower-Zahl gepflegt ist. Angezeigt als „630+" — Admin-Werte haben Vorrang. */
 export const REICHWEITE_FALLBACK = { instagramFollower: 630, stand: '2026-10-01' } as const
 export const LIVE_PARTNER = ov?.partner?.livePartner ?? null
+/** v19-S: Ansprechpartner über dem /partner-Formular. null = kein Block
+ *  (nicht vorbefüllt — Marvin pflegt ihn im Admin unter Partner → Zahlen). */
+export const ANSPRECHPARTNER = ov?.partner?.ansprechpartner ?? null
 
 /** Alle aktiven Sponsoren mit Stufe (fehlend = 'partner'). Hauptpartner zuerst. */
 const RANG: Record<SponsorStufe, number> = { hauptpartner: 0, partner: 1, unterstuetzer: 2 }

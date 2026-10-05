@@ -35,8 +35,14 @@ em { font-style: normal; }
   position: sticky; top: 0; z-index: 10;
   display: flex; align-items: center; gap: var(--s-3);
   margin: 0 calc(-1 * var(--s-4)); padding: calc(var(--s-3) + env(safe-area-inset-top)) var(--s-4) var(--s-3);
-  background: rgba(11, 10, 11, .96);
-  border-bottom: var(--border);
+  background: transparent;
+  border-bottom: 1px solid transparent;
+  transition: background var(--d-1) var(--ease), border-color var(--d-1) var(--ease);
+}
+/* v19-S: ab Scroll komplett deckend (keine Geisterschrift) */
+.pt-top.is-scrolled {
+  background: var(--c-black, #0b0a0b);
+  border-bottom-color: var(--c-line, rgba(255, 255, 255, 0.12));
 }
 .pt-brand { display: flex; align-items: center; gap: var(--s-3); text-decoration: none; min-width: 0; }
 .pt-brand img { width: 30px; height: auto; }
@@ -77,6 +83,28 @@ em { font-style: normal; }
 .pt-h2--klein { font-size: var(--t-d3); }
 .pt-h3 { font-size: var(--t-label); font-weight: 700; letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--c-text-3); margin: var(--s-5) 0 var(--s-3); }
 .pt-lead { margin-top: var(--s-4); max-width: 38rem; font-size: var(--t-lead); color: var(--c-text-2); }
+/* v19-S: Mediadaten-Einzeiler im Hero (statt leerer „Die Zahlen"-Sektion) */
+.pt-hero__zahl { margin-top: var(--s-4); font-size: var(--t-body); color: var(--c-text-2); }
+.pt-hero__zahl b { font-family: var(--f-display); font-weight: 400; font-size: 1.5rem; letter-spacing: .02em; color: var(--c-white); margin-right: 6px; }
+
+/* v19-S: Ansprechpartner über dem Formular */
+.pt-kontakt {
+  display: flex; align-items: center; gap: var(--s-4);
+  margin: 0 0 var(--s-5); padding: var(--s-4);
+  background: var(--c-ink); border: var(--border); border-radius: var(--r-l);
+}
+.pt-kontakt__foto { flex: none; width: 72px; height: 72px; border-radius: 50%; object-fit: cover; }
+.pt-kontakt__foto--leer {
+  display: grid; place-items: center; background: var(--c-ink-2); color: var(--c-white);
+  font-family: var(--f-display); font-weight: 400; font-size: 1.6rem; letter-spacing: .04em;
+}
+.pt-kontakt__txt { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.pt-kontakt__label { font-size: var(--t-label); font-weight: 700; letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--c-red); }
+.pt-kontakt__name { font-family: var(--f-display); font-weight: 400; font-size: 1.5rem; letter-spacing: .02em; color: var(--c-white); }
+.pt-kontakt__rolle { font-size: var(--t-small); color: var(--c-text-2); }
+.pt-kontakt__sub { font-size: var(--t-small); color: var(--c-text-3); }
+.pt-kontakt__tel { margin-top: 2px; font-weight: 700; color: var(--c-white); text-decoration: none; }
+.pt-kontakt__tel:hover { color: var(--c-red); }
 .pt-lead--sm { margin: 0 0 var(--s-4); font-size: var(--t-body); }
 .pt-stand { margin-top: var(--s-4); font-size: var(--t-small); color: var(--c-text-3); }
 
