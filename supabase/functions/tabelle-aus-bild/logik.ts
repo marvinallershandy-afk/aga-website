@@ -213,6 +213,9 @@ export function baueNutzerText(anzahlBilder: number): string {
     : 'Hier ist ein Screenshot einer Ligatabelle. Lies sie komplett ab.'
 }
 
+/** Pflicht-Zusatz: Ergebnis IMMER über das Werkzeug melden. */
+const WERKZEUG_HINWEIS = ` Melde das Ergebnis ausschließlich über das Werkzeug „${TOOL_NAME}“ — kein Fließtext.`
+
 /** Body für POST https://api.anthropic.com/v1/messages */
 export function baueAnfrage(bilder: Bild[], modell: string = MODELL) {
   return {
@@ -220,7 +223,10 @@ export function baueAnfrage(bilder: Bild[], modell: string = MODELL) {
     max_tokens: MAX_TOKENS,
     system: baueSystemPrompt(),
     tools: [TOOL_SCHEMA],
-    tool_choice: { type: 'tool', name: TOOL_NAME },
+    // Die 5er-Modelle erlauben kein erzwungenes tool_choice ("tool"/"any") —
+    // live getestet 05.10.2026, HTTP 400. "auto" + klare Anweisung im
+    // System-Prompt und im Nutzertext; leseToolAntwort fängt Text-JSON ab.
+    tool_choice: { type: 'auto' },
     messages: [
       {
         role: 'user',
@@ -229,7 +235,7 @@ export function baueAnfrage(bilder: Bild[], modell: string = MODELL) {
             type: 'image',
             source: { type: 'base64', media_type: b.mediaType, data: b.data },
           })),
-          { type: 'text', text: baueNutzerText(bilder.length) },
+          { type: 'text', text: baueNutzerText(bilder.length) + WERKZEUG_HINWEIS },
         ],
       },
     ],
@@ -280,6 +286,20 @@ export function leseToolAntwort(api: unknown): RohErgebnis {
     (c) => (c as { type?: unknown }).type === 'tool_use' && (c as { name?: unknown }).name === TOOL_NAME,
   ) as { input?: unknown } | undefined
   if (!block || typeof block.input !== 'object' || block.input === null) {
+    // Fallback: Modell hat (trotz Anweisung) JSON als Text geliefert
+    const text = content
+      .filter((c) => (c as { type?: unknown }).type === 'text')
+      .map((c) => String((c as { text?: unknown }).text ?? ''))
+      .join('\n')
+    const m = text.match(/\{[\s\S]*\}/)
+    if (m) {
+      try {
+        const parsed = JSON.parse(m[0]) as unknown
+        if (parsed && typeof parsed === 'object') return parsed as RohErgebnis
+      } catch {
+        /* weiter zur Fehlermeldung */
+      }
+    }
     if (a.stop_reason === 'max_tokens') {
       throw new AuslesenFehler('Die Tabelle war zu lang für einen Durchgang. Bitte in zwei Screenshots aufteilen.', 422)
     }
