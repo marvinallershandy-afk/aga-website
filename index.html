@@ -82,6 +82,8 @@
     <!-- v16-K: Karten-Shell (Poster + Marker) ist im vorgerenderten HTML —
          ihr CSS muss VOR dem JS da sein. Strikt auf .kmap*/.kpanel* begrenzt,
          dem Admin (gleiche index.html) also egal. -->
+    <!-- v17-D: Designsystem-Tokens (docs/DESIGN.md) — vor allem anderen CSS -->
+    <link rel="stylesheet" href="/src/theme/design.css" />
     <link rel="stylesheet" href="/src/map/map.css" />
     <!-- /admin und /live (Rückfallebene) zeigen die vorgerenderte Karte nicht -->
     <script>/^\/(admin|live)(\/|\.html|$)/.test(location.pathname)&&document.documentElement.classList.add('no-map')</script>

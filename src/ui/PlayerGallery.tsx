@@ -7,6 +7,7 @@ import { useStore } from '../store/useStore'
 import { HoloCard } from './HoloCard'
 import { StaffCard } from './StaffCard'
 import { shareStory } from './storyShare'
+import { X, ArrowUpRight } from 'lucide-react'
 
 // ─────────────────────────────────────────────────────────────
 // „Alle Spieler anzeigen" — Vollbild-Overlay über den ganzen Kader,
@@ -110,7 +111,9 @@ export function PlayerGallery({ open, onClose }: { open: boolean; onClose: () =>
                 <span className="pgal__kicker">Der ganze Kader · 1. Herren</span>
                 <h3 className="pgal__title" id="pgal-title">Alle Spieler</h3>
               </div>
-              <button className="pgal__close" onClick={onClose} aria-label="Schließen">×</button>
+              <button className="pgal__close" onClick={onClose} aria-label="Schließen">
+                <X size={18} strokeWidth={1.5} aria-hidden="true" />
+              </button>
             </header>
 
             <div className="pgal__scroll">
@@ -128,7 +131,8 @@ export function PlayerGallery({ open, onClose }: { open: boolean; onClose: () =>
                         <div key={p.id} className="pgal__cardwrap">
                           <HoloCard player={p} onClick={(pl) => setSelected(pl)} />
                           <button className="pgal__share" onClick={() => void shareStory(p)}>
-                            Story teilen ↗
+                            Story teilen
+                            <ArrowUpRight size={12} strokeWidth={1.5} aria-hidden="true" />
                           </button>
                         </div>
                       ))}

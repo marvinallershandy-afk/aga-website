@@ -7,7 +7,7 @@ export function ScrollHint() {
   return (
     <div className="scrollhint" style={style}>
       <div className="scrollhint__mouse" />
-      <span>Anstoß per Scroll</span>
+      <span>Weiter scrollen</span>
     </div>
   )
 }

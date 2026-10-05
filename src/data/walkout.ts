@@ -8,6 +8,12 @@ export interface WalkoutAsset {
   slug: string
 }
 
+/** v17-D: Walkout-Videos in Karten/Hover/Modal zeigen? Aus, bis die
+ *  Greenscreen-Aufnahmen da sind (Dolly-Clips zu unscharf) — dann zeigen
+ *  die Karten die scharfen Foto-Freisteller. Code + Assets bleiben.
+ *  (Die 3D-Aufstellung auf /live nutzt den Atlas unabhängig davon.) */
+export const WALKOUT_ENABLED = false
+
 /** Cache-Buster der aktuellen Asset-Generation. */
 export const WALKOUT_VERSION = 'muv5a9yx'
 export const WALKOUT_BASE = '/players/walkout/'

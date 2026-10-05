@@ -246,3 +246,16 @@ export const ALBUM_LINK = {
   kurz: 'Album',
   beschreibung: 'Am Platz einchecken, Karten-Packs öffnen, Album füllen — Freibier beim 5. Heimspiel.',
 } as const
+
+// ── v17-D: Offizielle Vereinsfotografin ──────────────────────
+// PLATZHALTER: Marvin bestätigt Handle (aus Neles Unterlagen:
+// instagram.com/pictureby.nele). Steuert alle „Fotos: picture by Nele"-Credits.
+export const NELE_INSTAGRAM = 'pictureby.nele'
+export const NELE = {
+  name: 'picture by Nele',
+  rolle: 'Offizielle Vereinsfotografin',
+  instagram: '@' + NELE_INSTAGRAM,
+  instagramUrl: `https://instagram.com/${NELE_INSTAGRAM}`,
+  /** public/brand — aus „Nele Logo Transparent.png" (6400 px → 480 px WebP) */
+  logo: '/brand/picture-by-nele.webp',
+} as const

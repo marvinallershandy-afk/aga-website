@@ -1,0 +1,137 @@
+/* ═══════════════════════════════════════════════════════════════
+   v17-D · SVA-Designsystem — verbindlich für alle öffentlichen Seiten
+   (Karte + Panels, Rundgang, /live, /partner, /galerie, Rechtsseiten).
+   Doku + Regeln: docs/DESIGN.md
+
+   Leitbild: große echte Fotos, große Typo, viel Ruhe, wenige Farben.
+   Fotografie trägt die Seite — die UI tritt zurück.
+
+   Diese Datei ist klein und abhängigkeitsfrei: sie wird render-blockierend
+   aus jeder HTML-Seite geladen (vor map.css / partner.css / live.css) und
+   definiert NUR Tokens + wenige Grundbausteine (.ds-*). Seiten-CSS nutzt
+   ausschließlich diese Tokens.
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Farbe: Rot / Schwarz / Weiß + EIN Akzent (Gold, sparsam) ── */
+  --c-red: #E91D29;          /* SVA-Rot (CI) — Handlung, Live, Markierung */
+  --c-red-press: #C3141F;    /* gedrückt / Hover auf Rot */
+  --c-black: #0B0A0B;        /* Seitengrund */
+  --c-ink: #141213;          /* Flächen (Panels, Karten) */
+  --c-ink-2: #1C1A1B;        /* angehobene Fläche, Eingabefelder */
+  --c-white: #F4F2EF;        /* Text (warmes Weiß, kein Reinweiß) */
+  --c-text-2: rgba(244, 242, 239, .70);  /* Fließtext zweiter Ordnung */
+  --c-text-3: rgba(244, 242, 239, .48);  /* Metadaten, Labels */
+  --c-line: rgba(244, 242, 239, .12);    /* Haarlinie */
+  --c-line-strong: rgba(244, 242, 239, .28);
+  --c-accent: #E8C15A;       /* Gold — NUR Rückennummer, Kapitän, Meister */
+  --c-scrim: rgba(11, 10, 11, .72);
+
+  /* ── Schrift ── */
+  --f-display: "Anton", "Arial Narrow", system-ui, sans-serif;
+  --f-body: "Archivo Variable", "Archivo", system-ui, -apple-system, sans-serif;
+  /* Display (Anton, immer Versalien) */
+  --t-d1: clamp(3.25rem, 8.5vw, 7.5rem);   /* Hero */
+  --t-d2: clamp(2.5rem, 5.2vw, 4.5rem);    /* Seiten-/Sektionstitel */
+  --t-d3: clamp(1.75rem, 3vw, 2.5rem);     /* Panel-Titel, Blocktitel */
+  --t-d4: 1.375rem;                         /* Kartentitel, Marker */
+  /* Text (Archivo) */
+  --t-lead: clamp(1.0625rem, 1.3vw, 1.25rem);
+  --t-body: 1rem;
+  --t-small: .875rem;
+  --t-label: .75rem;    /* Versalien, Laufweite --ls-label */
+  --t-micro: .6875rem;
+  --lh-tight: 1;
+  --lh-body: 1.55;
+  --ls-display: .01em;
+  --ls-label: .14em;
+
+  /* ── Abstand: 4/8-Raster ── */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+  --s-8: 64px;
+  --s-9: 96px;
+  --gutter: clamp(16px, 4vw, 48px);
+
+  /* ── Form: genau ZWEI Radien (+ Kreis für Avatare/Icon-Knöpfe) ── */
+  --r-s: 4px;    /* Knöpfe, Felder, Chips, kleine Bilder */
+  --r-l: 12px;   /* Panels, Sheets, große Medien */
+
+  /* ── Linien statt Leuchtränder; EIN Schatten für schwebende Ebenen ── */
+  --border: 1px solid var(--c-line);
+  --shadow-float: 0 24px 48px rgba(0, 0, 0, .45);
+
+  /* ── Bewegung: 200–400 ms, ease-out, nichts wackelt ohne Grund ── */
+  --ease: cubic-bezier(.22, 1, .36, 1);
+  --d-1: 200ms;
+  --d-2: 300ms;
+  --d-3: 400ms;
+
+  /* ── Icons: lucide, dünne Linie ── */
+  --icon-stroke: 1.5;
+}
+
+/* ── Grundbausteine ─────────────────────────────────────────── */
+
+/* Label / Kicker: Archivo, Versalien, gesperrt. Optional mit kurzer Linie. */
+.ds-label {
+  font-family: var(--f-body);
+  font-size: var(--t-label);
+  font-weight: 700;
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--c-text-3);
+}
+.ds-label--red { color: var(--c-red); }
+
+.ds-display {
+  font-family: var(--f-display);
+  font-weight: 400;
+  line-height: .95;
+  letter-spacing: var(--ls-display);
+  text-transform: uppercase;
+}
+
+/* Knopf: rechteckig, ruhig. Primär = Rot, Sekundär = Linie, Text = Pfeil. */
+.ds-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  min-height: 48px;
+  padding: 0 var(--s-5);
+  border: 1px solid transparent;
+  border-radius: var(--r-s);
+  font: 700 .8125rem/1 var(--f-body);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--c-white);
+  background: transparent;
+  cursor: pointer;
+  transition: background-color var(--d-1) var(--ease), border-color var(--d-1) var(--ease), color var(--d-1) var(--ease);
+}
+.ds-btn--primary { background: var(--c-red); }
+.ds-btn--primary:hover { background: var(--c-red-press); }
+.ds-btn--line { border-color: var(--c-line-strong); }
+.ds-btn--line:hover { border-color: var(--c-white); }
+.ds-btn:focus-visible { outline: 2px solid var(--c-white); outline-offset: 2px; }
+.ds-btn svg { flex: none; }
+
+/* Fotonachweis */
+.ds-credit {
+  font-size: var(--t-micro);
+  letter-spacing: .06em;
+  color: var(--c-text-3);
+}
+.ds-credit a { color: var(--c-text-2); text-decoration: none; border-bottom: 1px solid var(--c-line-strong); }
+.ds-credit a:hover { color: var(--c-white); border-color: var(--c-white); }
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --d-1: 0ms; --d-2: 0ms; --d-3: 0ms; }
+}

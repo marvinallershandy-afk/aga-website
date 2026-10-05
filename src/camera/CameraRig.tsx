@@ -23,6 +23,7 @@ import {
   type Shot,
 } from './mapCamera'
 import { mapWorld } from '../map/mapWorld'
+import { INTRO_S, endIntro } from '../map/intro'
 import { mapPanelRect } from '../map/layout'
 import type { PlaceId } from '../map/places'
 
@@ -95,7 +96,11 @@ function partyInsidePose(pp: number, aspect: number, t: number, pos: THREE.Vecto
 const FLIGHT_S = 1.2 // Marker → Ort
 const RIDE_S = 2.8 // Tür-Durchfahrt in den Partyraum
 const CUT_S = 0.22 // Schleier-Schnitt beim Verlassen des Raums
-type Key = 'tour' | 'overview' | PlaceId
+type Key = 'tour' | 'overview' | 'intro' | PlaceId
+// v17-D Intro: Hero (g 0) → über den Platz (g 1.5) in INTRO_A s, dann
+// in die Karten-Totale (bis INTRO_S).
+const INTRO_G = 1.5
+const INTRO_A = 5
 
 interface FrameState {
   size: { width: number; height: number }
@@ -136,6 +141,8 @@ interface Rig {
   cut: number
   rect: { x: number; y: number; w: number; h: number }
   shot: Shot
+  /** v17-D: verstrichene Intro-Zeit (s). */
+  introT: number
 }
 
 function createRig(camera: THREE.PerspectiveCamera): Rig {
@@ -168,6 +175,7 @@ function createRig(camera: THREE.PerspectiveCamera): Rig {
     cut: -1,
     rect: { x: 0, y: 0, w: 1, h: 1 },
     shot: { pos: new THREE.Vector3(), look: new THREE.Vector3(), fov: 46 },
+    introT: 0,
   }
 }
 
@@ -314,8 +322,8 @@ function beginFlight(r: Rig, prev: Key | '', next: Key) {
   r.ovFrom = mapWorld.overview
   r.ovTo = next === 'overview' ? 1 : 0
   r.teamFrom = teamState.w
-  const nextSpec = next !== 'overview' && next !== 'tour' ? PLACE_SPECS[next] : null
-  const prevSpec = prev && prev !== 'overview' && prev !== 'tour' ? PLACE_SPECS[prev] : null
+  const nextSpec = next !== 'overview' && next !== 'tour' && next !== 'intro' ? PLACE_SPECS[next] : null
+  const prevSpec = prev && prev !== 'overview' && prev !== 'tour' && prev !== 'intro' ? PLACE_SPECS[prev] : null
   r.teamTo = nextSpec?.team ? 1 : 0
   if (nextSpec) {
     r.uA = nextSpec.uFrom ?? nextSpec.u
@@ -413,7 +421,7 @@ function mapFrame(r: Rig, state: FrameState, delta: number, key: Key) {
     shot.pos.copy(o.pos)
     shot.look.copy(o.look)
     shot.fov = coverFov(cls, ra)
-  } else if (key !== 'tour') {
+  } else if (key !== 'tour' && key !== 'intro') {
     placeShot(key, ra, cls, shot)
     if (PLACE_SPECS[key].sponsor) {
       const targetBx = sponsorBoardX(useStore.getState().sponsorFocus)
@@ -476,6 +484,60 @@ function mapFrame(r: Rig, state: FrameState, delta: number, key: Key) {
   applyLens(r, W, H, ra, THREE.MathUtils.lerp(r.fromFov, shot.fov, e))
 }
 
+// ── v17-D: Intro-Fahrt (erster Besuch) ──────────────────────
+// Wartet im Hero-Bild (Flutlicht noch aus), bis die Live-3D steht; dann
+// über den Anstoß-Dive (Flutlicht geht an) über den Platz und weich hinauf
+// in die Karten-Totale (Poster-deckungsgleich → Marker landen exakt).
+function introFrame(r: Rig, state: FrameState, delta: number, play: boolean) {
+  const camera = r.camera
+  const W = state.size.width
+  const H = state.size.height
+  const aspect = W / H
+  r.rect.x = 0
+  r.rect.y = 0
+  r.rect.w = W
+  r.rect.h = H
+  if (play) r.introT = Math.min(INTRO_S, r.introT + delta)
+  const t = r.introT
+  teamState.s = 0
+  teamState.w = 0
+  const g = easeInOut(Math.min(1, t / INTRO_A)) * INTRO_G
+  sampleFlightG(g, r.pos, r.look)
+  // Portrait wie im Rundgang: vom Blickpunkt zurückziehen
+  if (aspect < 1) {
+    const k = Math.min(1.75, 1 + (1 - aspect) * 1.1)
+    r.pos.sub(r.look).multiplyScalar(k).add(r.look)
+    r.pos.y += (1 - aspect) * 0.5
+  }
+  let fov = 46
+  let u = gToU(g)
+  const b = easeInOut(THREE.MathUtils.clamp((t - INTRO_A) / (INTRO_S - INTRO_A), 0, 1))
+  if (b > 0) {
+    const cls = mapClass(aspect)
+    const o = OVERVIEW[cls]
+    r.pos.lerp(o.pos, b)
+    r.look.lerp(o.look, b)
+    fov = THREE.MathUtils.lerp(46, coverFov(cls, aspect), b)
+    u = THREE.MathUtils.lerp(u, U_OVERVIEW, b)
+  }
+  cameraState.u = u
+  mapWorld.overview = b
+  mapWorld.tilt = b
+  mapWorld.fansIdle = b
+  setNearFor(r, 0)
+  camera.position.copy(r.pos)
+  r.currentLook.copy(r.look)
+  camera.lookAt(r.currentLook)
+  applyLens(r, W, H, aspect, fov)
+  if (play && t >= INTRO_S) {
+    // gelandet: ab jetzt ist das die Totale (kein zweiter Flug)
+    r.key = 'overview'
+    r.t = 1
+    r.ovFrom = r.ovTo = 1
+    endIntro()
+  }
+}
+
 function rigFrame(r: Rig, state: FrameState, delta: number) {
   const camera = r.camera
   const st = useStore.getState()
@@ -483,7 +545,8 @@ function rigFrame(r: Rig, state: FrameState, delta: number) {
   const H = state.size.height
   // Deep-Link: erst in der (Poster-gleichen) Totale stehen, bis die Live-
   // Karte übernommen hat — dann fliegt die Kamera zum Ort.
-  const key: Key = st.mode === 'tour' ? 'tour' : st.place && st.stageLive ? st.place : 'overview'
+  const key: Key =
+    st.mode === 'tour' ? 'tour' : st.intro !== 'off' ? 'intro' : st.place && st.stageLive ? st.place : 'overview'
 
   // Erster Frame: in der Totale (Poster-deckungsgleich) bzw. im
   // Rundgang direkt starten.
@@ -492,6 +555,10 @@ function rigFrame(r: Rig, state: FrameState, delta: number) {
     if (key === 'tour') {
       r.key = 'tour'
       r.t = 1
+    } else if (key === 'intro') {
+      r.key = 'intro'
+      r.t = 1
+      r.introT = 0
     } else {
       const o = OVERVIEW[mapClass(W / H)]
       camera.position.copy(o.pos)
@@ -523,6 +590,10 @@ function rigFrame(r: Rig, state: FrameState, delta: number) {
     r.key = key
   }
 
+  if (key === 'intro') {
+    introFrame(r, state, delta, st.intro === 'play')
+    return
+  }
   if (key !== 'tour') {
     mapFrame(r, state, delta, key)
     return

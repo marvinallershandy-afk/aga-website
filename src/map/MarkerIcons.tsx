@@ -2,6 +2,7 @@ import { Timer, Goal, Shirt, Megaphone, Music, Handshake, Car } from 'lucide-rea
 import type { PlaceId } from './places'
 
 // v16-K: Pin-Icons der Karte (lucide, tree-shaken, currentColor).
+// v17-D: Designsystem — dünne Linien-Icons (Strichstärke 1.5).
 const ICONS: Record<PlaceId, typeof Timer> = {
   spieltag: Timer,
   training: Goal,
@@ -14,5 +15,5 @@ const ICONS: Record<PlaceId, typeof Timer> = {
 
 export function PlaceIcon({ id, size = 20 }: { id: PlaceId; size?: number }) {
   const I = ICONS[id]
-  return <I size={size} strokeWidth={2.2} aria-hidden="true" />
+  return <I size={size} strokeWidth={1.5} aria-hidden="true" />
 }

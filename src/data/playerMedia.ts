@@ -19,7 +19,7 @@
 // ausschließlich in diese Datei. Doku: docs/GREENSCREEN.md („Schnittstelle“).
 // ─────────────────────────────────────────────────────────────
 import { GREENSCREEN, GREENSCREEN_BASE, GREENSCREEN_SIZE, GREENSCREEN_VERSION } from './greenscreen'
-import { WALKOUT_SIZE, walkoutSources } from './walkout'
+import { WALKOUT_ENABLED, WALKOUT_SIZE, walkoutSources } from './walkout'
 
 export interface VideoSources {
   /** VP9 mit Alpha (Chrome/Firefox/Edge) */
@@ -66,7 +66,8 @@ function gsVideo(slug: string, name: string): VideoSources {
 
 export function playerMedia(id: string, fallback?: Fallback | null): PlayerMedia {
   const gs = GREENSCREEN[id]
-  const walk = walkoutSources(id)
+  // v17-D: Dolly-Walkouts sind aus (zu unscharf), bis Greenscreen-Loops da sind
+  const walk = WALKOUT_ENABLED ? walkoutSources(id) : null
   const base = gs ? `${GREENSCREEN_BASE}${gs.slug}/` : ''
   const figure = gs?.card ? `${base}card.webp${v}` : fallback?.cutoutUrl ?? null
   const bild = figure ?? fallback?.photoUrl ?? null

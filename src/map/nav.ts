@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useStore, type ViewMode } from '../store/useStore'
 import { placeFromSlug, TOUR_SLUGS, type PlaceId } from './places'
+import { wantIntro } from './intro'
 
 // ─────────────────────────────────────────────────────────────
 // v16-K: Deep-Links + Browser-Zurück für die Karte.
@@ -13,7 +14,7 @@ import { placeFromSlug, TOUR_SLUGS, type PlaceId } from './places'
 // ─────────────────────────────────────────────────────────────
 
 const MARK = { sva: 1 }
-const RESERVED_PATHS = ['admin', 'live', 'partner', 'impressum', 'datenschutz']
+const RESERVED_PATHS = ['admin', 'live', 'partner', 'impressum', 'datenschutz', 'album', 'galerie']
 
 function parse(): { mode: ViewMode; place: PlaceId | null } {
   const hash = window.location.hash.replace(/^#/, '')
@@ -87,6 +88,8 @@ export function initNavFromUrl() {
     window.history.replaceState(null, '', canon)
   }
   useStore.getState().setNav(first)
+  // v17-D: erster Besuch auf der Startseite (kein Deep-Link) → Intro-Fahrt
+  if (first.mode === 'map' && !first.place && wantIntro()) useStore.getState().setIntro('wait')
 }
 
 /** Einmal im App-Root: Zurück/Vor/Hash-Edits. */

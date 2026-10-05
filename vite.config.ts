@@ -16,6 +16,8 @@ export default defineConfig({
         partner: fileURLToPath(new URL('./partner.html', import.meta.url)),
         // v17-A: Sammelalbum /album (Fan-Login, QR-Check-in, kein three.js)
         album: fileURLToPath(new URL('./album.html', import.meta.url)),
+        // v17-D: Galerien „Spieltag in Bildern“ /galerie (kein three.js)
+        galerie: fileURLToPath(new URL('./galerie.html', import.meta.url)),
       },
     },
   },

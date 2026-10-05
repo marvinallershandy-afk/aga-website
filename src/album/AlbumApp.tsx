@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { UserRound } from 'lucide-react'
 import type { Session } from '@supabase/supabase-js'
 import {
   AlbumFehler,
@@ -346,10 +347,8 @@ export function AlbumApp() {
     <div className={`al${zeigeHeft ? ' is-offen' : ''}`}>
       <header className="al-top">
         <a className="al-brand" href="/" aria-label="Zur Vereinsseite">
-          <img src="/brand/wappen.png" alt="" width="34" height="34" />
-          <span className="al-brand__wort">
-            SV<b>A</b>
-          </span>
+          <img src="/brand/aga-logo.png" alt="" width="28" height="33" />
+          <span className="al-brand__wort">SV Agathenburg-Dollern</span>
         </a>
         <span className="al-top__tag">Stickerheft</span>
         {zeigeHeft && (
@@ -359,10 +358,7 @@ export function AlbumApp() {
         )}
         {mein?.profil && (
           <button type="button" className="al-iconbtn" onClick={() => setKonto(true)} aria-label="Konto">
-            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-              <circle cx="12" cy="8.5" r="4" fill="none" stroke="currentColor" strokeWidth="2" />
-              <path d="M4 20.5c1.5-4 4.4-6 8-6s6.5 2 8 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
+            <UserRound size={20} strokeWidth={1.5} aria-hidden="true" />
           </button>
         )}
       </header>
@@ -388,8 +384,6 @@ export function AlbumApp() {
           />
         ) : (
           <section className="al-start" aria-label="Das offizielle Stickerheft">
-            <img className="al-deko al-deko--ol" src="/album/deko-oben-links.webp" alt="" aria-hidden="true" />
-            <img className="al-deko al-deko--or" src="/album/deko-oben-rechts.webp" alt="" aria-hidden="true" />
             <button
               type="button"
               className={`al-cover${aufschlagen ? ' is-auf' : ''}`}
@@ -398,7 +392,7 @@ export function AlbumApp() {
               disabled={laedt}
             >
               <span className="al-cover__seiten" aria-hidden="true" />
-              <img className="al-cover__bild" src="/album/cover.webp" alt="" width="880" height="1150" fetchPriority="high" />
+              <CoverFront saison={katalog?.saison} />
               {bereit && katalog && (
                 <span className="al-cover__aufkleber" aria-hidden="true">
                   <b>
@@ -409,7 +403,6 @@ export function AlbumApp() {
               )}
             </button>
             {unterCover}
-            <img className="al-deko al-deko--unten" src="/album/deko-unten.webp" alt="" aria-hidden="true" loading="lazy" />
           </section>
         )}
       </main>
@@ -523,5 +516,29 @@ function CheckinBanner({ ci, onNochmal, onWeg }: { ci: CheckinStatus; onNochmal:
         </button>
       )}
     </div>
+  )
+}
+
+/** v17-D: Cover als gestaltete Vorderseite (statt Foto eines Papierhefts):
+ *  dunkle Folie, drei scharfe Freisteller, große Typo, Rot als Band. */
+const COVER_SPIELER = ['malte-pils', 'tobias-helck', 'marc-kevin-biedermann']
+function CoverFront({ saison }: { saison?: string }) {
+  return (
+    <span className="al-cover__bild" aria-hidden="true">
+      <span className="al-cover__kopf">
+        <img src="/brand/aga-logo.png" alt="" width="44" height="52" />
+        <span>
+          Das offizielle
+          <b>Stickerheft</b>
+        </span>
+      </span>
+      <span className="al-cover__saison">Saison {saison ?? '2026/27'}</span>
+      <span className="al-cover__team">
+        {COVER_SPIELER.map((slug) => (
+          <img key={slug} src={`/players/cutout/hd/${slug}.webp`} alt="" draggable={false} />
+        ))}
+      </span>
+      <span className="al-cover__band">SV Agathenburg-Dollern · Kreisliga Stade</span>
+    </span>
   )
 }

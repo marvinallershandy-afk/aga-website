@@ -12,12 +12,22 @@ export interface PerfStats {
  *  Scroll-Rundgang ('tour') ist die Option dahinter. */
 export type ViewMode = 'map' | 'tour'
 
+/** v17-D: Intro-Kamerafahrt beim ersten Besuch.
+ *  'off'  = keine (Wiederkehrer, Deep-Link, reduced-motion, abgebrochen)
+ *  'wait' = gewünscht, Kamera steht im Hero-Bild und wartet auf die Live-3D
+ *  'play' = Fahrt läuft (~8 s), endet in der Karten-Totale */
+export type IntroState = 'off' | 'wait' | 'play'
+
 interface AppState {
   /** v16-K: Karte (Hub) oder Rundgang (Scroll-Onepager). */
   mode: ViewMode
   /** v16-K: geöffneter Ort auf der Karte (Panel offen, Kamera dort) oder null. */
   place: PlaceId | null
   setNav: (nav: { mode?: ViewMode; place?: PlaceId | null }) => void
+
+  /** v17-D: Intro-Fahrt (erster Besuch). */
+  intro: IntroState
+  setIntro: (v: IntroState) => void
 
   /** 0..1 normalisierter Scroll-Fortschritt über die ganze Seite (Ziel-Wert). */
   scrollProgress: number
@@ -139,6 +149,9 @@ export const useStore = create<AppState>((set) => ({
       const place = mode === 'tour' ? null : nav.place !== undefined ? nav.place : s.place
       return mode === s.mode && place === s.place ? s : { mode, place }
     }),
+
+  intro: 'off',
+  setIntro: (v) => set((s) => (s.intro === v ? s : { intro: v })),
 
   scrollProgress: 0,
   setScrollProgress: (p) => set({ scrollProgress: p }),

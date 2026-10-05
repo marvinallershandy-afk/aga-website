@@ -35,7 +35,7 @@ if (!isAdmin && authReturn) {
 } else {
   Promise.all([
     import('./index.css'),
-    import('./ui/cards.css'),
+    import('./ui/cards.css'), // v17-D: Designsystem-Schicht steht am Ende von cards.css
     import('react'),
     import('react-dom/client'),
     import('./App'),

@@ -12,6 +12,9 @@ import {
   type SponsorStufe,
 } from '../data/partner'
 import { CONTACT } from '../data/content'
+import { NELE } from '../data/club'
+import { GALERIEN, coverOf } from '../data/galerie'
+import { ArrowRight, ArrowUpRight, Check } from 'lucide-react'
 import { Anfrage } from './Anfrage'
 
 // ─────────────────────────────────────────────────────────────
@@ -34,10 +37,8 @@ export function PartnerApp() {
     <div className="pt">
       <header className="pt-top">
         <a className="pt-brand" href="/" aria-label="Zur Vereinsseite">
-          <img src="/brand/wappen.png" alt="" width="34" height="34" />
-          <span className="pt-brand__wort">
-            SV<b>A</b>
-          </span>
+          <img src="/brand/aga-logo.png" alt="" width="30" height="35" />
+          <span className="pt-brand__wort">SV Agathenburg-Dollern</span>
         </a>
         <span className="pt-top__tag">Partner</span>
         <a className="pt-btn pt-btn--sm" href="#anfrage">
@@ -54,7 +55,7 @@ export function PartnerApp() {
         <section id="anfrage" className="pt-sec pt-anfrage" aria-labelledby="h-anfrage">
           <p className="pt-kicker">Anfrage · 1 Minute</p>
           <h2 className="pt-h2" id="h-anfrage">
-            Lass uns <em>reden</em>
+            Lass uns reden
           </h2>
           <p className="pt-lead pt-lead--sm">Kein Vertrag, keine Verpflichtung. Du sagst uns, was dich interessiert — wir melden uns persönlich.</p>
           <Anfrage interesse={interesse} onInteresse={setInteresse} />
@@ -73,27 +74,39 @@ export function PartnerApp() {
 }
 
 // ── Hero ────────────────────────────────────────────────────
+// v17-D: großes echtes Foto (Galerie der Vereinsfotografin) statt
+// Streifen-Verlauf — Fotografie trägt.
+const HERO = (() => {
+  const g = GALERIEN[0]
+  const b = g ? g.bilder.find((x) => /siegerfoto/.test(x.src)) ?? coverOf(g) : null
+  return b
+})()
+
 function Hero() {
   return (
-    <section className="pt-hero" aria-labelledby="h-hero">
-      <p className="pt-kicker">Für Unternehmen aus der Region</p>
-      <h1 className="pt-h1" id="h-hero">
-        Werde Partner
-        <br />
-        des <em>SVA</em>
-      </h1>
-      <p className="pt-lead">
-        Meister der 1. Kreisklasse 2026, jetzt in der Kreisliga Stade — und auf Instagram so sichtbar wie nie. Der Verein wächst. Wachs mit: am
-        Platz, auf dem Trikot und in jeder Story.
-      </p>
-      <div className="pt-actions">
-        <a className="pt-btn" href="#pakete">
-          Pakete ansehen
-        </a>
-        <a className="pt-btn pt-btn--ghost" href="#anfrage">
-          Anfrage senden
-        </a>
+    <section className={`pt-hero${HERO ? ' has-foto' : ''}`} aria-labelledby="h-hero">
+      {HERO && <img className="pt-hero__foto" src={HERO.src} srcSet={`${HERO.preview} 800w, ${HERO.src} 2000w`} sizes="(min-width: 1120px) 1120px, 100vw" alt={HERO.alt} />}
+      <div className="pt-hero__text">
+        <p className="pt-kicker">Für Unternehmen aus der Region</p>
+        <h1 className="pt-h1" id="h-hero">
+          Werde Partner
+          <br />
+          des SVA
+        </h1>
+        <p className="pt-lead">
+          Meister der 1. Kreisklasse 2026, jetzt in der Kreisliga Stade — und auf Instagram so sichtbar wie nie. Der Verein wächst. Wachs mit: am
+          Platz, auf dem Trikot und in jeder Story.
+        </p>
+        <div className="pt-actions">
+          <a className="pt-btn" href="#pakete">
+            Pakete ansehen
+          </a>
+          <a className="pt-btn pt-btn--ghost" href="#anfrage">
+            Anfrage senden
+          </a>
+        </div>
       </div>
+      {HERO && <p className="pt-hero__credit">Foto: {NELE.name}</p>}
     </section>
   )
 }
@@ -117,7 +130,7 @@ function Zahlen() {
     <section id="zahlen" className="pt-sec" aria-labelledby="h-zahlen">
       <p className="pt-kicker">Mediadaten</p>
       <h2 className="pt-h2" id="h-zahlen">
-        Die <em>Zahlen</em>
+        Die Zahlen
       </h2>
       <ul className="pt-zahlen">
         {kacheln.map((k) => (
@@ -143,48 +156,56 @@ const STUFEN: SponsorStufe[] = ['hauptpartner', 'partner', 'unterstuetzer']
 
 function PartnerWand() {
   const alle = PARTNER_SPONSOREN
+  // v17-D: Nele steht als Medienpartnerin fest auf der Wand — bis sie im
+  // Admin als Sponsor eingetragen ist (Vorschlag: docs/PARTNER.md), danach
+  // nicht doppelt.
+  const neleImAdmin = alle.some((s) => /nele/i.test(s.name))
   return (
     <section id="partner-wand" className="pt-sec" aria-labelledby="h-wand">
       <p className="pt-kicker">Wer schon dabei ist</p>
       <h2 className="pt-h2" id="h-wand">
-        Die <em>Partner-Wand</em>
+        Die Partner-Wand
       </h2>
-      {alle.length === 0 ? (
-        <div className="pt-wand-leer">
-          <p className="pt-wand-leer__titel">Hier ist noch Platz für deinen Namen.</p>
-          <p>Die Partner-Wand der neuen Saison füllt sich gerade. Wer jetzt einsteigt, steht ganz vorn — am Platz, online und auf Instagram.</p>
-          <a className="pt-btn" href="#anfrage">
-            Erster Partner werden
+      <p className="pt-lead pt-lead--sm">
+        {alle.length ? 'Danke an alle, die den SVA möglich machen.' : 'Die Partner-Wand der neuen Saison füllt sich gerade — wer jetzt einsteigt, steht ganz vorn.'}
+      </p>
+      {!neleImAdmin && (
+        <div className="pt-stufe pt-stufe--medien">
+          <h3 className="pt-h3">{NELE.rolle}</h3>
+          <a className="pt-nele" href={NELE.instagramUrl} target="_blank" rel="noreferrer">
+            <img src={NELE.logo} alt="" width="96" height="77" />
+            <span>
+              <b>{NELE.name}</b>
+              <small>Alle Spieltagsfotos · {NELE.instagram}</small>
+            </span>
+            <ArrowUpRight size={18} strokeWidth={1.5} aria-hidden="true" />
           </a>
         </div>
-      ) : (
-        <>
-          <p className="pt-lead pt-lead--sm">Danke an alle, die den SVA möglich machen.</p>
-          {STUFEN.map((stufe) => {
-            const liste = alle.filter((s) => s.stufe === stufe)
-            if (!liste.length && stufe !== 'partner') return null
-            return (
-              <div key={stufe} className={`pt-stufe pt-stufe--${stufe}`}>
-                <h3 className="pt-h3">{STUFE_LABEL[stufe]}</h3>
-                <ul className="pt-logos">
-                  {liste.map((s) => (
-                    <li key={s.name}>
-                      <LogoKachel name={s.name} logoUrl={s.logoUrl} url={s.url} klein={stufe === 'unterstuetzer'} />
-                    </li>
-                  ))}
-                  {stufe === 'partner' && (
-                    <li>
-                      <a className="pt-logo pt-logo--frei" href="#anfrage">
-                        <span>Dein Logo?</span>
-                      </a>
-                    </li>
-                  )}
-                </ul>
-              </div>
-            )
-          })}
-        </>
       )}
+      {STUFEN.map((stufe) => {
+        const liste = alle.filter((s) => s.stufe === stufe)
+        if (!liste.length && stufe !== 'partner') return null
+        return (
+          <div key={stufe} className={`pt-stufe pt-stufe--${stufe}`}>
+            <h3 className="pt-h3">{STUFE_LABEL[stufe]}</h3>
+            <ul className="pt-logos">
+              {liste.map((s) => (
+                <li key={s.name}>
+                  <LogoKachel name={s.name} logoUrl={s.logoUrl} url={s.url} klein={stufe === 'unterstuetzer'} />
+                </li>
+              ))}
+              {stufe === 'partner' && (
+                <li>
+                  <a className="pt-logo pt-logo--frei" href="#anfrage">
+                    <span>Dein Logo</span>
+                    <ArrowRight size={16} strokeWidth={1.5} aria-hidden="true" />
+                  </a>
+                </li>
+              )}
+            </ul>
+          </div>
+        )
+      })}
     </section>
   )
 }
@@ -214,7 +235,7 @@ function Pakete({ onWaehle }: { onWaehle: (p: PartnerPaket) => void }) {
     <section id="pakete" className="pt-sec" aria-labelledby="h-pakete">
       <p className="pt-kicker">Sichtbarkeit · am Platz, online, auf Instagram</p>
       <h2 className="pt-h2" id="h-pakete">
-        Die <em>Pakete</em>
+        Die Pakete
       </h2>
       <ul className="pt-pakete">
         {PARTNER_PAKETE.map((p) => {
@@ -223,7 +244,7 @@ function Pakete({ onWaehle }: { onWaehle: (p: PartnerPaket) => void }) {
           const voll = p.frei != null && p.frei <= 0
           return (
             <li key={p.id} className={`pt-paket${p.hervorgehoben ? ' is-top' : ''}${voll ? ' is-voll' : ''}`}>
-              {p.hervorgehoben && <span className="pt-paket__band">Beliebt</span>}
+              {p.hervorgehoben && <span className="pt-paket__band">Am meisten gefragt</span>}
               <h3 className="pt-paket__name">{p.name}</h3>
               {p.beschreibung && <p className="pt-paket__text">{p.beschreibung}</p>}
               <p className="pt-paket__preis">{preisText(p)}</p>
@@ -250,11 +271,7 @@ function Pakete({ onWaehle }: { onWaehle: (p: PartnerPaket) => void }) {
 }
 
 function Haken() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M5 12.5l4.5 4.5L19 7.5" />
-    </svg>
-  )
+  return <Check size={16} strokeWidth={1.5} aria-hidden="true" />
 }
 
 // ── Ablauf ──────────────────────────────────────────────────
@@ -267,12 +284,12 @@ function Ablauf() {
   return (
     <section className="pt-sec" aria-labelledby="h-ablauf">
       <h2 className="pt-h2 pt-h2--klein" id="h-ablauf">
-        So <em>einfach</em> geht’s
+        So läuft’s
       </h2>
       <ol className="pt-ablauf">
         {schritte.map(([t, s], i) => (
           <li key={t}>
-            <b>{i + 1}</b>
+            <b>{String(i + 1).padStart(2, '0')}</b>
             <span>
               <strong>{t}</strong>
               {s}

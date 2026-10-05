@@ -78,6 +78,27 @@ Aufräumen passiert automatisch:
 - Der IP-Hash wird nach 7 Tagen geleert.
 - Gewonnene Anfragen bleiben.
 
+### Vorschlag: Nele als Medienpartnerin eintragen (v17-D)
+
+Nele (**picture by Nele**) ist offizielle Vereinsfotografin. Bis sie im Admin
+steht, zeigt `/partner` sie fest als eigenen Block „Offizielle Vereinsfotografin“
+oben auf der Partner-Wand (Logo, Instagram-Link). Sobald ein Sponsor mit „Nele“
+im Namen existiert, verschwindet der feste Block automatisch (keine Doppelung).
+
+Eintrag unter **Admin → Partner → Sponsoren**:
+
+| Feld | Wert |
+|---|---|
+| Name | picture by Nele |
+| Logo | `public/brand/picture-by-nele.webp` (aus „Nele Logo Transparent.png“, 480 px) |
+| Link | https://instagram.com/pictureby.nele — **Handle bitte bestätigen** (Konstante `NELE_INSTAGRAM` in `src/data/club.ts`) |
+| Stufe | Partner |
+| Paket | keins (Gegenleistung: Fotos gegen Nennung) |
+| Auf der Bande | nein |
+
+Credit überall: „Fotos: picture by Nele“ mit Link — Galerien (Karte → Fans,
+`/galerie`), Partner-Seite (Hero-Foto). Galerien pflegt der Admin unter **Galerien**.
+
 ---
 
 ## Teil C: Verkaufsleitfaden (1 Seite)

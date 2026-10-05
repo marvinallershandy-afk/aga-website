@@ -52,11 +52,10 @@ export interface EinstellungenRow {
   partner_2_id: string | null
   belohnung_komplett: string
   partner_komplett_id: string | null
-  stand_pin_gesetzt_at: string | null
   updated_at: string
   updated_by: string | null
 }
-export type EinstellungenInput = Partial<Omit<EinstellungenRow, 'id' | 'stand_pin_gesetzt_at' | 'updated_at' | 'updated_by'>>
+export type EinstellungenInput = Partial<Omit<EinstellungenRow, 'id' | 'updated_at' | 'updated_by'>>
 
 export interface CodeRow {
   spiel_id: string
@@ -201,7 +200,7 @@ export async function renderStickerFoto(img: HTMLImageElement, maxSeite = 1400):
   return jpg
 }
 
-// ── Einstellungen + PIN ─────────────────────────────────────
+// ── Einstellungen (v17-D: ohne Stand-PIN) ─────────────────────────────────
 export function useAlbumEinstellungen() {
   return useQuery({
     queryKey: albumKeys.einstellungen,
@@ -209,7 +208,7 @@ export function useAlbumEinstellungen() {
       const { data, error } = await db
         .from('sva_album_einstellungen')
         .select(
-          'id, aktiv, gewicht_bronze, gewicht_silber, gewicht_gold, gewicht_spezial, karten_pro_pack, doppelte_bremse, fenster_vor_min, fenster_nach_min, bonus_heimsieg, schwelle_1, belohnung_1, partner_1_id, schwelle_2, belohnung_2, partner_2_id, belohnung_komplett, partner_komplett_id, stand_pin_gesetzt_at, updated_at, updated_by',
+          'id, aktiv, gewicht_bronze, gewicht_silber, gewicht_gold, gewicht_spezial, karten_pro_pack, doppelte_bremse, fenster_vor_min, fenster_nach_min, bonus_heimsieg, schwelle_1, belohnung_1, partner_1_id, schwelle_2, belohnung_2, partner_2_id, belohnung_komplett, partner_komplett_id, updated_at, updated_by',
         )
         .eq('id', 1)
         .maybeSingle()
@@ -233,17 +232,6 @@ export function useSaveAlbumEinstellungen() {
     onSuccess: () => qc.invalidateQueries({ queryKey: albumKeys.einstellungen }),
   })
 }
-export function useStandPin() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: async (pin: string) => {
-      const { error } = await db.rpc('album_admin_pin', { p_pin: pin })
-      if (error) throw error
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: albumKeys.einstellungen }),
-  })
-}
-
 // ── Check-in-Codes ──────────────────────────────────────────
 export function useCodes() {
   return useQuery({

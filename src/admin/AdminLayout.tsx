@@ -17,6 +17,7 @@ import {
   KeyRound,
   UserRound,
   BookOpen,
+  Camera,
 } from 'lucide-react'
 import { useAuth } from './auth/AuthProvider'
 import { cn } from './lib/utils'
@@ -57,6 +58,8 @@ const NAV: NavItem[] = [
   { to: '/sponsoren', label: 'Partner', icon: Handshake },
   // v17-A: Sammelalbum (Stickerheft auf /album, QR-Check-in)
   { to: '/album', label: 'Album', icon: BookOpen },
+  // v17-D: Galerien der Vereinsfotografin (Karte → Fans, /galerie)
+  { to: '/galerien', label: 'Galerien', icon: Camera },
   { to: '/verein', label: 'Verein & Links', icon: Link2 },
   { to: '/team', label: 'Team & Zugänge', icon: KeyRound },
 ]

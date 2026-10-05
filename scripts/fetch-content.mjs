@@ -243,6 +243,41 @@ const STUFEN = new Set(['hauptpartner', 'partner', 'unterstuetzer'])
 const EINHEITEN = new Set(['Saison', 'Spieltag', 'Monat', 'einmalig'])
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const natural = (v) => (Number.isInteger(v) && v >= 0 ? v : null)
+// v17-D: Galerien „Spieltag in Bildern“ — Bilder (Storage-Pfade in sva_public
+// oder volle URLs) werden nach public/generated/galerien/<slug>/ geladen.
+const SLUG = /^[a-z0-9][a-z0-9-]{1,79}$/
+const storageUrl = (p) => (/^https:\/\//.test(p) ? p : `${url}/storage/v1/object/public/sva_public/${String(p).replace(/^\/+/, '')}`)
+async function mapGalerien(list) {
+  const out = []
+  for (const g of Array.isArray(list) ? list : []) {
+    const slug = str(g.slug)
+    const titel = str(g.titel)
+    if (!slug || !SLUG.test(slug) || !titel) continue
+    const bilder = []
+    let i = 0
+    for (const b of Array.isArray(g.bilder) ? g.bilder : []) {
+      const pfad = str(b.pfad)
+      if (!pfad) continue
+      i++
+      const base = `${String(i).padStart(2, '0')}-${slug}`.slice(0, 48)
+      const src = await localize(storageUrl(pfad), `galerien/${slug}`, base)
+      if (!src) continue
+      const preview = str(b.vorschau) ? (await localize(storageUrl(str(b.vorschau)), `galerien/${slug}`, base + '-800')) ?? src : src
+      const w = Number.isInteger(b.w) && b.w > 0 ? b.w : 2000
+      const h = Number.isInteger(b.h) && b.h > 0 ? b.h : 1333
+      bilder.push({ src, preview, w, h, alt: str(b.alt) ?? titel, ...(b.cover ? { cover: true } : {}) })
+    }
+    if (!bilder.length) continue
+    const o = { slug, titel, fotograf: str(g.fotograf) ?? 'picture by Nele', bilder }
+    if (str(g.untertitel)) o.untertitel = str(g.untertitel)
+    if (str(g.datum) && /^\d{4}-\d{2}-\d{2}$/.test(str(g.datum))) o.datum = str(g.datum)
+    if (str(g.fotografUrl) && /^https:\/\//.test(str(g.fotografUrl))) o.fotografUrl = str(g.fotografUrl)
+    if (g.spiel && str(g.spiel.opponent)) o.spiel = { opponent: str(g.spiel.opponent), home: !!g.spiel.home, ...(str(g.spiel.kickoff) ? { kickoff: str(g.spiel.kickoff) } : {}) }
+    out.push(o)
+  }
+  return out
+}
+
 async function mapPartner(p) {
   if (!p || typeof p !== 'object') return null
   const pakete = (Array.isArray(p.pakete) ? p.pakete : [])
@@ -346,6 +381,7 @@ async function main() {
     })
   }
   const partner = await mapPartner(snap.partner)
+  const galerien = await mapGalerien(snap.galerien)
 
   const table = (snap.table ?? [])
     .filter((r) => str(r.team) && Number.isInteger(r.pos))
@@ -396,6 +432,7 @@ async function main() {
   if (contact) overlay.contact = contact
   if (links) overlay.links = links
   if (partner) overlay.partner = partner
+  if (galerien.length) overlay.galerien = galerien
 
   const hasData = Object.keys(overlay).length > 2
   if (!hasData) {
@@ -411,7 +448,8 @@ async function main() {
     `fetch-content: Overlay geschrieben (players=${players.length}, staff=${staff.length}, lineup=${lineup ? lineup.formation : '—'}, ` +
       `sponsors=${sponsors.length}, table=${table.length}, form=${form.length}, nextMatch=${!!nextMatch}, lastMatch=${!!lastMatch}, ` +
       `sections=${sections.length}, contact=${!!contact}, links=${!!links}, ` +
-      `partner=${partner ? `${partner.pakete.length} Pakete/${Object.keys(partner.mediadaten).length} Zahlen` : '—'}, bilder=${downloads}).`,
+      `partner=${partner ? `${partner.pakete.length} Pakete/${Object.keys(partner.mediadaten).length} Zahlen` : '—'}, ` +
+      `galerien=${galerien.length}, bilder=${downloads}).`,
   )
 }
 

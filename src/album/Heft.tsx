@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import type { Gutschein, Katalog, Mein, RanglistenEintrag } from './api'
 import { Sticker } from './Sticker'
 import { GRUPPEN, SPIELER_GRUPPEN, name, type Fortschritt, type Gruppe, type Platz, type Treue } from './model'
@@ -93,8 +94,14 @@ export function Heft(props: Props) {
           {seiten.map((s, i) => (
             <section key={s.id} className={`hf-seite hf-seite--${s.gruppe ?? s.id}`} data-seite={i} aria-labelledby={`hf-t-${s.id}`}>
               <div className="hf-papier">
-                <span className="hf-aga" aria-hidden="true">AGA</span>
-                <img className="hf-wappen" src="/brand/aga-logo.png" alt="" aria-hidden="true" />
+                <span className="hf-kopf" aria-hidden="true">
+                  <span>Seite {i + 1}</span>
+                  {s.gruppe && (
+                    <span>
+                      {ps.filter((x) => x.gruppe === s.gruppe && x.beste).length}/{ps.filter((x) => x.gruppe === s.gruppe).length}
+                    </span>
+                  )}
+                </span>
                 <h2 className="hf-titel" id={`hf-t-${s.id}`}>
                   {s.titel}
                 </h2>
@@ -126,8 +133,6 @@ export function Heft(props: Props) {
                 )}
                 {s.id === 'letzte' && <LetzteSeite katalog={katalog} liste={rangliste} mitmachen={!!mein.profil?.rangliste} onKonto={onKonto} />}
 
-                <span className="hf-est" aria-hidden="true">est. 2024</span>
-                <span className="hf-nr" aria-hidden="true">{i + 1}</span>
               </div>
             </section>
           ))}
@@ -136,13 +141,13 @@ export function Heft(props: Props) {
 
       <div className="hf-blaettern">
         <button type="button" className="al-iconbtn" onClick={() => blaettern(Math.max(0, aktiv - 1))} disabled={aktiv === 0} aria-label="Vorherige Seite">
-          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          <ChevronLeft size={20} strokeWidth={1.5} aria-hidden="true" />
         </button>
         <span>
           Seite {Math.min(aktiv + 1, seiten.length)} von {seiten.length} · wischen zum Blättern
         </span>
         <button type="button" className="al-iconbtn" onClick={() => blaettern(Math.min(seiten.length - 1, aktiv + 1))} disabled={aktiv >= seiten.length - 1} aria-label="Nächste Seite">
-          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          <ChevronRight size={20} strokeWidth={1.5} aria-hidden="true" />
         </button>
       </div>
     </div>
@@ -151,10 +156,9 @@ export function Heft(props: Props) {
 
 function PlatzView({ p, frisch, onPlatz }: { p: Platz; frisch: boolean; onPlatz: (p: Platz) => void }) {
   const k = p.beste ?? p.versionen[0]
-  const rot = (((p.nr * 37) % 5) - 2) * 0.7
   const moment = p.gruppe === 'moment'
   return (
-    <li className={`hf-platz${frisch ? ' is-frisch' : ''}`} style={{ '--rot': `${rot}deg` } as React.CSSProperties}>
+    <li className={`hf-platz${frisch ? ' is-frisch' : ''}`}>
       <button type="button" className="hf-platz__btn" data-platz={p.key} onClick={() => onPlatz(p)} aria-label={`Nr. ${p.nr}: ${name(k)}${p.beste ? '' : ', fehlt noch'}`}>
         {p.beste ? (
           <Sticker karte={p.beste} />
@@ -182,6 +186,7 @@ function PlatzView({ p, frisch, onPlatz }: { p: Platz; frisch: boolean; onPlatz:
         </p>
       ) : (
         <span className="hf-label">
+          <i>{String(p.nr).padStart(2, '0')}</i>
           <b>{name(k)}</b>
         </span>
       )}
@@ -298,7 +303,7 @@ function InhaltSeite({
               <button type="button" className={`hf-gut${g.status === 'eingeloest' ? ' is-eingeloest' : ''}`} onClick={() => onGutschein(g)}>
                 <b>{g.titel}</b>
                 <span>{g.code}</span>
-                <em>{g.stufe === 'komplett' ? 'Verlosung' : g.status === 'eingeloest' ? 'Eingelöst' : 'Am Stand zeigen →'}</em>
+                <em>{g.stufe === 'komplett' ? 'Verlosung' : g.status === 'eingeloest' ? 'Eingelöst' : 'Am Stand zeigen'}</em>
               </button>
             </li>
           ))}

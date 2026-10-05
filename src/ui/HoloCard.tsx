@@ -5,6 +5,7 @@ import { CLUB } from '../data/club'
 import { tierOf, figureFit, cachedFigureFit, FIGURE, type FigureFit } from './cardArt'
 import { playerMedia } from '../data/playerMedia'
 import { useWalkout } from './walkoutSupport'
+import { hdCutout } from './hdCutout'
 import { WalkoutVideo } from './WalkoutVideo'
 
 // ─────────────────────────────────────────────────────────────
@@ -82,7 +83,9 @@ function startGyro() {
  *  Bild gemessen (cardArt.figureFit) → jeder Kopf sitzt gleich weit unter
  *  der Oberkante, egal wie der Freisteller zugeschnitten ist. Bis zur
  *  Messung bleibt die Figur unsichtbar (kein Springen). */
-export function CardFigure({ src, headU = FIGURE.head }: { src: string; headU?: number }) {
+export function CardFigure({ src: raw, headU = FIGURE.head }: { src: string; headU?: number }) {
+  // v17-D: immer die scharfe HD-Fassung (960×1440) in DOM-Karten
+  const src = hdCutout(raw)
   const [fit, setFit] = useState<FigureFit | null>(() => cachedFigureFit(src))
   return (
     <div className="holo__figwrap" aria-hidden="true">
@@ -146,8 +149,11 @@ export function HoloCard({ player, onClick, large }: Props) {
     const r = el.getBoundingClientRect()
     const px = (e.clientX - r.left) / r.width
     const py = (e.clientY - r.top) / r.height
-    el.style.setProperty('--tiltY', `${(px - 0.5) * 14}deg`)
-    el.style.setProperty('--tiltX', `${(0.5 - py) * 14}deg`)
+    // v17-D: keine 3D-Neigung mehr am Desktop — ein geneigter Layer wird
+    // als Bitmap umgerechnet und wirkt unscharf. Stattdessen Parallaxe:
+    // Spieler vorn, Prägung/Nummer hinten gegenläufig (nur transform).
+    el.style.setProperty('--mx', (px - 0.5).toFixed(3))
+    el.style.setProperty('--my', (py - 0.5).toFixed(3))
     el.style.setProperty('--px', `${px * 100}%`)
     el.style.setProperty('--py', `${py * 100}%`)
     el.style.setProperty('--glow', '1')
@@ -157,6 +163,8 @@ export function HoloCard({ player, onClick, large }: Props) {
     if (!el) return
     el.style.setProperty('--tiltX', '0deg')
     el.style.setProperty('--tiltY', '0deg')
+    el.style.setProperty('--mx', '0')
+    el.style.setProperty('--my', '0')
     el.style.setProperty('--px', '50%')
     el.style.setProperty('--py', '30%')
     el.style.setProperty('--glow', '0')

@@ -1,9 +1,14 @@
-import { useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { useStore } from '../store/useStore'
 import { CONTACT, SPONSORS, whatsappUrl, whatsappReady } from '../data/content'
 import { PLACE_BY_ID, type PlaceId } from './places'
 import { closePlace, openPlace } from './nav'
-import { PlaceIcon } from './MarkerIcons'
+import { ArrowLeft, ArrowRight, X } from 'lucide-react'
+import { TrainingMedia } from './TrainingMedia'
+import { GALERIEN } from '../data/galerie'
+// v17-D: Galerie erst laden, wenn das Fans-Panel aufgeht (eigene CSS — nicht
+// auf dem kritischen Pfad der Startseite)
+const GalerieView = lazy(() => import('../galerie/GalerieView').then((m) => ({ default: m.GalerieView })))
 import { PLACE_LEAD } from './panelText'
 import { useMatchStatus } from './matchStatus'
 import { FussballWidget } from '../ui/FussballWidget'
@@ -52,7 +57,7 @@ function SpieltagBody() {
           <b>{ms.state === 'live' ? ms.line : 'Live-Ticker & Spieltag'}</b>
           <small>{ms.state === 'live' ? 'Jetzt mitfiebern' : ms.long}</small>
         </span>
-        <span aria-hidden="true">→</span>
+        <ArrowRight size={20} strokeWidth={1.5} aria-hidden="true" />
       </a>
       <FussballWidget />
     </>
@@ -117,7 +122,8 @@ function MannschaftBody() {
           Alle Spieler
         </button>
         <button className="btn btn--ghost" onClick={() => openPlace('training')}>
-          Selber kicken? →
+          Selber kicken?
+          <ArrowRight size={16} strokeWidth={1.5} aria-hidden="true" />
         </button>
       </div>
       <PlayerGallery open={gallery} onClose={() => setGallery(false)} />
@@ -126,8 +132,15 @@ function MannschaftBody() {
 }
 
 function FansBody() {
+  const g = GALERIEN[0]
   return (
     <>
+      {/* v17-D: „Spieltag in Bildern“ — die neueste Galerie der Vereinsfotografin */}
+      {g && (
+        <Suspense fallback={<div className="kp-media" aria-hidden="true" />}>
+          <GalerieView galerie={g} variant="panel" moreHref="/galerie" />
+        </Suspense>
+      )}
       <FanGallery />
       <FanChantToggle />
       <div className="kp-actions">
@@ -161,7 +174,7 @@ function PartnerBody() {
           <b>Partner werden</b>
           <small>Pakete, Reichweite, Bande, Trikot & Story</small>
         </span>
-        <span aria-hidden="true">→</span>
+        <ArrowRight size={20} strokeWidth={1.5} aria-hidden="true" />
       </a>
       <SponsorPitch />
     </>
@@ -252,7 +265,7 @@ export function MapPanel() {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape' || e.defaultPrevented) return
       const s = useStore.getState()
-      if (s.selectedPlayer || s.fanPhoto != null || document.querySelector('.pgal')) return
+      if (s.selectedPlayer || s.fanPhoto != null || document.querySelector('.pgal, .glb-lb')) return
       closePlace()
     }
     window.addEventListener('keydown', onKey)
@@ -305,9 +318,6 @@ export function MapPanel() {
             onPointerCancel={onPointerUp}
           >
             <span className="kpanel__grip" aria-hidden="true" />
-            <span className={`kpanel__icon kpanel__icon--${p.tone}`} aria-hidden="true">
-              <PlaceIcon id={p.id} size={22} />
-            </span>
             <div className="kpanel__titles">
               <span className="kpanel__kicker">{p.kicker}</span>
               <h2 id={`kpanel-title-${p.id}`} ref={headRef} tabIndex={-1} className="kpanel__title">
@@ -315,16 +325,16 @@ export function MapPanel() {
               </h2>
             </div>
             <button className="kpanel__close" onClick={() => closePlace()} aria-label="Zurück zur Karte">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true">
-                <path d="M6 6l12 12M18 6 6 18" strokeLinecap="round" />
-              </svg>
+              <X size={18} strokeWidth={1.5} aria-hidden="true" />
             </button>
           </div>
           <div className="kpanel__body">
+            {p.id === 'training' && <TrainingMedia active={open} />}
             <p className="kpanel__lead">{PLACE_LEAD[p.id]}</p>
             <Body id={p.id} />
             <button className="kpanel__back" onClick={() => closePlace()}>
-              ← Zurück zur Karte
+              <ArrowLeft size={14} strokeWidth={1.5} aria-hidden="true" />
+              Zurück zur Karte
             </button>
           </div>
         </>

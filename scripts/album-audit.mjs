@@ -1,6 +1,7 @@
 // v17-A: /album headless durchklicken + screenshotten (390 px mobil, dazu Desktop).
 // KEINE echte DB, KEIN echtes Login: alle RPCs (album_*) und /auth/v1 werden
-// gemockt (zustandsbehaftet: Check-in → Pack → Besitz → Gutschein → PIN).
+// gemockt (zustandsbehaftet: Check-in → Pack → Besitz → Gutschein einlösen —
+// v17-D ohne PIN: Bestätigung, doppeltes Einlösen abgelehnt).
 // Eine Fan-Sitzung wird direkt in localStorage ('sva-album-auth') gelegt.
 //   npx vite --port 5192 --strictPort        (vorher starten)
 //   BASE=http://localhost:5192 OUT=./shots-album node scripts/album-audit.mjs
@@ -147,7 +148,8 @@ async function routes(ctx) {
     }
     if (fn === 'album_gutschein_einloesen') {
       const g = Z.gutscheine.find((x) => x.id === body.p_gutschein)
-      if (body.p_pin !== '4711') { Z.pinFehler++; return json(route, { ok: false, grund: 'pin_falsch', versuche: Math.max(0, 5 - Z.pinFehler) }) }
+      if ('p_pin' in body) return pgErr(route, 'function album_gutschein_einloesen(uuid, text) does not exist')
+      if (g.status === 'eingeloest') return json(route, { ok: false, grund: 'schon_eingeloest', eingeloestAt: g.eingeloestAt })
       g.status = 'eingeloest'; g.eingeloestAt = new Date().toISOString()
       return json(route, { ok: true, eingeloestAt: g.eingeloestAt })
     }
@@ -359,16 +361,17 @@ const go = async (page, path = '/album') => { await page.goto(`${BASE}${path}`, 
   await page.getByRole('button', { name: /Freibier oder Bratwurst/ }).click()
   await page.waitForTimeout(500)
   await shot(page, '21-gutschein')
-  await page.getByRole('button', { name: 'Helfer: jetzt einlösen' }).click()
-  await page.locator('.al-pin input').fill('1234')
-  await page.getByRole('button', { name: 'Einlösen' }).click()
-  await page.waitForTimeout(400)
-  check(await page.getByText(/PIN falsch. Noch 4 Versuche/).isVisible(), 'Gutschein: falsche PIN → Hinweis mit Restversuchen')
-  await shot(page, '22-gutschein-pin-falsch')
-  await page.locator('.al-pin input').fill('4711')
-  await page.getByRole('button', { name: 'Einlösen' }).click()
+  await page.getByRole('button', { name: 'Einlösen', exact: true }).click()
+  await page.waitForTimeout(300)
+  check(await page.getByText('Wirklich einlösen?').isVisible() && await page.getByText(/Danach ist der Gutschein verbraucht/).isVisible(), 'Gutschein: Bestätigungsfrage erscheint')
+  await shot(page, '22-gutschein-frage')
+  await page.getByRole('button', { name: 'Abbrechen' }).click()
+  check(await page.getByRole('button', { name: 'Einlösen', exact: true }).isVisible(), 'Gutschein: Abbrechen → nichts eingelöst')
+  await page.getByRole('button', { name: 'Einlösen', exact: true }).click()
+  await page.getByRole('button', { name: 'Ja, einlösen' }).click()
   await page.waitForTimeout(500)
-  check(await page.getByText(/Eingelöst am/).isVisible(), 'Gutschein: richtige PIN → eingelöst')
+  check(await page.getByText(/^am .* Uhr$/).isVisible() && await page.getByText('Nicht mehr gültig.').isVisible(), 'Gutschein: Ja → eingelöst mit Datum/Uhrzeit, großer Haken')
+  check(!(await page.getByRole('button', { name: 'Einlösen', exact: true }).count()), 'Gutschein: danach kein Einlösen-Knopf mehr')
   await shot(page, '23-gutschein-eingeloest')
   await page.getByRole('button', { name: 'Schließen' }).click()
   await page.getByRole('button', { name: 'Konto' }).click()
