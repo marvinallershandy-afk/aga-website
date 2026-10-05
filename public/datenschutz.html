@@ -137,16 +137,16 @@
       </p>
       <p><span class="todo">TODO-JURIST: Einordnung als „unbedingt erforderlich" nach § 25 Abs. 2 Nr. 2 TDDDG bestätigen</span></p>
 
-      <h2>6. Keine Einbindung von Drittanbieter-Inhalten</h2>
+      <h2>6. Keine Einbindung von Drittanbieter-Inhalten auf der Startseite</h2>
       <div class="good">
-        <strong>Technisch geprüft am 15.07.2026:</strong> Die Seite lädt beim Aufruf
+        <strong>Technisch geprüft am 15.07.2026, ergänzt am 05.10.2026:</strong> Die Startseite lädt beim Aufruf
         <strong>keine Ressourcen von Drittanbietern</strong>. Schriftarten sind lokal
         eingebunden (self-hosted), es werden keine externen Fonts, CDNs, Karten-Dienste
         oder Social-Media-Widgets nachgeladen. Karten (Routenplanung), fussball.de und
         Instagram sind ausschließlich als <em>Links</em> eingebunden — dabei fließen erst
         dann Daten an den jeweiligen Anbieter, wenn Sie den Link bewusst anklicken und
         die fremde Seite dadurch selbst aufrufen. Dort gilt die Datenschutzerklärung des
-        jeweiligen Anbieters.
+        jeweiligen Anbieters. Einzige Ausnahme ist der Spielstand rund um ein Spiel (Abschnitt 6a).
       </div>
       <p>
         Aus diesem Grund benötigt diese Website <strong>kein Cookie-Banner</strong> und keine
@@ -160,6 +160,55 @@
         (Art. 6 Abs. 1 lit. a DSGVO, § 25 Abs. 1 TDDDG) sowie ein Consent-Banner nötig.
         Dann müssen dieser Abschnitt und die Startseite gemeinsam angepasst werden.
       </div>
+
+      <h2>6a. Live-Spielstand und Liveticker (Supabase)</h2>
+      <!-- Verifiziert am Code (v15-L): src/live/api.ts (fetch ohne Cookies,
+           credentials: 'omit'), src/ui/MatchdayBar.tsx (Abruf nur 15 min vor
+           bis 3 h nach Anpfiff), src/live/LiveApp.tsx (/live). -->
+      <p>
+        Unsere Spieltag-Seite <a href="/live">/live</a> zeigt Spielstand, Liveticker und Aufstellung.
+        Dafür ruft Ihr Browser diese Daten beim Datenbank-Dienst <strong>Supabase</strong> ab
+        (Serverstandort Frankfurt am Main, EU). Das passiert
+      </p>
+      <ul>
+        <li>nur auf der Seite <code>/live</code> (dort etwa alle 15 Sekunden während eines Spiels, sonst alle paar Minuten, und nicht, solange der Tab im Hintergrund ist), und</li>
+        <li>auf der Startseite nur im Spieltagsfenster: von 15 Minuten vor bis 3 Stunden nach dem Anpfiff, alle 30 Sekunden, damit die Spieltag-Leiste den aktuellen Stand zeigt. Außerhalb dieses Fensters stellt die Startseite keine solche Verbindung her.</li>
+      </ul>
+      <p>
+        Dabei werden keine Cookies gesetzt und keine Kennungen gespeichert. Technisch bedingt erhält
+        Supabase Ihre IP-Adresse, Datum und Uhrzeit sowie Browser-Angaben (wie bei jedem Abruf einer
+        Website). Abgerufen werden ausschließlich öffentliche Spieldaten (Spielstand, Ereignisse,
+        Aufstellung mit Namen, Rückennummern und Fotos der Spieler).
+      </p>
+      <p>
+        <strong>Zweck:</strong> aktuelle Anzeige des Spielgeschehens.<br />
+        <strong>Rechtsgrundlage:</strong> Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse, Vereinsmitglieder und
+        Fans aktuell über laufende Spiele zu informieren); der Abruf ist für den von Ihnen aufgerufenen
+        Dienst technisch erforderlich (§ 25 Abs. 2 Nr. 2 TDDDG).<br />
+        <strong>Anbieter:</strong> <span class="todo">TODO-MARVIN: Firmierung + Anschrift laut Supabase-DPA eintragen (Supabase Inc.) und AV-Vertrag (Art. 28 DSGVO) abschließen</span>
+      </p>
+      <p><span class="todo">TODO-JURIST: Drittlandbezug (US-Mutterkonzern trotz EU-Serverstandort) bewerten</span></p>
+
+      <h2>6b. Tabelle von fussball.de (erst nach Klick)</h2>
+      <p>
+        Auf <a href="/live">/live</a> können Sie die aktuelle Tabelle bzw. den Spielplan als offizielles
+        Widget von <strong>fussball.de</strong> anzeigen lassen. Das Widget wird <strong>erst geladen, wenn Sie auf
+        „Aktuelle Tabelle von fussball.de laden“ tippen</strong> (2-Klick-Lösung). Vorher besteht keine
+        Verbindung zu fussball.de.
+      </p>
+      <p>
+        Mit dem Klick lädt Ihr Browser Inhalte von den Servern von fussball.de. Dabei werden insbesondere
+        Ihre IP-Adresse, Datum und Uhrzeit, Browser-Angaben und die Adresse unserer Seite an den Anbieter
+        übermittelt; ob fussball.de dabei Cookies setzt, liegt außerhalb unseres Einflusses.
+        Anbieter: <strong>DFB-Medien GmbH &amp; Co. KG</strong>,
+        <span class="todo">TODO-MARVIN: Anschrift laut Impressum von fussball.de prüfen/eintragen</span>.
+        Es gilt die Datenschutzerklärung von fussball.de.
+      </p>
+      <p>
+        <strong>Rechtsgrundlage:</strong> Ihre Einwilligung durch den Klick (Art. 6 Abs. 1 lit. a DSGVO,
+        § 25 Abs. 1 TDDDG). Sie gilt nur für den jeweiligen Seitenaufruf; ohne Klick wird nichts geladen.
+      </p>
+      <p><span class="todo">TODO-JURIST: 2-Klick-Lösung als Einwilligung ausreichend? Hinweistext vor dem Klick prüfen</span></p>
 
       <h2>7. Kontaktaufnahme</h2>
       <!-- TODO-MARVIN: Sobald WhatsApp als Kontaktweg aktiv ist (club.ts:
@@ -190,9 +239,10 @@
 
       <h2>9. Empfänger der Daten</h2>
       <p>
-        Eine Weitergabe Ihrer Daten findet nur an den Hosting-Anbieter als
-        Auftragsverarbeiter (Abschnitt 3) statt. Eine darüber hinausgehende Übermittlung
-        erfolgt nicht.
+        Eine Weitergabe Ihrer Daten findet an den Hosting-Anbieter als
+        Auftragsverarbeiter (Abschnitt 3) sowie beim Abruf von Live-Daten an Supabase
+        (Abschnitt 6a) statt; an fussball.de nur nach Ihrem Klick (Abschnitt 6b). Eine darüber
+        hinausgehende Übermittlung erfolgt nicht.
         <span class="todo">TODO-JURIST: bestätigen, sobald Abschnitt 3 gefüllt ist</span>
       </p>
 
