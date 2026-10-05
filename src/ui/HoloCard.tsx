@@ -3,6 +3,9 @@ import type { Player } from '../data/players'
 import { POSITION_LABEL, SHOW_RATING } from '../data/players'
 import { CLUB } from '../data/club'
 import { tierOf, figureFit, cachedFigureFit, FIGURE, type FigureFit } from './cardArt'
+import { WALKOUT_SIZE } from '../data/walkout'
+import { useWalkout } from './walkoutSupport'
+import { WalkoutVideo } from './WalkoutVideo'
 
 // ─────────────────────────────────────────────────────────────
 // v14-D „Karten 2.0" — DOM-Sammelkarte. Gleiches Design wie die
@@ -98,6 +101,24 @@ export function CardFigure({ src, headU = FIGURE.head }: { src: string; headU?: 
   )
 }
 
+/** v16-W: Walkout-Video statt Standbild, wenn es für die id eines gibt.
+ *  Gleiches Fenster wie der Freisteller; Kopf auf derselben Höhe (headU),
+ *  Körper läuft in die Namensplatte aus. Fehler → onFail → Foto. */
+const WALK_W = 88 // cqw Breite des Videos (Höhe = 2×)
+export function CardWalkout({ id, headU = FIGURE.head, onFail }: { id: string; headU?: number; onFail: () => void }) {
+  const h = WALK_W * (WALKOUT_SIZE.h / WALKOUT_SIZE.w)
+  return (
+    <div className="holo__figwrap" aria-hidden="true">
+      <WalkoutVideo
+        id={id}
+        className="holo__walkout"
+        style={{ top: `${(headU - WALKOUT_SIZE.headY * h).toFixed(2)}cqw`, left: `${(100 - WALK_W) / 2}%`, width: `${WALK_W}%` }}
+        onFail={onFail}
+      />
+    </div>
+  )
+}
+
 function splitName(name: string) {
   const parts = name.trim().split(/\s+/)
   return { first: parts.slice(0, -1).join(' '), last: parts.slice(-1)[0] ?? '' }
@@ -113,6 +134,7 @@ export function HoloCard({ player, onClick, large }: Props) {
   const tier = tierOf(player)
   const { first, last } = splitName(player.name)
   const figure = player.cutoutUrl ?? null
+  const walk = useWalkout(player.id)
   const big = SHOW_RATING ? String(player.rating) : player.number !== null ? String(player.number) : ''
 
   function onMove(e: React.PointerEvent) {
@@ -162,12 +184,14 @@ export function HoloCard({ player, onClick, large }: Props) {
     >
       <div className="holo__body" aria-hidden="true">
         <div className="holo__emboss" />
-        {figure && player.number !== null && <div className="holo__watermark">{player.number}</div>}
+        {(figure || walk.has) && player.number !== null && <div className="holo__watermark">{player.number}</div>}
         <div className="holo__frame" />
         <div className="holo__plate" />
       </div>
 
-      {figure ? (
+      {walk.has ? (
+        <CardWalkout id={player.id} onFail={walk.fail} />
+      ) : figure ? (
         <CardFigure key={figure} src={figure} />
       ) : (
         <div className="holo__nophoto" aria-hidden="true">

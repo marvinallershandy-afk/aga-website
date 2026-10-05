@@ -1,11 +1,18 @@
 // v15-L: kleine Inline-SVG-Icons der Live-Seite (kein Icon-Paket im Bundle).
 type Name =
   | 'ball' | 'gelb' | 'gelbrot' | 'rot' | 'wechsel' | 'kommentar' | 'elfmeter'
-  | 'pfeife' | 'teilen' | 'route' | 'offline' | 'tabelle'
+  | 'pfeife' | 'teilen' | 'route' | 'offline' | 'tabelle' | 'cube'
 
 export function Icon({ name, size = 18 }: { name: Name; size?: number }) {
   const p = { width: size, height: size, viewBox: '0 0 24 24', 'aria-hidden': true as const, focusable: false as const }
   switch (name) {
+    case 'cube':
+      return (
+        <svg {...p} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round">
+          <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z" />
+          <path d="M4 7.5l8 4.5 8-4.5M12 12v9" />
+        </svg>
+      )
     case 'ball':
       return (
         <svg {...p} fill="none" stroke="currentColor" strokeWidth="1.7">

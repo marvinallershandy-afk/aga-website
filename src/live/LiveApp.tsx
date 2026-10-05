@@ -16,6 +16,7 @@ import {
 } from './model'
 import { liveKonfiguriert } from './api'
 import { LiveBoard } from './LiveBoard'
+import { Aufstellung3D } from './Aufstellung3D'
 import { LiveTabelle } from './LiveTabelle'
 import { Icon } from './icons'
 
@@ -47,6 +48,7 @@ export function LiveApp() {
   const now = useNow(1000) + live.offset
   const [tab, setTab] = useState<Tab>('ticker')
   const [toast, setToast] = useState<string | null>(null)
+  const [drei, setDrei] = useState(false)
   const d = live.data
   const m = d?.match ?? null
   const players = useMemo(() => new Map((d?.players ?? []).map((p) => [p.id, p])), [d?.players])
@@ -151,7 +153,16 @@ export function LiveApp() {
               <h2 className="lv-h2" id="h-auf">
                 Aufstellung
               </h2>
-              <LiveBoard data={d!} players={players} />
+              {d!.lineup?.startelf.length === 11 && !drei && (
+                <button type="button" className="lv-btn lv-btn--ghost lv3d-open" onClick={() => setDrei(true)}>
+                  <Icon name="cube" /> 3D-Aufstellung
+                </button>
+              )}
+              <LiveBoard
+                data={d!}
+                players={players}
+                field={drei ? <Aufstellung3D data={d!} players={players} onClose={() => setDrei(false)} /> : undefined}
+              />
             </section>
             <section className="lv-col lv-col--tabelle" aria-labelledby="h-tab">
               <h2 className="lv-h2" id="h-tab">

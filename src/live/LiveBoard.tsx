@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, type ReactNode } from 'react'
 import { FORMATION_SLOTS } from '../data/lineup'
 import { Pitch, Face, chipLayout, lastName } from '../ui/tacticsPitch'
 import { platzStand, type LiveData, type LivePlayer } from './model'
@@ -18,7 +18,8 @@ const ROLLE: Record<string, string> = {
   teammanager: 'Teammanager',
 }
 
-export function LiveBoard({ data, players }: { data: LiveData; players: Map<string, LivePlayer> }) {
+/** v16-W: field ersetzt das 2D-Spielfeld (3D-Aufstellung); Bank/Stab bleiben. */
+export function LiveBoard({ data, players, field }: { data: LiveData; players: Map<string, LivePlayer>; field?: ReactNode }) {
   const l = data.lineup
   const stand = useMemo(() => platzStand(l, data.events), [l, data.events])
   if (!l || l.startelf.length !== 11) {
@@ -36,6 +37,7 @@ export function LiveBoard({ data, players }: { data: LiveData; players: Map<stri
     <div className="tboard lv-board">
       <div className="tboard__meta">{titel}</div>
       {!l.forMatch && data.match?.status === 'geplant' && <p className="lv-hinweis">Noch nicht für dieses Spiel bestätigt.</p>}
+      {field ?? (
       <div className="tboard__field">
         <Pitch />
         {stand.slots.map((id, i) => {
@@ -65,6 +67,7 @@ export function LiveBoard({ data, players }: { data: LiveData; players: Map<stri
           )
         })}
       </div>
+      )}
       {bankZeile.length > 0 && (
         <div className="tboard__row">
           <span className="tboard__label">Bank</span>

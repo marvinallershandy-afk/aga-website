@@ -382,3 +382,21 @@ a.lv-partner:hover .lv-partner__label { color: var(--fg); }
 .lv-table tr.is-self td { background: rgba(233,29,41,.16); font-weight: 700; }
 .lv-table tr.is-self td:first-child { box-shadow: inset 3px 0 0 #e91d29; }
 .lv-table__quelle { margin: 10px 0 0; font-size: 12px; color: rgba(255,255,255,.45); }
+
+/* ── v16-W: 3D-Aufstellung (three.js nur nach Klick) ───────────────── */
+.lv3d-open { width: 100%; margin: 0 0 12px; }
+.lv3d { margin: 0 0 .9rem; }
+.lv3d__stage {
+  position: relative; width: 100%; aspect-ratio: 4 / 5; max-height: 72vh;
+  border-radius: 14px; overflow: hidden; background: #0E0D0D;
+  border: 1px solid var(--line);
+  display: grid; place-items: center;
+}
+@media (min-width: 900px) { .lv3d__stage { aspect-ratio: 5 / 4; } }
+.lv3d__canvas { position: absolute; inset: 0; width: 100% !important; height: 100% !important; display: block; cursor: grab; }
+.lv3d__canvas:active { cursor: grabbing; }
+.lv3d__video { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.lv3d__hint { position: relative; z-index: 1; font-size: .85rem; color: var(--mut); }
+.lv3d__bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; }
+.lv3d__tip { font-size: .74rem; color: var(--mut); }
+.lv3d__close { min-height: 40px; font-size: .78rem; }

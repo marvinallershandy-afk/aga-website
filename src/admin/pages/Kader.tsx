@@ -15,6 +15,7 @@ import { friendlyError, isMissingSchema } from '../lib/db'
 import { useLineup, useRoster, useRosterMutations } from '../lib/queries'
 import { POSITION_CODES, positionCode, rolleLabel, slugFromName } from '../lib/pflege'
 import { cn } from '../lib/utils'
+import { WALKOUT } from '../../data/walkout'
 
 // ─────────────────────────────────────────────────────────────
 // v14-C: Kader — Spieler & Trainerstab, so wie sie auf der Website stehen.
@@ -206,6 +207,7 @@ export function Kader() {
                               <span className="truncate font-medium">{r.name}</span>
                               {r.kapitaen && <Badge gold>C</Badge>}
                               {r.neuzugang && <Badge>Neu</Badge>}
+                              {WALKOUT[r.slug] && <span className="text-xs font-medium text-emerald-500" title="Freigestelltes Walkout-Video vorhanden (Karte + 3D-Aufstellung)">Walkout vorhanden ✓</span>}
                             </span>
                             <span className="block text-sm text-muted-foreground">
                               {istSpieler(r)

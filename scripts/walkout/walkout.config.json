@@ -1,0 +1,26 @@
+{
+  "$doc": "Walkout-Pipeline (docs/WALKOUT.md). clips = DJI-Zählernummern (…_0213_…). Leer lassen bei start → build.mjs wählt Clip + Fenster automatisch (ruhigstes 2,2-s-Stück). confirmed=false → Assets werden gebaut, aber NICHT in src/data/walkout.ts eingetragen (Website zeigt sie nicht).",
+  "src": "~/Desktop/Dolly",
+  "seconds": 2.2,
+  "cell": [360, 720],
+  "atlasCell": [160, 320],
+  "players": [
+    { "id": "p-sladek", "slug": "justin-sladek", "clips": ["0213", "0214"], "confirmed": true, "evidence": "Hosennummer 11 + Gesicht" },
+    { "id": "p-bruenjes", "slug": "janek-bruenjes", "clips": ["0218", "0219", "0217"], "confirmed": true, "evidence": "Hosennummer 33; Gesicht plausibel (Haar wirkt im Gegenlicht dunkler)" },
+    { "id": "p-pejas-e", "slug": "elias-pejas", "clips": ["0222", "0223"], "confirmed": true, "evidence": "Hosennummer 22 + Gesicht" },
+    { "id": "p-neuber-m", "slug": "marcel-neuber", "clips": ["0224", "0225"], "confirmed": true, "evidence": "Hosennummer 14 + Gesicht" },
+    { "id": "p-matthes", "slug": "paul-matthes", "clips": ["0226", "0227"], "confirmed": true, "evidence": "Hosennummer 44 + Gesicht" },
+    { "id": "p-ebeling-t", "slug": "tino-ebeling", "clips": ["0228", "0229"], "confirmed": true, "evidence": "Hosennummer 38, dunkles TW-Trikot + Gesicht" },
+    { "id": "p-pils", "slug": "malte-pils", "clips": ["0230", "0231"], "confirmed": true, "spill": false, "evidence": "grünes TW-Trikot + Gesicht (Bart)" },
+    { "id": "p-jochim", "slug": "sam-luca-jochim", "clips": ["0232", "0233"], "confirmed": false, "evidence": "Hosennummer 1? (17 oder 13) — kein Vergleichsfoto; Alternative Justin Kalwa (13)" },
+    { "id": "s-hause", "slug": "niko-hause", "clips": ["0234", "0235"], "confirmed": true, "spill": true, "evidence": "schwarzes Stab-Outfit, Nummer 30 + Gesicht" },
+    { "id": "p-paruzel", "slug": "julio-paruzel", "clips": ["0236", "0237"], "confirmed": true, "evidence": "Hosennummer 7 + Gesicht (Kinnbart)" },
+    { "id": "p-elsen", "slug": "joshua-elsen", "clips": ["0238", "0239"], "confirmed": true, "evidence": "Hosennummer 32 + Gesicht" },
+    { "id": "p-warkehr-a", "slug": "aaron-warkehr", "clips": ["0240", "0241"], "confirmed": true, "evidence": "Hosennummer 6 + Gesicht (blond)" },
+    { "id": "p-becker", "slug": "niclas-becker", "clips": ["0242", "0243"], "confirmed": true, "evidence": "Hosennummer 8 + Vollbart" },
+    { "id": "p-brettschneider", "slug": "lennard-brettschneider", "clips": ["0244", "0245"], "confirmed": true, "evidence": "Hosennummer 4 + Gesicht" },
+    { "id": "p-huettry", "slug": "justin-huettry", "clips": ["0246", "0247"], "confirmed": true, "evidence": "Hosennummer 3 + Gesicht" },
+    { "id": "p-biedermann", "slug": "marc-kevin-biedermann", "clips": ["0248", "0249"], "confirmed": true, "evidence": "Hosennummer 3x (37) + Unterarm-Tattoo wie Foto" },
+    { "id": "s-ebeling-a", "slug": "adolf-ebeling", "clips": ["0250", "0251"], "confirmed": true, "evidence": "Initialen AE auf Hose + Gesicht" }
+  ]
+}
