@@ -12,7 +12,17 @@ const rootEl = document.getElementById('root')!
 // damit sie das Admin-Scrolling nicht kapern.
 const isAdmin = window.location.pathname.startsWith('/admin')
 
-if (isAdmin) {
+// v14: Magic-Link-Rückkehr abfangen. Ist die Ziel-URL nicht in Supabases
+// Redirect-Allowlist, schickt Supabase auf die Site-URL (Startseite) — die
+// Tokens hängen dann an der Startseite, wo der Onepager sie ignoriert.
+// Auth-Parameter außerhalb von /admin → mit Parametern nach /admin umleiten.
+const authReturn =
+  /(^|[#&])(access_token|refresh_token|error_description)=/.test(window.location.hash) ||
+  /[?&](code|token_hash)=/.test(window.location.search)
+
+if (!isAdmin && authReturn) {
+  window.location.replace('/admin' + window.location.search + window.location.hash)
+} else if (isAdmin) {
   import('./admin/mountAdmin').then(({ mountAdmin }) => mountAdmin(rootEl))
 } else {
   Promise.all([
