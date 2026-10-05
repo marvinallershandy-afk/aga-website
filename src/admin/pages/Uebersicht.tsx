@@ -14,6 +14,7 @@ import {
   Home,
   Bus,
   Radio,
+  Inbox,
 } from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
 import type { SpielRow } from '../lib/db'
@@ -33,6 +34,7 @@ import {
   useTabelle,
 } from '../lib/queries'
 import { isMissingSchema } from '../lib/db'
+import { useAnfragen, usePakete, usePartnerInfo } from '../lib/partner'
 import { formatAnstoss, relativZeit } from '../lib/format'
 import { ergebnisOffen, ergebnisText, letztesSpiel, naechstesSpiel, paarung } from '../lib/spiele'
 import { cn } from '../lib/utils'
@@ -61,6 +63,11 @@ export function Uebersicht() {
   const tabelleQ = useTabelle()
   const sponsorenQ = useSponsoren()
   const logQ = usePublishLog()
+  // v16-S: Partner-Bereich (fehlt die Migration, bleiben die Abfragen still leer)
+  const anfragenQ = useAnfragen()
+  const paketeQ = usePakete()
+  const partnerInfoQ = usePartnerInfo()
+  const neueAnfragen = (anfragenQ.data ?? []).filter((a) => a.status === 'neu')
 
   const schemaFehlt = [settingsQ.error, lineupQ.error, logQ.error].some((e) => e && isMissingSchema(e))
   const spiele = useMemo(() => spieleQ.data ?? [], [spieleQ.data])
@@ -88,11 +95,12 @@ export function Uebersicht() {
       ['Tabelle', maxIso(tabelle.map((t) => t.updated_at))],
       ['Sponsoren', maxIso((sponsorenQ.data ?? []).map((s) => s.updated_at))],
       ['Verein & Links', settings?.updated_at ?? null],
+      ['Partner-Pakete & Zahlen', maxIso([...(paketeQ.data ?? []).map((p) => p.updated_at), partnerInfoQ.data?.updated_by ? partnerInfoQ.data.updated_at : null])],
     ]
     return bereiche
       .filter(([, t]) => t && (!seit || new Date(t) > new Date(seit)))
       .map(([name]) => name)
-  }, [letzteVeroeffentlichung, roster, lineup, spiele, tabelle, sponsorenQ.data, settings])
+  }, [letzteVeroeffentlichung, roster, lineup, spiele, tabelle, sponsorenQ.data, settings, paketeQ.data, partnerInfoQ.data])
 
   // Inaktive/gelöschte Spieler in der gespeicherten Aufstellung?
   const aktiveIds = new Set(spieler.map((s) => s.id))
@@ -168,6 +176,26 @@ export function Uebersicht() {
       {spieltag && <SpieltagBanner spiel={spieltag} />}
 
       {schemaFehlt && <PflegeHinweis schema className="mb-4" />}
+
+      {/* v16-S: neue Partner-Anfragen von /partner */}
+      {neueAnfragen.length > 0 && (
+        <Link
+          to="/sponsoren?tab=anfragen"
+          className="mb-4 flex min-h-[64px] items-center gap-3 rounded-lg border border-sva-gold/50 bg-sva-gold/10 px-4 py-3"
+        >
+          <Inbox className="h-6 w-6 shrink-0 text-sva-gold" />
+          <span className="min-w-0 flex-1">
+            <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Partner-Anfragen <span className="rounded-full bg-sva-gold px-1.5 text-[11px] font-bold text-black">{neueAnfragen.length} neu</span>
+            </span>
+            <span className="block truncate font-medium">
+              {neueAnfragen.slice(0, 2).map((a) => a.firma).join(', ')}
+              {neueAnfragen.length > 2 ? ` und ${neueAnfragen.length - 2} weitere` : ''}
+            </span>
+          </span>
+          <span className="shrink-0 font-display text-lg tracking-wide text-sva-gold">Ansehen →</span>
+        </Link>
+      )}
 
       {/* 1. Website-Status + Veröffentlichen */}
       <Card className="mb-6 border-primary/40 bg-gradient-to-br from-primary/10 to-transparent">

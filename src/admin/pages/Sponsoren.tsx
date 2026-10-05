@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Plus, Handshake, ChevronUp, ChevronDown, ImagePlus, ImageOff, Trash2, Loader2, ExternalLink, Archive } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Plus, Handshake, ChevronUp, ChevronDown, ImagePlus, ImageOff, Trash2, Loader2, ExternalLink, Archive, Package, BarChart3, Inbox, Radio } from 'lucide-react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { PageHeader } from './Placeholder'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
 import { Modal } from '../components/ui/modal'
 import { Switch } from '../components/ui/switch'
+import { Select } from '../components/ui/select'
 import { SkeletonRows } from '../components/ui/skeleton'
 import { EmptyState } from '../components/ui/empty-state'
 import { ErrorState } from '../components/ui/error-state'
@@ -14,31 +15,106 @@ import { useToast } from '../components/ui/toast'
 import { useConfirm } from '../components/ui/confirm'
 import { PflegeHinweis } from '../components/PflegeHinweis'
 import type { SponsorInput, SponsorRow } from '../lib/db'
-import { friendlyError } from '../lib/db'
+import { friendlyError, isMissingSchema } from '../lib/db'
 import { useSponsoren, useSponsorenMutations } from '../lib/queries'
 import { uploadPublicImage } from '../lib/pflege'
 import { ACCEPT_IMAGES, loadImage, renderLogo } from '../lib/image'
+import { STUFEN, stufeLabel, useNeueAnfragen, usePakete, usePartnerInfo, useSavePartnerInfo, type AnfrageRow } from '../lib/partner'
 import { cn } from '../lib/utils'
+import { PaketeTab } from './partner/PaketeTab'
+import { ZahlenTab } from './partner/ZahlenTab'
+import { AnfragenTab } from './partner/AnfragenTab'
 
 // ─────────────────────────────────────────────────────────────
-// v14-C: Sponsoren für die Website — nur das, was dort erscheint:
-// Name, Logo, Link, „auf der Bande“, Reihenfolge, aktiv.
-// Pakete/Laufzeiten/Kontakte bleiben im Archiv-Modul „Sponsoren-CRM“
-// (gleiche Tabelle sm_sponsoren, nichts geht verloren).
+// v14-C: Sponsoren für die Website — Name, Logo, Link, „auf der Bande“,
+// Reihenfolge, aktiv. v16-S: Bereich „Partner“ mit vier Tabs:
+//   Sponsoren (+ Stufe, gekauftes Paket, „Live-Ticker präsentiert von“)
+//   Pakete · Zahlen (Mediadaten) · Anfragen (Eingang von /partner)
+// Route bleibt /sponsoren (Links/Tests), Tab über ?tab=.
+// Pakete/Laufzeiten/Kontakte (CRM) bleiben im Archiv-Modul „Sponsoren-CRM“.
 // ─────────────────────────────────────────────────────────────
 
+type Tab = 'sponsoren' | 'pakete' | 'zahlen' | 'anfragen'
+const TABS: Tab[] = ['sponsoren', 'pakete', 'zahlen', 'anfragen']
+
+const RANG: Record<string, number> = { hauptpartner: 0, partner: 1, unterstuetzer: 2 }
 const sortiere = (a: SponsorRow, b: SponsorRow) =>
-  Number(b.aktiv) - Number(a.aktiv) || (a.sortierung ?? 0) - (b.sortierung ?? 0) || a.name.localeCompare(b.name)
+  Number(b.aktiv) - Number(a.aktiv) ||
+  (RANG[a.stufe ?? 'partner'] ?? 1) - (RANG[b.stufe ?? 'partner'] ?? 1) ||
+  (a.sortierung ?? 0) - (b.sortierung ?? 0) ||
+  a.name.localeCompare(b.name)
 
 export function Sponsoren() {
+  const [params, setParams] = useSearchParams()
+  const tab = (TABS.includes(params.get('tab') as Tab) ? params.get('tab') : 'sponsoren') as Tab
+  const setTab = (t: Tab) => setParams(t === 'sponsoren' ? {} : { tab: t }, { replace: true })
+  const neu = useNeueAnfragen()
+  const [vorlage, setVorlage] = useState<{ name: string; paketId: string | null } | null>(null)
+
+  return (
+    <>
+      <PageHeader title="Partner" subtitle="Sponsoren, Pakete, Mediadaten und Anfragen — alles für /partner, die Bande und den Live-Ticker." />
+      {/* Mobil 2×2 statt Scroll-Leiste: alle vier Bereiche bleiben sichtbar */}
+      <div role="tablist" aria-label="Partner-Bereiche" className="mb-5 grid grid-cols-2 gap-1 rounded-lg bg-secondary p-1 sm:inline-grid sm:grid-cols-4">
+        {(
+          [
+            ['sponsoren', 'Sponsoren', Handshake],
+            ['pakete', 'Pakete', Package],
+            ['zahlen', 'Zahlen', BarChart3],
+            ['anfragen', 'Anfragen', Inbox],
+          ] as const
+        ).map(([value, label, Icon]) => (
+          <button
+            key={value}
+            type="button"
+            role="tab"
+            aria-selected={tab === value}
+            onClick={() => setTab(value)}
+            className={cn(
+              'flex min-h-11 items-center justify-center gap-2 rounded-md px-4 text-sm font-medium transition-colors',
+              tab === value ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            <Icon className="h-4 w-4" />
+            {label}
+            {value === 'anfragen' && neu > 0 && <span className="rounded-full bg-sva-gold px-1.5 text-[11px] font-bold text-black">{neu} neu</span>}
+          </button>
+        ))}
+      </div>
+      {tab === 'sponsoren' && <SponsorenTab vorlage={vorlage} onVorlageVerbraucht={() => setVorlage(null)} />}
+      {tab === 'pakete' && <PaketeTab />}
+      {tab === 'zahlen' && <ZahlenTab />}
+      {tab === 'anfragen' && (
+        <AnfragenTab
+          onAlsSponsor={(a: AnfrageRow) => {
+            setVorlage({ name: a.firma, paketId: a.paket_id })
+            setTab('sponsoren')
+          }}
+        />
+      )}
+    </>
+  )
+}
+
+function SponsorenTab({ vorlage, onVorlageVerbraucht }: { vorlage: { name: string; paketId: string | null } | null; onVorlageVerbraucht: () => void }) {
   const toast = useToast()
   const q = useSponsoren()
+  const pakete = usePakete()
   const { create, update, remove } = useSponsorenMutations()
-  const [editor, setEditor] = useState<{ open: boolean; row: SponsorRow | null }>({ open: false, row: null })
+  const [editor, setEditor] = useState<{ open: boolean; row: SponsorRow | null; vorlage?: { name: string; paketId: string | null } }>({ open: false, row: null })
+
+  useEffect(() => {
+    if (!vorlage) return
+    setEditor({ open: true, row: null, vorlage })
+    onVorlageVerbraucht()
+  }, [vorlage, onVorlageVerbraucht])
 
   const rows = useMemo(() => [...(q.data ?? [])].sort(sortiere), [q.data])
   const aktive = rows.filter((r) => r.aktiv)
   const altesSchema = rows.length > 0 && rows[0].bande === undefined
+  // v16-S: Partner-Migration angewandt? (Tabelle sva_partner_pakete lesbar)
+  const partnerBereit = !pakete.error
+  const paketName = (id: string | null) => (pakete.data ?? []).find((p) => p.id === id)?.name ?? null
 
   const verschieben = async (index: number, richtung: -1 | 1) => {
     const ziel = index + richtung
@@ -57,17 +133,21 @@ export function Sponsoren() {
 
   return (
     <>
-      <PageHeader
-        title="Sponsoren"
-        subtitle={`${aktive.length} auf der Website — Logos auf der Bande und im Sponsoren-Streifen.`}
-        actions={
-          <Button onClick={() => setEditor({ open: true, row: null })}>
-            <Plus className="h-4 w-4" /> Sponsor
-          </Button>
-        }
-      />
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-muted-foreground">{aktive.length} auf der Website — Partner-Wand, Bande und Sponsoren-Streifen.</p>
+        <Button onClick={() => setEditor({ open: true, row: null })}>
+          <Plus className="h-4 w-4" /> Sponsor
+        </Button>
+      </div>
 
       {altesSchema && <PflegeHinweis schema className="mb-4" />}
+      {pakete.error && isMissingSchema(pakete.error) && !altesSchema && (
+        <PflegeHinweis schema title="Partner-Bereich noch nicht freigeschaltet" className="mb-4">
+          Stufen, Pakete, Zahlen und Anfragen brauchen die Migration <code>20261006100000_sva_partner.sql</code> (Anleitung: docs/PARTNER.md). Sponsoren lassen sich trotzdem pflegen.
+        </PflegeHinweis>
+      )}
+
+      {partnerBereit && <LivePartnerKarte sponsoren={aktive} />}
 
       {q.error && !q.isPending && <ErrorState className="mb-4" message={friendlyError(q.error)} onRetry={() => void q.refetch()} />}
 
@@ -77,7 +157,7 @@ export function Sponsoren() {
         <EmptyState
           icon={Handshake}
           title="Noch keine Sponsoren"
-          description="Solange hier niemand steht, zeigt die Website „Hier könnte dein Logo stehen“."
+          description="Solange hier niemand steht, zeigt die Website „Hier könnte dein Logo stehen“ und /partner eine einladende leere Partner-Wand."
           action={
             <Button onClick={() => setEditor({ open: true, row: null })}>
               <Plus className="h-4 w-4" /> Ersten Sponsor anlegen
@@ -88,14 +168,23 @@ export function Sponsoren() {
         <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
           {rows.map((s) => {
             const i = aktive.indexOf(s)
+            const paket = paketName(s.partner_paket_id ?? null)
             return (
               <li key={s.id} className={cn('flex items-center gap-1', !s.aktiv && 'opacity-55')}>
                 <button type="button" onClick={() => setEditor({ open: true, row: s })} className="flex min-h-[68px] min-w-0 flex-1 items-center gap-3 px-3 py-2 text-left hover:bg-accent/40">
                   <LogoBox url={s.logo_url} name={s.name} />
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate font-medium">{s.name}</span>
+                    <span className="flex items-center gap-2">
+                      <span className="truncate font-medium">{s.name}</span>
+                      {partnerBereit && s.aktiv && (
+                        <span className={cn('shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide', s.stufe === 'hauptpartner' ? 'bg-primary/20 text-primary' : 'bg-secondary text-muted-foreground')}>
+                          {stufeLabel(s.stufe)}
+                        </span>
+                      )}
+                    </span>
                     <span className="block truncate text-sm text-muted-foreground">
-                      {!s.aktiv ? 'nicht auf der Website' : s.bande === false ? 'nur Sponsoren-Streifen' : 'Bande + Sponsoren-Streifen'}
+                      {!s.aktiv ? 'nicht auf der Website' : s.bande === false ? 'ohne Bande' : 'mit Bande'}
+                      {paket ? ` · ${paket}` : ''}
                       {s.website_url ? ` · ${s.website_url.replace(/^https?:\/\/(www\.)?/, '')}` : ''}
                     </span>
                   </span>
@@ -117,7 +206,7 @@ export function Sponsoren() {
       )}
 
       <p className="mt-4 flex items-center gap-1.5 text-xs text-muted-foreground">
-        <Archive className="h-3.5 w-3.5" /> Pakete, Laufzeiten und Kontakte:{' '}
+        <Archive className="h-3.5 w-3.5" /> Laufzeiten und Kontakte:{' '}
         <Link to="/sponsoren-crm" className="underline underline-offset-2">
           Sponsoren-CRM im Archiv
         </Link>
@@ -126,6 +215,9 @@ export function Sponsoren() {
       <SponsorFormular
         open={editor.open}
         row={editor.row}
+        vorlage={editor.vorlage}
+        partnerBereit={partnerBereit}
+        pakete={(pakete.data ?? []).map((p) => ({ id: p.id, name: p.name }))}
         naechsteSortierung={Math.max(0, ...rows.map((r) => r.sortierung ?? 0)) + 10}
         onClose={() => setEditor((e) => ({ ...e, open: false }))}
         onSave={async (input, id) => {
@@ -142,7 +234,49 @@ export function Sponsoren() {
   )
 }
 
-function LogoBox({ url, name, gross }: { url: string | null; name: string; gross?: boolean }) {
+/** v16-S: „Live-Ticker präsentiert von“ — wirkt auf /live sofort (web_live). */
+function LivePartnerKarte({ sponsoren }: { sponsoren: SponsorRow[] }) {
+  const toast = useToast()
+  const info = usePartnerInfo()
+  const save = useSavePartnerInfo()
+  const aktuell = info.data?.live_partner_id ?? ''
+  const gewaehlt = sponsoren.find((s) => s.id === aktuell) ?? null
+  return (
+    <div className="mb-4 flex flex-col gap-3 rounded-lg border border-border bg-card p-4 sm:flex-row sm:items-center">
+      <Radio className="hidden h-5 w-5 shrink-0 text-primary sm:block" />
+      <div className="min-w-0 flex-1">
+        <p className="font-medium">„Live-Ticker präsentiert von“</p>
+        <p className="text-xs text-muted-foreground">Logo im Kopf von /live (sofort) und auf jeder Endstand-Story-Grafik.</p>
+      </div>
+      <div className="flex items-center gap-2 sm:w-72">
+        {gewaehlt && <LogoBox url={gewaehlt.logo_url} name={gewaehlt.name} />}
+        <Select
+          aria-label="Live-Ticker präsentiert von"
+          className="h-12 text-base"
+          value={aktuell}
+          disabled={info.isPending || save.isPending || !!info.error}
+          onChange={async (e) => {
+            try {
+              await save.mutateAsync({ live_partner_id: e.target.value || null })
+              toast.success(e.target.value ? 'Live-Ticker-Partner gesetzt. Auf /live sofort sichtbar.' : 'Live-Ticker ohne Partner.')
+            } catch (err) {
+              toast.error(friendlyError(err))
+            }
+          }}
+        >
+          <option value="">— niemand —</option>
+          {sponsoren.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.name}
+            </option>
+          ))}
+        </Select>
+      </div>
+    </div>
+  )
+}
+
+export function LogoBox({ url, name, gross }: { url: string | null; name: string; gross?: boolean }) {
   return (
     <span className={cn('flex shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-white', gross ? 'h-24 w-48 p-2' : 'h-12 w-20 p-1')}>
       {url ? (
@@ -157,6 +291,9 @@ function LogoBox({ url, name, gross }: { url: string | null; name: string; gross
 function SponsorFormular({
   open,
   row,
+  vorlage,
+  partnerBereit,
+  pakete,
   naechsteSortierung,
   onClose,
   onSave,
@@ -164,6 +301,9 @@ function SponsorFormular({
 }: {
   open: boolean
   row: SponsorRow | null
+  vorlage?: { name: string; paketId: string | null }
+  partnerBereit: boolean
+  pakete: { id: string; name: string }[]
   naechsteSortierung: number
   onClose: () => void
   onSave: (input: SponsorInput & { name: string }, id?: string) => Promise<void>
@@ -175,6 +315,8 @@ function SponsorFormular({
   const [link, setLink] = useState('')
   const [bande, setBande] = useState(true)
   const [aktiv, setAktiv] = useState(true)
+  const [stufe, setStufe] = useState('partner')
+  const [paketId, setPaketId] = useState('')
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
   const [neuesLogo, setNeuesLogo] = useState<{ blob: Blob; vorschau: string } | null>(null)
   const [saving, setSaving] = useState(false)
@@ -182,14 +324,16 @@ function SponsorFormular({
 
   useEffect(() => {
     if (!open) return
-    setName(row?.name ?? '')
+    setName(row?.name ?? vorlage?.name ?? '')
     setLink(row?.website_url ?? '')
     setBande(row?.bande ?? true)
     setAktiv(row?.aktiv ?? true)
+    setStufe(row?.stufe ?? 'partner')
+    setPaketId(row?.partner_paket_id ?? vorlage?.paketId ?? '')
     setLogoUrl(row?.logo_url ?? null)
     setNeuesLogo(null)
     setError(null)
-  }, [open, row])
+  }, [open, row, vorlage])
 
   useEffect(() => () => {
     if (neuesLogo) URL.revokeObjectURL(neuesLogo.vorschau)
@@ -225,7 +369,15 @@ function SponsorFormular({
       let logo_url = logoUrl
       if (neuesLogo) logo_url = await uploadPublicImage(neuesLogo.blob, 'sponsoren', n)
       await onSave(
-        { name: n, website_url: url || null, bande, aktiv, logo_url, ...(row ? {} : { sortierung: naechsteSortierung }) },
+        {
+          name: n,
+          website_url: url || null,
+          bande,
+          aktiv,
+          logo_url,
+          ...(partnerBereit ? { stufe, partner_paket_id: paketId || null } : {}),
+          ...(row ? {} : { sortierung: naechsteSortierung }),
+        },
         row?.id,
       )
       onClose()
@@ -329,9 +481,46 @@ function SponsorFormular({
           )}
         </div>
       </div>
+
+      {partnerBereit && (
+        <>
+          <div className="space-y-1.5">
+            <Label id="sp-stufe-label">Stufe auf der Partner-Wand</Label>
+            <div role="radiogroup" aria-labelledby="sp-stufe-label" className="grid grid-cols-3 gap-2">
+              {STUFEN.map((s) => (
+                <button
+                  key={s.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={stufe === s.value}
+                  onClick={() => setStufe(s.value)}
+                  className={cn(
+                    'min-h-12 rounded-lg border px-2 py-2 text-sm font-medium transition-colors',
+                    stufe === s.value ? 'border-primary bg-primary text-primary-foreground' : 'border-border hover:bg-accent/40',
+                  )}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="sp-paket">Gebuchtes Paket (zählt bei „noch x frei“)</Label>
+            <Select id="sp-paket" className="h-12 text-base" value={paketId} onChange={(e) => setPaketId(e.target.value)}>
+              <option value="">— kein Paket —</option>
+              {pakete.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </Select>
+          </div>
+        </>
+      )}
+
       <div className="grid gap-2">
         <Switch checked={aktiv} onChange={setAktiv} label="Auf der Website zeigen" />
-        <Switch checked={bande} onChange={setBande} disabled={!aktiv} label="Auf der Bande" hint="Logo auch auf der 3D-Bande am Spielfeld — sonst nur im Sponsoren-Streifen" />
+        <Switch checked={bande} onChange={setBande} disabled={!aktiv} label="Auf der Bande" hint="Logo auch auf der 3D-Bande am Spielfeld — sonst nur Partner-Wand und Sponsoren-Streifen" />
       </div>
 
       {error && (
