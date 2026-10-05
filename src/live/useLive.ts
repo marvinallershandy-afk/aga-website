@@ -20,7 +20,7 @@ export interface LiveState {
   refresh: () => void
 }
 
-export function useLive(intervall: (d: LiveData | null) => number, enabled = true): LiveState {
+export function useLive(intervall: (d: LiveData | null) => number, enabled = true, demo = false): LiveState {
   const [data, setData] = useState<LiveData | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(enabled)
@@ -45,7 +45,7 @@ export function useLive(intervall: (d: LiveData | null) => number, enabled = tru
     const ctrl = new AbortController()
     const t = window.setTimeout(() => ctrl.abort(), 10_000)
     try {
-      const d = await fetchLive(ctrl.signal)
+      const d = await fetchLive(ctrl.signal, demo)
       dataRef.current = d
       setData(d)
       setError(null)
@@ -58,7 +58,7 @@ export function useLive(intervall: (d: LiveData | null) => number, enabled = tru
       setLoading(false)
       planen()
     }
-  }, [planen])
+  }, [planen, demo])
   useLayoutEffect(() => {
     tickRef.current = () => void tick()
   }, [tick])

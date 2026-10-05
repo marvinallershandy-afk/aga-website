@@ -24,6 +24,8 @@ import { Button } from '../components/ui/button'
 import { Skeleton } from '../components/ui/skeleton'
 import { PublishButton } from '../components/PublishButton'
 import { PflegeHinweis } from '../components/PflegeHinweis'
+// v18-T: Vorführ-Spiel (nur Admin)
+import { VorfuehrungKarte } from '../components/VorfuehrungKarte'
 import {
   useLineup,
   usePublishLog,
@@ -328,6 +330,8 @@ export function Uebersicht() {
           )}
         </CardContent>
       </Card>
+
+      <VorfuehrungKarte className="mt-6" />
     </>
   )
 }

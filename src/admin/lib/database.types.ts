@@ -680,6 +680,7 @@ export type Database = {
           anpfiff_at: string | null
           anstoss: string
           created_at: string
+          demo: boolean
           gegner: string
           heim: boolean
           id: string
@@ -701,6 +702,7 @@ export type Database = {
           anpfiff_at?: string | null
           anstoss: string
           created_at?: string
+          demo?: boolean
           gegner: string
           heim?: boolean
           id?: string
@@ -722,6 +724,7 @@ export type Database = {
           anpfiff_at?: string | null
           anstoss?: string
           created_at?: string
+          demo?: boolean
           gegner?: string
           heim?: boolean
           id?: string
@@ -1349,6 +1352,7 @@ export type Database = {
       rezept_speichern: { Args: { p_rezept: Json }; Returns: string }
       web_snapshot: { Args: never; Returns: Json }
       web_live: { Args: never; Returns: Json }
+      web_live_demo: { Args: never; Returns: Json }
       partner_anfrage: {
         Args: {
           p_firma: string

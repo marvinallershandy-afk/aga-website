@@ -65,6 +65,7 @@ Zuerst prüfen, was schon angewandt ist: Dashboard → Database → Migrations, 
 | … | `20261007100000` … `20261008110000` | Album, Galerien (siehe `docs/ALBUM.md`, `docs/DESIGN.md`) |
 | 11 | `20261009090000_sva_alltag.sql` | **ja** (v18-A Kalender-Abo + Mannschaften fürs Probetraining — siehe `docs/STATISTIK.md`) |
 | 12 | `20261009100000_sva_statistik.sql` | **ja** (v18-A cookiefreie Statistik — siehe `docs/STATISTIK.md`) |
+| 13 | `20261010100000_sva_demo_spiel.sql` | **ja** (v18-T Vorführ-Spiel: `sm_spiele.demo`, `web_live_demo()`, Admin-Knöpfe — siehe `docs/SPIELTAG.md`; Test `supabase/tests/demo.test.mjs`) |
 
 Anwenden geht einzeln im SQL-Editor (Datei-Inhalt einfügen) oder per MCP `apply_migration`. `supabase db push` nur verwenden, wenn die Remote-Migrationshistorie zu den Dateinamen passt. Sonst versucht es die Baseline erneut.
 

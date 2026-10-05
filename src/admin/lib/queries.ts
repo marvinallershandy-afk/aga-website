@@ -58,7 +58,14 @@ export function useIdeen() {
 export function useEingang() {
   return useQuery({ queryKey: keys.eingang, queryFn: db.fetchEingang })
 }
+// v18-T: Das Vorführ-Spiel (sm_spiele.demo) ist für Spiele, Aufstellung,
+// Album, Galerien, Übersicht usw. unsichtbar — gleicher Cache, nur gefiltert.
+const ohneVorfuehrung = (rows: SpielRow[]) => rows.filter((s) => !s.demo)
 export function useSpiele() {
+  return useQuery({ queryKey: keys.spiele, queryFn: db.fetchSpiele, select: ohneVorfuehrung })
+}
+/** v18-T: inkl. Vorführ-Spiel — nur Ticker-Pult und Vorführ-Karte. */
+export function useSpieleMitVorfuehrung() {
   return useQuery({ queryKey: keys.spiele, queryFn: db.fetchSpiele })
 }
 export function useRoster() {

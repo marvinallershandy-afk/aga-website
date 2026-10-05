@@ -1,0 +1,23 @@
+/* v18-T: Hinweis „Vorführung – kein echtes Spiel“ (/live?vorfuehrung=1).
+   Designsystem: Label in Versalien, Haarlinie, keine Fläche, kein Glow. */
+.lv-demo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2, 8px);
+  margin: var(--s-3, 12px) 0 0;
+  padding: var(--s-2, 8px) var(--s-3, 12px);
+  border: 1px dashed var(--c-line-strong, rgba(244, 242, 239, .28));
+  border-radius: var(--r-s, 4px);
+  font-size: var(--t-small, .875rem);
+  color: var(--c-text-2, rgba(244, 242, 239, .7));
+  text-align: center;
+}
+.lv-demo__label {
+  font-size: var(--t-label, .75rem);
+  font-weight: 800;
+  letter-spacing: var(--ls-label, .14em);
+  text-transform: uppercase;
+  color: var(--c-red, #E91D29);
+}
+.lv-demo__label::after { content: " –"; color: var(--c-text-3, rgba(244, 242, 239, .48)); font-weight: 400; }

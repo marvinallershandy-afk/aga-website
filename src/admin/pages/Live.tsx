@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useSearchParams } from 'react-router-dom'
 import {
   Undo2,
   CloudOff,
@@ -29,7 +30,8 @@ import { PublishButton } from '../components/PublishButton'
 import { useAuth } from '../auth/AuthProvider'
 import type { RosterRow, SpielRow } from '../lib/db'
 import { friendlyError, isMissingSchema } from '../lib/db'
-import { useRoster, useSpiele } from '../lib/queries'
+import { useRoster, useSpieleMitVorfuehrung } from '../lib/queries'
+import { istVorfuehrSpiel } from '../lib/vorfuehrung'
 import { formatAnstoss } from '../lib/format'
 import { hatErgebnis, naechstesSpiel, paarung } from '../lib/spiele'
 import { fetchLineupFuerSpiel, liveQueue, neueId, setMotm, type TickerInsert } from '../lib/live'
@@ -59,7 +61,9 @@ type Sheet =
 const nachname = (n: string) => n.trim().split(/\s+/).slice(-1)[0] ?? n
 const berlinTag = (d: Date) => d.toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })
 
-function standardSpiel(spiele: SpielRow[]): SpielRow | null {
+function standardSpiel(alle: SpielRow[]): SpielRow | null {
+  // v18-T: das Vorführ-Spiel nie automatisch wählen (nur per Auswahl oder ?spiel=)
+  const spiele = alle.filter((s) => !istVorfuehrSpiel(s))
   const live = spiele.find((s) => s.status === 'live' || s.status === 'halbzeit')
   if (live) return live
   const heute = berlinTag(new Date())
@@ -82,15 +86,19 @@ export function Live() {
   const confirm = useConfirm()
   const qc = useQueryClient()
   const { rolle } = useAuth()
-  const spieleQ = useSpiele()
+  // v18-T: inkl. Vorführ-Spiel (normal bedienbar, klar markiert)
+  const spieleQ = useSpieleMitVorfuehrung()
   const rosterQ = useRoster()
   const spiele = useMemo(() => spieleQ.data ?? [], [spieleQ.data])
-  const [spielId, setSpielId] = useState<string | null>(null)
+  const [params] = useSearchParams()
+  const [spielId, setSpielId] = useState<string | null>(() => params.get('spiel'))
   useEffect(() => {
-    if (spielId || !spiele.length) return
+    if (!spiele.length) return
+    if (spielId && spiele.some((s) => s.id === spielId)) return
     setSpielId(standardSpiel(spiele)?.id ?? null)
   }, [spiele, spielId])
   const spiel = spiele.find((s) => s.id === spielId) ?? null
+  const vorfuehrung = istVorfuehrSpiel(spiel)
 
   const { query: tickerQ, queue, events } = useTicker(spielId)
   const lineupQ = useQuery({ queryKey: ['sva_lineup_spiel', spielId], queryFn: () => fetchLineupFuerSpiel(spielId), enabled: !!spielId, retry: false })
@@ -201,16 +209,24 @@ export function Live() {
             .sort((a, b) => +new Date(b.anstoss) - +new Date(a.anstoss))
             .map((s) => (
               <option key={s.id} value={s.id}>
+                {istVorfuehrSpiel(s) ? 'VORFÜHRUNG · ' : ''}
                 {paarung(s)} · {formatAnstoss(s.anstoss)}
               </option>
             ))}
         </Select>
         <Button asChild variant="outline" size="icon" className="h-12 w-12 shrink-0" aria-label="Öffentliche Live-Seite öffnen">
-          <a href="/live" target="_blank" rel="noreferrer">
+          <a href={vorfuehrung ? '/live?vorfuehrung=1' : '/live'} target="_blank" rel="noreferrer">
             <ExternalLink className="h-5 w-5" />
           </a>
         </Button>
       </div>
+
+      {vorfuehrung && (
+        <div className="mb-3 rounded-lg border border-dashed border-primary/70 bg-primary/10 px-3 py-2.5 text-sm" role="note" data-testid="live-vorfuehrung">
+          <b className="font-display text-base tracking-wider text-primary">VORFÜHRUNG</b> — kein echtes Spiel. Alles hier ist nur über den Vorführ-Link{' '}
+          <a className="underline" href="/live?vorfuehrung=1" target="_blank" rel="noreferrer">/live?vorfuehrung=1</a> zu sehen, nicht auf der Website.
+        </div>
+      )}
 
       {!spiel ? (
         <Card>
@@ -306,7 +322,7 @@ export function Live() {
           )}
 
           {lage.status === 'beendet' && (
-            <NachDemSpiel spiel={spiel} tore={lage.tore} kandidaten={imSpiel} events={events} byId={byId} istAdmin={rolle !== 'team'} onMotm={async (id) => {
+            <NachDemSpiel spiel={spiel} tore={lage.tore} kandidaten={imSpiel} events={events} byId={byId} istAdmin={rolle !== 'team' && !vorfuehrung} onMotm={async (id) => {
               try {
                 await setMotm(spiel.id, id)
                 await qc.invalidateQueries({ queryKey: ['sm_spiele'] })
