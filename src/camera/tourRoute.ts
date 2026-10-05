@@ -59,7 +59,7 @@ const FIXED: Record<string, Pose> = {
   // v19-3D (§2.2.3): frontaler + etwas tiefer/näher — die Tafel steht parallel
   // zur Bildkante statt in starker Diagonale, der Baumstamm/Boden-Anschnitt
   // wandert aus dem Bild (Blickpunkt auf Tafelhöhe).
-  sponsoren: { pos: P(-2.16, 0.55, 2.98), look: P(-2.16, 0.2, 3.92) },
+  sponsoren: { pos: P(-2.16, 0.52, 3.32), look: P(-2.16, 0.26, 3.9) },
   // Südost-Kurve: Fans + Meister-Banner
   fanblock: { pos: P(2.9, 1.55, 2.3), look: P(3.7, 0.55, 4.0) },
   // Anzeigetafel am Vereinsheim (x 6.13 | z −0.35), Blick nach Nordost

@@ -599,7 +599,12 @@ export function Clubhouse() {
               <circleGeometry args={[0.013, 10]} />
               <meshBasicMaterial color={[2.4, 2.0, 1.35]} toneMapped={false} side={THREE.DoubleSide} />
             </mesh>
-            <pointLight position={[-0.05, -0.02, 0]} intensity={0.9} distance={0.9} color="#ffbe78" />
+            {/* warmer Lichtkegel unter der Leuchte (emissiv, kein dynamisches
+                Licht — die bestehende Tür-LightPool wärmt den Boden) */}
+            <mesh position={[-0.03, -0.09, 0]} rotation-x={Math.PI / 2}>
+              <planeGeometry args={[0.1, 0.12]} />
+              <meshBasicMaterial color="#ffbe78" transparent opacity={0.3} blending={THREE.AdditiveBlending} depthWrite={false} toneMapped={false} />
+            </mesh>
           </group>
           {/* gerahmtes Mannschaftsfoto (Meister 2026, „picture by Nele") —
               nördlich der Tür auf der Wand */}

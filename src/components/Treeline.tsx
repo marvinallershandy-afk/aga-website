@@ -82,7 +82,7 @@ function buildRing({ seed, radius, hMin, hMax, gapZ, gapScale, smooth = 0, jitte
 export function Treeline() {
   // innerer Saum: dicht an Süd-Reling/Ost hinterm Vereinsheim, Nord offen
   const inner = useMemo(
-    () => buildRing({ seed: 11, radius: 12.5, hMin: 1.3, hMax: 2.2, gapZ: 0.25, gapScale: 0.12 }),
+    () => buildRing({ seed: 11, radius: 12.5, hMin: 1.3, hMax: 2.2, gapZ: 0.25, gapScale: 0.12, smooth: 2, jitter: 1.0 }),
     [],
   )
   // äußerer Wald: hoch, Nord nur abgesenkt (ferne Bäume hinterm Dorf).

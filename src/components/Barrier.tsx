@@ -131,15 +131,15 @@ export function Barrier() {
           <meshStandardMaterial map={t.tex} emissiveMap={t.tex} emissive="#ffffff" emissiveIntensity={0.34} roughness={0.6} />
         </mesh>
       ))}
-      {/* v19-3D (§2.2.3): schmales Rim-Light an der Banden-Oberkante +
-          dezentes Fill von vorn → „Nachtspiel an der Bande" statt leerer
-          Ecke. Die Tafeln heben sich klar vom Wald dahinter ab. */}
+      {/* v19-3D (§2.2.3): schmales Rim-Light an der Banden-Oberkante (emissiv,
+          kein dynamisches Licht → kein globaler Shader-Mehraufwand) → die
+          Tafeln heben sich klar vom Wald dahinter ab, „Nachtspiel an der
+          Bande" statt leerer Ecke. Die Emissiv-Anhebung der Tafeln (s. o.)
+          trägt den Rest. */}
       <mesh position={[0, BOARD_Y + BANDE_H / 2 + 0.004, BOARD_Z - BOARD_D / 2 - 0.003]}>
-        <boxGeometry args={[BANDE_W, 0.012, 0.01]} />
-        <meshBasicMaterial color={[1.3, 1.25, 1.1]} toneMapped={false} />
+        <boxGeometry args={[BANDE_W, 0.012, 0.012]} />
+        <meshBasicMaterial color={[1.35, 1.28, 1.12]} toneMapped={false} />
       </mesh>
-      <pointLight position={[0, BOARD_Y + 0.25, BOARD_Z - 0.6]} intensity={0.7} distance={2.4} decay={2} color="#cfe0ff" />
-      <pointLight position={[-PITCH.width * 0.22, BOARD_Y + 0.25, BOARD_Z - 0.6]} intensity={0.5} distance={2.2} decay={2} color="#cfe0ff" />
       {/* Standfüße der Bande */}
       {Array.from({ length: 6 }, (_, i) => -PITCH.width * 0.4 + (i * PITCH.width * 0.8) / 5).map((x) => (
         <mesh key={x} position={[x, 0.03, BOARD_Z]}>

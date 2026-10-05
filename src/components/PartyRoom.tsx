@@ -366,7 +366,7 @@ function Pinnwand() {
             </mesh>
             <mesh>
               <planeGeometry args={[p.w, hgt]} />
-              <meshStandardMaterial map={photos[i]} emissiveMap={photos[i]} emissive="#ffffff" emissiveIntensity={0.28} roughness={0.7} />
+              <meshStandardMaterial map={photos[i]} emissiveMap={photos[i]} emissive="#ffffff" emissiveIntensity={0.5} roughness={0.7} />
             </mesh>
             {/* Pinnnadel */}
             <mesh position={[0, hgt / 2 + 0.01, 0.004]}>
@@ -379,9 +379,8 @@ function Pinnwand() {
       {/* kleines „picture by Nele"-Schild */}
       <mesh position={[0.3, 0.44, 0.003]} rotation-z={-0.02}>
         <planeGeometry args={[0.2, 0.05]} />
-        <meshStandardMaterial color="#141013" roughness={0.8} />
+        <meshStandardMaterial color="#141013" emissive="#141013" emissiveIntensity={0.6} roughness={0.8} />
       </mesh>
-      <pointLight position={[0.25, 1.1, 0]} intensity={1.0} distance={1.6} color="#ffd9a0" />
     </group>
   )
 }
