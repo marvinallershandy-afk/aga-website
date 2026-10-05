@@ -119,6 +119,11 @@ export function LiveApp() {
         <Leer titel="Live-Ticker nicht eingerichtet" text="Die Live-Daten sind auf dieser Seite noch nicht verbunden." />
       ) : live.loading && !d ? (
         <HeroSkeleton />
+      ) : live.error && !d ? (
+        // v19-S (Audit C): Netzwerk-/5xx-Fehler ohne je geladene Daten ist
+        // KEIN „kein Spiel“, sondern eine Störung — ehrlich anzeigen + weiter
+        // versuchen (Backoff in useLive). Vorführ-Modus bleibt unberührt.
+        <Unerreichbar zeit={live.letzteAktualisierung ?? live.letzterVersuch} onRetry={live.refresh} />
       ) : !m ? (
         <>
           <Leer
@@ -337,7 +342,7 @@ function Team({ name, sva }: { name: string; sva: boolean }) {
     .toUpperCase()
   return (
     <div className={sva ? 'lv-team lv-team--sva' : 'lv-team'}>
-      <span className="lv-crest">{sva ? <img src="/brand/wappen.png" alt="" /> : <i>{ini}</i>}</span>
+      <span className={sva ? 'lv-crest' : 'lv-crest lv-crest--tafel'}>{sva ? <img src="/brand/wappen.png" alt="" /> : <i>{ini}</i>}</span>
       <span className="lv-team__name">
         {sva ? (
           <>
@@ -500,6 +505,30 @@ function Leer({ titel, text, children }: { titel: string; text: string; children
       {children}
       <div className="lv-actions">
         <a className="lv-btn" href="/">
+          Zur Vereinsseite
+        </a>
+      </div>
+    </section>
+  )
+}
+
+// v19-S (Audit C): Störungs-Zustand — Liveticker gerade nicht erreichbar.
+function Unerreichbar({ zeit, onRetry }: { zeit: number | null; onRetry: () => void }) {
+  const stand = zeit ? new Date(zeit).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) : null
+  return (
+    <section className="lv-hero lv-hero--leer" role="status">
+      <span className="lv-netz lv-netz--gross">
+        <Icon name="offline" />
+      </span>
+      <h1 className="lv-leer__titel">Liveticker gerade nicht erreichbar</h1>
+      <p className="lv-meta">
+        {stand ? <>Stand von {stand} Uhr — </> : null}Wir versuchen es weiter. Die Seite lädt sich von selbst neu, sobald die Verbindung wieder steht.
+      </p>
+      <div className="lv-actions">
+        <button type="button" className="lv-btn" onClick={onRetry}>
+          <Icon name="offline" /> Jetzt neu laden
+        </button>
+        <a className="lv-btn lv-btn--ghost" href="/">
           Zur Vereinsseite
         </a>
       </div>

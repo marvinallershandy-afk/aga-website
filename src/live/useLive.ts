@@ -16,8 +16,17 @@ export interface LiveState {
   loading: boolean
   /** Server-Zeit minus Gerätezeit (ms) */
   offset: number
+  /** Zeitpunkt des letzten ERFOLGREICHEN Abrufs (ms) oder null. */
   letzteAktualisierung: number | null
+  /** Zeitpunkt des letzten Versuchs (ms) — auch bei Fehlern gesetzt. */
+  letzterVersuch: number | null
   refresh: () => void
+}
+
+// v19-S: Retry mit Backoff nach Fehlern (statt 5-min-Intervall), damit die
+// Seite am Spieltag schnell wieder hochkommt. 3 → 6 → 12 → 24 → 48 → 60 s.
+function backoffMs(fails: number): number {
+  return Math.min(3000 * 2 ** (fails - 1), 60_000)
 }
 
 export function useLive(intervall: (d: LiveData | null) => number, enabled = true, demo = false): LiveState {
@@ -26,8 +35,10 @@ export function useLive(intervall: (d: LiveData | null) => number, enabled = tru
   const [loading, setLoading] = useState(enabled)
   const [offset, setOffset] = useState(0)
   const [letzte, setLetzte] = useState<number | null>(null)
+  const [versuch, setVersuch] = useState<number | null>(null)
   const timer = useRef<number | null>(null)
   const dataRef = useRef<LiveData | null>(null)
+  const failsRef = useRef(0)
   const intervallRef = useRef(intervall)
   useLayoutEffect(() => {
     intervallRef.current = intervall
@@ -38,7 +49,8 @@ export function useLive(intervall: (d: LiveData | null) => number, enabled = tru
     if (timer.current) window.clearTimeout(timer.current)
     timer.current = null
     if (document.visibilityState === 'hidden') return
-    timer.current = window.setTimeout(() => tickRef.current(), intervallRef.current(dataRef.current))
+    const wartezeit = failsRef.current > 0 ? backoffMs(failsRef.current) : intervallRef.current(dataRef.current)
+    timer.current = window.setTimeout(() => tickRef.current(), wartezeit)
   }, [])
 
   const tick = useCallback(async () => {
@@ -47,15 +59,18 @@ export function useLive(intervall: (d: LiveData | null) => number, enabled = tru
     try {
       const d = await fetchLive(ctrl.signal, demo)
       dataRef.current = d
+      failsRef.current = 0
       setData(d)
       setError(null)
       setOffset(new Date(d.serverNow).getTime() - Date.now())
       setLetzte(Date.now())
     } catch (e) {
+      if (!(e instanceof DOMException && e.name === 'AbortError')) failsRef.current += 1
       setError(e instanceof Error && e.name !== 'AbortError' ? e.message : 'Keine Verbindung')
     } finally {
       window.clearTimeout(t)
       setLoading(false)
+      setVersuch(Date.now())
       planen()
     }
   }, [planen, demo])
@@ -80,7 +95,7 @@ export function useLive(intervall: (d: LiveData | null) => number, enabled = tru
     }
   }, [enabled, tick])
 
-  return { data, error, loading, offset, letzteAktualisierung: letzte, refresh: () => void tick() }
+  return { data, error, loading, offset, letzteAktualisierung: letzte, letzterVersuch: versuch, refresh: () => void tick() }
 }
 
 /** Sekundentakt (bzw. gröber) für Countdown/Minute — respektiert versteckte Tabs. */
