@@ -2,13 +2,17 @@
 
 Stand v17-A. Fans scannen bei jedem Heimspiel am Eingang einen QR-Code, reißen ein
 Sticker-Tütchen auf und kleben die Sticker in ihr digitales Heft auf **`/album`**.
-Ab dem 5. und 10. Check-in gibt es Gutscheine (eingelöst am Stand per PIN), wer die
+Ab dem 5. und 10. Check-in gibt es Gutscheine (am Stand per Knopf „Einlösen“ + Bestätigung, v17-D), wer die
 ganze Mannschaft im Heft hat, nimmt an der Saison-Verlosung teil.
 Gleichzeitig zählt der Verein damit **echte Zuschauer** — die Zahl steht automatisch
 in den Mediadaten auf `/partner`.
 
-Design: Marvins Higgsfield-Entwurf „Das offizielle Stickerheft“ (Cover auf dem
-Kneipentisch, Retro-Papier-Seiten). Assets in `public/album/` (ohne Bier/Aschenbecher).
+Design (v17-D): im Designsystem der Website (docs/DESIGN.md) — dunkel, Rot-Schwarz,
+große Anton-Typo, scharfe Freisteller auf dunkler Folie, ruhige Bewegung. Panini nur
+als Akzent (helle Sticker-Kante, Tütchen, Seiten nach Positionen). Seltenheit als
+feine Folienkante (Silber/Gold), Spezial als dezentes Holo. Das Cover ist eine
+gestaltete Vorderseite (drei Freisteller), kein Foto mehr. Die alten Higgsfield-
+Assets in `public/album/` (Tisch, Deko, Cover-Foto) werden nicht mehr geladen.
 
 ---
 
@@ -17,7 +21,8 @@ Kneipentisch, Retro-Papier-Seiten). Assets in `public/album/` (ohne Bier/Aschenb
 1. **Migration** `supabase/migrations/20261007100000_sva_album.sql` anwenden (nach
    `20261006100000_sva_partner.sql`). Legt nur `sva_album_*`-Objekte an und erneuert
    `web_snapshot()` (Mediadaten + Check-in-Zahl). Idempotent.
-   Test vorher lokal: `supabase/tests/album.test.mjs` (PGlite, 139 Prüfungen).
+   Test vorher lokal: `supabase/tests/album.test.mjs` (PGlite, 141 Prüfungen).
+   **Danach** `20261008110000_sva_album_gutschein_ohne_pin.sql` (Gutschein ohne PIN).
 2. **Supabase → Authentication → Settings**
    - **„Confirm email“ muss AN sein.** Wichtig: Das Projekt hat Signups an. Ohne
      E-Mail-Bestätigung könnte sich jemand per Passwort-Signup mit der Adresse eines
@@ -35,7 +40,7 @@ Kneipentisch, Retro-Papier-Seiten). Assets in `public/album/` (ohne Bier/Aschenb
 3. Admin → **Album → Sticker** → „Sticker aus Kader erzeugen“ (Spieler als Kader-Sticker,
    Kapitän zusätzlich als Gold-Sticker, Trainerstab für die Trainerstab-Seite).
    Dann Momente („Foto des Jahres“), Partner- und Fan-Sticker mit Foto anlegen.
-4. Admin → **Album → Regeln & PIN** → **Stand-PIN** setzen (4 Ziffern) und Belohnungen
+4. Admin → **Album → Regeln** → Belohnungen
    mit „präsentiert von“-Partnern prüfen.
 5. „Website veröffentlichen“ — erst dann erscheint die Check-in-Zahl auf `/partner`.
 
@@ -61,15 +66,17 @@ eingebunden wird er beim Umbau der Startseite.
 **Gutschein einlösen (Stand-Team):**
 1. Fan öffnet `/album` → Inhalt → Gutschein → „Am Stand zeigen“.
    Die laufende Uhr und die bewegten Streifen zeigen: kein Screenshot.
-2. Helfer tippt „Helfer: jetzt einlösen“ und gibt die **Stand-PIN** auf dem Handy des
-   Fans ein → grüner Stempel „Eingelöst“.
-3. Nach 5 falschen PINs ist der Gutschein 15 min gesperrt.
+2. Fan (oder Helfer) tippt **„Einlösen“** → Frage „Wirklich einlösen? Danach ist der
+   Gutschein verbraucht.“ → **„Ja, einlösen“**.
+3. Großer grüner Haken „Eingelöst am … um … Uhr · Nicht mehr gültig“, Code
+   durchgestrichen. Ein zweites Einlösen lehnt der Server ab — Helfer achten nur auf
+   den Haken (und darauf, dass die Uhr läuft).
 4. Notfall (Akku leer): Admin → Album → Gutscheine → Code suchen → „Einlösen“.
 
 **Wenn der QR-Code geteilt wird** (Foto in der WhatsApp-Gruppe): Admin → Spieltage →
 „Neu erzeugen“ → neues Plakat drucken. Der alte Code ist sofort ungültig.
 
-## 3. Regeln (Admin → Album → Regeln & PIN)
+## 3. Regeln (Admin → Album → Regeln)
 
 | Einstellung | Standard | Wirkung |
 |---|---|---|
@@ -123,7 +130,7 @@ nie im Browser. Sticker werden beim Öffnen des Tütchens gutgeschrieben.
   (alle `SECURITY DEFINER`, prüfen `auth.uid()`). Getestet in `album.test.mjs`.
 - Der Album-Login nutzt einen eigenen Speicherschlüssel (`sva-album-auth`), er landet
   also nie in einer Admin-Sitzung.
-- Stand-PIN nur als gesalzener SHA-256; falsche PINs werden protokolliert (1 Tag).
+- Gutschein einlösen nur für den eigenen Gutschein und nur einmal (Zeilensperre); seit v17-D ohne Stand-PIN (alte PIN-Spalten bleiben unbenutzt stehen).
 - „Konto löschen“ (auf `/album`): Profil, Sticker, Gutscheine weg, Check-ins nur noch
   anonym. Das Login wird mitgelöscht, wenn es über das Album angelegt wurde
   (`user_metadata.app = 'sva-album'`) und kein Admin-Zugang ist. Das Auth-Schema teilt
@@ -133,9 +140,9 @@ nie im Browser. Sticker werden beim Öffnen des Tütchens gutgeschrieben.
 ## 7. Tests & Prüfskripte
 
 - `supabase/tests/album.test.mjs` — PGlite (Migration, Ziehung 70/22/7/1 über 4000
-  Sticker, Fenster, Doppel-Check-in, PIN-Sperre, Heimsieg-Bonus, Missbrauch durch Fans).
+  Sticker, Fenster, Doppel-Check-in, Einlösen ohne PIN (doppelt/fremd abgelehnt), Heimsieg-Bonus, Missbrauch durch Fans).
 - `scripts/album-audit.mjs` — `/album` mit Mocks (Login, Profil, Check-in, Tütchen je
-  Seltenheit, Einkleben, Fehlerzustände, Gutschein + PIN, Konto löschen).
+  Seltenheit, Einkleben, Fehlerzustände, Gutschein mit Bestätigung, Konto löschen).
 - `scripts/album-admin-audit.mjs` — Admin „Album“ inkl. QR-Lesbarkeit des Plakats
   (BarcodeDetector) und PDF-Export.
 

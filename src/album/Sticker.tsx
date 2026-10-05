@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { Karte } from './api'
 import { SELTEN_LABEL, name } from './model'
+import { hdCutout } from '../ui/hdCutout'
 
 // ─────────────────────────────────────────────────────────────
 // v17-A: Sticker wie im gedruckten SVA-Stickerheft (Vorlage: Higgsfield-
@@ -24,8 +25,11 @@ export function Sticker({ karte, walkout, className }: Props) {
   const [videoKaputt, setVideoKaputt] = useState(false)
   const [bildKaputt, setBildKaputt] = useState(false)
   const s = karte.spieler
-  const foto = !bildKaputt ? (karte.bildUrl ?? s?.fotoUrl ?? s?.cutoutUrl) : undefined
-  const freisteller = !!foto && !!s?.cutoutUrl && foto === s.cutoutUrl
+  // v17-D: Personen als scharfer Freisteller (HD) auf dunkler Folie — wie
+  // die Spielerkarten der Website; eigenes Foto (bildUrl) hat Vorrang.
+  const frei = s?.cutoutUrl ? hdCutout(s.cutoutUrl) : undefined
+  const foto = !bildKaputt ? (karte.bildUrl ?? frei ?? s?.fotoUrl) : undefined
+  const freisteller = !!foto && !!frei && foto === frei
   const video = walkout && karte.walkoutUrl && !videoKaputt ? karte.walkoutUrl : null
   const logo = karte.typ === 'partner' && !karte.bildUrl ? karte.partner?.logoUrl : undefined
   const fuss =
@@ -78,7 +82,7 @@ export function StickerRueckseite({ nr }: { nr?: number }) {
       <b>Stickerheft</b>
       <span>SV Agathenburg-Dollern</span>
       {nr != null && <em>Nr. {nr}</em>}
-      <small>Hier abziehen ↗</small>
+      <small>Hier abziehen</small>
     </div>
   )
 }
