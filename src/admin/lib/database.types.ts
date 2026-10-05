@@ -1159,6 +1159,10 @@ export type Database = {
       }
       sva_partner_info: {
         Row: {
+          ansprechpartner_foto_url: string | null
+          ansprechpartner_name: string | null
+          ansprechpartner_rolle: string | null
+          ansprechpartner_telefon: string | null
           heimspiele_saison: number | null
           id: number
           instagram_follower: number | null
@@ -1171,6 +1175,10 @@ export type Database = {
           zuschauer_heim: number | null
         }
         Insert: {
+          ansprechpartner_foto_url?: string | null
+          ansprechpartner_name?: string | null
+          ansprechpartner_rolle?: string | null
+          ansprechpartner_telefon?: string | null
           heimspiele_saison?: number | null
           id?: number
           instagram_follower?: number | null
@@ -1183,6 +1191,10 @@ export type Database = {
           zuschauer_heim?: number | null
         }
         Update: {
+          ansprechpartner_foto_url?: string | null
+          ansprechpartner_name?: string | null
+          ansprechpartner_rolle?: string | null
+          ansprechpartner_telefon?: string | null
           heimspiele_saison?: number | null
           id?: number
           instagram_follower?: number | null

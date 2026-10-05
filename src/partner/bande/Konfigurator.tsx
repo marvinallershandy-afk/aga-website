@@ -110,7 +110,9 @@ function SpieltagVorschau({ e }: { e: EntwurfZustand }) {
   }, [])
   useEffect(() => {
     if (!sichtbar) return
-    const gross = window.innerWidth * (window.devicePixelRatio || 1) > 1100
+    // v19-S (Audit C): auf dem Handy die 1000er-Variante (93 KB) statt 260 KB —
+    // nach CSS-Breite, nicht DPR (sonst zog ein DPR-3-Handy das große Foto).
+    const gross = window.innerWidth > 760
     let ab = false
     ladeFoto(gross)
       .then((f) => !ab && setFoto(f))

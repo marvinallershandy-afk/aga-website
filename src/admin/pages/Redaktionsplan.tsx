@@ -36,6 +36,7 @@ import { KanalIcons, StatusSelect } from '../components/ui/status'
 import { useToast } from '../components/ui/toast'
 import { ContentEditor } from '../components/ContentEditor'
 import type { ContentRow, ContentInput } from '../lib/db'
+import { friendlyError } from '../lib/db'
 import { useContent, useContentMutations } from '../lib/queries'
 import { KANAELE, STATUS, KATEGORIEN } from '../lib/constants'
 import {
@@ -158,7 +159,7 @@ export function Redaktionsplan() {
           toast.success(`„${row.titel}" → ${label}`)
         },
         onError: (e) =>
-          toast.error(e instanceof Error ? e.message : 'Status-Update fehlgeschlagen.'),
+          toast.error(friendlyError(e, 'Status-Update fehlgeschlagen.')),
       },
     )
   }
@@ -234,7 +235,7 @@ export function Redaktionsplan() {
       {contentQ.error && !loading && (
         <ErrorState
           className="mb-4"
-          message={contentQ.error.message}
+          message={friendlyError(contentQ.error)}
           onRetry={() => void contentQ.refetch()}
         />
       )}

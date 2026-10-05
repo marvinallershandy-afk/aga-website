@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { packOeffnen, type Karte, type PackArt, type PackInhalt, type PartnerInfo, AlbumFehler } from './api'
 import { Sticker, StickerRueckseite } from './Sticker'
 import { SELTEN_LABEL, SELTEN_RANG, name, reduzierteBewegung } from './model'
+import { InstagramZeile } from '../ui/InstagramZeile'
 
 // ─────────────────────────────────────────────────────────────
 // v17-A: Tütchen aufreißen wie bei Panini.
@@ -237,6 +238,9 @@ export function PackOpening({ packId, art, gegner, partner, karten, nummern, sai
               Belohnung freigeschaltet: <b>{g.titel}</b>
             </p>
           ))}
+          {/* v19-S (Audit B §2.6): Album als Follower-Motor — Story-Impuls */}
+          <p className="al-pack__story">Seltener Pull? Zeig ihn in deiner Story und markier uns.</p>
+          <InstagramZeile text="In der Story markieren: @svagathenburg" />
           <button
             type="button"
             className="al-btn al-btn--gross"

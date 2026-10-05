@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowUpRight } from 'lucide-react'
 import { GALERIEN, coverOf, galerieDatum, type Galerie } from '../data/galerie'
 import { CLUB, NELE } from '../data/club'
 import { GalerieView, NeleCredit } from './GalerieView'
+import { InstagramZeile } from '../ui/InstagramZeile'
 
 // ─────────────────────────────────────────────────────────────
 // v17-D: Seite /galerie (galerie.html, eigenes schlankes Bundle wie
@@ -92,6 +93,9 @@ export function GalerieApp() {
               {NELE.instagram} auf Instagram
               <ArrowUpRight size={16} strokeWidth={1.5} aria-hidden="true" />
             </a>
+            <p className="gpage__nele-sva">
+              <InstagramZeile text="Mehr vom Spieltag: @svagathenburg" />
+            </p>
           </div>
         </section>
       </main>

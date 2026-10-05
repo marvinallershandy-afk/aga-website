@@ -315,6 +315,35 @@ async function mapPartner(p) {
   return { pakete, mediadaten, ...(livePartner ? { livePartner } : {}) }
 }
 
+// v19-S: Ansprechpartner für /partner — eigene RPC web_partner_kontakt()
+// (Migration 20261011100000; web_snapshot bewusst nicht angefasst). Fehlt sie
+// oder ist kein Name gepflegt: kein Block.
+async function fetchPartnerKontakt() {
+  try {
+    const r = await fetchWithTimeout(`${url}/rest/v1/rpc/web_partner_kontakt`, {
+      method: 'POST',
+      headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: '{}',
+    })
+    if (!r.ok) {
+      console.log(`fetch-content: web_partner_kontakt() nicht verfügbar (HTTP ${r.status}) → kein Ansprechpartner-Block.`)
+      return null
+    }
+    const k = await r.json()
+    if (!k || typeof k !== 'object' || !str(k.name)) return null
+    const fotoUrl = await localize(k.fotoUrl, 'partner-kontakt', str(k.name))
+    return {
+      name: str(k.name),
+      ...(str(k.rolle) ? { rolle: str(k.rolle) } : {}),
+      ...(fotoUrl ? { fotoUrl } : {}),
+      ...(str(k.telefon) ? { telefon: str(k.telefon) } : {}),
+    }
+  } catch (e) {
+    console.log(`fetch-content: web_partner_kontakt() nicht erreichbar (${e?.message || e}) → kein Ansprechpartner-Block.`)
+    return null
+  }
+}
+
 // v18-A: Mannschaften für den Probetraining-Assistenten — eigene RPC
 // web_mitspielen() (Migration 20261009090000). Fehlt sie: Seed bleibt aktiv.
 const MANNSCHAFT_ID = /^[a-z0-9][a-z0-9-]{0,39}$/
@@ -413,6 +442,7 @@ async function main() {
     })
   }
   const partner = await mapPartner(snap.partner)
+  const partnerKontakt = await fetchPartnerKontakt()
   const galerien = await mapGalerien(snap.galerien)
   const mannschaften = await fetchMannschaften()
 
@@ -464,7 +494,8 @@ async function main() {
   if (sections.length) overlay.sections = sections
   if (contact) overlay.contact = contact
   if (links) overlay.links = links
-  if (partner) overlay.partner = partner
+  if (partner || partnerKontakt)
+    overlay.partner = { ...(partner ?? { pakete: [], mediadaten: {} }), ...(partnerKontakt ? { ansprechpartner: partnerKontakt } : {}) }
   if (galerien.length) overlay.galerien = galerien
   if (mannschaften.length) overlay.mannschaften = mannschaften
 

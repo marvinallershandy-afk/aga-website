@@ -148,7 +148,7 @@ export function Tabelle() {
     if (!ok) return
     remove.mutate(r.id, {
       onSuccess: () => toast.success('Zeile gelöscht.'),
-      onError: (e) => toast.error(e instanceof Error ? e.message : 'Löschen fehlgeschlagen.'),
+      onError: (e) => toast.error(friendlyError(e, 'Löschen fehlgeschlagen.')),
     })
   }
 
@@ -350,7 +350,7 @@ function TabelleEditor({
     try {
       await onSave()
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Speichern fehlgeschlagen.')
+      setError(friendlyError(e, 'Speichern fehlgeschlagen.'))
     } finally {
       setSaving(false)
     }

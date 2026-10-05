@@ -18,6 +18,7 @@ import { ErrorState } from '../components/ui/error-state'
 import { useToast } from '../components/ui/toast'
 import { SponsorEditor } from '../components/SponsorEditor'
 import type { SponsorInput, SponsorRow } from '../lib/db'
+import { friendlyError } from '../lib/db'
 import { useContentMutations, useSponsoren, useSponsorenMutations } from '../lib/queries'
 import { paketMeta } from '../lib/constants'
 import { toISODate, formatDateShort, tageBis } from '../lib/format'
@@ -63,7 +64,7 @@ export function SponsorenCrm() {
       },
       {
         onSuccess: () => toast.success(`„Sponsor des Monats: ${row.name}" im Plan angelegt.`),
-        onError: (e) => toast.error(e instanceof Error ? e.message : 'Anlegen fehlgeschlagen.'),
+        onError: (e) => toast.error(friendlyError(e, 'Anlegen fehlgeschlagen.')),
       },
     )
   }
@@ -102,7 +103,7 @@ export function SponsorenCrm() {
       )}
 
       {sponsorenQ.error && !sponsorenQ.isPending && (
-        <ErrorState className="mb-4" message={sponsorenQ.error.message} onRetry={() => void sponsorenQ.refetch()} />
+        <ErrorState className="mb-4" message={friendlyError(sponsorenQ.error)} onRetry={() => void sponsorenQ.refetch()} />
       )}
 
       {sponsorenQ.isPending ? (

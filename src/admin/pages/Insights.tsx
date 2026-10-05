@@ -15,6 +15,7 @@ import { ErrorState } from '../components/ui/error-state'
 import { useToast } from '../components/ui/toast'
 import { useConfirm } from '../components/ui/confirm'
 import type { InsightRow } from '../lib/db'
+import { friendlyError } from '../lib/db'
 import { useInsights, useInsightsMutations } from '../lib/queries'
 import { kanalLabel } from '../lib/constants'
 import { KanalIcons } from '../components/ui/status'
@@ -58,7 +59,7 @@ export function Insights() {
     if (!ok) return
     remove.mutate(row.id, {
       onSuccess: () => toast.success('Eintrag gelöscht.'),
-      onError: (e) => toast.error(e instanceof Error ? e.message : 'Löschen fehlgeschlagen.'),
+      onError: (e) => toast.error(friendlyError(e, 'Löschen fehlgeschlagen.')),
     })
   }
 
@@ -82,7 +83,7 @@ export function Insights() {
       />
 
       {insightsQ.error && !insightsQ.isPending && (
-        <ErrorState className="mb-4" message={insightsQ.error.message} onRetry={() => void insightsQ.refetch()} />
+        <ErrorState className="mb-4" message={friendlyError(insightsQ.error)} onRetry={() => void insightsQ.refetch()} />
       )}
 
       {insightsQ.isPending ? (
@@ -232,7 +233,7 @@ function InsightEditor({
       setTopBeitrag('')
       onClose()
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Speichern fehlgeschlagen.')
+      setError(friendlyError(e, 'Speichern fehlgeschlagen.'))
     } finally {
       setSaving(false)
     }

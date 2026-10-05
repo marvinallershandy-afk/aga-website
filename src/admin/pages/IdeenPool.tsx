@@ -25,6 +25,7 @@ import { useConfirm } from '../components/ui/confirm'
 import { IdeeEditor } from '../components/IdeeEditor'
 import { EingangEditor } from '../components/EingangEditor'
 import type { IdeeRow, IdeeInput, EingangRow, EingangInput, EingangStatus } from '../lib/db'
+import { friendlyError } from '../lib/db'
 import {
   useContentMutations,
   useEingang,
@@ -109,7 +110,7 @@ function BibliothekTab() {
   const toggleAktiv = (row: IdeeRow) => {
     update.mutate(
       { id: row.id, patch: { aktiv: !row.aktiv } },
-      { onError: (e) => toast.error(e instanceof Error ? e.message : 'Update fehlgeschlagen.') },
+      { onError: (e) => toast.error(friendlyError(e, 'Update fehlgeschlagen.')) },
     )
   }
 
@@ -126,7 +127,7 @@ function BibliothekTab() {
       },
       {
         onSuccess: () => toast.success(`„${row.titel}" als geplanter Beitrag (heute) angelegt.`),
-        onError: (e) => toast.error(e instanceof Error ? e.message : 'Anlegen fehlgeschlagen.'),
+        onError: (e) => toast.error(friendlyError(e, 'Anlegen fehlgeschlagen.')),
       },
     )
   }
@@ -151,7 +152,7 @@ function BibliothekTab() {
       </div>
 
       {ideenQ.error && !ideenQ.isPending && (
-        <ErrorState className="mb-4" message={ideenQ.error.message} onRetry={() => void ideenQ.refetch()} />
+        <ErrorState className="mb-4" message={friendlyError(ideenQ.error)} onRetry={() => void ideenQ.refetch()} />
       )}
 
       {ideenQ.isPending ? (
@@ -253,14 +254,14 @@ function EingangTab() {
     if (row.status === status) return
     update.mutate(
       { id: row.id, patch: { status } },
-      { onError: (e) => toast.error(e instanceof Error ? e.message : 'Status-Update fehlgeschlagen.') },
+      { onError: (e) => toast.error(friendlyError(e, 'Status-Update fehlgeschlagen.')) },
     )
   }
 
   const handleIntoPlan = (row: EingangRow) => {
     intoPlan.mutate(row, {
       onSuccess: () => toast.success(`„${row.titel}" in den Plan übernommen.`),
-      onError: (e) => toast.error(e instanceof Error ? e.message : 'Übernehmen fehlgeschlagen.'),
+      onError: (e) => toast.error(friendlyError(e, 'Übernehmen fehlgeschlagen.')),
     })
   }
 
@@ -274,7 +275,7 @@ function EingangTab() {
     if (!ok) return
     remove.mutate(row.id, {
       onSuccess: () => toast.success('Idee gelöscht.'),
-      onError: (e) => toast.error(e instanceof Error ? e.message : 'Löschen fehlgeschlagen.'),
+      onError: (e) => toast.error(friendlyError(e, 'Löschen fehlgeschlagen.')),
     })
   }
 
@@ -318,7 +319,7 @@ function EingangTab() {
       </div>
 
       {eingangQ.error && !eingangQ.isPending && (
-        <ErrorState className="mb-4" message={eingangQ.error.message} onRetry={() => void eingangQ.refetch()} />
+        <ErrorState className="mb-4" message={friendlyError(eingangQ.error)} onRetry={() => void eingangQ.refetch()} />
       )}
 
       {eingangQ.isPending ? (

@@ -225,7 +225,7 @@ export function Anfrage({
             <p className="pt-entwurf__titel">Dein Banden-Entwurf geht mit</p>
             <p className="pt-entwurf__text">
               Name{entwurf.zeile2.trim() ? ', zweite Zeile' : ''} und Untergrund gehen als Text mit.
-              {entwurf.logoDataUrl ? ' Dein Logo bleibt auf deinem Gerät — die Datei schickst du uns nach der Anfrage per E-Mail.' : ''}
+              {entwurf.logoDataUrl ? ' Die Logo-Datei schickst du uns nach der Anfrage per E-Mail.' : ''}
             </p>
             <button type="button" className="pt-entwurf__weg" onClick={onOhneEntwurf}>
               Ohne Entwurf anfragen

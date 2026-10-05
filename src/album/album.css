@@ -44,6 +44,8 @@ button { cursor: pointer; }
 button:disabled { cursor: default; }
 img { display: block; max-width: 100%; }
 em { font-style: normal; color: var(--c-red); }
+/* v19-S (Audit A §2.9): Headlines einfarbig (DESIGN.md §2) — kein Rot-Weiß-Split */
+.al-h1 em { color: inherit; }
 :focus-visible { outline: 2px solid var(--c-white); outline-offset: 2px; }
 
 .al { max-width: 1120px; margin: 0 auto; padding: 0 var(--s-4) calc(var(--s-6) + env(safe-area-inset-bottom)); overflow-x: clip; }
@@ -184,6 +186,14 @@ em { font-style: normal; color: var(--c-red); }
 .al-start__hint {
   position: relative; z-index: 2; margin-top: var(--s-5);
   font-weight: 700; font-size: var(--t-label); letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--c-text-2);
+}
+.al-start__rechts { width: 100%; display: flex; flex-direction: column; align-items: center; }
+/* v19-S (Audit A §2.9): Desktop-Zweispalter — Cover links, Login/Erklärung rechts */
+@media (min-width: 1024px) {
+  .al:not(.is-offen) .al-start { flex-direction: row; align-items: center; justify-content: center; gap: var(--s-8); padding-top: var(--s-8); }
+  .al:not(.is-offen) .al-start > .al-cover { flex: none; width: 360px; }
+  .al:not(.is-offen) .al-start__rechts { flex: 1 1 0; max-width: 30rem; align-items: stretch; }
+  .al:not(.is-offen) .al-start__rechts .al-start__hint { margin-top: 0; align-self: center; }
 }
 
 /* ── Check-in-Hinweis ────────────────────────────────────── */
@@ -447,6 +457,8 @@ em { font-style: normal; color: var(--c-red); }
 .al-pack__stage { position: relative; display: flex; flex-direction: column; align-items: center; gap: var(--s-4); width: 100%; max-width: 420px; }
 .al-pack__stage--ende { max-width: 560px; }
 .al-pack__kicker { font-size: var(--t-label); font-weight: 700; letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--c-red); text-align: center; }
+.al-pack__story { margin-top: var(--s-3); font-size: var(--t-small); color: var(--c-text-2); text-align: center; }
+.al-pack__stage--ende .ig-zeile { margin-top: var(--s-2); }
 .al-pack__hint { min-height: 1.5em; font-weight: 700; color: var(--c-text-2); letter-spacing: var(--ls-label); text-transform: uppercase; font-size: var(--t-label); }
 .al-pack__info { display: flex; flex-direction: column; align-items: center; gap: var(--s-2); min-height: 64px; text-align: center; }
 .al-pack__name { font-family: var(--f-display); font-size: 1.75rem; line-height: 1; text-transform: uppercase; }

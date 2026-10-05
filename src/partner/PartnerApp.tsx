@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import {
+  ANSPRECHPARTNER,
   BANDEN_PAKET,
   MEDIADATEN,
   PARTNER_PAKETE,
@@ -21,6 +22,7 @@ import { Anfrage } from './Anfrage'
 import { Konfigurator } from './bande/Konfigurator'
 import { PartnerTafel } from './bande/PartnerTafel'
 import { entwurf, entwurfAktiv, useEntwurf } from './bande/entwurf'
+import { InstagramZeile } from '../ui/InstagramZeile'
 
 // ─────────────────────────────────────────────────────────────
 // v16-S: Öffentliche Partner-Seite /partner — Sponsoren gewinnen.
@@ -42,6 +44,16 @@ export function PartnerApp() {
   const [mitEntwurf, setMitEntwurf] = useState(startMitEntwurf)
   const [interesse, setInteresse] = useState<string>(() => (mitEntwurf && BANDEN_PAKET ? BANDEN_PAKET.id : ''))
   const e = useEntwurf()
+
+  // v19-S (Audit A §2.8): Sticky-Header ab 1 px Scroll komplett deckend —
+  // sonst läuft Text als Geisterschrift hinter Logo/CTA durch.
+  const [scrolled, setScrolled] = useState(false)
+  useEffect(() => {
+    const on = () => setScrolled(window.scrollY > 1)
+    on()
+    window.addEventListener('scroll', on, { passive: true })
+    return () => window.removeEventListener('scroll', on)
+  }, [])
 
   // Deep-Link (/partner#anfrage, #deine-bande): erst nach dem Rendern springen
   useEffect(() => {
@@ -70,7 +82,7 @@ export function PartnerApp() {
 
   return (
     <div className="pt">
-      <header className="pt-top">
+      <header className={`pt-top${scrolled ? ' is-scrolled' : ''}`}>
         <a className="pt-brand" href="/" aria-label="Zur Vereinsseite">
           <img src="/brand/aga-logo.png" alt="" width="30" height="35" />
           <span className="pt-brand__wort">SV Agathenburg-Dollern</span>
@@ -94,6 +106,7 @@ export function PartnerApp() {
             Lass uns reden
           </h2>
           <p className="pt-lead pt-lead--sm">Kein Vertrag, keine Verpflichtung. Du sagst uns, was dich interessiert — wir melden uns persönlich.</p>
+          <Ansprechpartner />
           <Anfrage
             interesse={interesse}
             onInteresse={setInteresse}
@@ -110,6 +123,7 @@ export function PartnerApp() {
         <a href="/impressum">Impressum</a>
         <a href="/datenschutz">Datenschutz</a>
         <span>SV Agathenburg-Dollern · {CONTACT.email}</span>
+        <InstagramZeile className="ig-zeile--fuss" />
       </footer>
     </div>
   )
@@ -127,7 +141,14 @@ const HERO = (() => {
 function Hero() {
   return (
     <section className={`pt-hero${HERO ? ' has-foto' : ''}`} aria-labelledby="h-hero">
-      {HERO && <img className="pt-hero__foto" src={HERO.src} srcSet={`${HERO.preview} 800w, ${HERO.src} 2000w`} sizes="(min-width: 1120px) 1120px, 100vw" alt={HERO.alt} />}
+      {/* v19-S (Audit C): mobil die 800er-Variante (76 KB) statt 2000er (418 KB)
+          als LCP-Bild — per <picture> media, sonst zieht DSF-3 das große Foto. */}
+      {HERO && (
+        <picture>
+          <source media="(max-width: 760px)" srcSet={HERO.preview} />
+          <img className="pt-hero__foto" src={HERO.src} alt={HERO.alt} fetchPriority="high" decoding="async" />
+        </picture>
+      )}
       <div className="pt-hero__text">
         <p className="pt-kicker">Für Unternehmen aus der Region</p>
         <h1 className="pt-h1" id="h-hero">
@@ -139,6 +160,7 @@ function Hero() {
           Meister der 1. Kreisklasse 2026, jetzt in der Kreisliga Stade — und auf Instagram so sichtbar wie nie. Der Verein wächst. Wachs mit: am
           Platz, auf dem Trikot und in jeder Story.
         </p>
+        <HeroZahl />
         <div className="pt-actions">
           <a className="pt-btn" href="#deine-bande">
             Deine Bande ausprobieren
@@ -153,10 +175,29 @@ function Hero() {
   )
 }
 
+// v19-S: Einzeiler im Hero, solange die „Die Zahlen"-Sektion (< 3 Werte) ruht.
+function HeroZahl() {
+  const kacheln = mediaKacheln()
+  if (kacheln.length >= 3) return null
+  const k = kacheln[0]
+  return (
+    <p className="pt-hero__zahl">
+      <b>{k.wert}</b> {k.label}
+      {k.sub ? <> · {k.sub}</> : null}
+    </p>
+  )
+}
+
 // ── Zahlen / Mediadaten ─────────────────────────────────────
-function Zahlen() {
+interface Kachel {
+  wert: string
+  label: string
+  sub?: string
+}
+// v19-S: eine Quelle für die Kacheln (Hero-Einzeiler + „Die Zahlen"-Sektion).
+function mediaKacheln(): Kachel[] {
   const m = MEDIADATEN
-  const kacheln: { wert: string; label: string; sub?: string }[] = []
+  const kacheln: Kachel[] = []
   if (m.instagramFollower != null) kacheln.push({ wert: zahl(m.instagramFollower), label: 'Follower auf Instagram', sub: CONTACT.instagram })
   // v18-P: ohne Admin-Wert die Vereinsangabe — ehrlich als Mindestwert „630+"
   else kacheln.push({ wert: `${zahl(REICHWEITE_FALLBACK.instagramFollower)}+`, label: 'Follower auf Instagram', sub: CONTACT.instagram })
@@ -167,7 +208,15 @@ function Zahlen() {
     kacheln.push({ wert: zahl(m.checkinsSchnitt), label: 'Ø digitale Check-ins pro Heimspiel', sub: `gezählt per Sammelalbum · ${m.checkinsSpiele} ${m.checkinsSpiele === 1 ? 'Spiel' : 'Spiele'}` })
   if (m.websiteBesucheMonat != null) kacheln.push({ wert: zahl(m.websiteBesucheMonat), label: 'Website-Besuche pro Monat' })
   if (m.heimspieleSaison != null) kacheln.push({ wert: zahl(m.heimspieleSaison), label: 'Heimspiele pro Saison', sub: 'Kreisliga Stade' })
-  if (!kacheln.length) return null
+  return kacheln
+}
+
+function Zahlen() {
+  const m = MEDIADATEN
+  const kacheln = mediaKacheln()
+  // v19-S (Audit A §2.8 / §3.5): eine einzige Kennzahl ist kein Mediadaten-Block.
+  // Eigene Sektion erst ab 3 echten Zahlen — sonst steht der Wert als Zeile im Hero.
+  if (kacheln.length < 3) return null
   const kontakte = m.zuschauerHeim != null && m.heimspieleSaison != null ? m.zuschauerHeim * m.heimspieleSaison : null
   const stand = standText(m.stand ?? (m.instagramFollower == null ? REICHWEITE_FALLBACK.stand : undefined))
   return (
@@ -192,6 +241,42 @@ function Zahlen() {
       )}
       {stand && <p className="pt-stand">Stand: {stand} · Instagram-Insights und eigene Zählung</p>}
     </section>
+  )
+}
+
+// ── Ansprechpartner (v19-S, Audit B §2.4) ───────────────────
+// Firmeninhaber kaufen von Menschen. Nur sichtbar, wenn im Admin gepflegt.
+function Ansprechpartner() {
+  const a = ANSPRECHPARTNER
+  if (!a) return null
+  const initialen = a.name
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase()
+  return (
+    <div className="pt-kontakt">
+      {a.fotoUrl ? (
+        <img className="pt-kontakt__foto" src={a.fotoUrl} alt={a.name} width={72} height={72} loading="lazy" />
+      ) : (
+        <span className="pt-kontakt__foto pt-kontakt__foto--leer" aria-hidden="true">
+          {initialen}
+        </span>
+      )}
+      <div className="pt-kontakt__txt">
+        <p className="pt-kontakt__label">Dein Ansprechpartner</p>
+        <b className="pt-kontakt__name">{a.name}</b>
+        {a.rolle && <span className="pt-kontakt__rolle">{a.rolle}</span>}
+        <p className="pt-kontakt__sub">Antwort meist am selben Tag.</p>
+        {a.telefon && (
+          <a className="pt-kontakt__tel" href={`tel:${a.telefon.replace(/[^+\d]/g, '')}`}>
+            {a.telefon}
+          </a>
+        )}
+      </div>
+    </div>
   )
 }
 

@@ -15,6 +15,8 @@
     <!-- Bewusst KEINE externen Fonts/CDNs — siehe Abschnitt 6. -->
     <style>
       /* v17-D: Werte aus src/theme/design.css (statische Seite, kein Build-CSS) */
+      /* v19-S: Anton selbst gehostet (cookie-/CDN-frei) für die Headline (Audit A §2.14) */
+      @font-face { font-family: "Anton"; font-style: normal; font-weight: 400; font-display: swap; src: url("/fonts/anton-latin-400.woff2") format("woff2"); }
       :root { --rot: #E91D29; --bg: #0B0A0B; --fg: #F4F2EF; --mut: rgba(244,242,239,.62); --line: rgba(244,242,239,.12); }
       * { box-sizing: border-box; }
       body {
@@ -27,7 +29,8 @@
       a:hover { color: var(--rot); }
       .back { display: inline-block; margin-bottom: 2.5rem; font-size: .82rem;
               letter-spacing: .12em; text-transform: uppercase; color: var(--mut); }
-      h1 { font-size: clamp(2rem, 6vw, 3rem); line-height: 1.05; margin: 0 0 .4rem;
+      h1 { font-family: "Anton", "Arial Narrow", system-ui, sans-serif; font-weight: 400;
+           font-size: clamp(2.4rem, 7vw, 3.6rem); line-height: 1.02; margin: 0 0 .4rem;
            text-transform: uppercase; letter-spacing: .01em; }
       h1 span { color: inherit; } /* v17-D: einfarbige Headlines */
       h2 { font-size: .8rem; text-transform: uppercase; letter-spacing: .14em; padding-top: 1.6rem; border-top: 1px solid var(--line);

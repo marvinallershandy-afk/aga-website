@@ -1,0 +1,57 @@
+/* v19-S: Instagram-Rückkanal-Zeile (src/ui/InstagramZeile.tsx).
+   Dezent, im Designsystem: Linie statt Fläche, Marke übers Icon.
+   Funktioniert auf allen dunklen Seiten (Karte, /live, /partner, /album, /galerie). */
+.ig-zeile {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2, 8px);
+  max-width: 100%;
+  padding: 10px 16px;
+  border: 1px solid var(--c-line-strong, rgba(255, 255, 255, 0.28));
+  border-radius: var(--r-s, 4px);
+  color: var(--c-white, #f4f2ef);
+  background: transparent;
+  font-family: var(--f-body, Archivo, system-ui, sans-serif);
+  font-size: var(--t-small, 0.875rem);
+  font-weight: 600;
+  line-height: 1.25;
+  text-decoration: none;
+  text-align: left;
+  transition: color var(--d-1, 200ms) var(--ease, ease-out), border-color var(--d-1, 200ms) var(--ease, ease-out);
+}
+.ig-zeile:hover,
+.ig-zeile:focus-visible {
+  color: var(--c-red, #e91d29);
+  border-color: var(--c-red, #e91d29);
+}
+.ig-zeile svg {
+  flex: none;
+}
+.ig-zeile__text {
+  min-width: 0;
+}
+/* In Fußzeilen: volle Breite, zentriert, etwas Abstand nach oben */
+.ig-zeile--fuss {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-top: var(--s-3, 12px);
+}
+/* Karten-Totale: in die kleine Eck-Fußzeile einfügen (ohne Fläche, Mikro-Typo). */
+.ig-zeile--karte {
+  padding: 0;
+  border: 0;
+  gap: 6px;
+  color: var(--c-text-2);
+  font-size: var(--t-micro, 0.6875rem);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+.ig-zeile--karte svg:last-child {
+  display: none;
+}
+.ig-zeile--karte:hover,
+.ig-zeile--karte:focus-visible {
+  color: var(--c-white);
+  border-color: transparent;
+}
