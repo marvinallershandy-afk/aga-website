@@ -484,9 +484,10 @@ html.is-map body {
   }
   .kmap[data-open] .kdock { transform: translate(-50%, 160%); opacity: 0; pointer-events: none; }
   .kmap__hint { bottom: calc(max(.8rem, env(safe-area-inset-bottom)) + 4.1rem); }
-  .kmap__loader { bottom: auto; top: 4.6rem; }
-  /* Pflicht-Links mobil: klein unter dem Kopf rechts (Dock belegt unten) */
-  .kmap__foot { left: auto; right: 1rem; bottom: auto; top: 3.9rem; font-size: .58rem; }
+  /* unter dem Kopf UND unter einer evtl. Spieltag-Leiste (.mday) */
+  .kmap__loader { bottom: auto; top: calc(env(safe-area-inset-top, 0px) + 6.4rem); }
+  /* Pflicht-Links mobil: klein links über dem Dock (rechts sitzt der Ton) */
+  .kmap__foot { bottom: calc(max(.8rem, env(safe-area-inset-bottom)) + 4.4rem); font-size: .58rem; }
 }
 .kdock__btn {
   display: inline-flex;

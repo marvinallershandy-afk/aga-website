@@ -36,7 +36,7 @@ export const MAP_POSTER: Record<'wide' | 'tall', PosterClass> = {
     markers: {
       spieltag: [0.494, 0.3795],
       training: [0.5556, 0.8059],
-      mannschaft: [0.3443, 0.5926],
+      mannschaft: [0.3444, 0.5926],
       fans: [0.8213, 0.4771],
       musik: [0.3328, 0.3303],
       partner: [0.6954, 0.6365],

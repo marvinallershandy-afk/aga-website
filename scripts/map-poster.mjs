@@ -26,13 +26,13 @@ const CAM_TALL = { pos: [-27.5, 36.5, 7.1], look: [2.2, 0, 0.6], fov: 34 }
 
 const CLASSES = [
   // 16:9 — Desktop/Tablet quer (Cover schneidet seitlich bzw. oben/unten)
-  { key: 'wide', cam: CAM_WIDE, ctx: { viewport: { width: 1600, height: 900 }, deviceScaleFactor: 1 }, quality: 70 },
+  { key: 'wide', cam: CAM_WIDE, ctx: { viewport: { width: 1600, height: 900 }, deviceScaleFactor: 1 }, quality: 80 },
   // 9:19.5 — Telefone hochkant (mobile Kette ohne Bloom wie auf dem Handy)
   {
     key: 'tall',
     cam: CAM_TALL,
     ctx: { viewport: { width: 360, height: 780 }, deviceScaleFactor: 2, isMobile: true, hasTouch: false, userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1' },
-    quality: 68,
+    quality: 78,
   },
 ]
 

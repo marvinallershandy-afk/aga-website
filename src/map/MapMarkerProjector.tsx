@@ -5,6 +5,7 @@ import { useStore } from '../store/useStore'
 import { PLACES } from './places'
 import { mapWorld, markerSlots, markerLayer } from './mapWorld'
 import { OVERVIEW } from '../camera/mapCamera'
+import { setLiveSignal } from '../live/liveSignal'
 
 // ─────────────────────────────────────────────────────────────
 // v16-K: klebt die DOM-Marker an ihre 3D-Orte. Läuft im Canvas NACH dem
@@ -20,7 +21,7 @@ const ANCHORS = PLACES.map((p) => ({ id: p.id, v: new THREE.Vector3(...p.anchor)
 // DEV: Poster-Generator (scripts/map-poster.mjs) stellt die Totale ein und
 // liest die projizierten Marker-Positionen aus. Im Build entfernt.
 if (import.meta.env.DEV && typeof window !== 'undefined') {
-  ;(window as unknown as Record<string, unknown>).__mapDev = { OVERVIEW, mapWorld, markerSlots, ANCHORS }
+  ;(window as unknown as Record<string, unknown>).__mapDev = { OVERVIEW, mapWorld, markerSlots, ANCHORS, setLiveSignal }
 }
 
 export function MapMarkerProjector() {

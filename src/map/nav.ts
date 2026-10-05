@@ -13,15 +13,17 @@ import { placeFromSlug, TOUR_SLUGS, type PlaceId } from './places'
 // ─────────────────────────────────────────────────────────────
 
 const MARK = { sva: 1 }
+const RESERVED_PATHS = ['admin', 'live', 'partner', 'impressum', 'datenschutz']
 
 function parse(): { mode: ViewMode; place: PlaceId | null } {
   const hash = window.location.hash.replace(/^#/, '')
   if (TOUR_SLUGS.includes(hash.toLowerCase())) return { mode: 'tour', place: null }
   const fromHash = placeFromSlug(hash)
   if (fromHash) return { mode: 'map', place: fromHash }
-  // Pfad-Alias (/training) — nur EIN Segment, nie /admin oder /live (main.tsx)
+  // Pfad-Alias (/training) — nur EIN Segment. /admin, /live (main.tsx) und
+  // /partner (eigene Partner-Seite) gehören anderen Seiten.
   const seg = window.location.pathname.replace(/^\/+|\/+$/g, '')
-  if (seg && !seg.includes('/')) {
+  if (seg && !seg.includes('/') && !RESERVED_PATHS.includes(seg.toLowerCase())) {
     if (TOUR_SLUGS.includes(seg.toLowerCase())) return { mode: 'tour', place: null }
     const fromPath = placeFromSlug(seg)
     if (fromPath) return { mode: 'map', place: fromPath }
