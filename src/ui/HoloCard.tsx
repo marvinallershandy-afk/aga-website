@@ -3,7 +3,7 @@ import type { Player } from '../data/players'
 import { POSITION_LABEL, SHOW_RATING } from '../data/players'
 import { CLUB } from '../data/club'
 import { tierOf, figureFit, cachedFigureFit, FIGURE, type FigureFit } from './cardArt'
-import { WALKOUT_SIZE } from '../data/walkout'
+import { playerMedia } from '../data/playerMedia'
 import { useWalkout } from './walkoutSupport'
 import { WalkoutVideo } from './WalkoutVideo'
 
@@ -106,6 +106,8 @@ export function CardFigure({ src, headU = FIGURE.head }: { src: string; headU?: 
  *  Körper läuft in die Namensplatte aus. Fehler → onFail → Foto. */
 const WALK_W = 88 // cqw Breite des Videos (Höhe = 2×)
 export function CardWalkout({ id, headU = FIGURE.head, onFail }: { id: string; headU?: number; onFail: () => void }) {
+  // v17-G: Geometrie der Quelle (Greenscreen-Loop oder Dolly-Walkout) aus playerMedia
+  const WALKOUT_SIZE = playerMedia(id).loopSize
   const h = WALK_W * (WALKOUT_SIZE.h / WALKOUT_SIZE.w)
   return (
     <div className="holo__figwrap" aria-hidden="true">
@@ -133,7 +135,7 @@ export function HoloCard({ player, onClick, large }: Props) {
   const ref = useRef<HTMLDivElement>(null)
   const tier = tierOf(player)
   const { first, last } = splitName(player.name)
-  const figure = player.cutoutUrl ?? null
+  const figure = playerMedia(player.id, player).figure // v17-G: Greenscreen → Freisteller
   const walk = useWalkout(player.id)
   const big = SHOW_RATING ? String(player.rating) : player.number !== null ? String(player.number) : ''
 

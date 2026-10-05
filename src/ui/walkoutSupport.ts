@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { WALKOUT } from '../data/walkout'
+import { playerMedia } from '../data/playerMedia'
 
 // v16-W: Helfer der Walkout-Videos (eigene Datei wegen Fast Refresh).
 
@@ -18,5 +18,5 @@ export function prefersHevcAlpha(): boolean {
 /** Hat die id ein Walkout? Nach einem Ladefehler (fail) fällt die Karte aufs Foto zurück. */
 export function useWalkout(id: string) {
   const [failed, setFailed] = useState(false)
-  return { has: !!WALKOUT[id] && !failed, fail: () => setFailed(true) }
+  return { has: !!playerMedia(id).loop && !failed, fail: () => setFailed(true) }
 }

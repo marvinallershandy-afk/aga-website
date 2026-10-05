@@ -5,6 +5,7 @@ import { WaIcon, MailIcon } from './Icons'
 import { CardFigure, CardWalkout, lastNameSize, requestGyro } from './HoloCard'
 import { useWalkout } from './walkoutSupport'
 import { FIGURE } from './cardArt'
+import { playerMedia } from '../data/playerMedia'
 
 // v14-D: Trainerstab-Karte im Karten-2.0-System (gleicher Körper, Freisteller,
 // Wappen) — aber klar KEINE Spielerkarte: Graphit statt Rot-Foil, Rolle statt
@@ -14,7 +15,7 @@ export function StaffCard({ member }: { member: Staff }) {
   const parts = member.name.trim().split(/\s+/)
   const first = parts.slice(0, -1).join(' ')
   const last = parts.slice(-1)[0] ?? ''
-  const figure = member.cutoutUrl ?? null
+  const figure = playerMedia(member.id, member).figure // v17-G: Greenscreen → Freisteller
   const walk = useWalkout(member.id)
   return (
     <div className="staff-card2">
