@@ -11,6 +11,8 @@ import { Switch } from '../components/ui/switch'
 import { SkeletonRows } from '../components/ui/skeleton'
 import { useToast } from '../components/ui/toast'
 import { PflegeHinweis } from '../components/PflegeHinweis'
+// v18-A: Mannschaften für den Probetraining-Assistenten (eigene Speichern-Knöpfe)
+import { MannschaftenKarte } from '../components/MannschaftenKarte'
 import { friendlyError, isMissingSchema } from '../lib/db'
 import { useSaveSettings, useSettings } from '../lib/queries'
 import { fussballDeUrl, normalizeWhatsapp, parseFussballDeTeamId } from '../lib/pflege'
@@ -217,6 +219,8 @@ export function Verein() {
               <Input id="v-saison" className="h-12 w-32 text-base" value={f.saison} onChange={(e) => set('saison', e.target.value)} placeholder="2026/27" />
             </Feld>
           </Abschnitt>
+
+          <MannschaftenKarte />
 
           <Abschnitt icon={Scale} titel="Rechtliches">
             <p className="text-sm text-muted-foreground">
