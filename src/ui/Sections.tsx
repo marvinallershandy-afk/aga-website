@@ -188,6 +188,11 @@ export function Sections() {
           <div className="wanted-card">
             <h3>Spieler</h3>
             <p>Du kannst kicken? Oder glaubst es zumindest? Beides reicht für den Anfang.</p>
+            {/* v15-L: Trainingszeit + Trainingsort (≠ Spielort) */}
+            <p className="wanted-card__when">
+              {CONTACT.training}
+              {CONTACT.trainingOrt ? <> · {CONTACT.trainingOrt.split(',')[0]}</> : null}
+            </p>
             <a
               className="btn btn--primary"
               href={whatsappUrl('Hallo! Ich würde gern beim Probetraining vorbeikommen.')}
@@ -226,10 +231,13 @@ export function Sections() {
         <motion.dl className="contact-grid" {...reveal} style={{ maxWidth: 620 }}>
           <div>
             <dt>Training</dt>
-            <dd>{CONTACT.training}</dd>
+            <dd style={{ maxWidth: 260 }}>
+              {CONTACT.training}
+              {CONTACT.trainingOrt ? <><br />{CONTACT.trainingOrt}</> : null}
+            </dd>
           </div>
           <div>
-            <dt>Platz</dt>
+            <dt>Spielort</dt>
             <dd style={{ maxWidth: 260 }}>{CONTACT.address}</dd>
           </div>
           <div>

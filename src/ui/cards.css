@@ -806,6 +806,8 @@
   flex: 1;
 }
 .wanted-card .btn { align-self: flex-start; text-decoration: none; }
+/* v15-L: Trainingszeit + Trainingsort in der Spieler-Karte */
+.wanted-card p.wanted-card__when { flex: 0 0 auto; font-size: .8rem; font-weight: 700; letter-spacing: .04em; color: var(--gold); }
 
 /* ── Musik-Sektion ──────────────────────────────────────────── */
 .music-section {
