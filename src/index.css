@@ -158,7 +158,8 @@ body {
   }
 }
 @media (max-width: 640px) {
-  .section.section--team-fly { height: 210svh; padding: 0; }
+  /* v14: 210→130svh — das Taktik-Board steht mobil still, langer Leerlauf fühlte sich zäh an */
+  .section.section--team-fly { height: 130svh; padding: 0; }
   .team-sticky {
     max-width: none;
     justify-content: flex-start;

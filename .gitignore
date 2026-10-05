@@ -45,3 +45,6 @@ _v10set.mjs
 SVA_V11_SHOTS/
 SVA_V11_SWEEP/
 scripts/_*.mjs
+
+# v14: Build-Artefakte des DB-Fetch (scripts/fetch-content.mjs)
+public/generated/
