@@ -1,52 +1,24 @@
 import { useEffect } from 'react'
-import { useStore } from '../store/useStore'
 import { startTour, toMap } from './nav'
 
 // ─────────────────────────────────────────────────────────────
-// v17-D „Intro + Scroll = Rundgang".
-//  · Erster Besuch: kurze Kamerafahrt (Hero-Flutlicht → über den Platz →
-//    Landung in der Karten-Totale), jederzeit abbrechbar. Danach Karte.
-//    Merker in localStorage (try/catch: ohne Speicher → kein Intro).
+// Karte ↔ Rundgang per Scrollen (v17-D, v18-R).
 //  · Auf der Karte startet Scrollen (Rad, Wischen, ↓/Bild↓/Leertaste)
-//    nahtlos den Rundgang; ganz oben im Rundgang führt weiteres Hoch-
-//    scrollen zurück auf die Karte.
+//    den Rundgang — nahtlos: die Route beginnt in der Karten-Totale, die
+//    Kamera fährt vom ersten Scroll-Pixel an mit (kein Text dazwischen).
+//    Der Weg, der das Umschalten ausgelöst hat, wird übernommen (carry).
+//  · Ganz oben im Rundgang führt weiteres Hochscrollen zurück auf die Karte.
+//  · v18-R: Das automatische Intro (Fahrt beim ersten Besuch) ist entfallen
+//    (Marvin: „trägt nicht") — die Seite startet ruhig auf der Totale.
 // three-frei (läuft auch im Poster-/Fallback-Pfad).
 // ─────────────────────────────────────────────────────────────
 
-const KEY = 'sva-intro'
-/** Dauer der Fahrt in Sekunden (CameraRig liest denselben Wert). */
-export const INTRO_S = 8
-
-export function markIntroSeen() {
-  try {
-    localStorage.setItem(KEY, 'seen')
-  } catch {
-    /* privater Modus → beim nächsten Mal eben ohne Merker */
-  }
-}
-
-/** Soll beim Start das Intro laufen? (synchron, vor dem ersten Render) */
-export function wantIntro(): boolean {
-  if (typeof window === 'undefined') return false
-  const q = new URLSearchParams(window.location.search)
-  if (q.get('intro') === '1') return true // Abnahme/Screens: Intro erzwingen
-  // Prerender (Playwright) und Mess-Skripte: nie (sonst landet das Intro
-  // im vorgerenderten HTML und die Marker wären vor dem JS versteckt)
-  if (q.has('cam') || navigator.webdriver) return false
-  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return false
-  try {
-    return localStorage.getItem(KEY) !== 'seen'
-  } catch {
-    return false
-  }
-}
-
-/** Intro beenden (Abbruch oder fertig) — Kamera fliegt in die Totale. */
-export function endIntro() {
-  const s = useStore.getState()
-  if (s.intro === 'off') return
-  markIntroSeen()
-  s.setIntro('off')
+let carry = 0
+/** Scroll-Weg, der auf der Karte den Rundgang ausgelöst hat (einmalig). */
+export function takeTourCarry(): number {
+  const c = carry
+  carry = 0
+  return c
 }
 
 const isUiTarget = (t: EventTarget | null) =>
@@ -56,16 +28,17 @@ const isUiTarget = (t: EventTarget | null) =>
 export function useMapScrollToTour(active: boolean) {
   useEffect(() => {
     if (!active) return
-    // kurze Sperre: der Rad-Schwung, der das Intro abgebrochen oder den
-    // Rundgang verlassen hat, soll nicht sofort wieder umschalten
-    const armedAt = performance.now() + 900
+    // kurze Sperre: der Rad-Schwung, der den Rundgang (nach oben) verlassen
+    // hat, soll nicht sofort wieder umschalten
+    const armedAt = performance.now() + 300
     let acc = 0
     let lastT = 0
     let y0: number | null = null
     let fired = false
-    const go = () => {
+    const go = (dist = 0) => {
       if (fired) return
       fired = true
+      carry = Math.max(0, Math.min(400, dist))
       startTour()
     }
     const onWheel = (e: WheelEvent) => {
@@ -74,8 +47,8 @@ export function useMapScrollToTour(active: boolean) {
       if (now - lastT > 300) acc = 0
       lastT = now
       if (e.deltaY > 0) {
-        acc += e.deltaY
-        if (acc > 40) go()
+        acc += e.deltaY * (e.deltaMode === 1 ? 16 : 1)
+        if (acc > 24) go(acc)
       } else acc = 0
     }
     const onTouchStart = (e: TouchEvent) => {
@@ -83,7 +56,8 @@ export function useMapScrollToTour(active: boolean) {
     }
     const onTouchMove = (e: TouchEvent) => {
       if (y0 == null || performance.now() < armedAt) return
-      if (y0 - e.touches[0].clientY > 64) go()
+      const d = y0 - e.touches[0].clientY
+      if (d > 24) go(d)
     }
     const onKey = (e: KeyboardEvent) => {
       if (isUiTarget(e.target) || performance.now() < armedAt) return

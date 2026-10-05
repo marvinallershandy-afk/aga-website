@@ -88,16 +88,17 @@ keine Unicode-Pfeile als Icon.
 * **Fotos**: randlos oder 4 px; kein Rahmen, kein Schatten; Hover = 3 % Zoom im Bild.
   Credit „Fotos: picture by Nele" mit Link (`NELE_INSTAGRAM`, src/data/club.ts).
 
-## 4. Startseite: Intro + Scroll = Rundgang
+## 4. Startseite: Karte + Scroll = Rundgang
 
-* Erster Besuch (`localStorage['sva-intro']`, try/catch): Kamera steht im
-  Hero-Bild, Poster blendet über, dann ~8 s Fahrt (Flutlicht geht an → über
-  den Platz → hinauf in die Karten-Totale). „Zur Karte", Tipp, Rad, Wischen
-  oder Taste brechen ab. Nicht bei Deep-Links, reduced-motion, ohne WebGL,
-  im Prerender (`navigator.webdriver`). Erzwingen zum Testen: `/?intro=1`.
+* v18-R: **kein automatisches Intro** mehr (trug nicht) — die Seite startet
+  ruhig in der Karten-Totale.
 * Karte: Scrollen/Wischen nach unten (oder ↓/Bild↓/Leertaste) startet den
-  Rundgang nahtlos; im Rundgang ganz oben weiter hochscrollen → Karte.
-* Code: `src/map/intro.ts`, `src/map/IntroOverlay.tsx`, `CameraRig.introFrame`.
+  Rundgang nahtlos — die Route beginnt in der Pose der Karte, die Kamera
+  fährt vom ersten Scroll-Pixel an mit, kein Text dazwischen. Im Rundgang
+  ganz oben weiter hochscrollen → Karte.
+* Route, Übergänge, Spieler zu Spieler, Partyraum: **docs/RUNDGANG.md**.
+* Code: `src/map/intro.ts` (Scroll-Hooks), `src/camera/tourPlan.ts`,
+  `src/camera/tourRoute.ts`, `CameraRig.tourFrame`.
 
 ## 5. Trainings-Video
 

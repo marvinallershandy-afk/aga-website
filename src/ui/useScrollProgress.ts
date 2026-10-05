@@ -3,29 +3,21 @@ import { useStore } from '../store/useStore'
 // P1: Sektionstexte aus der Fassade (sm_website_content-Overlay → sonst Seed).
 import { SECTIONS } from '../data/content'
 import { setAnchors } from '../camera/anchors'
+import { measureStopAnchors, STOP_INDEX, TEAM_FIRST, TEAM_TOTALE } from '../camera/tourPlan'
+import { tourCam } from '../camera/rigState'
 
-// ECHTE DOM-Sektionen (v8: anstoss ist KEINE eigene Sektion mehr).
-// v9: fanblock (zw. mannschaft/musik) + sponsoren (zw. musik/tabelle).
-// v11-E5: Reihenfolge tabelle↔sponsoren getauscht (…musik, TABELLE, SPONSOREN, kontakt).
-const SECTION_IDS = ['verein', 'mannschaft', 'fanblock', 'musik', 'tabelle', 'sponsoren', 'kontakt']
-// v13-E2: Sektionen mit Inhalt > Viewport snappen am ANFANG (CSS
-// .section--snap-start) — ihr Kamera-Anker muss deshalb auf offsetTop
-// gemessen werden statt auf die Sektions-Mitte, sonst ruht der Scroll
-// an einer anderen Stelle als die komponierte Kamera-Pose.
+// ECHTE DOM-Sektionen in Rundgang-Reihenfolge (v18-R, docs/RUNDGANG.md):
+// Verein → Mannschaft → Bande → Fans → Anzeigetafel → Partyraum → Mitmachen.
+const SECTION_IDS = ['verein', 'mannschaft', 'sponsoren', 'fanblock', 'tabelle', 'musik', 'kontakt']
+// Sektionen mit Inhalt > Viewport ruhen am ANFANG (offsetTop) statt mittig
+// (Klasse .section--snap-start — heißt historisch so, Snap ist aus).
 const SNAP_START_IDS = new Set(['tabelle', 'kontakt'])
-// v14-D: Die Mannschaft ist eine FLYOVER-Sektion (v15-P: Desktop 150svh,
-// mobil 130svh, Sticky-Text). Sie trägt ZWEI Kamera-Anker: Anfang der Strecke
-// (Sektion oben bündig = Establishing-Shot) und Ende (Sektion unten bündig =
-// Totale). Dazwischen hält die Kamera-Station, und der CameraRig fährt die
-// eigene Flyover-Unterkurve. Die Gesamt-Ankunft (Anstoß → Mannschaft) und
-// der Ausflug (Mannschaft → Fanblock) bleiben gleich lang wie zuvor.
+// v18-R: Die Mannschaft ist eine Sticky-Strecke mit einem Halt je Spieler
+// der Startelf + Totale (tourPlan.measureStopAnchors).
 const FLYOVER_ID = 'mannschaft'
 function isFlyover(el: HTMLElement): boolean {
   return el.classList.contains('section--team-fly')
 }
-// Anteil des Wegs Verein→Mannschaft, an dem der Anstoß-Dive (Kamera-
-// Station 1) liegt — als nahtloser Übergang, ohne eigene Sektion.
-const ANSTOSS_FRAC = 0.55
 
 // Liest den nativen Dokument-Scroll, normalisiert auf 0..1 und legt
 // ihn (rAF-gedrosselt) im Store ab. Zusätzlich werden die Kamera-
@@ -43,59 +35,76 @@ export function useScrollProgress(enabled: boolean) {
     // Sektionen) und blendet auf den Reise-Etappen aus. Vorher standen im
     // Transit die Texte ZWEIER Stationen gleichzeitig im Bild.
     let presenceZones: { el: HTMLElement; w0: number; w1: number }[] = []
+    // v18-R: Halt-Anker in px — damit folgt die Text-Präsenz der KAMERA
+    // (tourCam.s, gedämpfte Fahrt) statt dem rohen Scroll: Stationstexte
+    // erscheinen, wenn die Kamera ankommt, nicht schon davor.
+    let stopY: number[] = []
 
     const measure = () => {
-      const doc = document.documentElement
-      const max = doc.scrollHeight - window.innerHeight
-      if (max <= 0) return
-      // Ruhepunkt (scrollY) je Sektion. Flyover: Anfang der Strecke.
-      let flyEnd = -1
-      const secP = SECTION_IDS.map((id) => {
-        const el = document.getElementById(id)
-        if (!el) return 0
-        let rest: number
-        if (id === FLYOVER_ID && isFlyover(el)) {
-          rest = el.offsetTop
-          flyEnd = Math.min(1, Math.max(0, (el.offsetTop + Math.max(0, el.offsetHeight - window.innerHeight)) / max))
-        } else {
-          rest = SNAP_START_IDS.has(id)
-            ? el.offsetTop
-            : el.offsetTop + el.offsetHeight / 2 - window.innerHeight / 2
-        }
-        return Math.min(1, Math.max(0, rest / max))
-      })
-      // Erste Station: schon bei Scroll 0 im Hero-Frame stehen
-      secP[0] = Math.min(secP[0], 0.12)
-      secP[secP.length - 1] = 1
-      // 9 Kamera-Anker: der synthetische Anstoß-Dive liegt zwischen
-      // Verein (secP[0]) und Mannschaft (secP[1]) — Übergang, keine Sektion.
-      // Die Mannschaft trägt Anfang UND Ende ihres Flyovers (ohne Flyover,
-      // z. B. Fallback: beide gleich → Station ohne Haltestrecke).
-      const anstoss = secP[0] + (secP[1] - secP[0]) * ANSTOSS_FRAC
-      const mEnd = flyEnd >= 0 ? Math.max(secP[1], flyEnd) : secP[1]
-      setAnchors([secP[0], anstoss, secP[1], mEnd, secP[2], secP[3], secP[4], secP[5], secP[6]])
-      // Nav-Highlight nur für echte Sektionen
-      sectionAnchors = SECTION_IDS
-        // Flyover: Highlight über die ganze Strecke (Intervall statt Punkt)
-        .map((id, i) => ({ id, p0: secP[i], p1: i === 1 ? mEnd : secP[i] }))
-        .filter((a) => SECTIONS.some((s) => s.id === a.id))
-      // v13-K1: Präsenz-Fenster messen (in scrollY-Pixeln, nicht normiert).
+      const m = measureStopAnchors()
+      if (!m) return
+      const { y, max } = m
+      stopY = y
+      setAnchors(y.map((v) => v / max))
+      const vh = window.innerHeight
+      // Nav-Highlight: Intervall je Sektion (Mannschaft: ganze Spieler-
+      // Strecke, Musik: drinnen im Raum)
+      const span: Record<string, [number, number]> = {
+        verein: [y[0], y[0]],
+        mannschaft: [y[TEAM_FIRST], y[TEAM_TOTALE]],
+        sponsoren: [y[STOP_INDEX.sponsoren], y[STOP_INDEX.sponsoren]],
+        fanblock: [y[STOP_INDEX.fanblock], y[STOP_INDEX.fanblock]],
+        tabelle: [y[STOP_INDEX.tabelle], y[STOP_INDEX.tabelle]],
+        musik: [y[STOP_INDEX['musik-raum']], y[STOP_INDEX['musik-raum-ende']]],
+        kontakt: [y[y.length - 1], y[y.length - 1]],
+      }
+      sectionAnchors = SECTION_IDS.map((id) => ({ id, p0: span[id][0] / max, p1: span[id][1] / max })).filter((a) =>
+        SECTIONS.some((s) => s.id === a.id),
+      )
+      // v13-K1: Präsenz-Fenster (scrollY-Pixel) — Text lebt um seinen Halt.
       presenceZones = SECTION_IDS.flatMap((id) => {
         const el = document.getElementById(id)
         if (!el) return []
-        const vh = window.innerHeight
         const center = el.offsetTop + el.offsetHeight / 2 - vh / 2
-        // Flyover: der Sticky-Text lebt über die ganze Strecke.
         if (id === FLYOVER_ID && isFlyover(el)) {
           return [{ el, w0: el.offsetTop, w1: el.offsetTop + Math.max(0, el.offsetHeight - vh) }]
         }
+        if (id === 'musik') return [{ el, w0: span.musik[0], w1: span.musik[1] }]
         const w0 = id === 'verein' ? 0 : SNAP_START_IDS.has(id) ? el.offsetTop : center
-        const w1 = SNAP_START_IDS.has(id)
-          ? el.offsetTop + Math.max(0, el.offsetHeight - vh)
-          : center
+        const w1 = SNAP_START_IDS.has(id) ? el.offsetTop + Math.max(0, el.offsetHeight - vh) : center
         return [{ el, w0, w1 }]
       })
     }
+
+    // v13-K1: Präsenz anwenden — Fade-Weg ab Ruhefenster. Tap-Schutz im
+    // Transit über pointer-events. v18-R: Fade-Weg 0.5 → 0.25 vh und
+    // gemessen an der Kamera-Lage (s. stopY) → Text erst bei Ankunft.
+    const lastOp = new Map<HTMLElement, string>()
+    const applyPresence = (y: number) => {
+      const fadeDist = window.innerHeight * 0.25
+      for (const z of presenceZones) {
+        const dist = y < z.w0 ? z.w0 - y : y > z.w1 ? y - z.w1 : 0
+        const t = Math.min(1, dist / fadeDist)
+        const presence = 1 - t * t * (3 - 2 * t)
+        const op = presence.toFixed(3)
+        if (lastOp.get(z.el) === op) continue
+        lastOp.set(z.el, op)
+        z.el.style.opacity = op
+        z.el.style.pointerEvents = presence < 0.04 ? 'none' : ''
+      }
+    }
+    let camRaf = 0
+    let lastS = -2
+    const camLoop = () => {
+      camRaf = requestAnimationFrame(camLoop)
+      const s = tourCam.s
+      if (s < 0 || stopY.length === 0 || Math.abs(s - lastS) < 1e-4) return
+      lastS = s
+      const i = Math.min(stopY.length - 2, Math.max(0, Math.floor(s)))
+      const f = Math.min(1, Math.max(0, s - i))
+      applyPresence(stopY[i] + (stopY[i + 1] - stopY[i]) * f)
+    }
+    camRaf = requestAnimationFrame(camLoop)
 
     const update = () => {
       raf = 0
@@ -103,19 +112,7 @@ export function useScrollProgress(enabled: boolean) {
       const max = doc.scrollHeight - window.innerHeight
       const p = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0
       setScroll(p)
-      // v13-K1: Präsenz anwenden — ½ Viewport Fade-Weg ab Ruhefenster.
-      // Tap-Schutz im Transit über pointer-events, NICHT visibility:
-      // visibility:hidden würde die Snap-Fläche der Sektion entfernen und
-      // programmatische Sprünge (Nav/Dock) vom Proximity-Snap wegziehen.
-      const fadeDist = window.innerHeight * 0.5
-      const y = window.scrollY
-      for (const z of presenceZones) {
-        const dist = y < z.w0 ? z.w0 - y : y > z.w1 ? y - z.w1 : 0
-        const t = Math.min(1, dist / fadeDist)
-        const presence = 1 - t * t * (3 - 2 * t)
-        z.el.style.opacity = presence.toFixed(3)
-        z.el.style.pointerEvents = presence < 0.04 ? 'none' : ''
-      }
+      if (tourCam.s < 0) applyPresence(window.scrollY)
       // Nav-Highlight: nächstgelegene Sektions-Station
       if (sectionAnchors.length) {
         let best = 0
@@ -161,6 +158,7 @@ export function useScrollProgress(enabled: boolean) {
       window.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', onResize)
       if (raf) cancelAnimationFrame(raf)
+      cancelAnimationFrame(camRaf)
     }
   }, [enabled])
 }

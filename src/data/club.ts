@@ -24,6 +24,8 @@ export interface Section {
 }
 
 // Reihenfolge = Reihenfolge der Kamera-Stationen entlang der Fahrt.
+// v18-R: Rundgang über das Gelände (docs/RUNDGANG.md) — Verein → Mannschaft
+// → Bande → Fans → Anzeigetafel → Partyraum → Mitmachen.
 export const SECTIONS: Section[] = [
   {
     id: 'verein',
@@ -45,11 +47,25 @@ export const SECTIONS: Section[] = [
     body: 'Eine Truppe, die montags humpelt und sonntags fliegt — jeder als Sammelkarte. Flieg über die Elf, tipp eine Karte an und teil deinen Spieler in der Story.',
   },
   {
+    id: 'sponsoren',
+    label: 'Sponsoren',
+    kicker: 'Für Unternehmen',
+    title: 'Deine Bande\nwartet',
+    body: 'Dein Logo direkt am Spielfeld — plus Reichweite im Dorf und in der Story. Eine Bande haben wir extra für dich freigelassen.',
+  },
+  {
     id: 'fanblock',
     label: 'Fans',
     kicker: 'Die Südkurve',
     title: 'Der\nFanblock',
     body: 'Elf auf dem Platz, gewonnen wird an der Bande. Unsere Kurve steht bei jedem Wetter — und du gehörst dazu, ab dem ersten Sonntag.',
+  },
+  {
+    id: 'tabelle',
+    label: 'Tabelle',
+    kicker: 'Saison-Cockpit',
+    title: 'Die Wahrheit\nvom Wochenende',
+    body: 'Manchmal Tabellenführer der Herzen, manchmal einfach Tabellenführer. Tabelle, Form, Torschützen, nächstes Spiel — ungefiltert und gelegentlich glorreich.',
   },
   {
     id: 'musik',
@@ -60,22 +76,6 @@ export const SECTIONS: Section[] = [
     // Snap-Fenster passen. Riesenkicker-Story + Grüße leben weiter in
     // der __story unterm Cover (Desktop, MusicSection).
     body: 'Willkommen im Partyraum — hier läuft „Aga Urknall", unser eigenes Album, geschrieben von einem von uns. Drück Play, dreh auf: Wer mitgrölt, ist schon fast Mitglied.',
-  },
-  // v11-E5: Reihenfolge getauscht — erst die TABELLE/Saison (Ergebnis-Beat),
-  // dann die SPONSOREN (Geld-Beat direkt vor „Mitmachen").
-  {
-    id: 'tabelle',
-    label: 'Tabelle',
-    kicker: 'Saison-Cockpit',
-    title: 'Die Wahrheit\nvom Wochenende',
-    body: 'Manchmal Tabellenführer der Herzen, manchmal einfach Tabellenführer. Tabelle, Form, Torschützen, nächstes Spiel — ungefiltert und gelegentlich glorreich.',
-  },
-  {
-    id: 'sponsoren',
-    label: 'Sponsoren',
-    kicker: 'Für Unternehmen',
-    title: 'Deine Bande\nwartet',
-    body: 'Dein Logo direkt am Spielfeld — plus Reichweite im Dorf und in der Story. Eine Bande haben wir extra für dich freigelassen.',
   },
   {
     id: 'kontakt',

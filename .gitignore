@@ -54,3 +54,7 @@ scripts/mail/v2-*.html
 scripts/mail/patch-*.json
 scripts/mail/v*-*.html
 scripts/mail/patch.json
+
+# v18-R: Rundgang-Beweise/Messläufe (lokal)
+shots-rundgang/
+_rundgang/

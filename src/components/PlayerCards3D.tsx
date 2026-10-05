@@ -4,7 +4,8 @@ import * as THREE from 'three'
 import { whatsappUrl, whatsappReady } from '../data/content'
 import { useStore } from '../store/useStore'
 import { cameraState } from '../camera/CameraPath'
-import { TEAM_CARDS, TEAM_CENTER, TEAM_PLAYERS, DUGOUT, teamState, type TeamCard } from '../camera/teamLayout'
+import { TEAM_CARDS, TEAM_CENTER, TEAM_PLAYERS, DUGOUT, teamState, teamFocus, type TeamCard } from '../camera/teamLayout'
+import { TEAM_ORDER } from '../camera/tourPlan'
 import { makePlayerCardTexture, makeStaffCardTexture, CARD_TEX_ASPECT } from '../three/playerCardTexture'
 
 // ─────────────────────────────────────────────────────────────
@@ -19,8 +20,9 @@ import { makePlayerCardTexture, makeStaffCardTexture, CARD_TEX_ASPECT } from '..
 //    entfallen) — alle Karten gleichwertig, nur ein dezenter Glanz-Lauf
 //  · Kontaktschatten (instanziert) erden jede Karte
 // Klick → Tap-Launch (Karte fliegt zur Kamera) → Flip-Detail-Modal.
-// Mobil (≤640px) gibt es KEIN 3D-Kartenfeld — dort trägt das DOM-
-// Taktik-Board (v14-M).
+// v18-R: Auch mobil (≤640px) stehen die Karten in 3D — die Spieler-zu-
+// Spieler-Fahrt gibt es auf dem Handy genauso (Startelf-Texturen 512 px
+// statt 640 px; Texturen sind modul-gecacht, s. playerCardTexture.ts).
 // v14-M „Ganzer Platz": Elf über die volle Feldlänge, Bank in einem
 // schlichten Unterstand AUSSERHALB der Südlinie auf Höhe der Mittellinie
 // (wächst mit der Bank-Reihe aus dem Rasen).
@@ -31,6 +33,9 @@ const NARROW_QUERY = '(max-width: 640px)'
 const START_YAW_LIMIT = 0.45
 const BENCH_YAW_LIMIT = 0.9
 const LEAN = -0.07 // leichte Rücklage → Karte „schaut" zur erhöhten Kamera
+// v18-R: Rang jeder Startelf-Karte in der Spieler-Fahrt (für die Fokus-Blende)
+const ORDER_OF = new Map(TEAM_ORDER.map((ci, k) => [ci, k]))
+const DIM = 0.38 // Helligkeit der Nachbarn, während die Kamera an einer Karte hält
 
 function smoothstep(a: number, b: number, x: number) {
   const t = THREE.MathUtils.clamp((x - a) / (b - a), 0, 1)
@@ -119,11 +124,10 @@ const _dummy = new THREE.Object3D()
 
 export function PlayerCards3D() {
   const narrow = useNarrow()
-  if (narrow) return null
-  return <CardField />
+  return <CardField startTex={narrow ? 512 : 640} />
 }
 
-function CardField() {
+function CardField({ startTex }: { startTex: number }) {
   const { camera, gl } = useThree()
   const setSelected = useStore((s) => s.setSelectedPlayer)
   const aniso = Math.min(8, gl.capabilities.getMaxAnisotropy())
@@ -132,10 +136,10 @@ function CardField() {
       TEAM_CARDS.map((c) => ({
         ...c,
         tex: c.player
-          ? makePlayerCardTexture(c.player, c.kind === 'start' ? 640 : 384, aniso).texture
+          ? makePlayerCardTexture(c.player, c.kind === 'start' ? startTex : 384, aniso).texture
           : makeStaffCardTexture(c.staff!, 384, aniso).texture,
       })),
-    [aniso],
+    [aniso, startTex],
   )
   // Geometrie mit Ursprung an der Unterkante → Karte steht auf dem Rasen.
   const geom = useMemo(() => {
@@ -217,9 +221,16 @@ function CardField() {
       const item = layout[i]
       const lineReveal = item.line >= 4 ? benchR : THREE.MathUtils.clamp((rp - item.line * 0.12) / 0.4, 0, 1)
       const ease = lineReveal * lineReveal * (3 - 2 * lineReveal)
+      // v18-R: Fokus — die angefahrene Karte voll, die übrigen gedimmt
+      // (stetig über den Abstand in der Fahrt-Reihenfolge, kein Umschalten)
+      const ord = ORDER_OF.get(i)
+      const near = ord == null || teamFocus.k < 0 ? 0 : Math.max(0, 1 - Math.abs(ord - teamFocus.k))
+      const dim = 1 - (1 - DIM) * teamFocus.w * (1 - near * near * (3 - 2 * near))
       const alpha = ease * fo
       const mat = m.material as THREE.MeshBasicMaterial
       mat.opacity = alpha
+      // abdunkeln statt durchsichtig (keine „Geisterkarten")
+      if (mat.color.r !== dim) mat.color.setScalar(dim)
       mat.depthWrite = alpha > 0.9
       m.visible = alpha > 0.01
 
@@ -227,7 +238,9 @@ function CardField() {
       // Richtung Platz mit Spielraum (Bank/Stab an der Südlinie).
       const az = Math.atan2(camX - item.x, camZ - item.z)
       const base = item.kind === 'start' ? teamYaw : Math.PI
-      const lim = item.kind === 'start' ? START_YAW_LIMIT : BENCH_YAW_LIMIT
+      // v18-R: während der Spieler-Fahrt drehen sich alle Startelf-Karten
+      // voll zur Kamera (die Kamera steht auch vor/zwischen den Reihen).
+      const lim = item.kind === 'start' ? START_YAW_LIMIT + (Math.PI - START_YAW_LIMIT) * teamFocus.w : BENCH_YAW_LIMIT
       const target = base + THREE.MathUtils.clamp(wrapAngle(az - base), -lim, lim)
       if (!m.userData.yawInit) {
         yaw.current[i] = target

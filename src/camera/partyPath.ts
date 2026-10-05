@@ -75,11 +75,19 @@ const HALF = ROOM.width / 2
 // der Türrahmen streift den Bildrand (Parallaxe verkauft den Durchtritt),
 // und der Welt-Hop bei p=PARTY_HOP passiert erst, wenn echte Geometrie
 // (Windfang-Wände + Glow-Rückwand) das Bild komplett rahmt.
+// v18-R: Der Anflug beginnt nicht mehr an der alten Musik-Station mitten
+// auf dem Platz, sondern VOR DER TÜR (DOOR_STAND, nördlich des Zaun-Endes
+// z≈−1.75, gerade Sichtlinie auf die Öffnung). Der Rundgang hält dort,
+// geht rein, kommt auf demselben Weg wieder heraus und steht wieder hier.
+export const DOOR_STAND = {
+  pos: new THREE.Vector3(5.12, 0.58, -2.66),
+  look: new THREE.Vector3(6.45, 0.2, -2.5),
+} as const
+
 const approachPos = new THREE.CatmullRomCurve3(
   [
-    new THREE.Vector3(4.6, 0.9, 1.5),
-    new THREE.Vector3(5.25, 0.62, -0.7),
-    new THREE.Vector3(5.8, 0.34, -2.55),
+    DOOR_STAND.pos.clone(),
+    new THREE.Vector3(5.72, 0.34, -2.57),
     new THREE.Vector3(6.3, DOOR.cy + 0.01, DOOR.z),
     new THREE.Vector3(6.58, DOOR.cy, DOOR.z),
   ],
@@ -126,7 +134,7 @@ const _p = new THREE.Vector3()
 const _l = new THREE.Vector3()
 // Blick zieht bis auf die Glow-Rückwand des Windfangs (x≈6.72)
 const DOOR_LOOK = new THREE.Vector3(DOOR.x + 0.3, DOOR.cy, DOOR.z)
-const MUSIK_LOOK = new THREE.Vector3(7.1, 0.5, -0.35)
+const MUSIK_LOOK = DOOR_STAND.look
 
 function smooth01(t: number): number {
   const c = THREE.MathUtils.clamp(t, 0, 1)

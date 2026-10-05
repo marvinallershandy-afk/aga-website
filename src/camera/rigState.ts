@@ -15,3 +15,7 @@ export const KICKOFF_U = 1 / 7
 /** Partyraum-Durchfahrt: Fortschritt, bei dem die Türöffnung das Bild
  *  füllt → Welt-Hop (s. partyPath.ts). */
 export const PARTY_HOP = 0.48
+
+/** v18-R: Lage der Rundgang-Kamera in Halt-Einheiten (gedämpft), −1 = kein
+ *  3D-Rundgang aktiv. Der DOM-Pfad blendet Stationstexte danach ein. */
+export const tourCam = { s: -1 }

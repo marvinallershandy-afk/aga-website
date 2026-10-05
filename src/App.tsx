@@ -22,8 +22,7 @@ import { AudioManager } from './audio/AudioManager'
 import { MapView, MapPoster } from './map/MapView'
 import { MapPanel } from './map/MapPanel'
 import { initNavFromUrl, useMapRouting } from './map/nav'
-import { Intro } from './map/IntroOverlay'
-import { useTourTopToMap } from './map/intro'
+import { useTourTopToMap, takeTourCarry } from './map/intro'
 
 // v16-K: Deep-Link (/#training, /mannschaft, /#rundgang …) VOR dem ersten
 // Render auswerten → die Karte öffnet direkt den richtigen Ort.
@@ -83,9 +82,11 @@ export default function App() {
   // v17-D: ganz oben im Rundgang weiter hochscrollen → zurück auf die Karte
   useTourTopToMap(mode === 'tour')
 
-  // Rundgang beginnt oben (Hero); zurück auf der Karte gibt es keinen Scroll.
+  // Rundgang beginnt oben (= Karten-Totale, v18-R) und übernimmt den
+  // Scroll-Weg, der ihn ausgelöst hat → die Fahrt läuft ohne Pause weiter.
+  // Zurück auf der Karte gibt es keinen Scroll.
   useEffect(() => {
-    window.scrollTo(0, 0)
+    window.scrollTo({ top: mode === 'tour' ? takeTourCarry() : 0, behavior: 'instant' })
   }, [mode])
 
   // Fanblock: Atmosphäre zieht leicht an (Gemurmel näher) — im Rundgang
@@ -120,7 +121,6 @@ export default function App() {
       {/* v15-L: nur im Spieltagsfenster sichtbar, sonst null + 0 Requests */}
       <MatchdayBar />
       {mode === 'map' ? <MapView /> : <Sections />}
-      {mode === 'map' && <Intro />}
       <MapPanel />
       {!fallback && mode === 'tour' && <ScrollHint />}
       <Letterbox />

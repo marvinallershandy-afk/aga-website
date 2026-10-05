@@ -87,6 +87,24 @@ body {
   scroll-snap-align: center;
 }
 
+/* v18-R: Anfang des 3D-Rundgangs = Karten-Totale, ohne Text */
+.section.section--karte {
+  min-height: 60vh;
+  min-height: 60svh;
+  pointer-events: none;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* v13-E2: Sektionen, deren INHALT höher als der Viewport ist (Tabelle,
    Mitmachen), dürfen nicht mittig snappen — Center-Snap schiebt den Titel
    um (Inhalt−Viewport)/2 unter die Nav. Sie rasten am Sektions-ANFANG ein;
@@ -110,11 +128,13 @@ body {
    (Totale, .team-endstop). Die Kamera-Anker misst useScrollProgress.ts
    genau an diesen beiden Stellen. Ausflug/Ankunft bleiben 100vh lang.
    v15-P: ohne Person-für-Person-Fokus reicht EIN ruhiger Kameraweg —
-   250 → 150svh (Fahrstrecke 150vh → 50vh). */
+   250 → 150svh (Fahrstrecke 150vh → 50vh).
+   v18-R: Spieler zu Spieler — je Spieler 30svh Scroll-Weg (11 → 430svh);
+   die exakte Höhe setzt Sections.tsx aus TEAM_N · TEAM_STEP_VH. */
 .section.section--team-fly {
   min-height: 0;
-  height: 150vh;
-  height: 150svh;
+  height: 430vh;
+  height: 430svh;
   padding: 0;
   display: block;
   justify-content: initial;
@@ -160,8 +180,8 @@ body {
   }
 }
 @media (max-width: 640px) {
-  /* v14: 210→130svh — das Taktik-Board steht mobil still, langer Leerlauf fühlte sich zäh an */
-  .section.section--team-fly { height: 130svh; padding: 0; }
+  /* v18-R: mobil gleiche Spieler-Strecke wie am Desktop (Höhe inline) */
+  .section.section--team-fly { padding: 0; }
   .team-sticky {
     max-width: none;
     justify-content: flex-start;
@@ -173,9 +193,11 @@ body {
   .team-sticky .section__kicker { padding: 0 1.25rem; }
   /* Fließtext weicht dem Taktik-Board — die Aufstellung IST hier der Inhalt */
   .team-sticky .section__body { display: none; }
-  /* v14-M: ruhige, abgedunkelte Draufsicht hinter dem Board */
-  .team-sticky > .section__scrim {
-    background: linear-gradient(180deg, rgba(8,7,10,0.86) 0%, rgba(8,7,10,0.62) 30%, rgba(8,7,10,0.58) 70%, rgba(8,7,10,0.8) 100%);
+  /* v18-R: oben Titel, unten Spielername — die Mitte gehört der 3D-Karte.
+     Höhere Spezifität als der allgemeine Mobil-Scrim (.section--left …),
+     der sonst später im Dokument gewinnt und die Karte abdunkelt. */
+  .section.section--team-fly .team-sticky > .section__scrim {
+    background: linear-gradient(180deg, rgba(8,7,10,0.82) 0%, rgba(8,7,10,0.35) 24%, rgba(8,7,10,0) 38%, rgba(8,7,10,0) 58%, rgba(8,7,10,0.72) 76%, rgba(8,7,10,0.9) 100%);
   }
 }
 

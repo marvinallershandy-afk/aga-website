@@ -2,9 +2,12 @@ import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useStore } from '../store/useStore'
-import { sampleFlightG, cameraState, STATION_COUNT } from './CameraPath'
-import { scrollToG, gToU, gToTeam } from './anchors'
-import { teamState } from './teamLayout'
+import { cameraState } from './CameraPath'
+import { tourCam } from './rigState'
+import { scrollToStop } from './anchors'
+import { teamState, teamFocus } from './teamLayout'
+import { TEAM_FIRST, TEAM_TOTALE, TEAM_N, TEAM_ORDER, STOP_INDEX } from './tourPlan'
+import { sampleRoute, routeDAtStop, createRouteSample, smoothDamp, setRouteStart, keepInClearing, type RouteSample } from './tourRoute'
 import { PITCH } from '../utils/constants'
 import {
   PARTY_HOP,
@@ -23,7 +26,6 @@ import {
   type Shot,
 } from './mapCamera'
 import { mapWorld } from '../map/mapWorld'
-import { INTRO_S, endIntro } from '../map/intro'
 import { mapPanelRect } from '../map/layout'
 import type { PlaceId } from '../map/places'
 
@@ -48,24 +50,27 @@ const devCam = (() => {
 // [Verein, Slot0..3, CTA]. Das Karussell fokussiert die 4 Slot-Tafeln.
 const SP_BOARD_W = PITCH.width * 0.86
 const SP_PANELS = 6
-const SP_U = 6 / (STATION_COUNT - 1) // Scroll-Param der Sponsoren-Station
-// v14-D: Mannschafts-Flyover. Präsenz der Station in Stations-Einheiten g
-// (anchors.ts): Ankunft g 1.55→2, Flyover g 2→3, Ausflug g 3→3.45.
-function teamPresence(g: number): number {
-  if (g >= 2 && g <= 3) return 1
-  const d = g < 2 ? 2 - g : g - 3
-  return 1 - smoothstep(0.08, 0.45, d)
+// v18-R: Mannschafts-Präsenz in Halt-Einheiten s: 1 über die Spieler-Halte
+// bis zur Totale, außerhalb weich aus.
+function teamPresence(s: number): number {
+  if (s >= TEAM_FIRST && s <= TEAM_TOTALE) return 1
+  const d = s < TEAM_FIRST ? TEAM_FIRST - s : s - TEAM_TOTALE
+  return 1 - smoothstep(0.08, 0.6, d)
 }
 // Landscape: Die linke Bildseite gehört der Sticky-Textspalte. Statt die
 // Kamera quer zu versetzen, verschiebt eine View-Offset-Projektion das Bild
-// nach rechts — die Komposition der Keyframes bleibt erhalten, der Fokus-
+// nach rechts — die Komposition der Halte bleibt erhalten, der Fokus-
 // punkt rückt nur aus der Bildmitte in die rechte Bühnenhälfte.
 const TEAM_VIEW_SHIFT = 0.17 // Anteil der Bildbreite
-// v14-M: Telefon hochkant — dort trägt das DOM-Taktik-Board die Aufstellung.
-// Dahinter steht die Kamera RUHIG in einer hohen Draufsicht auf den Platz
-// (keine Fahrt unter dem Board), weich ein-/ausgeblendet mit der Präsenz.
-const PHONE_TEAM_POS = new THREE.Vector3(-0.3, 12.5, 1.9)
-const PHONE_TEAM_LOOK = new THREE.Vector3(-0.3, 0, 0.1)
+// v18-R Fahrt-Feder (Routen-Kosten ≈ Weltmeter): Glättzeit, Grundtempo,
+// längste Fahrt bei großen Sprüngen (Tempo wächst mit der Restdistanz).
+const TOUR_SMOOTH = 0.34
+const TOUR_V0 = 5.2
+const TOUR_MAX_S = 1.5
+const SPONSOR_STOP = STOP_INDEX.sponsoren
+const MAX_BACK = 2.4 // max. Hochformat-Rückzug in Weltmetern
+const PHONE_TEAM_FOV = 56
+const _off = new THREE.Vector3()
 function sponsorBoardX(focus: number): number {
   const panelW = SP_BOARD_W / SP_PANELS
   const boardIndex = 1 + THREE.MathUtils.clamp(focus, 0, 3) // Slot-Tafeln = Board 1..4
@@ -95,12 +100,11 @@ function partyInsidePose(pp: number, aspect: number, t: number, pos: THREE.Vecto
 // ── v16-K: Karten-Modus ─────────────────────────────────────
 const FLIGHT_S = 1.2 // Marker → Ort
 const RIDE_S = 2.8 // Tür-Durchfahrt in den Partyraum
-const CUT_S = 0.22 // Schleier-Schnitt beim Verlassen des Raums
-type Key = 'tour' | 'overview' | 'intro' | PlaceId
-// v17-D Intro: Hero (g 0) → über den Platz (g 1.5) in INTRO_A s, dann
-// in die Karten-Totale (bis INTRO_S).
-const INTRO_G = 1.5
-const INTRO_A = 5
+const RIDE_OUT_S = 2.2 // v18-R: Rückweg Raum → vor die Tür (statt Schleier-Schnitt)
+type Key = 'tour' | 'overview' | PlaceId
+// v18-R: Übergabe Karten-Totale → Rundgang. Die Route beginnt in exakt
+// dieser Pose → nur ein kurzes Angleichen (Atmen/Rundung), kein Flug.
+const HANDOFF_S = 0.3
 
 interface FrameState {
   size: { width: number; height: number }
@@ -110,14 +114,15 @@ interface FrameState {
 /** Der gesamte Laufzeitzustand der Kamera (kein React-State). */
 interface Rig {
   camera: THREE.PerspectiveCamera
-  // Rundgang
-  smoothed: number // g (Stations-Einheiten inkl. Flyover)
-  smoothedParty: number
+  // Rundgang (v18-R): Fahrt auf der Kosten-Achse D der Route, Feder-Tempo
+  d: number
+  dVel: { v: number }
+  /** Zielwert D beim letzten Frame (für Sprung-Erkennung) */
+  dInit: boolean
+  sample: RouteSample
   smoothedSponsorX: number
   pos: THREE.Vector3
   look: THREE.Vector3
-  flightPos: THREE.Vector3
-  flightLook: THREE.Vector3
   currentLook: THREE.Vector3
   // Karte
   key: Key | ''
@@ -137,24 +142,28 @@ interface Rig {
   pp: number
   ride: number
   phase: 'none' | 'fly' | 'ride'
-  /** Schnitt raus aus dem Partyraum: 0..1 Schleier-Aufbau, −1 = keiner. */
+  /** Rückweg aus dem Partyraum: 0..1 Fortschritt, −1 = keiner. */
   cut: number
+  /** Party-Fortschritt beim Start des Rückwegs. */
+  cutFrom: number
   rect: { x: number; y: number; w: number; h: number }
   shot: Shot
-  /** v17-D: verstrichene Intro-Zeit (s). */
-  introT: number
+  /** Dauer der laufenden Übergabe Karte → Rundgang (s). */
+  handoff: number
+  /** fov des Rundgangs in diesem Frame (Karten-Tele → 46°). */
+  tourFov: number
 }
 
 function createRig(camera: THREE.PerspectiveCamera): Rig {
   return {
     camera,
-    smoothed: 0,
-    smoothedParty: 0,
+    d: 0,
+    dVel: { v: 0 },
+    dInit: false,
+    sample: createRouteSample(),
     smoothedSponsorX: sponsorBoardX(0),
     pos: new THREE.Vector3(),
     look: new THREE.Vector3(),
-    flightPos: new THREE.Vector3(),
-    flightLook: new THREE.Vector3(),
     currentLook: new THREE.Vector3(0, 0.4, 0),
     key: '',
     t: 1,
@@ -173,9 +182,11 @@ function createRig(camera: THREE.PerspectiveCamera): Rig {
     ride: 0,
     phase: 'none',
     cut: -1,
+    cutFrom: 0,
     rect: { x: 0, y: 0, w: 1, h: 1 },
     shot: { pos: new THREE.Vector3(), look: new THREE.Vector3(), fov: 46 },
-    introT: 0,
+    handoff: FLIGHT_S,
+    tourFov: 46,
   }
 }
 
@@ -196,47 +207,71 @@ function dampLook(r: Rig, rate: number, delta: number) {
   )
 }
 
-// ── Scroll-Rundgang (bestehende Fahrt, unverändert) ─────────
+// ── Scroll-Rundgang (v18-R) ─────────────────────────────────
+// Ziel = Scroll-Position → Halt-Parameter → Routen-Kosten D. Die Kamera
+// folgt D mit einer kritisch gedämpften Feder (stetige Geschwindigkeit,
+// weiches An- und Abfahren) und einem Tempo-Deckel, der mit der Rest-
+// strecke wächst: kurze Etappen in ~1 s, weite Sprünge höchstens ~TOUR_MAX_S.
+// Nutzer bleibt Herr über die Richtung (kein Scroll-Hijacking, keine Sperre).
 function tourFrame(r: Rig, state: FrameState, delta: number) {
   const camera = r.camera
-  const target = scrollToG(useStore.getState().scrollProgress)
-  // zeitbasierte Dämpfung (frameratenunabhängig) — läuft auch im
-  // Partyraum weiter, damit die Fahrt beim Austritt schon stimmt.
-  // v14-D: gedämpft wird g (Stations-Einheiten inkl. Flyover-Strecke);
-  // u bleibt für alle anderen Leser exakt das alte 8-Stationen-Raster.
-  r.smoothed = THREE.MathUtils.damp(r.smoothed, target, 4, delta)
-  const g = r.smoothed
-  const uNow = gToU(g)
-  cameraState.u = uNow // für Flutlicht/Ball/Staub (Anstoß)
-  teamState.s = gToTeam(g)
-  teamState.w = teamPresence(g)
+  const st = useStore.getState()
+  // Start der Route = Karten-Totale dieser Bildklasse (wie Poster/Karte)
+  {
+    const a0 = state.size.width / state.size.height
+    const cls = mapClass(a0)
+    setRouteStart(OVERVIEW[cls].pos, OVERVIEW[cls].look, coverFov(cls, a0), cls === 'tall')
+  }
+  const target = routeDAtStop(scrollToStop(st.scrollProgress))
+  if (!r.dInit) {
+    r.d = target
+    r.dVel.v = 0
+    r.dInit = true
+  }
+  const rem = Math.abs(target - r.d)
+  const maxSpeed = Math.max(TOUR_V0, rem / TOUR_MAX_S)
+  r.d = smoothDamp(r.d, target, r.dVel, TOUR_SMOOTH, maxSpeed, Math.min(delta, 0.1))
+  const sm = sampleRoute(r.d, r.sample)
+  const sNow = sm.s
+  tourCam.s = sNow
+  cameraState.u = sm.u // für Flutlicht/Ball/Staub/Karten/Fans
+  r.tourFov = sm.fov
+  // Karten-Look (Tilt-Shift, ruhige Fans) blendet auf der ersten Etappe aus
+  mapWorld.overview = sm.karte
+  mapWorld.tilt = sm.karte
+  mapWorld.fansIdle = sm.karte
+  // Mannschaft: Fortschritt über Spieler-Halte + Totale, Präsenz, Fokus
+  teamState.s = THREE.MathUtils.clamp((sNow - TEAM_FIRST) / (TEAM_TOTALE - TEAM_FIRST), 0, 1)
+  teamState.w = teamPresence(sNow)
+  const fk = sNow - TEAM_FIRST
+  if (fk > -0.6 && fk < TEAM_N - 0.4) {
+    teamFocus.k = THREE.MathUtils.clamp(fk, 0, TEAM_N - 1)
+    teamFocus.card = TEAM_ORDER[Math.round(teamFocus.k)]
+    teamFocus.w = 1 - smoothstep(0.15, 0.6, fk < 0 ? -fk : fk > TEAM_N - 1 ? fk - (TEAM_N - 1) : 0)
+  } else {
+    teamFocus.k = -1
+    teamFocus.card = -1
+    teamFocus.w = 0
+  }
 
-  // Partyraum-DURCHFAHRT (v5): gedämpfter Fortschritt — die Kamera
-  // fährt kontinuierlich zur Tür, der Welt-Hop passiert genau beim
-  // Durchgang durch PARTY_HOP (Türöffnung füllt das Bild).
-  const ppTarget = useStore.getState().partyProgress
-  // v11-E3: sanftere Dämpfung (5→3.8) → der Schwenk zieht weicher nach.
-  r.smoothedParty = THREE.MathUtils.damp(r.smoothedParty, ppTarget, 3.8, delta)
-  const pp = r.smoothedParty
-  // v14-E4: Der Windfang ist nur 0.3 tief / 0.2 breit — im Tür-Fenster
-  // senken wir die Near-Plane ab, sonst clippen Laibung/Decke beim
-  // Durchtritt. Außerhalb sofort zurück (Tiefen-Präzision).
+  const aspect = state.size.width / state.size.height
+
+  // Partyraum (v18-R): eigene Etappen der Route — vor der Tür halten, rein,
+  // im Raum verweilen, auf demselben Weg zurück vor die Tür.
+  const pp = sm.party
+  if (Math.abs(st.partyProgress - pp) > 1e-4 || (pp === 0 && st.partyProgress !== 0)) st.setPartyProgress(pp)
   setNearFor(r, pp)
-  if (pp > 0.005) {
+  if (pp > 0.0005) {
     if (camera.view && camera.view.enabled) camera.clearViewOffset()
-    const aspect = state.size.width / state.size.height
-    if (pp < PARTY_HOP) {
-      // Anflug außen: weich aus der laufenden Fahrt in die Tür-Kurve
-      sampleFlightG(g, r.flightPos, r.flightLook)
-      samplePartyApproach(pp, r.pos, r.look)
-      const w = THREE.MathUtils.clamp(pp / 0.1, 0, 1) // Einblendung
-      r.pos.lerpVectors(r.flightPos, r.pos, w)
-      r.look.lerpVectors(r.flightLook, r.look, w)
-    } else {
-      partyInsidePose(pp, aspect, state.clock.elapsedTime, r.pos, r.look)
+    if (pp < PARTY_HOP) samplePartyApproach(pp, r.pos, r.look)
+    else partyInsidePose(pp, aspect, state.clock.elapsedTime, r.pos, r.look)
+    // Portrait: wie draußen vom Blickpunkt zurück (nur außen, weich zur Tür hin aus)
+    if (aspect < 1 && pp < PARTY_HOP) {
+      const k = 1 + (1 - aspect) * 0.6 * (1 - smoothstep(0, PARTY_HOP * 0.7, pp))
+      r.pos.sub(r.look).multiplyScalar(k).add(r.look)
     }
     camera.position.copy(r.pos)
-    dampLook(r, 9, delta)
+    dampLook(r, 14, delta)
     // Beim Hop springt auch der Blick hart mit (kein Nachziehen quer
     // durch die Welten): Distanz-Heuristik erkennt den Teleport.
     if (r.currentLook.distanceToSquared(r.look) > 100) r.currentLook.copy(r.look)
@@ -244,40 +279,41 @@ function tourFrame(r: Rig, state: FrameState, delta: number) {
     return
   }
 
-  sampleFlightG(g, r.pos, r.look)
-
-  const aspect = state.size.width / state.size.height
-
-  // v14-D: Mannschafts-Station — Präsenz 1 auf der Flyover-Strecke.
-  // v15-P: EIN ruhiger Kameraweg bis zur Totale — kein Blick-Zug mehr
-  // von Karte zu Karte, die Keyframe-Blickkurve allein führt.
+  r.pos.copy(sm.pos)
+  r.look.copy(sm.look)
   const wMann = teamState.w
+  // In der Karten-Totale keine Hochformat-/Sway-Korrektur (Pose = Karte)
+  const free = 1 - sm.karte
 
-  // Portrait-Anpassung (v4-Audit): die Stationen sind für 16:9
-  // komponiert — auf schmalen Viewports zieht die Kamera vom
-  // Blickpunkt zurück, damit die Komposition erhalten bleibt.
-  if (aspect < 1) {
-    // v14-D: Im Flyover nur ein milder Rückzug — die Karten sollen groß
-    // bleiben (Tablet hochkant). Am Telefon trägt ohnehin das DOM-Deck.
-    const kFull = Math.min(1.75, 1 + (1 - aspect) * 1.1)
-    const k = THREE.MathUtils.lerp(kFull, 1 + (1 - aspect) * 0.45, wMann)
-    r.pos.sub(r.look).multiplyScalar(k).add(r.look)
-    r.pos.y += (1 - aspect) * 0.5 * (1 - wMann * 0.6) // leicht höher für mehr Kontext
-  }
-
-  // v14-M: Telefon hochkant → ruhige Draufsicht hinter dem Taktik-Board.
+  // Portrait-Anpassung: die Halte sind für 16:9 komponiert — auf schmalen
+  // Viewports zieht die Kamera vom Blickpunkt zurück (Komposition bleibt).
+  // v18-R: Rückzug absolut gedeckelt (MAX_BACK) — auf langen Blickweiten
+  // (Etappen-Mitte) schob der Faktor die Kamera sonst in den Wald.
+  // Vor der Tür (Partyraum-Etappen) gleich wie im Party-Anflug (stetig).
+  // Handy + Spieler: zusätzlich weiteres fov (horizontaler Bildwinkel),
+  // statt die Kamera durch die Reihe dahinter zurückzuziehen.
   const phone = aspect < 0.8 && state.size.width <= 640
-  if (phone && wMann > 0.001) {
-    const e = wMann * wMann * (3 - 2 * wMann)
-    r.pos.lerp(PHONE_TEAM_POS, e)
-    r.look.lerp(PHONE_TEAM_LOOK, e)
+  if (aspect < 1) {
+    const kFull = Math.min(1.75, 1 + (1 - aspect) * 1.1)
+    const kTeam = 1 + (1 - aspect) * (phone ? 1.25 : 1.05)
+    const door = 1 - smoothstep(0.0, 0.5, Math.min(Math.abs(sNow - STOP_INDEX['musik-tuer']), Math.abs(sNow - STOP_INDEX['musik-raus'])))
+    let k = THREE.MathUtils.lerp(kFull, kTeam, wMann)
+    k = THREE.MathUtils.lerp(k, 1 + (1 - aspect) * 0.6, door)
+    k = THREE.MathUtils.lerp(1, k, free)
+    _off.copy(r.pos).sub(r.look)
+    const len = _off.length()
+    const back = Math.min((k - 1) * len, MAX_BACK)
+    if (len > 1e-4) r.pos.addScaledVector(_off, back / len)
+    r.pos.y += (1 - aspect) * 0.5 * (1 - wMann * 0.7) * (1 - door) * free
+    keepInClearing(r.pos) // Rückzug nie in den Waldrand
+    if (phone) r.tourFov = THREE.MathUtils.lerp(r.tourFov, PHONE_TEAM_FOV, wMann)
   }
 
-  // v14-D: Bildverschiebung für die Textspalte (nur Landscape, weich ein/aus)
-  // Hochformat (Tablet): Text steht oben → Bild nach unten verschieben.
+  // Bildverschiebung für die Textspalte (nur Landscape, weich ein/aus).
+  // Hochformat: Text oben, Spielername unten → Karte ins freie Mittelfeld.
   const wantShift = aspect >= 1 ? TEAM_VIEW_SHIFT * wMann : 0
-  const wantShiftY = aspect < 1 && !phone ? 0.13 * wMann : 0
-  if (wantShift + wantShiftY > 0.0005) {
+  const wantShiftY = aspect < 1 ? (phone ? -0.06 : 0.13) * wMann : 0
+  if (Math.abs(wantShift) + Math.abs(wantShiftY) > 0.0005) {
     const w = state.size.width
     const h = state.size.height
     camera.setViewOffset(w, h, -wantShift * w, -wantShiftY * h, w, h)
@@ -285,29 +321,33 @@ function tourFrame(r: Rig, state: FrameState, delta: number) {
     camera.clearViewOffset()
   }
 
-  // dezenter Idle-Sway für Lebendigkeit
+  // dezenter Idle-Sway — oben mehr, an den Karten und unten ruhig
   const t = state.clock.elapsedTime
-  // v14-D: im Flyover ruhiger (die Fahrt selbst ist die Bewegung)
-  // v14-M: in der Mannschaft praktisch still (ruhig, klar)
-  const sway = (1 - uNow * 0.6) * (1 - 0.85 * wMann) // oben mehr, unten ruhiger
+  const sway = (1 - sm.u * 0.6) * (1 - 0.9 * wMann) * free
   r.pos.x += Math.sin(t * 0.18) * 0.14 * sway
   r.pos.y += Math.sin(t * 0.23 + 1.3) * 0.08 * sway
+  // …und dort genau das Atmen der Karten-Totale (nahtlose Übergabe)
+  if (!mapWorld.still) {
+    r.pos.x += Math.sin(t * 0.13) * 0.1 * sm.karte
+    r.pos.y += Math.sin(t * 0.17 + 1.1) * 0.06 * sm.karte
+  }
 
-  // v12-E6: Sponsoren-Karussell — nahe der Sponsoren-Station fährt die Kamera
-  // seitlich an der Bande entlang auf die fokussierte Tafel (Pfeile im DOM).
-  // Der Fokus-x wird gedämpft → sanftes „von Bande zu Bande fahren".
-  const wSp = smoothstep(0.11, 0.03, Math.abs(uNow - SP_U)) // 1 an der Station, 0 weg
+  // v12-E6: Sponsoren-Karussell — am Banden-Halt fährt die Kamera seitlich
+  // an der Bande entlang auf die fokussierte Tafel (Pfeile im DOM).
+  const wSp = 1 - smoothstep(0.06, 0.5, Math.abs(sNow - SPONSOR_STOP))
   if (wSp > 0.001) {
-    const targetBx = sponsorBoardX(useStore.getState().sponsorFocus)
+    const targetBx = sponsorBoardX(st.sponsorFocus)
     r.smoothedSponsorX = THREE.MathUtils.damp(r.smoothedSponsorX, targetBx, 3.5, delta)
     const bx = r.smoothedSponsorX
-    r.pos.x = THREE.MathUtils.lerp(r.pos.x, bx + 0.1, wSp)
-    r.look.x = THREE.MathUtils.lerp(r.look.x, bx, wSp)
+    r.pos.x += (bx + 0.1 - r.pos.x) * wSp
+    r.look.x += (bx - r.look.x) * wSp
   }
 
   camera.position.copy(r.pos)
-  // zeitbasiert (nicht pro Frame): konvergiert auch bei niedriger FPS
-  dampLook(r, 7.5, delta)
+  // Blick ist bereits weich (Slerp auf gedämpfter Fahrt) — nur leichtes
+  // Nachziehen gegen Sway-/Karussell-Zittern; Teleport (Party-Hop) hart.
+  dampLook(r, 12, delta)
+  if (r.currentLook.distanceToSquared(r.look) > 100) r.currentLook.copy(r.look)
   camera.lookAt(r.currentLook)
 }
 
@@ -322,8 +362,8 @@ function beginFlight(r: Rig, prev: Key | '', next: Key) {
   r.ovFrom = mapWorld.overview
   r.ovTo = next === 'overview' ? 1 : 0
   r.teamFrom = teamState.w
-  const nextSpec = next !== 'overview' && next !== 'tour' && next !== 'intro' ? PLACE_SPECS[next] : null
-  const prevSpec = prev && prev !== 'overview' && prev !== 'tour' && prev !== 'intro' ? PLACE_SPECS[prev] : null
+  const nextSpec = next !== 'overview' && next !== 'tour' ? PLACE_SPECS[next] : null
+  const prevSpec = prev && prev !== 'overview' && prev !== 'tour' ? PLACE_SPECS[prev] : null
   r.teamTo = nextSpec?.team ? 1 : 0
   if (nextSpec) {
     r.uA = nextSpec.uFrom ?? nextSpec.u
@@ -394,13 +434,24 @@ function mapFrame(r: Rig, state: FrameState, delta: number, key: Key) {
   r.rect.h += (want.h - r.rect.h) * k
   const ra = r.rect.w / r.rect.h
 
-  // Schnitt raus aus dem Partyraum (warmer Schleier, dann Flug)
+  // v18-R: raus aus dem Partyraum = derselbe Weg rückwärts (Raum → Flur →
+  // Tür, der warme Schleier deckt nur den Hop), Halt vor der Tür, DANN Flug.
+  // Vorher: harter Schleier-Schnitt aus dem Raum direkt in den Flug.
   if (r.cut >= 0) {
-    r.cut += delta / CUT_S
-    mapWorld.veil = Math.min(1, r.cut)
-    if (r.cut < 1) {
-      applyLens(r, W, H, ra, camera.fov)
-      return // Kamera bleibt im Raum, bis der Schleier deckt
+    r.cut = Math.min(1, r.cut + delta / RIDE_OUT_S)
+    const e = r.cut * r.cut * (3 - 2 * r.cut)
+    r.pp = r.cutFrom * (1 - e)
+    useStore.getState().setPartyProgress(r.pp)
+    setNearFor(r, r.pp)
+    if (r.cut < 1 && r.pp > 0.0005) {
+      if (r.pp < PARTY_HOP) samplePartyApproach(r.pp, r.pos, r.look)
+      else partyInsidePose(r.pp, ra, t, r.pos, r.look)
+      camera.position.copy(r.pos)
+      dampLook(r, 14, delta)
+      if (r.currentLook.distanceToSquared(r.look) > 100) r.currentLook.copy(r.look)
+      camera.lookAt(r.currentLook)
+      applyLens(r, W, H, ra, 46)
+      return
     }
     r.cut = -1
     leaveParty(r)
@@ -421,7 +472,7 @@ function mapFrame(r: Rig, state: FrameState, delta: number, key: Key) {
     shot.pos.copy(o.pos)
     shot.look.copy(o.look)
     shot.fov = coverFov(cls, ra)
-  } else if (key !== 'tour' && key !== 'intro') {
+  } else if (key !== 'tour') {
     placeShot(key, ra, cls, shot)
     if (PLACE_SPECS[key].sponsor) {
       const targetBx = sponsorBoardX(useStore.getState().sponsorFocus)
@@ -484,60 +535,6 @@ function mapFrame(r: Rig, state: FrameState, delta: number, key: Key) {
   applyLens(r, W, H, ra, THREE.MathUtils.lerp(r.fromFov, shot.fov, e))
 }
 
-// ── v17-D: Intro-Fahrt (erster Besuch) ──────────────────────
-// Wartet im Hero-Bild (Flutlicht noch aus), bis die Live-3D steht; dann
-// über den Anstoß-Dive (Flutlicht geht an) über den Platz und weich hinauf
-// in die Karten-Totale (Poster-deckungsgleich → Marker landen exakt).
-function introFrame(r: Rig, state: FrameState, delta: number, play: boolean) {
-  const camera = r.camera
-  const W = state.size.width
-  const H = state.size.height
-  const aspect = W / H
-  r.rect.x = 0
-  r.rect.y = 0
-  r.rect.w = W
-  r.rect.h = H
-  if (play) r.introT = Math.min(INTRO_S, r.introT + delta)
-  const t = r.introT
-  teamState.s = 0
-  teamState.w = 0
-  const g = easeInOut(Math.min(1, t / INTRO_A)) * INTRO_G
-  sampleFlightG(g, r.pos, r.look)
-  // Portrait wie im Rundgang: vom Blickpunkt zurückziehen
-  if (aspect < 1) {
-    const k = Math.min(1.75, 1 + (1 - aspect) * 1.1)
-    r.pos.sub(r.look).multiplyScalar(k).add(r.look)
-    r.pos.y += (1 - aspect) * 0.5
-  }
-  let fov = 46
-  let u = gToU(g)
-  const b = easeInOut(THREE.MathUtils.clamp((t - INTRO_A) / (INTRO_S - INTRO_A), 0, 1))
-  if (b > 0) {
-    const cls = mapClass(aspect)
-    const o = OVERVIEW[cls]
-    r.pos.lerp(o.pos, b)
-    r.look.lerp(o.look, b)
-    fov = THREE.MathUtils.lerp(46, coverFov(cls, aspect), b)
-    u = THREE.MathUtils.lerp(u, U_OVERVIEW, b)
-  }
-  cameraState.u = u
-  mapWorld.overview = b
-  mapWorld.tilt = b
-  mapWorld.fansIdle = b
-  setNearFor(r, 0)
-  camera.position.copy(r.pos)
-  r.currentLook.copy(r.look)
-  camera.lookAt(r.currentLook)
-  applyLens(r, W, H, aspect, fov)
-  if (play && t >= INTRO_S) {
-    // gelandet: ab jetzt ist das die Totale (kein zweiter Flug)
-    r.key = 'overview'
-    r.t = 1
-    r.ovFrom = r.ovTo = 1
-    endIntro()
-  }
-}
-
 function rigFrame(r: Rig, state: FrameState, delta: number) {
   const camera = r.camera
   const st = useStore.getState()
@@ -546,7 +543,7 @@ function rigFrame(r: Rig, state: FrameState, delta: number) {
   // Deep-Link: erst in der (Poster-gleichen) Totale stehen, bis die Live-
   // Karte übernommen hat — dann fliegt die Kamera zum Ort.
   const key: Key =
-    st.mode === 'tour' ? 'tour' : st.intro !== 'off' ? 'intro' : st.place && st.stageLive ? st.place : 'overview'
+    st.mode === 'tour' ? 'tour' : st.place && st.stageLive ? st.place : 'overview'
 
   // Erster Frame: in der Totale (Poster-deckungsgleich) bzw. im
   // Rundgang direkt starten.
@@ -555,10 +552,6 @@ function rigFrame(r: Rig, state: FrameState, delta: number) {
     if (key === 'tour') {
       r.key = 'tour'
       r.t = 1
-    } else if (key === 'intro') {
-      r.key = 'intro'
-      r.t = 1
-      r.introT = 0
     } else {
       const o = OVERVIEW[mapClass(W / H)]
       camera.position.copy(o.pos)
@@ -573,14 +566,23 @@ function rigFrame(r: Rig, state: FrameState, delta: number) {
   if (key !== r.key) {
     const prev = r.key
     if (prev === 'tour') r.rect = { x: 0, y: 0, w: W, h: H }
-    // Raus aus dem Partyraum: drinnen → Schleier-Schnitt, sonst sofort
+    // Raus aus dem Partyraum: Rückweg vor die Tür, dann Flug (Rundgang: sofort)
     if (prev === 'musik' && r.pp > 0) {
-      if (r.pp >= PARTY_HOP && key !== 'tour') r.cut = 0
-      else leaveParty(r)
+      if (key !== 'tour') {
+        r.cut = 0
+        r.cutFrom = r.pp
+      } else leaveParty(r)
     }
     if (key === 'tour') {
       r.cut = -1
       if (r.pp > 0) leaveParty(r)
+      r.dInit = false // Rundgang setzt an der aktuellen Scroll-Position an
+      r.handoff = prev === 'overview' ? HANDOFF_S : FLIGHT_S
+    }
+    if (key !== 'tour') {
+      teamFocus.k = -1
+      teamFocus.card = -1
+      teamFocus.w = 0
     }
     if (r.cut < 0) {
       beginFlight(r, prev, key)
@@ -590,11 +592,8 @@ function rigFrame(r: Rig, state: FrameState, delta: number) {
     r.key = key
   }
 
-  if (key === 'intro') {
-    introFrame(r, state, delta, st.intro === 'play')
-    return
-  }
   if (key !== 'tour') {
+    tourCam.s = -1
     mapFrame(r, state, delta, key)
     return
   }
@@ -605,20 +604,20 @@ function rigFrame(r: Rig, state: FrameState, delta: number) {
     camera.updateProjectionMatrix()
   }
   tourFrame(r, state, delta)
-  mapWorld.overview = 0
-  mapWorld.tilt = 0
-  mapWorld.fansIdle = 0
   if (mapWorld.veil > 0) mapWorld.veil = Math.max(0, mapWorld.veil - delta / 0.5)
-  // Übergabe Karte → Rundgang: weich aus der Kartenpose einblenden
-  let fov = 46
+  // Übergabe Karte → Rundgang. v18-R: aus der Totale nur ein kurzes
+  // Angleichen mit Ease-OUT (die Fahrt läuft vom ersten Frame an mit dem
+  // Scroll mit — vorher 1,2 s Ease-in-out-Flug, gefühlt ein Stocken).
+  // Aus einem offenen Ort (selten) weiter der normale Flug.
+  let fov = r.tourFov
   if (r.t < 1) {
-    r.t = Math.min(1, r.t + delta / FLIGHT_S)
-    const e = easeInOut(r.t)
+    r.t = Math.min(1, r.t + delta / r.handoff)
+    const e = r.handoff < FLIGHT_S ? 1 - Math.pow(1 - r.t, 3) : easeInOut(r.t)
     r.pos.copy(camera.position)
     camera.position.lerpVectors(r.fromPos, r.pos, e)
     r.look.lerpVectors(r.fromLook, r.currentLook, e)
     camera.lookAt(r.look)
-    fov = THREE.MathUtils.lerp(r.fromFov, 46, e)
+    fov = THREE.MathUtils.lerp(r.fromFov, r.tourFov, e)
   }
   if (Math.abs(camera.fov - fov) > 1e-4) {
     camera.fov = fov

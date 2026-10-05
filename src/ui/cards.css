@@ -1911,3 +1911,97 @@
 /* Fokus im Modal: nur bei Tastatur sichtbar, weiß */
 .flip-scene:focus { outline: none; }
 .flip-scene:focus-visible { outline: 2px solid var(--c-white); outline-offset: 4px; }
+
+/* ═══ v18-R: Spieler zu Spieler — Begleittext im Designsystem ═══════
+   Nummer (Gold = Rückennummer), Position als Versal-Label, Name in Anton.
+   Wechsel = 300 ms Einblenden, nichts federt. Handy: unten im Bild. */
+.team-focus__meta { display: flex; align-items: baseline; gap: var(--s-3); }
+.team-focus__count {
+  font-family: var(--f-body);
+  font-size: var(--t-micro);
+  font-weight: 600;
+  letter-spacing: var(--ls-label);
+  color: var(--c-text-3);
+  font-variant-numeric: tabular-nums;
+}
+.team-focus__card {
+  appearance: none;
+  border: 0;
+  background: none;
+  color: var(--c-white);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  padding: 0;
+  animation: team-fade var(--d-2) var(--ease) both;
+}
+.team-focus__num {
+  min-width: 2ch;
+  font-family: var(--f-display);
+  font-size: clamp(3rem, 4.6vw, 4.25rem);
+  line-height: .9;
+  text-align: right;
+  color: var(--c-accent);
+  font-variant-numeric: tabular-nums;
+}
+.team-focus__txt {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  min-width: 0;
+  padding-left: var(--s-4);
+  border-left: var(--border);
+}
+.team-focus__pos {
+  font-family: var(--f-body);
+  font-size: var(--t-label);
+  font-weight: 600;
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--c-text-2);
+}
+.team-focus__pos em { font-style: normal; color: var(--c-accent); }
+.team-focus__pos em::before { content: "·"; margin: 0 .5em; color: var(--c-text-3); }
+.team-focus__name {
+  font-family: var(--f-display);
+  font-weight: 400;
+  font-size: var(--t-d3);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--ls-display);
+  text-transform: uppercase;
+}
+.team-focus__name small {
+  display: block;
+  font-family: var(--f-body);
+  font-size: var(--t-micro);
+  font-weight: 600;
+  letter-spacing: var(--ls-label);
+  color: var(--c-text-3);
+  margin-bottom: 2px;
+}
+.team-focus__card:hover .team-focus__name {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 6px;
+}
+.team-focus__card:focus-visible { outline: 2px solid var(--c-white); outline-offset: 4px; border-radius: var(--r-s); }
+.team-focus__intro, .team-focus__outro { animation-duration: var(--d-2); }
+
+/* Handy: Begleittext + Knopf unten, über dem Kapitel-Dock */
+.team-mobile {
+  margin-top: auto;
+  padding: 0 1.25rem calc(5.4rem + env(safe-area-inset-bottom, 0px));
+  pointer-events: none;
+}
+.team-mobile .team-focus { margin-top: 0; min-height: 6.6rem; gap: var(--s-2); max-width: none; }
+.team-mobile .team-focus__num { font-size: 2.75rem; }
+.team-mobile .team-focus__name { font-size: 1.75rem; }
+.team-mobile .team-focus__intro { font-size: var(--t-small); }
+.team-mobile .tboard__actions { padding: 0; margin-top: var(--s-3); }
+@media (prefers-reduced-motion: reduce) {
+  .team-focus__card { animation: none; }
+}
