@@ -101,7 +101,7 @@ export interface TafelLayout {
 }
 
 /** Layout der langen 3D-Bandentafeln (≈ 6 : 1). */
-export const BANDE_3D: TafelLayout = { rand: 0.09, nutz: 0.62 }
+export const BANDE_3D: TafelLayout = { rand: 0.09, nutz: 0.52 }
 
 export function zeichneTafel(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, inhalt: TafelInhalt, layout: TafelLayout = {}): Grund {
   const grund = grundVon(inhalt)
@@ -193,7 +193,7 @@ export function zeichneLeer(ctx: CanvasRenderingContext2D, x: number, y: number,
   // Claim mittig (die Kamera fährt nah heran), darunter die Einladung
   ctx.fillStyle = FARBE.hell
   ctx.textAlign = 'center'
-  const px = passend(ctx, [claim], ANTON, h * 0.46, Math.min(w - 6 * m, w * 0.62))
+  const px = passend(ctx, [claim], ANTON, h * 0.46, Math.min(w - 6 * m, w * 0.5))
   ctx.font = ANTON(px)
   ctx.fillText(claim, x + w / 2, y + h * 0.43)
   ctx.fillStyle = FARBE.rot

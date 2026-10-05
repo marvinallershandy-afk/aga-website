@@ -111,7 +111,7 @@ Cache pro URL) und danach überall gleich gezeichnet (`tafel.ts`): 3D-Bande,
 |---|---|
 | Trimmen | transparente Ränder weg; **einfarbige** Ränder (weißes JPG) werden vom Rand her freigestellt — Weiß *im* Logo bleibt |
 | Größe | nach **Fläche** normiert (Höhe ∝ Seitenverhältnis^-0,4): ein quadratisches Bildzeichen wirkt so groß wie eine lange Wortmarke |
-| Abstand | 9 % (3D-Bande) bzw. 13 % Rand oben/unten, mind. 4 % seitlich; auf der langen 3D-Tafel bleibt der Inhalt in den mittleren 62 % (die Kamera fährt nah heran) |
+| Abstand | 9 % (3D-Bande) bzw. 13 % Rand oben/unten, mind. 4 % seitlich; auf der langen 3D-Tafel bleibt der Inhalt in den mittleren 52 % (die Kamera fährt nah heran) |
 | Untergrund | warmes Weiß, außer das Logo wäre darauf schlecht lesbar (z. B. weißes Logo) → Schwarz |
 | Name | reines **Bildzeichen ohne Schrift** (wenige Formteile) → Firmenname daneben, in der Logofarbe. Logos mit Schrift bekommen keinen Namen dazu |
 | Schärfe | jede 3D-Tafel hat eine eigene Textur (256 px hoch, exaktes Seitenverhältnis, Mipmaps, Anisotropie) |
