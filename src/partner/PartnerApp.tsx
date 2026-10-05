@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   BANDEN_PAKET,
   MEDIADATEN,
@@ -42,6 +42,17 @@ export function PartnerApp() {
   const [mitEntwurf, setMitEntwurf] = useState(startMitEntwurf)
   const [interesse, setInteresse] = useState<string>(() => (mitEntwurf && BANDEN_PAKET ? BANDEN_PAKET.id : ''))
   const e = useEntwurf()
+
+  // Deep-Link (/partner#anfrage, #deine-bande): erst nach dem Rendern springen
+  useEffect(() => {
+    const id = window.location.hash.slice(1)
+    if (!/^[a-z-]+$/.test(id)) return
+    const t = window.setTimeout(() => {
+      document.getElementById(id)?.scrollIntoView({ block: 'start' })
+      if (id === 'anfrage') document.getElementById('pt-name')?.focus({ preventScroll: true })
+    }, 60)
+    return () => window.clearTimeout(t)
+  }, [])
 
   const zurAnfrage = () => {
     document.getElementById('anfrage')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
