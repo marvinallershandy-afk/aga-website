@@ -267,3 +267,25 @@ Die Website ist dabei das **Werkzeug und Zuhause**: Spieltag, Album, Tipp-Liga, 
 ## E. Gestrichen
 - **Einlaufkinder:** passt nicht zum Verein.
 - **Helfer-Schichtplan:** Es gibt feste Leute dafür.
+
+---
+
+# Update 06.10.2026: Karten-Ökonomie, Spezialkarten, Kanäle
+
+**Rahmen:** Restsaison 17 Spieltage, davon 8 Heimspiele (3 bis zur Winterpause, 5 ab 14.03.). Katalog ~45 Karten. Reiner Zufall bräuchte ~190 Ziehungen fürs volle Album → deshalb:
+
+**Kartenquellen (Standardwerte, alle im Admin einstellbar):** Starter-Pack 5 (mind. 1 Silber) · Check-in-Pack 3 (+1 Heimsieg) · 1 Karte je Tipp in der Tipp-Liga · Instagram-Story-Code (wöchentlich, 24 h) 1 · Partner-Code im Laden → Partner-Karte · Freund-Bonus +1 für beide.
+**Smart-Pack:** erste Karte garantiert neu. **Doppelte:** Tausch mit Freunden (1:1) oder 3 Doppelte → 1 Wunschkarte (nie Spezial).
+**Zielwerte:** Gelegenheits-Follower ~30 Karten → ~55–60 % Album; typischer Follower ~40 → ~70 %; Stammfan ~70 + Tausch → komplett ca. Mai.
+
+**Seltenheit bewertet nie einen Spieler:** jeder Spieler hat eine Basis-Karte (zählt fürs Album); Silber-/Gold-Glanz-Varianten sind Zusatz-Sammelstücke. Gold-Grundkarten nur für Rollen (Kapitän, Trainer). Keine Bewertungszahlen auf Karten.
+**Spezial = Momente:** Meister 2026, Urknall-Pokal 2026, Partner-Spezial („präsentiert von“), limitiert: Spieler des Spiels (wöchentlich nach IG-Abstimmung), Derby-Karte, Advents-/Weihnachtskarte → Bonus-Seite, zählt nicht fürs volle Album.
+**Kapitel** (Tor, Abwehr, Mittelfeld, Sturm, Trainerstab, Momente, Kurve, Partner): komplett → Abzeichen + Bonus-Karte.
+
+**Belohnungen nur an Check-ins (Vorschlag, Entscheidung Marvin):** 3. Check-in Getränk nach Wahl · 6. Check-in Bratwurst + Getränk oder Fanartikel · alle Heimspiele → Verlosung · Album komplett → Saison-Verlosung. (Alte 5./10.-Schwelle ist diese Saison mit 8 Heimspielen nicht sinnvoll.)
+
+**Winterpause:** Adventskalender 1.–24.12. (täglich Story-Code → Karte, 24.12. Weihnachts-Spezial) = Follower-Schub Richtung 1.000; Tipp-Liga-Winterwertung optional über Testspiele.
+
+**Instagram dreht sich um die Tipp-Liga:** Mi neue Karte (Collab-Reel mit Spieler) · Fr „Jetzt tippen“ · Sa „Noch nicht getippt?“ + Story-Code · So Spieltag + Check-in · Mo MOTM-Spezialkarte, Tipp-Sieger, Fans vs. Kabine · laufend Pack-Opening-Reels (auch TikTok) · Partner-Collab „Neu im Album“. Dazu WhatsApp-Kanal „SVA Spieltag“ und Liga-Einladungslinks in Gruppen; lokal QR am Eingang/Vereinsheim, Partner-Codes an der Ladenkasse.
+
+**Noch zu klären:** Einverständnis Spieler (U18: Eltern), Jugendschutz bei Getränken, Finanzierung der Preise über Partner, Rollen am Spieltag (Story-Code, Spielbericht, Gutschein am Stand), Saisonwechsel (Album 26/27 bleibt, neues Heft im Sommer).
