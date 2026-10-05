@@ -108,11 +108,13 @@ body {
    Strecke — der Text klebt (Sticky), die Kamera gleitet über die Elf.
    Ruhepunkte: Anfang (Establishing-Shot, .section--snap-start) und Ende
    (Totale, .team-endstop). Die Kamera-Anker misst useScrollProgress.ts
-   genau an diesen beiden Stellen. Ausflug/Ankunft bleiben 100vh lang. */
+   genau an diesen beiden Stellen. Ausflug/Ankunft bleiben 100vh lang.
+   v15-P: ohne Person-für-Person-Fokus reicht EIN ruhiger Kameraweg —
+   250 → 150svh (Fahrstrecke 150vh → 50vh). */
 .section.section--team-fly {
   min-height: 0;
-  height: 250vh;
-  height: 250svh;
+  height: 150vh;
+  height: 150svh;
   padding: 0;
   display: block;
   justify-content: initial;

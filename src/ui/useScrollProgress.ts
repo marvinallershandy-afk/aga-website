@@ -13,8 +13,8 @@ const SECTION_IDS = ['verein', 'mannschaft', 'fanblock', 'musik', 'tabelle', 'sp
 // gemessen werden statt auf die Sektions-Mitte, sonst ruht der Scroll
 // an einer anderen Stelle als die komponierte Kamera-Pose.
 const SNAP_START_IDS = new Set(['tabelle', 'kontakt'])
-// v14-D: Die Mannschaft ist eine FLYOVER-Sektion (Desktop ~250vh, mobil
-// ~210svh, Sticky-Text). Sie trägt ZWEI Kamera-Anker: Anfang der Strecke
+// v14-D: Die Mannschaft ist eine FLYOVER-Sektion (v15-P: Desktop 150svh,
+// mobil 130svh, Sticky-Text). Sie trägt ZWEI Kamera-Anker: Anfang der Strecke
 // (Sektion oben bündig = Establishing-Shot) und Ende (Sektion unten bündig =
 // Totale). Dazwischen hält die Kamera-Station, und der CameraRig fährt die
 // eigene Flyover-Unterkurve. Die Gesamt-Ankunft (Anstoß → Mannschaft) und

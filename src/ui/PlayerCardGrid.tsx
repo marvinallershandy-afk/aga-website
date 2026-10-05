@@ -1,24 +1,13 @@
 import { useEffect, useState } from 'react'
 // P1: Website-Daten aus der Fassade (Overlay/DB → sonst statischer Seed).
-import { PLAYERS, STAFF, TRAINING_ZEILE, POSITION_LABEL, ROLE_LABEL, type Player } from '../data/content'
+import { PLAYERS, STAFF, TRAINING_ZEILE, ROLE_LABEL } from '../data/content'
 import { useStore } from '../store/useStore'
 import { HoloCard } from './HoloCard'
 import { StaffCard } from './StaffCard'
 import { PlayerGallery } from './PlayerGallery'
 import { jumpToSection } from './Brandbar'
 import { TacticsBoard } from './TacticsBoard'
-import {
-  TEAM_CARDS,
-  TEAM_PLAYERS,
-  BANK,
-  STAB,
-  FORMATION_LABEL,
-  MATCH_LABEL,
-  FOCUS_ORDER,
-  teamState,
-  focusCardAt,
-  teamPhaseAt,
-} from '../camera/teamLayout'
+import { BANK, STAB, FORMATION_LABEL, MATCH_LABEL, teamState, teamPhaseAt } from '../camera/teamLayout'
 
 // v13-E9: Der Spieler-Funnel beginnt HIER (FIFA-Karten = „da will ich
 // spielen") — die Pill bringt den Probetraining-Termin an die Mannschaft.
@@ -46,64 +35,36 @@ function lastName(name: string) {
   return name.trim().split(/\s+/).slice(-1)[0]
 }
 
-/** Kennzeichen hinter der Position — nur echte Flags. */
-function flagsOf(p: Player): string[] {
-  const f: string[] = []
-  if (p.isCaptain) f.push('Kapitän')
-  if (p.isNewSigning) f.push('Neuzugang')
-  if (p.isPlayerOfMonth) f.push('Spieler des Monats')
-  return f
-}
-
-// ─── Desktop/Tablet: Fokus-Text synchron zum Flyover ─────────
-// Liest teamState (vom CameraRig pro Frame geschrieben) per rAF und
-// rendert nur bei Wechsel der Fokus-Karte neu → ruhig, kein Flackern.
-function TeamFocus() {
-  const setSelected = useStore((s) => s.setSelectedPlayer)
-  const [view, setView] = useState<{ phase: 'intro' | 'focus' | 'outro'; idx: number }>({ phase: 'intro', idx: -1 })
+// ─── Desktop/Tablet: ruhiger Begleittext zur Fahrt ───────────
+// v15-P: KEIN Person-für-Person-Fokus mehr (synchroner Name/Nr. +
+// Fortschrittsstriche entfallen). Zwei Zustände: unterwegs ein kurzer
+// Hinweis, in der Totale Bank + Trainerstab. teamState wird vom
+// CameraRig pro Frame geschrieben; neu gerendert wird nur beim Wechsel.
+function TeamInfo() {
+  const [phase, setPhase] = useState<'fahrt' | 'totale'>('fahrt')
   useEffect(() => {
     let raf = 0
-    let last = ''
+    let last = 'fahrt'
     const tick = () => {
       raf = requestAnimationFrame(tick)
       if (teamState.w < 0.02) return
-      const phase = teamPhaseAt(teamState.s)
-      const idx = phase === 'focus' ? focusCardAt(teamState.s) : -1
-      const key = `${phase}:${idx}`
-      if (key !== last) {
-        last = key
-        setView({ phase, idx })
+      const next = teamPhaseAt(teamState.s)
+      if (next !== last) {
+        last = next
+        setPhase(next)
       }
     }
     raf = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(raf)
   }, [])
 
-  const card = view.idx >= 0 ? TEAM_CARDS[view.idx] : null
-  const p = card?.player
-  const order = FOCUS_ORDER.indexOf(view.idx)
   const label = MATCH_LABEL ? `Aufstellung ${MATCH_LABEL}` : `Unsere Elf · ${FORMATION_LABEL}`
+  const hasOutro = BANK.length > 0 || STAB.length > 0
 
   return (
     <div className="team-focus">
       <div className="team-focus__meta">{label}</div>
-      {view.phase === 'focus' && p ? (
-        <button key={p.id} className="team-focus__card" onClick={() => setSelected(p, TEAM_PLAYERS)} aria-label={`${p.name} öffnen`}>
-          <span className="team-focus__num">{p.number ?? '–'}</span>
-          <span className="team-focus__txt">
-            <span className="team-focus__pos">
-              {POSITION_LABEL[p.position]}
-              {flagsOf(p).map((f) => (
-                <em key={f}>{f}</em>
-              ))}
-            </span>
-            <b className="team-focus__name">
-              <small>{p.name.split(' ').slice(0, -1).join(' ')}</small>
-              {lastName(p.name)}
-            </b>
-          </span>
-        </button>
-      ) : view.phase === 'outro' ? (
+      {phase === 'totale' && hasOutro ? (
         <div key="outro" className="team-focus__outro">
           {BANK.length > 0 && (
             <p>
@@ -120,14 +81,9 @@ function TeamFocus() {
         </div>
       ) : (
         <p key="intro" className="team-focus__intro">
-          Scroll über den Platz: Wir fliegen einmal über die Elf. Tipp eine Karte an, dann dreht sie sich.
+          Scroll über den Platz bis zur Totale. Tipp eine Karte an, dann dreht sie sich.
         </p>
       )}
-      <div className="team-focus__dots">
-        {FOCUS_ORDER.map((ci, i) => (
-          <i key={ci} data-on={i === order ? 'true' : undefined} data-done={order >= 0 && i < order ? 'true' : undefined} />
-        ))}
-      </div>
     </div>
   )
 }
@@ -164,7 +120,7 @@ export function PlayerCardGrid() {
     }
     return (
       <>
-        <TeamFocus />
+        <TeamInfo />
         <div className="team-actions">
           {allBtn}
           <TrainingPill />

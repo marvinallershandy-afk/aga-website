@@ -2,7 +2,8 @@ import type { Staff } from '../data/players'
 import { ROLE_LABEL } from '../data/players'
 import { CLUB, whatsappUrl, whatsappReady } from '../data/content'
 import { WaIcon, MailIcon } from './Icons'
-import { lastNameSize, requestGyro } from './HoloCard'
+import { CardFigure, lastNameSize, requestGyro } from './HoloCard'
+import { FIGURE } from './cardArt'
 
 // v14-D: Trainerstab-Karte im Karten-2.0-System (gleicher Körper, Freisteller,
 // Wappen) — aber klar KEINE Spielerkarte: Graphit statt Rot-Foil, Rolle statt
@@ -27,7 +28,7 @@ export function StaffCard({ member }: { member: Staff }) {
           <div className="holo__plate" />
         </div>
         {figure ? (
-          <img className="holo__figure" src={figure} alt="" loading="lazy" decoding="async" draggable={false} />
+          <CardFigure key={figure} src={figure} headU={FIGURE.headStaff} />
         ) : (
           <div className="holo__nophoto" aria-hidden="true">
             <img src="/brand/aga-logo.png" alt="" />

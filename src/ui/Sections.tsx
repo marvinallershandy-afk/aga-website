@@ -74,9 +74,9 @@ export function Sections() {
       <div id="anstoss-gap" aria-hidden="true" style={{ height: '80vh', pointerEvents: 'none' }} />
 
       {/* 1 · MANNSCHAFT — v14-D „Startelf-Flyover". Im 3D-Pfad ist die
-          Sektion eine lange Flyover-Strecke (Desktop 250vh, mobil 210svh):
-          der Text klebt (Sticky), die Kamera gleitet über die Elf, der DOM-
-          Text zeigt synchron die Fokus-Karte. Klick-durchlässig
+          Sektion eine Flyover-Strecke (v15-P: Desktop 150svh, mobil 130svh):
+          der Text klebt (Sticky), die Kamera gleitet in EINEM ruhigen Weg
+          bis zur Totale (kein Person-für-Person-Fokus). Klick-durchlässig
           (passthrough), damit Taps die 3D-Karten erreichen. Kamera-Anker
           (Anfang/Ende der Strecke) misst useScrollProgress.ts.
           Mobil trägt ein horizontales Swipe-Deck die Karten.

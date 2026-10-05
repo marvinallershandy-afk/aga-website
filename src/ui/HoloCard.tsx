@@ -1,15 +1,16 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import type { Player } from '../data/players'
 import { POSITION_LABEL, SHOW_RATING } from '../data/players'
 import { CLUB } from '../data/club'
-import { tierOf } from './cardArt'
+import { tierOf, figureFit, cachedFigureFit, FIGURE, type FigureFit } from './cardArt'
 
 // ─────────────────────────────────────────────────────────────
 // v14-D „Karten 2.0" — DOM-Sammelkarte. Gleiches Design wie die
 // 3D-Textur und der Story-Export (ui/cardArt.ts):
 //  · rot-schwarzer gebürsteter Foil mit Wappen-Prägung
-//  · Freisteller ragt mit dem Kopf über die Oberkante, dahinter die
-//    Rückennummer als Wasserzeichen, sanfter Kontaktschatten
+//  · Freisteller IM Kartenrahmen (v15-P): Kopf mit Abstand unter der
+//    Oberkante (Scheitel pro Bild gemessen), Oberkörper läuft weich in
+//    die Namensplatte aus; dahinter die Rückennummer als Wasserzeichen
 //  · oben links Nummer (Gold) + Position, oben rechts Wappen
 //  · unten Vorname klein, NACHNAME groß
 //  · Badges „C" (Kapitän) und „NEU" (Neuzugang)
@@ -72,6 +73,29 @@ function startGyro() {
       })
     }
   }, { passive: true })
+}
+
+/** v15-P: Freisteller im Kartenfenster. Der Scheitel wird beim Laden pro
+ *  Bild gemessen (cardArt.figureFit) → jeder Kopf sitzt gleich weit unter
+ *  der Oberkante, egal wie der Freisteller zugeschnitten ist. Bis zur
+ *  Messung bleibt die Figur unsichtbar (kein Springen). */
+export function CardFigure({ src, headU = FIGURE.head }: { src: string; headU?: number }) {
+  const [fit, setFit] = useState<FigureFit | null>(() => cachedFigureFit(src))
+  return (
+    <div className="holo__figwrap" aria-hidden="true">
+      <img
+        className="holo__figure"
+        src={src}
+        alt=""
+        loading="lazy"
+        decoding="async"
+        draggable={false}
+        data-ready={fit ? 'true' : undefined}
+        style={fit ? { top: `${(headU - fit.head * FIGURE.width * fit.ratio).toFixed(2)}cqw` } : undefined}
+        onLoad={(e) => setFit(figureFit(e.currentTarget))}
+      />
+    </div>
+  )
 }
 
 function splitName(name: string) {
@@ -144,7 +168,7 @@ export function HoloCard({ player, onClick, large }: Props) {
       </div>
 
       {figure ? (
-        <img className="holo__figure" src={figure} alt="" loading="lazy" decoding="async" draggable={false} />
+        <CardFigure key={figure} src={figure} />
       ) : (
         <div className="holo__nophoto" aria-hidden="true">
           <img src="/brand/aga-logo.png" alt="" />

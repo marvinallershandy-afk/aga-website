@@ -106,6 +106,16 @@ export function Login() {
               </button>
             </form>
           )}
+          {/* v15-P: Sitzung bleibt gespeichert (persistSession + autoRefreshToken) */}
+          <p className="mt-5 border-t border-border pt-4 text-center text-xs leading-relaxed text-muted-foreground">
+            Einmal anmelden — du bleibst auf diesem Gerät eingeloggt.
+            {mode === 'magic' && (
+              <>
+                <br />
+                Lieber mit Passwort? Nach dem ersten Login unter <b className="text-foreground">Konto</b> festlegen.
+              </>
+            )}
+          </p>
         </CardContent>
       </Card>
     </div>

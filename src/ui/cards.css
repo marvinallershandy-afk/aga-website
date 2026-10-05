@@ -7,9 +7,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
   gap: clamp(1rem, 2.5vw, 2rem);
-  /* v14-D: Luft für den über die Kante ragenden Kopf */
-  row-gap: clamp(2rem, 4vw, 3rem);
-  padding-top: 1rem;
+  row-gap: clamp(1.4rem, 3vw, 2.2rem);
   width: 100%;
   margin-top: clamp(2rem, 5vw, 3.5rem);
 }
@@ -27,9 +25,9 @@
 
 /* ═══ v14-D „Karten 2.0" ════════════════════════════════════════════
    Gleiches Design wie 3D-Textur und Story (ui/cardArt.ts). Alle Maße in
-   cqw → die Karte skaliert als Ganzes (Deck 72vw, Galerie, Modal). Der
-   Freisteller ragt über die Oberkante (overflow sichtbar), deshalb
-   brauchen Raster/Decks oben etwas Luft. */
+   cqw → die Karte skaliert als Ganzes (Deck 72vw, Galerie, Modal).
+   v15-P: Der Freisteller bleibt im Rahmen — Raster brauchen oben keinen
+   Kopf-Freiraum mehr. */
 .holo {
   --tiltX: 0deg;
   --tiltY: 0deg;
@@ -133,21 +131,32 @@
   height: 42%;
   background: linear-gradient(180deg, rgba(8,5,6,0) 0%, rgba(8,5,6,.94) 52%);
 }
-/* Freisteller: Kopf über der Oberkante, Auslauf in die Namensplatte */
+/* v15-P: Freisteller IM Kartenrahmen. Fenster = Innenkante der Stufen-
+   Rahmenlinie (3.4cqw + Linie), Kopf mit Abstand unter der Oberkante
+   (top setzt CardFigure aus dem gemessenen Scheitel), weicher Auslauf in
+   die Namensplatte. Werte gespiegelt in cardArt.ts (FIGURE). */
+.holo__figwrap {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  clip-path: inset(3.95cqw round 2.9cqw);
+  /* Auslauf endet über dem Vornamen (.holo__name top 73 %) */
+  -webkit-mask-image: linear-gradient(180deg, #000 0, #000 75.6cqw, transparent 99.4cqw);
+  mask-image: linear-gradient(180deg, #000 0, #000 75.6cqw, transparent 99.4cqw);
+}
 .holo__figure {
   position: absolute;
-  left: 1%;
-  width: 98%;
-  top: -31.7cqw;
+  left: 7%;
+  width: 86%;
+  max-width: none;
   height: auto;
-  aspect-ratio: 2 / 3;
-  object-fit: contain;
-  object-position: top;
-  -webkit-mask-image: linear-gradient(180deg, #000 0, #000 124cqw, transparent 146cqw);
-  mask-image: linear-gradient(180deg, #000 0, #000 124cqw, transparent 146cqw);
+  top: 0;
+  opacity: 0;
+  transition: opacity .3s ease;
   filter: drop-shadow(0 1.2cqw 2.4cqw rgba(0,0,0,.6)) drop-shadow(0 0 3.5cqw rgba(233,29,41,.35));
   pointer-events: none;
 }
+.holo__figure[data-ready] { opacity: 1; }
 .holo__nophoto { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; }
 .holo__nophoto img { position: absolute; width: 50%; top: 22%; left: 25%; opacity: .5; filter: drop-shadow(0 3cqw 6cqw rgba(0,0,0,.55)); }
 .holo__nophoto span {
@@ -327,7 +336,7 @@
   max-width: 760px;
   width: 100%;
 }
-.modal-card { width: min(70vw, 360px, calc((100svh - 9rem) / 1.5)); flex: 0 0 auto; padding-top: 1.4rem; }
+.modal-card { width: min(70vw, 360px, calc((100svh - 9rem) / 1.5)); flex: 0 0 auto; }
 .modal-chips { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: .9rem; }
 .modal-chips span {
   font-size: .62rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase;
@@ -1049,7 +1058,7 @@
 }
 .staff-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-  gap: clamp(1rem, 2.5vw, 2rem); width: 100%; padding-top: 1rem;
+  gap: clamp(1rem, 2.5vw, 2rem); width: 100%;
 }
 /* v14-D: Stab im Karten-2.0-System — Graphit statt Rot-Foil */
 .staff-card2 { display: flex; flex-direction: column; align-items: center; gap: .7rem; }
@@ -1187,8 +1196,8 @@
 .pgal__grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
   gap: clamp(.9rem, 2vw, 1.6rem);
-  row-gap: clamp(1.6rem, 3vw, 2.4rem);
-  padding-top: .9rem; /* Kopf-Freiraum (Freisteller ragt über die Kante) */
+  row-gap: clamp(1.2rem, 2.4vw, 1.8rem);
+  padding-top: .3rem;
 }
 
 /* v13-K4: Karte + Story-Share als Einheit */
@@ -1217,7 +1226,7 @@
     padding: .2rem .4rem 1rem;
     -webkit-overflow-scrolling: touch;
   }
-  .pgal__grid { padding-top: 1.4rem; scrollbar-width: none; }
+  .pgal__grid { padding-top: .5rem; scrollbar-width: none; }
   .pgal__grid > * { flex: 0 0 64vw; scroll-snap-align: center; }
 }
 
@@ -1344,7 +1353,7 @@
 @keyframes nextPulse { to { box-shadow: 0 0 0 9px rgba(233,29,41,0); } }
 @media (prefers-reduced-motion: reduce) { .next-pill__dot { animation: none; } }
 
-/* ═══ v14-D: Mannschafts-Flyover — Fokus-Text (Desktop/Tablet) ═══════ */
+/* ═══ v14-D/v15-P: Mannschafts-Fahrt — Begleittext (Desktop/Tablet) ══ */
 .team-focus {
   margin-top: clamp(1.2rem, 2.6vh, 2rem);
   min-height: 9.5rem;
@@ -1367,71 +1376,6 @@
   color: rgba(255,255,255,.74);
   animation: team-fade .5s cubic-bezier(.22,1,.36,1) both;
 }
-.team-focus__card {
-  appearance: none;
-  border: 0;
-  background: none;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-  pointer-events: auto;
-  display: flex;
-  align-items: center;
-  gap: 1.1rem;
-  animation: team-fade .5s cubic-bezier(.22,1,.36,1) both;
-}
-.team-focus__num {
-  min-width: 2.2ch;
-  font-family: var(--font-display);
-  font-size: clamp(3.4rem, 5.4vw, 4.8rem);
-  line-height: .9;
-  text-align: right;
-  background: linear-gradient(180deg, #fff0b8 0%, #E8C15A 55%, #b8912f 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  filter: drop-shadow(0 4px 14px rgba(0,0,0,.6));
-}
-.team-focus__txt { display: flex; flex-direction: column; gap: .35rem; min-width: 0; }
-.team-focus__pos {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: .5rem;
-  font-size: .7rem;
-  font-weight: 800;
-  letter-spacing: .22em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,.8);
-}
-.team-focus__pos em {
-  font-style: normal;
-  font-size: .58rem;
-  letter-spacing: .16em;
-  padding: .25em .6em;
-  border-radius: 999px;
-  border: 1px solid rgba(232,193,90,.6);
-  color: var(--gold);
-}
-.team-focus__name {
-  font-family: var(--font-display);
-  font-weight: 400;
-  font-size: clamp(2rem, 3.4vw, 3rem);
-  line-height: .95;
-  text-transform: uppercase;
-  letter-spacing: .01em;
-  text-shadow: 0 4px 30px rgba(0,0,0,.7);
-}
-.team-focus__name small {
-  display: block;
-  font-family: var(--font-body);
-  font-weight: 700;
-  font-size: .72rem;
-  letter-spacing: .3em;
-  color: rgba(255,255,255,.62);
-  margin-bottom: .25rem;
-}
 .team-focus__outro { display: flex; flex-direction: column; gap: .6rem; animation: team-fade .5s cubic-bezier(.22,1,.36,1) both; }
 .team-focus__outro p { font-size: .9rem; line-height: 1.5; color: rgba(255,255,255,.82); max-width: 40ch; }
 .team-focus__outro span {
@@ -1443,20 +1387,12 @@
   color: var(--red);
   margin-bottom: .15rem;
 }
-.team-focus__dots { display: flex; gap: 5px; margin-top: .2rem; }
-.team-focus__dots i {
-  width: 14px; height: 3px; border-radius: 2px;
-  background: rgba(255,255,255,.22);
-  transition: background .3s ease, width .3s ease;
-}
-.team-focus__dots i[data-done] { background: rgba(232,193,90,.55); }
-.team-focus__dots i[data-on] { width: 26px; background: var(--gold); }
 @keyframes team-fade {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .team-focus__card, .team-focus__intro, .team-focus__outro { animation: none; }
+  .team-focus__intro, .team-focus__outro { animation: none; }
 }
 .team-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .8rem 1rem; margin-top: 1.2rem; }
 .team-actions .card-grid__all, .team-actions .training-pill { margin-top: 0; align-self: center; }

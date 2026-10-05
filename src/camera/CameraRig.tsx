@@ -4,7 +4,7 @@ import * as THREE from 'three'
 import { useStore } from '../store/useStore'
 import { sampleFlightG, cameraState, STATION_COUNT } from './CameraPath'
 import { scrollToG, gToU, gToTeam } from './anchors'
-import { teamState, focusLookAt } from './teamLayout'
+import { teamState } from './teamLayout'
 import { PITCH } from '../utils/constants'
 import {
   PARTY_HOP,
@@ -62,7 +62,6 @@ export function CameraRig() {
   const camera = useThree((s) => s.camera)
   const smoothed = useRef(0) // g (Stations-Einheiten inkl. Flyover)
   const viewShift = useRef(0)
-  const focusPt = useRef({ x: 0, y: 0, z: 0 })
   const smoothedParty = useRef(0)
   const smoothedSponsorX = useRef(sponsorBoardX(0))
   const pos = useRef(new THREE.Vector3())
@@ -151,20 +150,9 @@ export function CameraRig() {
     const aspect = state.size.width / state.size.height
 
     // v14-D: Mannschafts-Station — Präsenz 1 auf der Flyover-Strecke.
+    // v15-P: EIN ruhiger Kameraweg bis zur Totale — kein Blick-Zug mehr
+    // von Karte zu Karte, die Keyframe-Blickkurve allein führt.
     const wMann = teamState.w
-    if (wMann > 0.001) {
-      // Der Blick ruht nacheinander auf jeder Fokus-Karte (Plateaus) und
-      // gleitet dann weiter — die Keyframe-Blickkurve liefert die grobe
-      // Richtung, die Fokus-Karte zieht den Blick zu sich.
-      // v14-M: dezent — der Blick zieht nur noch leicht zur Fokus-Karte,
-      // die ruhige Bogenfahrt bleibt führend.
-      const wf = focusLookAt(teamState.s, focusPt.current) * 0.16 * wMann
-      if (wf > 0.001) {
-        look.current.x += (focusPt.current.x - look.current.x) * wf
-        look.current.y += (focusPt.current.y - look.current.y) * wf
-        look.current.z += (focusPt.current.z - look.current.z) * wf
-      }
-    }
 
     // Portrait-Anpassung (v4-Audit): die Stationen sind für 16:9
     // komponiert — auf schmalen Viewports zieht die Kamera vom

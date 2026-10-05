@@ -6,7 +6,9 @@
 // Design (gespiegelt in cards.css für die DOM-HoloCard):
 //  · Karten-Art: rot-schwarzer, gebürsteter Metall-Foil mit Wappen-
 //    Prägung, große Rückennummer als Wasserzeichen
-//  · Freisteller: der Spieler ragt mit dem Kopf über die obere Kante
+//  · Freisteller: v15-P komplett IM Kartenrahmen — Kopf mit sauberem
+//    Abstand unter der Oberkante, Oberkörper läuft weich in die
+//    Namensplatte aus (kein Kopf mehr über der Kante)
 //  · oben links Rückennummer in Gold + Position, oben rechts Wappen
 //  · unten Vorname klein, NACHNAME groß (Anton)
 //  · Badges: Kapitän „C", „NEU" für Neuzugänge
@@ -22,8 +24,79 @@ export type CardTier = 'kader' | 'neu' | 'kapitaen' | 'potm'
 
 /** Höhe des Kartenkörpers relativ zur Breite (3 : 4.2). */
 export const CARD_RATIO = 1.4
-/** Freiraum über dem Kartenkörper für den herausragenden Kopf (× Breite). */
-export const POP_RATIO = 0.085
+
+/** v15-P: Freisteller-Fenster in Karten-Einheiten (u = Breite / 100).
+ *  Gespiegelt in cards.css (.holo__figwrap / .holo__figure).
+ *  · inset/radius: Fenster liegt INNEN an der Stufen-Rahmenlinie (3.4u + Linie)
+ *  · left/width: Figur 86u breit, mittig
+ *  · head: Scheitel des Spielers in u unter der Oberkante (Stab etwas tiefer,
+ *    dort steht oben links die Rolle)
+ *  · fadeFrom/fadeTo: Auslauf in die Namensplatte (Anteil der Kartenhöhe;
+ *    die DOM-Karte setzt den Namen etwas höher → dort 0.54…0.71) */
+export const FIGURE = {
+  inset: 3.95,
+  radius: 2.9,
+  left: 7,
+  width: 86,
+  head: 12,
+  headStaff: 15,
+  fadeFrom: 0.56,
+  fadeTo: 0.74,
+} as const
+
+/** Scheitel-Lage der Freisteller-Konvention (macOS-Vision-Stapel), falls die
+ *  Messung nicht möglich ist (fremde Origin ohne CORS). */
+const HEAD_FALLBACK = 0.185
+
+export interface FigureFit {
+  /** Oberkante des sichtbaren Motivs (Alpha) als Anteil der Bildhöhe */
+  head: number
+  /** Bildhöhe / Bildbreite */
+  ratio: number
+}
+const fitCache = new Map<string, FigureFit>()
+
+/** Misst die Oberkante des Freistellers (erste Zeile mit deckendem Alpha).
+ *  Gecacht pro Bild-URL; billig (64×96-Probe). */
+export function figureFit(img: HTMLImageElement): FigureFit {
+  const key = img.currentSrc || img.src
+  const hit = fitCache.get(key)
+  if (hit) return hit
+  const ratio = img.naturalWidth > 0 ? img.naturalHeight / img.naturalWidth : 1.5
+  let head = HEAD_FALLBACK
+  try {
+    const w = 64
+    const h = Math.max(8, Math.round(w * ratio))
+    const c = document.createElement('canvas')
+    c.width = w
+    c.height = h
+    const x = c.getContext('2d', { willReadFrequently: true })!
+    x.drawImage(img, 0, 0, w, h)
+    const data = x.getImageData(0, 0, w, h).data
+    rows: for (let yy = 0; yy < h; yy++) {
+      let n = 0
+      for (let xx = 0; xx < w; xx++) {
+        if (data[(yy * w + xx) * 4 + 3] > 90 && ++n >= 2) {
+          head = yy / h
+          break rows
+        }
+      }
+    }
+  } catch {
+    /* tainted (fremde Origin) → Konvention */
+  }
+  const fit = { head, ratio }
+  fitCache.set(key, fit)
+  return fit
+}
+/** Bereits gemessene Lage (synchron), sonst null. */
+export function cachedFigureFit(url: string): FigureFit | null {
+  try {
+    return fitCache.get(new URL(url, window.location.href).href) ?? null
+  } catch {
+    return null
+  }
+}
 
 export function tierOf(p: Player): CardTier {
   if (p.isPlayerOfMonth) return 'potm'
@@ -228,45 +301,46 @@ function frameGradient(ctx: CanvasRenderingContext2D, x: number, y: number, W: n
   return g
 }
 
-/** Freisteller mit weichem Auslauf nach unten und Kontaktschatten.
- *  Der Kopf ragt um ~4.5 % der Breite über die Oberkante des Körpers. */
-function drawFigure(ctx: CanvasRenderingContext2D, img: HTMLImageElement, x: number, y: number, W: number, H: number) {
+/** Freisteller im Kartenfenster: Kopf mit Abstand unter der Oberkante,
+ *  weicher Auslauf in die Namensplatte, Kontaktschatten + roter Rim —
+ *  alles innerhalb der Stufen-Rahmenlinie (nichts ragt über die Karte). */
+function drawFigure(ctx: CanvasRenderingContext2D, img: HTMLImageElement, x: number, y: number, W: number, H: number, headU: number = FIGURE.head) {
   const u = W / 100
-  const P = POP_RATIO * W
-  const fw = W * 0.98
-  const fh = fw * (img.naturalHeight / img.naturalWidth)
-  // Freisteller-Konvention (macOS-Vision-Stapel): Scheitel bei ~18.5 % der Bildhöhe
-  const headTop = 0.185 * fh
-  const top = y - u * 4.5 - headTop
+  const fit = figureFit(img)
+  const fw = u * FIGURE.width
+  const fh = fw * fit.ratio
+  const top = u * headU - fit.head * fh
+  const ins = u * FIGURE.inset
   const off = document.createElement('canvas')
   off.width = Math.round(W)
-  off.height = Math.round(H + P)
+  off.height = Math.round(H)
   const o = off.getContext('2d')!
-  // Seiten/unten an die Karte gebunden, oben frei (Pop-out)
-  roundRect(o, 0, 0, W, H + P, u * 5)
-  o.clip()
-  o.drawImage(img, (W - fw) / 2, top - (y - P), fw, fh)
+  o.drawImage(img, (W - fw) / 2, top, fw, fh)
   // Auslauf in die Namensplatte
   o.globalCompositeOperation = 'destination-in'
-  const m = o.createLinearGradient(0, P + H * 0.66, 0, P + H * 0.84)
+  const m = o.createLinearGradient(0, H * FIGURE.fadeFrom, 0, H * FIGURE.fadeTo)
   m.addColorStop(0, 'rgba(0,0,0,1)')
   m.addColorStop(1, 'rgba(0,0,0,0)')
   o.fillStyle = m
-  o.fillRect(0, 0, W, H + P)
-  // Kontaktschatten + roter Rim
+  o.fillRect(0, 0, W, H)
+  // Fenster = Innenkante der Rahmenlinie; Schatten/Rim bleiben darin
+  ctx.save()
+  roundRect(ctx, x + ins, y + ins, W - ins * 2, H - ins * 2, u * FIGURE.radius)
+  ctx.clip()
   ctx.save()
   ctx.shadowColor = 'rgba(0,0,0,0.6)'
   ctx.shadowBlur = u * 3.2
   ctx.shadowOffsetY = u * 1.2
-  ctx.drawImage(off, x, y - P)
+  ctx.drawImage(off, x, y)
   ctx.restore()
   ctx.save()
   ctx.globalAlpha = 0.5
   ctx.shadowColor = 'rgba(233,29,41,0.55)'
   ctx.shadowBlur = u * 5
-  ctx.drawImage(off, x, y - P)
+  ctx.drawImage(off, x, y)
   ctx.restore()
-  ctx.drawImage(off, x, y - P)
+  ctx.drawImage(off, x, y)
+  ctx.restore()
 }
 
 function drawBadge(ctx: CanvasRenderingContext2D, kind: 'C' | 'NEU', cx: number, cy: number, u: number) {
@@ -361,9 +435,8 @@ export interface DrawOpts {
 }
 
 /**
- * Zeichnet die Spielerkarte. (x, y) = linke obere Ecke des KARTENKÖRPERS,
- * Breite W, Körperhöhe W·CARD_RATIO. Der Kopf des Freistellers ragt bis zu
- * POP_RATIO·W über y hinaus — der Aufrufer muss diesen Platz freihalten.
+ * Zeichnet die Spielerkarte. (x, y) = linke obere Ecke der Karte,
+ * Breite W, Höhe W·CARD_RATIO. v15-P: Nichts ragt über die Karte hinaus.
  */
 export function drawPlayerCard(ctx: CanvasRenderingContext2D, x: number, y: number, W: number, player: Player, assets: CardAssets, opts: DrawOpts = {}) {
   const H = W * CARD_RATIO
@@ -400,7 +473,7 @@ export function drawPlayerCard(ctx: CanvasRenderingContext2D, x: number, y: numb
     ctx.fillStyle = holo
     ctx.fillRect(x, y, W, H)
   }
-  // Innere Rahmenlinie in Stufenfarbe (liegt hinter dem Kopf)
+  // Innere Rahmenlinie in Stufenfarbe (das Freisteller-Fenster liegt innen daran)
   roundRect(ctx, x + u * 3.4, y + u * 3.4, W - u * 6.8, H - u * 6.8, u * 3.2)
   ctx.strokeStyle = frameGradient(ctx, x, y, W, H, tier)
   ctx.globalAlpha = 0.75
@@ -525,7 +598,7 @@ export function drawStaffCard(ctx: CanvasRenderingContext2D, x: number, y: numbe
   }
   drawNamePlate(ctx, x, y, W, H, first, last, 'stab', member.since !== null ? `IM VEREIN SEIT ${member.since}` : 'SV AGATHENBURG-DOLLERN')
   ctx.restore()
-  if (assets.figure) drawFigure(ctx, assets.figure, x, y, W, H)
+  if (assets.figure) drawFigure(ctx, assets.figure, x, y, W, H, FIGURE.headStaff)
   // Rolle oben links
   ctx.save()
   ctx.textAlign = 'left'
