@@ -75,6 +75,47 @@
   to = "/galerie.html"
   status = 200
 
+# v18-A: Kalender-Abo → Supabase Edge Function `kalender` (Proxy, Adresse
+# bleibt /kalender.ics → später https://aga-erste.de/kalender.ics).
+# Query-Strings (?spiel=…, ?anstoss=…) reicht Netlify beim Proxy durch.
+[[redirects]]
+  from = "/kalender.ics"
+  to = "https://fwiivwmoyagcdrjvhaou.supabase.co/functions/v1/kalender"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/kalender-alle.ics"
+  to = "https://fwiivwmoyagcdrjvhaou.supabase.co/functions/v1/kalender?alle=1"
+  status = 200
+  force = true
+
+# v18-A: Kurz-Links für Instagram & Co. (Zuordnung in der Statistik, docs/STATISTIK.md).
+# 302 statt 301: Ziele bleiben änderbar, Browser cachen nicht dauerhaft.
+[[redirects]]
+  from = "/ig"
+  to = "/?utm_source=instagram&utm_medium=bio"
+  status = 302
+  force = true
+
+[[redirects]]
+  from = "/story"
+  to = "/?utm_source=instagram&utm_medium=story"
+  status = 302
+  force = true
+
+[[redirects]]
+  from = "/qr"
+  to = "/?utm_source=qr&utm_medium=platz"
+  status = 302
+  force = true
+
+[[redirects]]
+  from = "/wa"
+  to = "/?utm_source=whatsapp"
+  status = 302
+  force = true
+
 # SPA-Fallback: deckt sowohl den 3D-Onepager als auch /admin/* ab.
 [[redirects]]
   from = "/*"
