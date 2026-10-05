@@ -22,6 +22,8 @@ export const curveClock = {
   uAmp: { value: 1 },
   /** Effekt-Sichtbarkeit 0..1 (Rauch/Glut blenden mit der Station ein/aus) */
   uFx: { value: 0 },
+  /** v19-3D (§2.11): Konfetti-Puls — 1 beim Ankommen, klingt in ~2,5 s ab */
+  uConfetti: { value: 0 },
 }
 
 /** Flacker-Funktion der Bengalos (identisch im Glow-Shader, CurveFx.tsx) */

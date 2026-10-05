@@ -55,8 +55,11 @@ const VIAS_TALL_KARTE = [P(-16, 14, 2.6), P(-5.6, 4.0, 0.8)]
 const FIXED: Record<string, Pose> = {
   // Totale hinter dem eigenen Tor: ganze Elf + Unterstand (wie v14-M)
   'team-totale': { pos: P(-10.4, 6.2, 0.5), look: P(0.4, -0.5, 1.1) },
-  // Banden-Zoom auf die Süd-Bande, erste freie Tafel (Karussell verschiebt x)
-  sponsoren: { pos: P(-2.16, 0.86, 3.05), look: P(-2.26, 0.12, 3.985) },
+  // Banden-Zoom auf die Süd-Bande, erste freie Tafel (Karussell verschiebt x).
+  // v19-3D (§2.2.3): frontaler + etwas tiefer/näher — die Tafel steht parallel
+  // zur Bildkante statt in starker Diagonale, der Baumstamm/Boden-Anschnitt
+  // wandert aus dem Bild (Blickpunkt auf Tafelhöhe).
+  sponsoren: { pos: P(-2.16, 0.55, 2.98), look: P(-2.16, 0.2, 3.92) },
   // Südost-Kurve: Fans + Meister-Banner
   fanblock: { pos: P(2.9, 1.55, 2.3), look: P(3.7, 0.55, 4.0) },
   // Anzeigetafel am Vereinsheim (x 6.13 | z −0.35), Blick nach Nordost

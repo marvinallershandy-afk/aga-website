@@ -25,21 +25,36 @@ interface RingOpts {
   /** Nord-Sektor (z < −gapZ·r) überspringen bzw. absenken */
   gapZ: number
   gapScale: number // 0 = Lücke ganz offen, 0.3 = niedrige Resthecke
+  /** v19-3D (§2.4.1): zusätzliche Glättungs-Durchläufe der Kronenhöhe +
+   *  Radial-Jitter. Der äußere Fernwald wird runder, damit die Finale-
+   *  Vogelperspektive keine „gezackten schwarzen Polygone" zeigt. */
+  smooth?: number
+  jitter?: number
 }
 
-function buildRing({ seed, radius, hMin, hMax, gapZ, gapScale }: RingOpts): THREE.BufferGeometry {
+function buildRing({ seed, radius, hMin, hMax, gapZ, gapScale, smooth = 0, jitter = 1.6 }: RingOpts): THREE.BufferGeometry {
   const rng = mulberry32(seed)
   const N = 200
   const raw = Array.from({ length: N }, () => hMin + rng() * (hMax - hMin))
   const s1 = raw.map((_, i) => (raw[(i + N - 1) % N] + raw[i] * 2 + raw[(i + 1) % N]) / 4)
-  const h = s1.map((_, i) => (s1[(i + N - 1) % N] + s1[i] * 2 + s1[(i + 1) % N]) / 4)
+  let h = s1.map((_, i) => (s1[(i + N - 1) % N] + s1[i] * 2 + s1[(i + 1) % N]) / 4)
+  for (let p = 0; p < smooth; p++) {
+    const prev = h
+    h = prev.map((_, i) => (prev[(i + N - 2) % N] + prev[(i + N - 1) % N] + prev[i] * 2 + prev[(i + 1) % N] + prev[(i + 2) % N]) / 6)
+  }
 
   const pos: number[] = []
   const uv: number[] = []
   const idx: number[] = []
+  // geglätteter Radius-Jitter (ein gemeinsamer Lauf, damit der Rand nicht springt)
+  const jit = Array.from({ length: N }, () => (rng() - 0.5) * jitter)
+  for (let s = 0; s < smooth; s++) {
+    const prev = jit.slice()
+    for (let i = 0; i < N; i++) jit[i] = (prev[(i + N - 1) % N] + prev[i] * 2 + prev[(i + 1) % N]) / 4
+  }
   for (let i = 0; i < N; i++) {
     const a = (i / N) * Math.PI * 2
-    const r = radius + (rng() - 0.5) * 1.6
+    const r = radius + jit[i]
     const x = Math.cos(a) * r
     const z = Math.sin(a) * r
     // Nord-Lücke: sanft auf gapScale absenken
@@ -70,9 +85,11 @@ export function Treeline() {
     () => buildRing({ seed: 11, radius: 12.5, hMin: 1.3, hMax: 2.2, gapZ: 0.25, gapScale: 0.12 }),
     [],
   )
-  // äußerer Wald: hoch, Nord nur abgesenkt (ferne Bäume hinterm Dorf)
+  // äußerer Wald: hoch, Nord nur abgesenkt (ferne Bäume hinterm Dorf).
+  // v19-3D (§2.4.1): stärker geglättet + weniger Radial-Jitter → weiche
+  // Fern-Silhouette statt gezackter Polygone in der Finale-Vogelperspektive.
   const outer = useMemo(
-    () => buildRing({ seed: 23, radius: 18, hMin: 2.0, hMax: 3.4, gapZ: 0.3, gapScale: 0.35 }),
+    () => buildRing({ seed: 23, radius: 18, hMin: 2.2, hMax: 3.2, gapZ: 0.3, gapScale: 0.35, smooth: 4, jitter: 0.5 }),
     [],
   )
   // v5.5 („Fotomaterial"): der innere Saum trägt eine echte Wald-

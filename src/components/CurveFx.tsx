@@ -143,11 +143,13 @@ export function BengaloSmoke({ flares, perFlare }: { flares: THREE.Vector3[]; pe
           vUv = uv;
           vGrad = position.y + 0.5;
           vAlpha = smoothstep(0.0, 0.16, age) * pow(1.0 - age, 1.5) * uFx;
-          // Licht: unten glüht der Bengalo rot durch, oben streift das Flutlicht
-          float glow = exp(-age * 6.5) * flick(uTime, ei);
-          vec3 lit = vec3(0.24, 0.23, 0.26) + vec3(0.1, 0.1, 0.12) * smoothstep(0.25, 1.0, age);
-          vec3 tint = mix(vec3(1.0), vec3(1.3, 0.6, 0.55), exp(-age * 3.0));
-          vCol = lit * tint + vec3(1.0, 0.16, 0.1) * 1.8 * glow;
+          // v19-3D (§2.11): Rauch entsättigt — neutrales Rauchgrau mit rotem
+          // Kern am Fuß (vorher rosa „Zuckerwatte"). Der rote Durchglüh-Anteil
+          // bleibt kompakt am Bengalo-Kern.
+          float glow = exp(-age * 7.5) * flick(uTime, ei);
+          vec3 lit = vec3(0.25, 0.245, 0.255) + vec3(0.09, 0.09, 0.1) * smoothstep(0.25, 1.0, age);
+          vec3 tint = mix(vec3(1.0), vec3(1.12, 0.82, 0.74), exp(-age * 3.5));
+          vCol = lit * tint + vec3(1.0, 0.2, 0.12) * 1.5 * glow;
           #include <fog_vertex>
         }`,
       fragmentShader: /* glsl */ `
@@ -290,6 +292,7 @@ export function Confetti({ count }: { count: number }) {
         attribute vec4 aC;
         attribute vec4 aC2;
         uniform float uTime;
+        uniform float uConfetti;
         varying vec3 vCol;
         mat3 rX(float a){float c=cos(a),s=sin(a);return mat3(1.,0.,0.,0.,c,s,0.,-s,c);}
         mat3 rY(float a){float c=cos(a),s=sin(a);return mat3(c,0.,-s,0.,1.,0.,s,0.,c);}
@@ -300,7 +303,8 @@ export function Confetti({ count }: { count: number }) {
           float ph = aC2.z;
           vec3 c = vec3(aC.x + sin(uTime * 0.8 + ph) * aC2.y, y0 - fall, aC.y + cos(uTime * 0.6 + ph) * aC2.y * 0.6);
           mat3 R = rY(uTime * aC2.x * 0.7 + ph * 2.0) * rX(uTime * aC2.x + ph);
-          float s = 0.022 * smoothstep(0.0, 0.08, fall) * (1.0 - smoothstep(y0 - 0.02, y0 + 0.05, fall));
+          // v19-3D (§2.11): Konfetti nur kurz beim Ankommen — uConfetti pulst
+          float s = 0.022 * uConfetti * smoothstep(0.0, 0.08, fall) * (1.0 - smoothstep(y0 - 0.02, y0 + 0.05, fall));
           vec3 p = c + R * (position * s);
           vec3 n = R * vec3(0., 0., 1.);
           vec4 mvPosition = modelViewMatrix * vec4(p, 1.0);
@@ -326,6 +330,7 @@ export function Confetti({ count }: { count: number }) {
       transparent: true,
     })
     mat.uniforms.uTime = curveClock.uTime
+    mat.uniforms.uConfetti = curveClock.uConfetti
     return { geo, mat }
   }, [count])
   useEffect(() => () => { geo.dispose(); mat.dispose() }, [geo, mat])

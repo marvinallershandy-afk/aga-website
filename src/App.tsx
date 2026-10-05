@@ -1,4 +1,4 @@
-import { useEffect, lazy, Suspense } from 'react'
+import { useEffect, useState, lazy, Suspense } from 'react'
 import { useStore } from './store/useStore'
 import { detectWebGL, prefersReducedMotion } from './utils/caps'
 import { useScrollProgress } from './ui/useScrollProgress'
@@ -42,6 +42,41 @@ export default function App() {
   const mode = useStore((s) => s.mode)
 
   useMapRouting()
+
+  // Audit C (v19-3D): Der schwere 3D-Chunk (three/R3F + doorGlow-Shared,
+  // ~1 MB) soll NICHT mit dem ersten Bild konkurrieren. Das Poster der
+  // Karten-Totale ist sofort da; die Bühne (und damit ihr Chunk) wird erst
+  // nach dem ersten Paint im Leerlauf angefordert — poster-first bleibt
+  // erhalten, der Chunk lädt nur minimal später. Bei fehlendem WebGL/
+  // reduced-motion wird die Bühne ohnehin nie geladen.
+  const [mountStage, setMountStage] = useState(false)
+  useEffect(() => {
+    if (mountStage) return
+    let raf = 0
+    let idle = 0
+    const hasIdle = typeof window.requestIdleCallback === 'function'
+    // zwei rAF → nach dem ersten tatsächlichen Paint des Posters
+    raf = requestAnimationFrame(() =>
+      (raf = requestAnimationFrame(() => {
+        idle = hasIdle
+          ? window.requestIdleCallback(() => setMountStage(true), { timeout: 400 })
+          : window.setTimeout(() => setMountStage(true), 120)
+      })),
+    )
+    // Wischt der Besucher sofort los, die Bühne ohne Verzögerung holen
+    const now = () => setMountStage(true)
+    window.addEventListener('wheel', now, { once: true, passive: true })
+    window.addEventListener('touchstart', now, { once: true, passive: true })
+    window.addEventListener('keydown', now, { once: true })
+    return () => {
+      cancelAnimationFrame(raf)
+      if (hasIdle) window.cancelIdleCallback(idle)
+      else clearTimeout(idle)
+      window.removeEventListener('wheel', now)
+      window.removeEventListener('touchstart', now)
+      window.removeEventListener('keydown', now)
+    }
+  }, [mountStage])
 
   // Ton-Schalter → AudioManager (global; Musik selbst lebt im Partyraum)
   useEffect(() => {
@@ -109,9 +144,7 @@ export default function App() {
         mode === 'tour' && <StaticBackdrop />
       ) : (
         <StageBoundary>
-          <Suspense fallback={null}>
-            <Stage />
-          </Suspense>
+          <Suspense fallback={null}>{mountStage && <Stage />}</Suspense>
         </StageBoundary>
       )}
       {/* Poster der Karten-Totale: sofort sichtbar, bis die Live-3D-Karte

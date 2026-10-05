@@ -1,65 +1,59 @@
 import { useMemo } from 'react'
 import * as THREE from 'three'
 
-// Dorf-Silhouetten an der offenen NORD-Seite (Agathenburg liegt
-// hinterm Platz Richtung Schulstraße) — dunkle Giebelhäuser mit
-// vereinzelt warm erleuchteten Fenstern, im Fog halb versunken.
+// Dorf-Silhouette an der offenen NORD-Seite (Agathenburg liegt hinterm
+// Platz Richtung Schulstraße) — v19-3D (§2.4.1): weiche, gerundete
+// Hügel-/Baumband-Silhouetten in zwei, drei Graustufen statt gezackter
+// schwarzer Giebel-Polygone (die aus der Finale-Vogelperspektive wie
+// Geometrie-Fehler aussahen). Vereinzelt warm erleuchtete Fenster
+// bleiben, im Fog halb versunken.
 // Beleg: dji_…142306_0154…/f001, Satellit.
 
-const HOUSES: { x: number; z: number; w: number; d: number; h: number; rot: number; lit: boolean }[] = [
-  { x: -5.5, z: -7.2, w: 1.1, d: 0.8, h: 0.5, rot: 0.15, lit: true },
-  { x: -2.8, z: -8.1, w: 1.3, d: 0.9, h: 0.55, rot: -0.1, lit: false },
-  { x: 0.2, z: -7.6, w: 1.0, d: 0.75, h: 0.48, rot: 0.3, lit: true },
-  { x: 3.1, z: -8.4, w: 1.2, d: 0.85, h: 0.52, rot: -0.2, lit: false },
-  { x: 5.8, z: -7.0, w: 0.95, d: 0.7, h: 0.45, rot: 0.4, lit: true },
+// Weiche Massen: gestreckte, geglättete Kuppen (Low-Poly-Kugel-Kappen) in
+// drei Tönen + ein paar warme Fensterpunkte.
+const MOUNDS: { x: number; z: number; w: number; d: number; h: number; tone: number }[] = [
+  { x: -6.8, z: -7.6, w: 2.6, d: 1.6, h: 0.62, tone: 0 },
+  { x: -4.2, z: -8.3, w: 3.0, d: 1.8, h: 0.78, tone: 1 },
+  { x: -1.3, z: -7.8, w: 2.4, d: 1.5, h: 0.56, tone: 2 },
+  { x: 1.4, z: -8.5, w: 3.2, d: 1.9, h: 0.72, tone: 0 },
+  { x: 4.3, z: -7.7, w: 2.8, d: 1.6, h: 0.6, tone: 1 },
+  { x: 7.0, z: -8.2, w: 2.4, d: 1.5, h: 0.5, tone: 2 },
+]
+const TONES = ['#141210', '#1a1714', '#211c18']
+
+// Warme Fensterlichter (bleiben als Lebenszeichen im Dorf)
+const WINDOWS: [number, number, number][] = [
+  [-6.4, 0.3, -6.9],
+  [-3.6, 0.42, -7.5],
+  [-3.9, 0.22, -7.5],
+  [1.9, 0.36, -7.7],
+  [4.1, 0.26, -7.0],
 ]
 
-function House({ x, z, w, d, h, rot, lit }: (typeof HOUSES)[number]) {
-  const gable = useMemo(() => {
-    const half = d / 2
-    const s = new THREE.Shape()
-    s.moveTo(-half, 0); s.lineTo(half, 0); s.lineTo(0, h * 0.55); s.closePath()
-    return new THREE.ShapeGeometry(s)
-  }, [d, h])
-
+function Mound({ x, z, w, d, h, tone }: (typeof MOUNDS)[number]) {
+  // obere Halbkugel, flach gedrückt und gestreckt → weiche Kuppe ohne Zacken
+  const geo = useMemo(() => {
+    const g = new THREE.SphereGeometry(1, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2)
+    return g
+  }, [])
   return (
-    <group position={[x, 0, z]} rotation-y={rot}>
-      <mesh position={[0, h / 2, 0]}>
-        <boxGeometry args={[w, h, d]} />
-        <meshStandardMaterial color="#171310" roughness={1} />
-      </mesh>
-      <mesh geometry={gable} position={[w / 2, h, 0]} rotation-y={Math.PI / 2}>
-        <meshStandardMaterial color="#141110" roughness={1} />
-      </mesh>
-      <mesh geometry={gable} position={[-w / 2, h, 0]} rotation-y={-Math.PI / 2}>
-        <meshStandardMaterial color="#141110" roughness={1} />
-      </mesh>
-      {/* Dach als Prisma-Platten */}
-      {[-1, 1].map((s) => (
-        <mesh
-          key={s}
-          position={[0, h + h * 0.28, s * (d / 4)]}
-          rotation-x={-s * Math.atan2(h * 0.55, d / 2)}
-        >
-          <boxGeometry args={[w + 0.08, 0.03, Math.hypot(d / 2, h * 0.55) + 0.03]} />
-          <meshStandardMaterial color="#100d0c" roughness={1} />
-        </mesh>
-      ))}
-      {lit && (
-        <mesh position={[0, h * 0.4, d / 2 + 0.004]}>
-          <planeGeometry args={[0.1, 0.08]} />
-          <meshStandardMaterial color="#ffb765" emissive="#ff9d3f" emissiveIntensity={1.1} toneMapped={false} />
-        </mesh>
-      )}
-    </group>
+    <mesh geometry={geo} position={[x, 0, z]} scale={[w / 2, h, d / 2]}>
+      <meshStandardMaterial color={TONES[tone]} roughness={1} />
+    </mesh>
   )
 }
 
 export function Village() {
   return (
     <group>
-      {HOUSES.map((h, i) => (
-        <House key={i} {...h} />
+      {MOUNDS.map((m, i) => (
+        <Mound key={i} {...m} />
+      ))}
+      {WINDOWS.map((p, i) => (
+        <mesh key={i} position={p}>
+          <planeGeometry args={[0.1, 0.08]} />
+          <meshStandardMaterial color="#ffb765" emissive="#ff9d3f" emissiveIntensity={1.1} toneMapped={false} />
+        </mesh>
       ))}
     </group>
   )

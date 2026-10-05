@@ -58,3 +58,6 @@ scripts/mail/patch.json
 # v18-R: Rundgang-Beweise/Messläufe (lokal)
 shots-rundgang/
 _rundgang/
+
+# v19-3D: Beweis-Shots (lokal, nicht committen)
+shots-v19-3d/
