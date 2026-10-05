@@ -10,7 +10,8 @@ import { StageBoundary } from './ui/StageBoundary'
 const Stage = lazy(() => import('./components/Stage').then((m) => ({ default: m.Stage })))
 import { Sections } from './ui/Sections'
 import { Brandbar } from './ui/Brandbar'
-import { MatchdayBar } from './ui/MatchdayBar'
+// v18-T: SpieltagLeiste = MatchdayBar, mit ?vorfuehrung=1 die Vorführ-Leiste
+import { SpieltagLeiste } from './ui/VorfuehrungsLeiste'
 import { ScrollHint } from './ui/ScrollHint'
 import { PlayerModal } from './ui/PlayerModal'
 import { FanLightbox } from './ui/FanLightbox'
@@ -118,7 +119,7 @@ export default function App() {
       <PartyDirector />
       <Brandbar />
       {/* v15-L: nur im Spieltagsfenster sichtbar, sonst null + 0 Requests */}
-      <MatchdayBar />
+      <SpieltagLeiste />
       {mode === 'map' ? <MapView /> : <Sections />}
       {mode === 'map' && <Intro />}
       <MapPanel />

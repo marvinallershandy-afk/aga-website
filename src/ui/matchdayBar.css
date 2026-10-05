@@ -42,3 +42,10 @@
   .mday { top: calc(env(safe-area-inset-top, 0px) + .82rem); left: auto; right: 12px; transform: none; max-width: calc(100vw - 96px); }
 }
 @media (prefers-reduced-motion: reduce) { .mday__dot { animation: none; } }
+
+/* v18-T: Vorführ-Spiel (/?vorfuehrung=1) — gestrichelte Kante + Label */
+.mday--demo { border-style: dashed; }
+.mday__demo {
+  font-weight: 800; letter-spacing: .14em; text-transform: uppercase;
+  color: rgba(255, 255, 255, .62); padding-right: .45rem; border-right: 1px solid rgba(255, 255, 255, .25);
+}

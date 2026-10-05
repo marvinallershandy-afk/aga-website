@@ -20,6 +20,9 @@ import { LiveTabelle } from './LiveTabelle'
 import { Icon } from './icons'
 // v18-A: gemeinsame Kalender-Komponente (Spiel + Abo)
 import { KalenderKnopf } from '../alltag/Kalender'
+// v18-T: Vorführ-Spiel nur über /live?vorfuehrung=1
+import { VORFUEHRUNG } from './vorfuehrung'
+import { VorfuehrungsHinweis } from './VorfuehrungsHinweis'
 
 // ─────────────────────────────────────────────────────────────
 // v15-L: Öffentliche Live-Seite /live — der Spieltag lebt hier, nicht im
@@ -45,7 +48,7 @@ function intervall(d: LiveData | null): number {
 type Tab = 'ticker' | 'aufstellung' | 'tabelle'
 
 export function LiveApp() {
-  const live = useLive(intervall, liveKonfiguriert)
+  const live = useLive(intervall, liveKonfiguriert, VORFUEHRUNG)
   const now = useNow(1000) + live.offset
   const [tab, setTab] = useState<Tab>('ticker')
   const [toast, setToast] = useState<string | null>(null)
@@ -74,7 +77,7 @@ export function LiveApp() {
   }, [toast])
 
   const teilen = async () => {
-    const url = `${window.location.origin}/live`
+    const url = `${window.location.origin}/live${VORFUEHRUNG ? '?vorfuehrung=1' : ''}`
     const text = m ? teilenText(m) : 'Spieltag beim SV Agathenburg-Dollern'
     const nav = navigator as Navigator & { share?: (d: ShareData) => Promise<void> }
     try {
@@ -105,6 +108,7 @@ export function LiveApp() {
         </button>
       </header>
 
+      {VORFUEHRUNG && <VorfuehrungsHinweis />}
       {d?.partner && <Praesentiert p={d.partner} />}
 
       {!liveKonfiguriert ? (
@@ -113,7 +117,10 @@ export function LiveApp() {
         <HeroSkeleton />
       ) : !m ? (
         <>
-          <Leer titel="Gerade kein Spiel" text="Sobald das nächste Spiel eingetragen ist, findest du hier Countdown, Aufstellung und Liveticker.">
+          <Leer
+            titel={VORFUEHRUNG ? 'Gerade keine Vorführung' : 'Gerade kein Spiel'}
+            text={VORFUEHRUNG ? 'Im Admin unter „Vorführ-Spiel“ starten — dann erscheint es hier.' : 'Sobald das nächste Spiel eingetragen ist, findest du hier Countdown, Aufstellung und Liveticker.'}
+          >
             {d?.previous && <Zuletzt prev={d.previous} />}
           </Leer>
           {d && (
@@ -277,7 +284,7 @@ function Hero({ m, now, players, adresse, prev, onTeilen }: { m: LiveMatch; now:
         <button type="button" className="lv-btn lv-btn--ghost" onClick={onTeilen}>
           <Icon name="teilen" /> Teilen
         </button>
-        {m.status === 'geplant' && (
+        {m.status === 'geplant' && !m.demo && (
           <KalenderKnopf className="lv-btn lv-btn--ghost" adresse={adresse} spiel={{ id: m.id, gegner: m.opponent, heim: m.home, anstoss: m.kickoff, ort: m.home ? adresse : m.venue, wettbewerb: m.competition }} />
         )}
       </div>

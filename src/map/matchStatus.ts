@@ -37,7 +37,8 @@ export function matchStatus(now: number, live: LiveSignal | null): MatchStatus {
   if (live && (live.status === 'live' || live.status === 'halbzeit')) {
     const stand = `${live.goalsFor}:${live.goalsAgainst}`
     const line = live.status === 'live' ? `LIVE ${stand}${live.minuteLabel ? ` · ${live.minuteLabel}` : ''}` : `Halbzeit ${stand}`
-    return { line, state: 'live', long: `${line} ${vs}` }
+    // v18-T: Gegner aus dem Live-Signal (gleich NEXT_MATCH; bei der Vorführung das Vorführ-Spiel)
+    return { line, state: 'live', long: `${line} ${live.home ? 'vs' : 'bei'} ${live.opponent}` }
   }
   if (!k || NEXT_MATCH.isPlaceholder) {
     return { line: 'Tabelle & Ticker', state: 'none', long: 'Tabelle, Form und Live-Ticker' }

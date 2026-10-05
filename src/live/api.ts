@@ -10,9 +10,10 @@ const KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
 
 export const liveKonfiguriert = !!(URL_BASE && KEY)
 
-export async function fetchLive(signal?: AbortSignal): Promise<LiveData> {
+/** demo = true → web_live_demo() (v18-T: NUR das Vorführ-Spiel, /live?vorfuehrung=1). */
+export async function fetchLive(signal?: AbortSignal, demo = false): Promise<LiveData> {
   if (!URL_BASE || !KEY) throw new Error('Live-Daten sind nicht eingerichtet.')
-  const r = await fetch(`${URL_BASE}/rest/v1/rpc/web_live`, {
+  const r = await fetch(`${URL_BASE}/rest/v1/rpc/${demo ? 'web_live_demo' : 'web_live'}`, {
     method: 'POST',
     headers: { apikey: KEY, Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' },
     body: '{}',

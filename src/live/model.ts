@@ -67,6 +67,8 @@ export interface LiveMatch {
   goalsFor: number
   goalsAgainst: number
   updatedAt?: string
+  /** v18-T: nur aus web_live_demo() — Vorführ-Spiel, kein echtes Spiel */
+  demo?: boolean
 }
 
 export interface LiveLineup {

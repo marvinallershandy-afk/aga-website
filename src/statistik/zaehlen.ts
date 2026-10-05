@@ -8,11 +8,13 @@
 //   · keine IP/User-Agent-Speicherung (der UA wird nur HIER im Browser grob
 //     ausgewertet: Bot? Instagram-In-App-Browser? — nie übertragen)
 //   · Bots/Prerender (navigator.webdriver) werden nicht gezählt
+//   · v18-T: Aufrufe über den Vorführ-Link (?vorfuehrung=1) auch nicht
 // Ereignisse (Ziele) laufen über dieselbe Tabelle als „#ereignis:<name>“.
 // Feste Listen = supabase/migrations/20261009100000_sva_statistik.sql.
 // ─────────────────────────────────────────────────────────────
 
 import { istBotUa, pfadAusAdresse, quelleErmitteln } from './quelle'
+import { istVorfuehrungsAdresse } from '../live/vorfuehrung'
 
 const URL_BASE = import.meta.env.VITE_SUPABASE_URL as string | undefined
 const KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
@@ -59,6 +61,8 @@ function quelle(): string {
 
 function senden(pfad: string) {
   if (typeof window === 'undefined' || istBot()) return
+  // v18-T: Vorführ-Link (?vorfuehrung=1) ist kein echter Besuch → nicht zählen
+  if (istVorfuehrungsAdresse(START.search)) return
   const daten = { pfad, quelle: quelle(), geraet: geraet() }
   if (import.meta.env.DEV) {
     protokoll.push(daten)
