@@ -1,20 +1,26 @@
-/* v25-D / v26: Check-in-Anzeige (iPad-Vollbild) — Premium-Bühne in 3 Ebenen.
+/* v26: Check-in-Anzeige (iPad-Vollbild) — Premium-Schaustück.
+   Links ruhige QR-Zone (Sammelkarte), oben Scorebug (TV-Anzeigetafel), rechts
+   Bühne mit filmischen Szenen (Karten-Showcase, Team-Wand, Heute, Shiny).
    Site-Design: Rot/Gold/Schwarz, Anton/Archivo. Nur CSS-Transform/Opacity
-   (flüssig auf älterem iPad), kein Blur auf großen Flächen in Animation,
-   max. 2 Held-Bilder im DOM. prefers-reduced-motion wird respektiert. */
+   (GPU, flüssig auf älterem iPad), kein Blur auf großen animierten Flächen.
+   prefers-reduced-motion wird respektiert. */
 .ca {
   position: fixed; inset: 0; z-index: 100; overflow: hidden;
-  display: flex; flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.28fr);
+  grid-template-rows: 100%;
+  gap: clamp(14px, 2.2vmin, 34px);
+  padding: clamp(16px, 2.6vmin, 40px);
   background: #0b0a09; color: #f4f2ef;
   font-family: 'Archivo', system-ui, sans-serif;
   user-select: none; -webkit-user-select: none; touch-action: none;
   -webkit-tap-highlight-color: transparent;
   --red: #E91D29; --red-deep: #b4141d; --gold: #e8c15a; --gold-deep: #c4952f;
-  --ink: #f4f2ef; --rand: clamp(20px, 3.2vmin, 46px);
+  --ink: #f4f2ef;
 }
 .ca * { box-sizing: border-box; }
 
-/* ── Ebene 1: Grund + Flutlicht ─────────────────────────────── */
+/* ── Ebene 1: Grund + Flutlicht + Staub ─────────────────────── */
 .ca-grund { position: absolute; inset: 0; z-index: 0; overflow: hidden; background:
     radial-gradient(130% 100% at 50% -10%, #1a1512 0%, #110e0c 46%, #0b0a09 100%); }
 .ca-grund__kegel {
@@ -28,197 +34,287 @@
 }
 .ca-grund__kegel--b {
   top: -52vmax; right: -24vmax;
-  background: radial-gradient(closest-side, rgba(233,29,41,.22), rgba(233,29,41,.06) 48%, transparent 74%);
+  background: radial-gradient(closest-side, rgba(233,29,41,.2), rgba(233,29,41,.05) 48%, transparent 74%);
   animation: ca-kegel-b 42s ease-in-out infinite alternate;
 }
 @keyframes ca-kegel-a { from { transform: translate3d(0,0,0); } to { transform: translate3d(14vmax, 6vmax, 0); } }
 @keyframes ca-kegel-b { from { transform: translate3d(0,0,0); } to { transform: translate3d(-12vmax, 8vmax, 0); } }
 .ca-grund__struktur {
   position: absolute; inset: 0; opacity: .5;
-  background-image: repeating-linear-gradient(115deg, rgba(255,255,255,.018) 0 2px, transparent 2px 7px);
+  background-image: repeating-linear-gradient(115deg, rgba(255,255,255,.016) 0 2px, transparent 2px 7px);
+}
+.ca-staub { position: absolute; inset: 0; pointer-events: none; opacity: .5; }
+.ca-staub i {
+  position: absolute; border-radius: 50%; background: rgba(255,244,224,.5);
+  box-shadow: 0 0 6px rgba(255,240,210,.5); will-change: transform, opacity;
+  animation: ca-staub ease-in-out infinite alternate;
+}
+@keyframes ca-staub {
+  from { transform: translate3d(0,0,0); opacity: .12; }
+  to   { transform: translate3d(2vmin, -6vmin, 0); opacity: .5; }
 }
 .ca-grund__wappen {
-  position: absolute; right: -6vmin; bottom: -9vmin; width: 52vmin; height: auto;
-  object-fit: contain; opacity: .05; filter: grayscale(1); pointer-events: none;
+  position: absolute; right: -6vmin; bottom: -9vmin; width: 48vmin; height: auto;
+  object-fit: contain; opacity: .045; filter: grayscale(1); pointer-events: none;
 }
 .ca-grund__vignette {
   position: absolute; inset: 0; pointer-events: none;
   background:
-    linear-gradient(90deg, rgba(8,7,6,.86) 0%, rgba(8,7,6,.5) 34%, rgba(8,7,6,0) 58%),
-    radial-gradient(120% 120% at 50% 42%, transparent 52%, rgba(6,5,5,.6) 100%),
-    linear-gradient(180deg, rgba(8,7,6,.42), transparent 22%, transparent 68%, rgba(6,5,5,.74));
+    radial-gradient(120% 120% at 50% 42%, transparent 54%, rgba(6,5,5,.6) 100%),
+    linear-gradient(180deg, rgba(8,7,6,.3), transparent 20%, transparent 70%, rgba(6,5,5,.6));
 }
 
-/* ── Ebene 2: Spieler-Held ──────────────────────────────────── */
-.ca-held { position: absolute; z-index: 1; inset: 0 0 0 auto; width: 52%; pointer-events: none; }
-.ca-held__bild {
-  position: absolute; inset: 0; opacity: 0;
-  background-repeat: no-repeat; background-position: center bottom; background-size: contain;
-  transition: opacity 1.4s ease; will-change: transform, opacity;
-  filter: drop-shadow(0 18px 42px rgba(0,0,0,.55)) saturate(1.04) contrast(1.03);
-}
-.ca-held__bild.is-da { opacity: 1; animation: ca-ken 9s ease-out both; }
-@keyframes ca-ken {
-  from { transform: scale(1.05) translate3d(2%, 1.6%, 0); }
-  to   { transform: scale(1.12) translate3d(-1.5%, -1%, 0); }
-}
-.ca-held__sockel {
-  position: absolute; left: 0; right: 0; bottom: 0; height: 36%;
-  background: linear-gradient(180deg, transparent, rgba(8,7,6,.78) 68%, #0b0a09);
-}
-
-/* Namensschild über dem Held */
-.ca-schild {
-  position: absolute; z-index: 2; right: var(--rand); bottom: calc(var(--rand) + 6px);
-  display: flex; align-items: flex-end; gap: 16px; text-align: right;
-  animation: ca-schild-ein .9s ease both;
-}
-@keyframes ca-schild-ein { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
-.ca-schild__nr {
-  font-family: 'Anton', 'Archivo', sans-serif; font-weight: 400; line-height: .8;
-  font-size: clamp(62px, 11vmin, 150px); color: transparent;
-  -webkit-text-stroke: 2px rgba(232,193,90,.9);
-  text-shadow: 0 2px 18px rgba(0,0,0,.5);
-}
-.ca-schild__txt { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; padding-bottom: 8px; }
-.ca-schild__txt b {
-  font-family: 'Anton', 'Archivo', sans-serif; font-weight: 400; letter-spacing: .01em;
-  font-size: clamp(22px, 3.4vmin, 40px); line-height: 1; text-transform: uppercase;
-  text-shadow: 0 2px 14px rgba(0,0,0,.6);
-}
-.ca-schild__txt i {
-  font-style: normal; font-size: clamp(12px, 1.5vmin, 16px); font-weight: 700;
-  letter-spacing: .16em; text-transform: uppercase; color: var(--gold);
-}
-
-/* ── Kopf ───────────────────────────────────────────────────── */
-.ca-kopf { position: relative; z-index: 4; display: flex; align-items: center; gap: 18px; padding: var(--rand) var(--rand) 0; }
-.ca-wappen { flex: none; width: clamp(50px, 6vmin, 76px); height: auto; object-fit: contain; filter: drop-shadow(0 3px 10px rgba(0,0,0,.5)); }
-.ca-kopf__txt { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-.ca-kopf__kicker { font-size: clamp(11px, 1.3vmin, 15px); font-weight: 800; letter-spacing: .2em; text-transform: uppercase; color: var(--red); }
-.ca-kopf__paar {
-  font-family: 'Anton', 'Archivo', sans-serif; font-weight: 400; line-height: .98; letter-spacing: .01em;
-  font-size: clamp(30px, 5.2vmin, 62px); text-transform: uppercase; text-shadow: 0 2px 16px rgba(0,0,0,.55);
-}
-.ca-kopf__paar span { color: var(--red); margin: 0 .12em; }
-.ca-kopf__zeile { display: inline-flex; align-items: center; gap: 9px; font-size: clamp(14px, 1.8vmin, 21px); color: rgba(244,242,239,.84); }
-.ca-live { width: 11px; height: 11px; border-radius: 50%; background: var(--red); box-shadow: 0 0 12px rgba(233,29,41,.8); animation: ca-puls 1.4s ease-in-out infinite; }
-@keyframes ca-puls { 50% { opacity: .3; } }
-.ca-netz { margin-left: auto; width: 12px; height: 12px; border-radius: 50%; background: #3ddc84; box-shadow: 0 0 10px rgba(61,220,132,.6); }
-.ca-netz.is-weg { background: #e0a53a; box-shadow: 0 0 10px rgba(224,165,58,.6); }
-
-/* ── Mitte: QR-Karte + Panel ────────────────────────────────── */
-.ca-mitte {
-  position: relative; z-index: 4; flex: 1; display: flex; align-items: center;
-  justify-content: flex-start; gap: clamp(24px, 4vw, 64px); padding: clamp(14px, 2.4vmin, 32px) var(--rand);
-}
-
-/* QR-Karte als Sammelkarte */
-.ca-karte-wrap { position: relative; display: flex; flex-direction: column; align-items: center; gap: .9em; flex: none; width: min(44vw, 60vh, 540px); }
-.ca-karte-rahmen { position: relative; width: 100%; }
-.ca-ring { position: absolute; inset: -11px; width: auto; height: auto; filter: drop-shadow(0 0 7px rgba(233,29,41,.28)); pointer-events: none; }
-.ca-ring__spur { fill: none; stroke: rgba(232,193,90,.22); stroke-width: 2; }
-.ca-ring__lauf { fill: none; stroke: var(--red); stroke-width: 2.6; stroke-linecap: round; stroke-dasharray: 100; transition: stroke-dashoffset .5s linear; }
-
+/* ── LINKS: QR-Zone als Premium-Sammelkarte ─────────────────── */
+.ca-qr { position: relative; z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .ca-karte {
-  position: relative; width: 100%; border-radius: clamp(20px, 2.4vmin, 30px);
-  padding: clamp(8px, 1.1vmin, 14px);
+  position: relative; width: min(42vw, 64vh); border-radius: clamp(20px, 2.6vmin, 32px);
+  padding: clamp(9px, 1.2vmin, 15px);
   background: linear-gradient(140deg, #f4da82 0%, var(--gold-deep) 22%, #8f6a1f 42%, var(--red) 70%, var(--red-deep) 100%);
-  box-shadow: 0 30px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.5);
+  box-shadow: 0 32px 84px rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.5);
   overflow: hidden; transform: translateZ(0);
+  animation: ca-karte-ein .8s cubic-bezier(.16,1,.3,1) both;
 }
-.ca-karte.is-wechsel { animation: ca-flip .9s ease; }
-@keyframes ca-flip { 0% { transform: perspective(900px) rotateY(0) scale(1); } 46% { transform: perspective(900px) rotateY(9deg) scale(.985); } 100% { transform: perspective(900px) rotateY(0) scale(1); } }
+@keyframes ca-karte-ein { from { opacity: 0; transform: translateY(14px) scale(.98); } to { opacity: 1; transform: none; } }
 .ca-karte__innen {
-  position: relative; display: flex; flex-direction: column; align-items: center; gap: clamp(7px, 1vmin, 12px);
-  border-radius: clamp(14px, 1.8vmin, 22px); padding: clamp(10px, 1.6vmin, 20px);
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: clamp(8px, 1.1vmin, 14px);
+  border-radius: clamp(14px, 2vmin, 24px); padding: clamp(12px, 1.7vmin, 22px);
   background: linear-gradient(170deg, #1b1512, #120e0c); box-shadow: inset 0 0 0 1px rgba(232,193,90,.25);
 }
 .ca-karte__kopf { display: flex; align-items: center; gap: 10px; }
-.ca-karte__kopf img { width: clamp(26px, 3.2vmin, 40px); height: auto; object-fit: contain; }
+.ca-karte__kopf img { width: clamp(28px, 3.3vmin, 42px); height: auto; object-fit: contain; }
 .ca-karte__kopf span {
   font-family: 'Anton', 'Archivo', sans-serif; font-weight: 400; letter-spacing: .14em; text-transform: uppercase;
-  font-size: clamp(16px, 2.3vmin, 28px);
+  font-size: clamp(18px, 2.5vmin, 30px);
   background: linear-gradient(180deg, #ffe9a8, var(--gold-deep)); -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 .ca-karte__qr {
-  position: relative; width: 100%; aspect-ratio: 1; border-radius: clamp(10px, 1.4vmin, 16px);
-  padding: clamp(8px, 1.3vmin, 16px); background: #f7f5f1; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08);
+  position: relative; z-index: 2; width: 100%; aspect-ratio: 1; border-radius: clamp(10px, 1.5vmin, 18px);
+  padding: clamp(10px, 1.5vmin, 18px); background: #f7f5f1; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08), 0 6px 20px rgba(0,0,0,.25);
 }
 .ca-karte__bild { width: 100%; height: 100%; image-rendering: pixelated; display: block; }
 .ca-karte__leer { display: grid; place-items: center; height: 100%; padding: 12px; color: #6b6560; font-size: 15px; text-align: center; }
 .ca-karte__fuss {
   font-family: 'Anton', 'Archivo', sans-serif; font-weight: 400; letter-spacing: .05em; text-transform: uppercase;
-  font-size: clamp(13px, 1.7vmin, 20px); color: rgba(244,242,239,.9); text-align: center;
+  font-size: clamp(14px, 1.9vmin, 22px); color: rgba(244,242,239,.92); text-align: center;
 }
+.ca-karte__demo { font-size: clamp(11px, 1.3vmin, 14px); color: var(--gold); letter-spacing: .04em; text-align: center; margin-top: -4px; }
+/* Glanz-Sweep NUR auf dem Rahmen, nie animiert auf dem QR-Modul (das deckt ihn ab) */
 .ca-karte__glanz {
-  position: absolute; inset: 0; pointer-events: none; border-radius: inherit; opacity: 0;
-  background: linear-gradient(115deg, transparent 38%, rgba(255,255,255,.5) 50%, transparent 62%);
+  position: absolute; inset: 0; z-index: 1; pointer-events: none; border-radius: inherit; opacity: 0;
+  background: linear-gradient(115deg, transparent 40%, rgba(255,255,255,.55) 50%, transparent 60%);
 }
 .ca-karte.is-wechsel .ca-karte__glanz { animation: ca-glanz .9s ease; }
 @keyframes ca-glanz { 0% { opacity: 0; transform: translateX(-60%); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateX(60%); } }
-.ca-karte__rest { font-size: clamp(13px, 1.6vmin, 18px); color: rgba(244,242,239,.6); letter-spacing: .02em; white-space: nowrap; }
-.ca-karte__rest b { color: var(--ink); font-weight: 700; font-variant-numeric: tabular-nums; }
 
-/* Panel: Claim + Zähler + Fortschritt + Info */
-.ca-panel { max-width: 30ch; display: flex; flex-direction: column; gap: clamp(10px, 1.6vmin, 18px); }
-.ca-panel__claim { font-size: clamp(16px, 2vmin, 24px); line-height: 1.38; color: rgba(244,242,239,.9); margin: 0; }
-.ca-panel__claim b { color: var(--gold); font-weight: 700; }
-.ca-zaehler { display: flex; align-items: baseline; gap: 14px; margin-top: 2px; }
-.ca-zaehler__zahl {
-  font-family: 'Anton', 'Archivo', sans-serif; font-weight: 400; line-height: .9; font-variant-numeric: tabular-nums;
-  font-size: clamp(56px, 10vmin, 128px); color: var(--red); text-shadow: 0 4px 24px rgba(233,29,41,.4);
-  transform-origin: left center;
+/* ── OBEN RECHTS: Scorebug (TV-Anzeigetafel) ────────────────── */
+.ca-stage { position: relative; z-index: 2; min-width: 0; display: flex; flex-direction: column; gap: clamp(10px, 1.8vmin, 24px); }
+.ca-score {
+  position: relative; z-index: 3; flex: none;
+  display: flex; flex-direction: column; align-items: center; gap: clamp(4px, .9vmin, 10px);
+  padding: clamp(10px, 1.6vmin, 20px) clamp(16px, 2.4vmin, 32px);
+  border-radius: clamp(16px, 2vmin, 24px);
+  background: linear-gradient(180deg, rgba(23,18,16,.92), rgba(14,11,10,.82));
+  box-shadow: 0 18px 44px rgba(0,0,0,.5), inset 0 0 0 1px rgba(232,193,90,.22);
+  animation: ca-score-ein .7s cubic-bezier(.16,1,.3,1) both;
 }
-.ca-zaehler__zahl.is-puls { animation: ca-zpuls .9s cubic-bezier(.3,1.4,.5,1); }
+@keyframes ca-score-ein { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: none; } }
+.ca-score__kick { font-size: clamp(10px, 1.2vmin, 14px); font-weight: 800; letter-spacing: .24em; text-transform: uppercase; color: var(--red); }
+.ca-score__tafel { display: flex; align-items: center; gap: clamp(14px, 2.6vmin, 40px); }
+.ca-score__team { display: flex; align-items: center; gap: clamp(8px, 1.2vmin, 14px); }
+.ca-score__team--gast { flex-direction: row-reverse; }
+.ca-score__wappen { width: clamp(42px, 5.2vmin, 66px); height: auto; object-fit: contain; filter: drop-shadow(0 3px 10px rgba(0,0,0,.5)); }
+.ca-score__kuerzel {
+  display: grid; place-items: center; width: clamp(42px, 5.2vmin, 64px); height: clamp(46px, 5.7vmin, 70px);
+  clip-path: polygon(50% 0, 100% 16%, 100% 66%, 50% 100%, 0 66%, 0 16%);
+  background: linear-gradient(155deg, #3a2f26, #15110f);
+  box-shadow: 0 3px 10px rgba(0,0,0,.5);
+  position: relative;
+  font-family: 'Anton', 'Archivo', sans-serif; font-size: clamp(22px, 3vmin, 38px); color: var(--gold);
+  text-shadow: 0 1px 4px rgba(0,0,0,.6);
+}
+.ca-score__kuerzel::before { content: ''; position: absolute; inset: 2px; clip-path: inherit; box-shadow: inset 0 0 0 2px rgba(232,193,90,.55); pointer-events: none; }
+.ca-score__team b {
+  font-family: 'Anton', 'Archivo', sans-serif; font-weight: 400; letter-spacing: .02em; text-transform: uppercase;
+  font-size: clamp(22px, 3.4vmin, 44px); line-height: 1; text-shadow: 0 2px 12px rgba(0,0,0,.5);
+}
+.ca-score__mitte { min-width: clamp(88px, 11vmin, 160px); display: grid; place-items: center; }
+.ca-score__stand { display: inline-flex; align-items: center; gap: clamp(4px, .8vmin, 10px); }
+.ca-score__stand i, .ca-score__anstoss { color: rgba(244,242,239,.5); }
+.ca-score__zahl, .ca-score__anstoss b {
+  font-family: 'Anton', 'Archivo', sans-serif; font-weight: 400; line-height: .85; font-variant-numeric: tabular-nums;
+  font-size: clamp(46px, 8.6vmin, 112px); color: var(--ink); text-shadow: 0 4px 20px rgba(0,0,0,.5);
+  display: inline-block; animation: ca-roll .5s cubic-bezier(.16,1,.3,1) both;
+}
+.ca-score__stand i { font-family: 'Anton', 'Archivo', sans-serif; font-size: clamp(34px, 6vmin, 76px); line-height: .85; animation: none; }
+.ca-score.is-ende .ca-score__zahl { color: var(--gold); }
+@keyframes ca-roll { from { opacity: 0; transform: translateY(42%); } to { opacity: 1; transform: none; } }
+.ca-score__anstoss b { font-size: clamp(40px, 7.4vmin, 96px); color: var(--gold); }
+.ca-score__zeile { display: inline-flex; align-items: center; gap: 9px; font-size: clamp(13px, 1.7vmin, 20px); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: rgba(244,242,239,.78); }
+.ca-score__punkt { width: 11px; height: 11px; border-radius: 50%; background: var(--red); box-shadow: 0 0 12px rgba(233,29,41,.85); animation: ca-puls 1.4s ease-in-out infinite; }
+@keyframes ca-puls { 50% { opacity: .3; } }
+.ca-score__min { font-family: 'Anton', 'Archivo', sans-serif; font-weight: 400; font-size: clamp(15px, 2vmin, 24px); letter-spacing: .02em; display: inline-block; animation: ca-roll .4s cubic-bezier(.16,1,.3,1) both; }
+
+/* ── Szenen-Bühne ───────────────────────────────────────────── */
+.ca-szene { position: relative; flex: 1; min-height: 0; overflow: hidden; border-radius: clamp(14px, 2vmin, 24px); }
+.ca-show__kicker {
+  position: absolute; top: clamp(2px, .6vmin, 8px); left: 50%; transform: translateX(-50%); z-index: 4;
+  font-size: clamp(12px, 1.5vmin, 18px); font-weight: 800; letter-spacing: .16em; text-transform: uppercase;
+  color: rgba(244,242,239,.66); white-space: nowrap; text-shadow: 0 2px 10px rgba(0,0,0,.6);
+  animation: ca-ein-ab .7s ease both;
+}
+@keyframes ca-ein-ab { from { opacity: 0; transform: translate(-50%, -8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
+/* Karten-Container: Höhe treibt die Breite (Karte = 100/140) */
+.ca-card { aspect-ratio: 100 / 140; height: auto; filter: drop-shadow(0 20px 44px rgba(0,0,0,.6)); }
+
+/* Szene 1: Karten-Showcase */
+.ca-show { position: absolute; inset: 0; display: grid; place-items: center; }
+.ca-show__bank { position: relative; height: 100%; width: 100%; display: grid; place-items: center; perspective: 1600px; }
+.ca-show__card { position: absolute; }
+.ca-show__card--focus { height: min(82%, 60vh); z-index: 3; animation: ca-focus-ein .9s cubic-bezier(.16,1,.3,1) both, ca-schweben 9s ease-in-out .9s infinite alternate; }
+.ca-show__card--links { height: min(66%, 48vh); z-index: 1; transform: translateX(-62%) rotate(-9deg) scale(.9); opacity: .66; filter: drop-shadow(0 16px 34px rgba(0,0,0,.6)) brightness(.7); animation: ca-bank-l .9s cubic-bezier(.16,1,.3,1) both; }
+.ca-show__card--rechts { height: min(66%, 48vh); z-index: 1; transform: translateX(62%) rotate(9deg) scale(.9); opacity: .66; filter: drop-shadow(0 16px 34px rgba(0,0,0,.6)) brightness(.7); animation: ca-bank-r .9s cubic-bezier(.16,1,.3,1) both; }
+@keyframes ca-focus-ein { from { opacity: 0; transform: translateY(26px) rotateY(16deg) scale(.92); } to { opacity: 1; transform: none; } }
+@keyframes ca-schweben { from { transform: rotateY(-6deg) rotateX(2deg) translateY(-1%); } to { transform: rotateY(6deg) rotateX(-2deg) translateY(1%); } }
+@keyframes ca-bank-l { from { opacity: 0; transform: translateX(-30%) rotate(-4deg) scale(.86); } to { opacity: .66; transform: translateX(-62%) rotate(-9deg) scale(.9); } }
+@keyframes ca-bank-r { from { opacity: 0; transform: translateX(30%) rotate(4deg) scale(.86); } to { opacity: .66; transform: translateX(62%) rotate(9deg) scale(.9); } }
+
+/* Szene 2: Team-Wand */
+.ca-wall { position: absolute; inset: 0; display: grid; place-items: center; padding-top: clamp(24px, 3.4vmin, 44px); }
+.ca-wall__grid {
+  display: grid; grid-template-columns: repeat(var(--cols, 5), minmax(0, 1fr));
+  gap: clamp(5px, .9vmin, 13px); width: 100%; height: 100%; align-content: center; justify-items: center;
+}
+/* Breiten-getriebene Kacheln (Spalte = Breite, Höhe aus dem Seitenverhältnis)
+   → ganzer Kader passt sauber in max. 3 Reihen, bleibt edel (kein Überlauf). */
+.ca-wall__card { width: 100%; min-width: 0; filter: drop-shadow(0 8px 18px rgba(0,0,0,.5)); transition: filter .7s ease;
+  animation: ca-wall-ein .5s cubic-bezier(.16,1,.3,1) calc(var(--i) * 42ms) both, ca-wall-dim .7s ease 4.2s forwards; }
+@keyframes ca-wall-ein { from { opacity: 0; transform: translateY(14px) scale(.84); } to { opacity: 1; transform: none; } }
+@keyframes ca-wall-dim { to { opacity: .32; filter: drop-shadow(0 6px 14px rgba(0,0,0,.5)) brightness(.55) saturate(.9); } }
+/* … und der Held zoomt heraus */
+.ca-wall__card.is-held { z-index: 5;
+  animation: ca-wall-ein .5s cubic-bezier(.16,1,.3,1) calc(var(--i) * 42ms) both, ca-wall-pop .9s cubic-bezier(.16,1,.3,1) 4.2s forwards; }
+@keyframes ca-wall-pop { to { transform: scale(2.1); filter: drop-shadow(0 22px 40px rgba(0,0,0,.65)); } }
+
+/* Szene 3: Heute */
+.ca-heute { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: clamp(12px, 2vmin, 24px); padding: clamp(28px, 4vmin, 52px); text-align: center; }
+.ca-heute__zaehler { display: flex; flex-direction: column; align-items: center; animation: ca-ein-auf .7s cubic-bezier(.16,1,.3,1) both; }
+@keyframes ca-ein-auf { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+.ca-heute__zahl {
+  font-family: 'Anton', 'Archivo', sans-serif; font-weight: 400; line-height: .82; font-variant-numeric: tabular-nums;
+  font-size: clamp(90px, 20vmin, 220px); color: var(--red); text-shadow: 0 6px 34px rgba(233,29,41,.42);
+}
+.ca-heute__zahl.is-puls { animation: ca-zpuls .9s cubic-bezier(.3,1.4,.5,1); }
 @keyframes ca-zpuls { 0% { transform: scale(1); } 32% { transform: scale(1.16); color: var(--gold); } 100% { transform: scale(1); } }
-.ca-zaehler__wort { font-size: clamp(16px, 2vmin, 24px); color: rgba(244,242,239,.86); }
-.ca-fort { height: 12px; border-radius: 999px; background: rgba(244,242,239,.1); overflow: hidden; box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); }
-.ca-fort__balken { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--red), var(--gold)); transition: width .7s ease; box-shadow: 0 0 14px rgba(232,193,90,.4); }
-.ca-fort__text { font-size: clamp(14px, 1.7vmin, 19px); color: rgba(244,242,239,.74); margin: 0; }
-.ca-info {
-  margin: 4px 0 0; padding: clamp(9px, 1.3vmin, 14px) clamp(14px, 1.8vmin, 20px); border-radius: 14px;
-  font-size: clamp(14px, 1.8vmin, 20px); font-weight: 600; color: var(--ink);
-  background: rgba(232,193,90,.1); box-shadow: inset 0 0 0 1px rgba(232,193,90,.3);
-  animation: ca-info-ein .6s ease both;
+.ca-heute__wort { font-size: clamp(18px, 2.6vmin, 32px); font-weight: 700; color: rgba(244,242,239,.9); letter-spacing: .02em; }
+.ca-heute__fort { width: min(80%, 540px); height: clamp(10px, 1.3vmin, 16px); border-radius: 999px; background: rgba(244,242,239,.1); overflow: hidden; box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); }
+.ca-heute__balken { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--red), var(--gold)); transition: width .7s ease; box-shadow: 0 0 16px rgba(232,193,90,.45); }
+.ca-heute__ftext { margin: 0; font-size: clamp(14px, 1.9vmin, 22px); color: rgba(244,242,239,.74); }
+.ca-heute__belohnung {
+  display: inline-flex; align-items: center; gap: clamp(10px, 1.4vmin, 16px); margin-top: clamp(4px, 1vmin, 12px);
+  padding: clamp(10px, 1.4vmin, 16px) clamp(16px, 2.2vmin, 26px); border-radius: 16px;
+  background: rgba(232,193,90,.1); box-shadow: inset 0 0 0 1px rgba(232,193,90,.34);
 }
-@keyframes ca-info-ein { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.ca-heute__schwelle { font-family: 'Anton', 'Archivo', sans-serif; font-weight: 400; font-size: clamp(30px, 4.4vmin, 56px); color: var(--gold); line-height: .8; }
+.ca-heute__btxt { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; font-size: clamp(13px, 1.6vmin, 18px); color: rgba(244,242,239,.72); }
+.ca-heute__btxt b { font-size: clamp(17px, 2.2vmin, 26px); color: var(--ink); font-weight: 700; }
 
-/* ── Start-Overlay (Geste für Vollbild) ─────────────────────── */
-.ca-start {
-  position: absolute; inset: 0; z-index: 6; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
-  background: rgba(11,10,9,.76); backdrop-filter: blur(4px); border: 0; color: var(--ink); cursor: pointer;
+/* Szene 4: Shiny-Moment */
+.ca-shiny { position: absolute; inset: 0; display: grid; place-items: center; }
+.ca-shiny__aura { position: absolute; width: 70vmin; height: 70vmin; border-radius: 50%; background: radial-gradient(closest-side, rgba(232,193,90,.26), rgba(217,169,60,.08) 46%, transparent 72%); animation: ca-aura 6s ease-in-out infinite alternate; }
+@keyframes ca-aura { from { transform: scale(.9); opacity: .6; } to { transform: scale(1.08); opacity: 1; } }
+.ca-shiny__card { position: relative; height: min(84%, 62vh); animation: ca-focus-ein .9s cubic-bezier(.16,1,.3,1) both, ca-schweben 8s ease-in-out .9s infinite alternate; }
+
+/* Szene 5: Torschütze */
+.ca-scorer { position: absolute; inset: 0; display: grid; place-items: center; }
+.ca-scorer__kicker { color: var(--gold); }
+.ca-scorer__card { position: relative; height: min(84%, 62vh); animation: ca-scorer-ein .9s cubic-bezier(.16,1,.3,1) both, ca-schweben 8s ease-in-out .9s infinite alternate; }
+@keyframes ca-scorer-ein { from { opacity: 0; transform: translateY(30px) scale(.9) rotate(-3deg); } to { opacity: 1; transform: none; } }
+
+/* ── Abpfiff-Moment ─────────────────────────────────────────── */
+.ca-ende {
+  position: fixed; inset: 0; z-index: 380; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: clamp(8px, 1.4vmin, 18px);
+  background: radial-gradient(70% 60% at 50% 46%, rgba(26,20,16,.96), rgba(8,6,6,.98));
+  animation: ca-ende-ein .5s ease both;
 }
-.ca-start > span { font-family: 'Anton', 'Archivo', sans-serif; font-size: clamp(26px, 4vw, 48px); text-transform: uppercase; }
-.ca-start > small { font-size: clamp(14px, 1.7vw, 18px); color: rgba(244,242,239,.7); }
-.ca-exit-hinweis { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); z-index: 5; font-size: 12px; color: rgba(244,242,239,.24); letter-spacing: .04em; }
+@keyframes ca-ende-ein { from { opacity: 0; } to { opacity: 1; } }
+.ca-ende__pfiff { position: absolute; width: 36vmin; height: 36vmin; border-radius: 50%; border: 3px solid rgba(255,255,255,.3); animation: ca-pfiff 1s cubic-bezier(.2,.8,.2,1) 3; }
+@keyframes ca-pfiff { 0% { transform: scale(.4); opacity: .8; } 100% { transform: scale(2.4); opacity: 0; } }
+.ca-ende__glanz { position: absolute; inset: 0; background: conic-gradient(from 0deg, transparent 0 8deg, rgba(232,193,90,.12) 8deg 14deg, transparent 14deg 22deg); -webkit-mask: radial-gradient(closest-side, #000 10%, transparent 64%); mask: radial-gradient(closest-side, #000 10%, transparent 64%); animation: ca-ende-dreh 8s linear; }
+@keyframes ca-ende-dreh { to { transform: rotate(60deg); } }
+.ca-ende__label { position: relative; font-size: clamp(14px, 2vmin, 24px); font-weight: 800; letter-spacing: .22em; text-transform: uppercase; color: var(--red); animation: ca-ein-auf .6s ease both; }
+.ca-ende__stand {
+  position: relative; display: inline-flex; align-items: center; gap: clamp(8px, 1.4vmin, 18px);
+  font-family: 'Anton', 'Archivo', sans-serif; font-weight: 400; line-height: .8;
+  font-size: clamp(90px, 20vmin, 220px); color: var(--ink); text-shadow: 0 8px 40px rgba(0,0,0,.6);
+  animation: ca-stand-ein .7s cubic-bezier(.2,1.3,.4,1) .1s both;
+}
+.ca-ende.is-sieg .ca-ende__stand { color: var(--gold); text-shadow: 0 8px 50px rgba(232,193,90,.4); }
+.ca-ende__stand i { color: rgba(244,242,239,.4); font-size: .6em; }
+@keyframes ca-stand-ein { from { opacity: 0; transform: scale(1.6); } to { opacity: 1; transform: none; } }
+.ca-ende__paar { position: relative; font-family: 'Anton', 'Archivo', sans-serif; font-weight: 400; letter-spacing: .04em; text-transform: uppercase; font-size: clamp(22px, 3.4vmin, 44px); animation: ca-ein-auf .6s ease .2s both; }
+.ca-ende__danke { position: relative; font-size: clamp(14px, 1.9vmin, 22px); color: rgba(244,242,239,.8); margin-top: clamp(4px, 1vmin, 12px); animation: ca-ein-auf .6s ease .35s both; }
 
-/* ── Hochformat (iPad hoch): Held oben hinter der Karte, Panel darunter ── */
+/* ── TOR!-Einblendung: Standbild-Freisteller soll leben (nicht „Fototermin") ──
+   Nur wenn KEIN Jubel-/Pose-Video da ist (dann greift .tj__figur--video).
+   Zoom-in über die vorhandene Animation, danach sanftes Atmen/Neigen. */
+.ca .tj--tor .tj__figur:not(.tj__figur--video) {
+  transform-origin: 50% 88%;
+  animation: tj-figur .95s cubic-bezier(.16,1,.3,1) .2s both, ca-torfigur 3.6s ease-in-out 1.2s infinite alternate;
+}
+@keyframes ca-torfigur {
+  from { transform: translate(-50%, 4%) scale(1.015) rotate(-1.3deg); }
+  to   { transform: translate(-50%, 1%) scale(1.075) rotate(1.3deg); }
+}
+
+/* ── Netz / Vorführung / Exit ───────────────────────────────── */
+.ca-netz { position: absolute; top: clamp(12px, 2vmin, 24px); right: clamp(12px, 2vmin, 24px); z-index: 6; width: 11px; height: 11px; border-radius: 50%; background: #3ddc84; box-shadow: 0 0 10px rgba(61,220,132,.6); }
+.ca-netz.is-weg { background: #e0a53a; box-shadow: 0 0 10px rgba(224,165,58,.6); }
+.ca-vorfuehrung { position: absolute; top: clamp(10px, 1.8vmin, 22px); right: clamp(14px, 2.4vmin, 30px); z-index: 6; font-size: clamp(10px, 1.2vmin, 13px); font-weight: 800; letter-spacing: .2em; text-transform: uppercase; color: rgba(232,193,90,.7); padding: 4px 10px; border-radius: 999px; background: rgba(232,193,90,.1); box-shadow: inset 0 0 0 1px rgba(232,193,90,.3); }
+.ca-exit-hinweis { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); z-index: 5; font-size: 12px; color: rgba(244,242,239,.22); letter-spacing: .04em; }
+
+/* ── Start-Karte (Geste für Vollbild) ───────────────────────── */
+.ca-start { position: absolute; inset: 0; z-index: 10; display: grid; place-items: center; background: rgba(11,10,9,.82); backdrop-filter: blur(4px); }
+.ca-start__karte { display: flex; flex-direction: column; align-items: center; gap: clamp(8px, 1.4vmin, 16px); padding: clamp(28px, 4vmin, 52px); border-radius: 26px; background: linear-gradient(170deg, #1b1512, #110d0b); box-shadow: 0 30px 80px rgba(0,0,0,.6), inset 0 0 0 1px rgba(232,193,90,.26); text-align: center; max-width: min(90vw, 560px); }
+.ca-start__wappen { width: clamp(56px, 8vmin, 84px); height: auto; }
+.ca-start__titel { font-family: 'Anton', 'Archivo', sans-serif; font-weight: 400; text-transform: uppercase; font-size: clamp(26px, 4vw, 46px); }
+.ca-start__sub { font-size: clamp(13px, 1.7vw, 17px); color: rgba(244,242,239,.66); }
+.ca-start__knoepfe { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; margin-top: 8px; }
+.ca-start__btn { border: 0; cursor: pointer; padding: clamp(12px, 1.6vmin, 18px) clamp(20px, 3vmin, 34px); border-radius: 14px; font-family: 'Anton', 'Archivo', sans-serif; font-weight: 400; text-transform: uppercase; letter-spacing: .04em; font-size: clamp(16px, 2.1vmin, 24px); color: var(--ink); background: rgba(244,242,239,.1); box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); transition: transform .15s ease, background .15s ease; }
+.ca-start__btn:hover { background: rgba(244,242,239,.16); transform: translateY(-1px); }
+.ca-start__btn--echt { background: var(--red); box-shadow: 0 10px 28px rgba(233,29,41,.4); }
+.ca-start__btn--echt:hover { background: var(--red-deep); }
+.ca-start__hint { font-size: clamp(11px, 1.4vw, 14px); color: rgba(244,242,239,.42); margin-top: 4px; }
+
+/* ── Hochformat (iPad hoch): QR oben, Bühne darunter ────────── */
 @media (orientation: portrait) {
-  .ca-held { inset: 0 0 auto 0; width: 100%; height: 54%; }
-  .ca-held__bild { background-size: cover; background-position: center 22%; }
-  .ca-held__sockel { height: 60%; background: linear-gradient(180deg, transparent, rgba(8,7,6,.55) 42%, rgba(8,7,6,.92) 74%, #0b0a09); }
-  /* Namensschild ins freie Dunkel rechts neben den Kopf (nicht aufs Gesicht) */
-  .ca-schild { left: auto; right: var(--rand); top: calc(var(--rand) + 84px); bottom: auto; transform: none; flex-direction: row; align-items: flex-end; text-align: right; }
-  .ca-schild__nr { font-size: clamp(48px, 13vw, 104px); }
-  .ca-grund__vignette { background:
-    linear-gradient(180deg, rgba(8,7,6,.46) 0%, rgba(8,7,6,.08) 22%, rgba(8,7,6,.44) 46%, rgba(8,7,6,.92) 66%),
-    radial-gradient(120% 120% at 50% 38%, transparent 55%, rgba(6,5,5,.6) 100%); }
-  .ca-mitte { flex-direction: column; justify-content: flex-end; gap: clamp(14px, 2.6vh, 30px); padding-bottom: calc(var(--rand) + 6px); }
-  .ca-karte-wrap { width: min(54vw, 34vh, 410px); }
-  .ca-panel { max-width: 34ch; text-align: center; align-items: center; }
-  .ca-zaehler { justify-content: center; }
-  .ca-zaehler__zahl { transform-origin: center; }
-  .ca-fort { width: min(78vw, 440px); }
+  .ca { grid-template-columns: 100%; grid-template-rows: auto minmax(0, 1fr); }
+  .ca-qr { flex-direction: row; }
+  .ca-karte { width: min(62vw, 42vh); }
+  .ca-stage { gap: clamp(8px, 1.4vmin, 18px); }
+  .ca-score__zahl, .ca-score__anstoss b { font-size: clamp(42px, 9vmin, 92px); }
+  .ca-score__stand i { font-size: clamp(30px, 6.4vmin, 60px); }
+  /* Team-Wand hoch: weniger Reihen (eigene Spaltenzahl) → nichts abgeschnitten */
+  .ca-wall__grid { grid-template-columns: repeat(var(--cols-h, 5), minmax(0, 1fr)); }
+  /* Karten etwas kleiner → volle Karte sichtbar, etwas Luft nach unten */
+  .ca-show__card--focus, .ca-shiny__card, .ca-scorer__card { height: min(78%, 44vh); }
+  .ca-show__card--links, .ca-show__card--rechts { height: min(60%, 34vh); }
+  .ca-szene { padding-bottom: clamp(6px, 1.4vmin, 16px); }
 }
 
 /* ── Ruhe-Modus ─────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  .ca-held__bild.is-da { animation: none; }
-  .ca-grund__kegel--a, .ca-grund__kegel--b { animation: none; }
-  .ca-live { animation: none; }
-  .ca-karte.is-wechsel { animation: none; }
+  .ca-grund__kegel--a, .ca-grund__kegel--b, .ca-staub i { animation: none; }
+  .ca-karte, .ca-score, .ca-show__kicker { animation: none; }
   .ca-karte.is-wechsel .ca-karte__glanz { animation: none; }
-  .ca-zaehler__zahl.is-puls { animation: none; }
-  .ca-schild, .ca-info { animation: none; }
+  .ca-score__zahl, .ca-score__min, .ca-score__anstoss b { animation: none; }
+  .ca-show__card--focus, .ca-shiny__card, .ca-scorer__card { animation: ca-focus-ein .6s ease both; }
+  .ca-show__card--links { animation: none; }
+  .ca-show__card--rechts { animation: none; }
+  .ca-wall__card { animation: none; }
+  .ca-heute__zaehler, .ca-heute__zahl.is-puls { animation: none; }
+  .ca-score__punkt { animation: none; }
+  .ca-shiny__aura, .ca-ende__pfiff, .ca-ende__glanz { animation: none; }
+  .ca-ende__stand, .ca-ende__label, .ca-ende__paar, .ca-ende__danke { animation: none; }
+  .ca .tj--tor .tj__figur:not(.tj__figur--video) { animation: tj-figur .6s ease both; }
 }
