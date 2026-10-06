@@ -31,3 +31,7 @@ Diese Punkte sollte Marvin bzw. der Vorstand noch erledigen:
 14. Danach ggf. `noindex` auf Impressum/Datenschutz entfernen (optional).
 
 - **Tipp-Liga:** Teilnahmebedingungen (`/teilnahmebedingungen`) und Datenschutz-Abschnitt 11a juristisch prüfen (Preise von Partnern/Gewinnspielrecht, Mindestalter, Ausschluss der Kabine).
+
+- **FuPa-Zustimmung (Ziffer 4.1.4):** Vor dem Scharfschalten des Live-Bots eine **schriftliche Zustimmung von FuPa Lüneburg** (lueneburg@fupa.net, Christian Nähring) einholen — gilt für (a) Spielplan/Ergebnisse/Tabelle (auch der heutige `fupa-sync`), (b) Live-Ereignisse nur SVA-Spiele, (c) Kreisliga-Konferenz, (d) Aufstellungsstatistik. Entwurf in `KONZEPT_LIVE_WETTBEWERB.md` 2.7. Ohne Zustimmung bleibt `fupa_live_modus='aus'`.
+- **Einwilligung Reporter (Textübernahme):** Tickertexte von **Niko Hause** und **Marcel Neuber** nur mit deren (schriftlicher) Einwilligung auf der Vereinsseite zeigen; ihre FuPa-IDs dann unter „Texte unserer Reporter übernehmen" eintragen. Ohne Eintrag zeigt `/live` nur eigene Satzvorlagen (Fakten), keine Reportertexte.
+- **Reaktionen (Datenschutz 5a):** Abschnitt 5a der Datenschutzerklärung (Konto-ID + Emoji je Ereignis, Speicherdauer Abpfiff + 7 Tage, dann nur Summen, Löschung mit Konto) juristisch prüfen (TODO-JURIST im HTML markiert).

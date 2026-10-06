@@ -1,0 +1,795 @@
+[
+ {
+  "type": "news",
+  "entity": {
+   "id": 3219996,
+   "title": "Einsam an der Spitze: O/O holt Arbeitssieg gegen engagierte Altländer "
+  }
+ },
+ {
+  "type": "matchevent",
+  "entity": {
+   "id": 86320825,
+   "minute": 91,
+   "additionalMinute": 0,
+   "text": "Am Ende ein 2 zu 2 von der Unterhaltsamen Seite. Danke an alle die vor Ort waren. Danke an den Verkauf und dem schönen Tag an der Mehrzweckhalle in Agathenburg.",
+   "team": null,
+   "homeGoal": 2,
+   "awayGoal": 2,
+   "type": "text",
+   "subtype": "__default",
+   "primaryRole": null,
+   "secondaryRole": null
+  }
+ },
+ {
+  "type": "matchevent",
+  "entity": {
+   "id": 86320509,
+   "minute": 90,
+   "additionalMinute": 5,
+   "text": "Abpfiff",
+   "team": null,
+   "homeGoal": 2,
+   "awayGoal": 2,
+   "type": "whistle",
+   "subtype": "whistle_regular_stop_second_halftime",
+   "primaryRole": null,
+   "secondaryRole": null
+  }
+ },
+ {
+  "type": "matchevent",
+  "entity": {
+   "id": 86320433,
+   "minute": 90,
+   "additionalMinute": 4,
+   "text": "Wird nichts!",
+   "team": null,
+   "homeGoal": 2,
+   "awayGoal": 2,
+   "type": "text",
+   "subtype": "__default",
+   "primaryRole": null,
+   "secondaryRole": null
+  }
+ },
+ {
+  "type": "matchevent",
+  "entity": {
+   "id": 86320374,
+   "minute": 90,
+   "additionalMinute": 4,
+   "text": "Nochmal Ecke für Deinste",
+   "team": null,
+   "homeGoal": 2,
+   "awayGoal": 2,
+   "type": "text",
+   "subtype": "__default",
+   "primaryRole": null,
+   "secondaryRole": null
+  }
+ },
+ {
+  "type": "matchevent",
+  "entity": {
+   "id": 86319987,
+   "minute": 90,
+   "additionalMinute": 3,
+   "text": "Es wird hitzig 2 min noch!!",
+   "team": null,
+   "homeGoal": 2,
+   "awayGoal": 2,
+   "type": "text",
+   "subtype": "__default",
+   "primaryRole": null,
+   "secondaryRole": null
+  }
+ },
+ {
+  "type": "matchevent",
+  "entity": {
+   "id": 86317708,
+   "minute": 86,
+   "additionalMinute": 0,
+   "text": "Freistoß von Deinste. Wird von Malte nach vorne abgewehrt und als ping pong Ball per Kopf versenkt.",
+   "team": {
+    "slug": "deinster-sv-m1-2026-27",
+    "name": {
+     "full": "Deinster SV",
+     "middle": "Deinster SV",
+     "short": "SV D"
+    }
+   },
+   "homeGoal": 2,
+   "awayGoal": 2,
+   "type": "goal",
+   "subtype": "goal_shoot",
+   "primaryRole": {
+    "player": {
+     "id": 1169171,
+     "slug": "moritz-glodeck-1169171",
+     "firstName": "Moritz",
+     "lastName": "Glodeck"
+    },
+    "seasonCount": 4
+   },
+   "secondaryRole": {
+    "player": {
+     "id": 2572783,
+     "slug": "connor-wilkens-2572783",
+     "firstName": "Connor",
+     "lastName": "Wilkens"
+    },
+    "seasonCount": 1
+   }
+  }
+ },
+ {
+  "type": "matchevent",
+  "entity": {
+   "id": 86316956,
+   "minute": 84,
+   "additionalMinute": 0,
+   "text": "Foulspiel",
+   "team": {
+    "slug": "deinster-sv-m1-2026-27",
+    "name": {
+     "full": "Deinster SV",
+     "middle": "Deinster SV",
+     "short": "SV D"
+    }
+   },
+   "homeGoal": 2,
+   "awayGoal": 1,
+   "type": "card",
+   "subtype": "card_yellow",
+   "primaryRole": {
+    "player": {
+     "id": 1929070,
+     "slug": "hagen-woehlk-1929070",
+     "firstName": "Hagen",
+     "lastName": "Wöhlk"
+    },
+    "seasonCount": 2
+   },
+   "secondaryRole": null
+  }
+ },
+ {
+  "type": "matchevent",
+  "entity": {
+   "id": 86316400,
+   "minute": 82,
+   "additionalMinute": 0,
+   "text": "",
+   "team": {
+    "slug": "sv-agathenburg-dollern-m1-2026-27",
+    "name": {
+     "full": "SV Agathenburg Dollern",
+     "middle": "Agathenb./Do",
+     "short": "SVAD"
+    }
+   },
+   "homeGoal": 2,
+   "awayGoal": 1,
+   "type": "substitute",
+   "subtype": "__default",
+   "primaryRole": {
+    "player": {
+     "id": 1792205,
+     "slug": "janek-bruenjes-1792205",
+     "firstName": "Janek",
+     "lastName": "Brünjes"
+    },
+    "seasonCount": 1
+   },
+   "secondaryRole": {
+    "player": {
+     "id": 2160027,
+     "slug": "elias-pejas-2160027",
+     "firstName": "Elias",
+     "lastName": "Pejas"
+    },
+    "seasonCount": 2
+   }
+  }
+ },
+ {
+  "type": "matchevent",
+  "entity": {
+   "id": 86363535,
+   "minute": 80,
+   "additionalMinute": 0,
+   "text": "",
+   "team": {
+    "slug": "deinster-sv-m1-2026-27",
+    "name": {
+     "full": "Deinster SV",
+     "middle": "Deinster SV",
+     "short": "SV D"
+    }
+   },
+   "homeGoal": null,
+   "awayGoal": null,
+   "type": "substitute",
+   "subtype": "__default",
+   "primaryRole": {
+    "player": {
+     "id": 2586714,
+     "slug": "paul-rohleder-2586714",
+     "firstName": "Paul",
+     "lastName": "Rohleder"
+    },
+    "seasonCount": 1
+   },
+   "secondaryRole": {
+    "player": {
+     "id": 451515,
+     "slug": "florian-krause-451515",
+     "firstName": "Florian",
+     "lastName": "Krause"
+    },
+    "seasonCount": 1
+   }
+  }
+ },
+ {
+  "type": "matchevent",
+  "entity": {
+   "id": 86314994,
+   "minute": 78,
+   "additionalMinute": 0,
+   "text": "Sorry für die Flaute im Liveticker. Es gab wichtige Gespräche an der Aussenlinie. Aber man kann sagen Aga ist am Drücker!",
+   "team": null,
+   "homeGoal": 2,
+   "awayGoal": 1,
+   "type": "text",
+   "subtype": "__default",
+   "primaryRole": null,
+   "secondaryRole": null
+  }
+ },
+ {
+  "type": "matchevent",
+  "entity": {
+   "id": 86363409,
+   "minute": 65,
+   "additionalMinute": 0,
+   "text": "",
+   "team": {
+    "slug": "deinster-sv-m1-2026-27",
+    "name": {
+     "full": "Deinster SV",
+     "middle": "Deinster SV",
+     "short": "SV D"
+    }
+   },
+   "homeGoal": null,
+   "awayGoal": null,
+   "type": "substitute",
+   "subtype": "__default",
+   "primaryRole": {
+    "player": {
+     "id": 2571414,
+     "slug": "jonah-lennart-boesch-2571414",
+     "firstName": "Jonah Lennart",
+     "lastName": "Bösch"
+    },
+    "seasonCount": 1
+   },
+   "secondaryRole": {
+    "player": {
+     "id": 1761813,
+     "slug": "michel-gerken-1761813",
+     "firstName": "Michel",
+     "lastName": "Gerken"
+    },
+    "seasonCount": 1
+   }
+  }
+ },
+ {
+  "type": "matchevent",
+  "entity": {
+   "id": 86363408,
+   "minute": 65,
+   "additionalMinute": 0,
+   "text": "",
+   "team": {
+    "slug": "deinster-sv-m1-2026-27",
+    "name": {
+     "full": "Deinster SV",
+     "middle": "Deinster SV",
+     "short": "SV D"
+    }
+   },
+   "homeGoal": null,
+   "awayGoal": null,
+   "type": "substitute",
+   "subtype": "__default",
+   "primaryRole": {
+    "player": {
+     "id": 1057211,
+     "slug": "jannis-nutbohm-1057211",
+     "firstName": "Jannis",
+     "lastName": "Nutbohm"
+    },
+    "seasonCount": 1
+   },
+   "secondaryRole": {
+    "player": {
+     "id": 2323290,
+     "slug": "wenzel-branke-2323290",
+     "firstName": "Wenzel",
+     "lastName": "Branke"
+    },
+    "seasonCount": 1
+   }
+  }
+ },
+ {
+  "type": "matchevent",
+  "entity": {
+   "id": 86316569,
+   "minute": 65,
+   "additionalMinute": 0,
+   "text": "",
+   "team": {
+    "slug": "sv-agathenburg-dollern-m1-2026-27",
+    "name": {
+     "full": "SV Agathenburg Dollern",
+     "middle": "Agathenb./Do",
+     "short": "SVAD"
+    }
+   },
+   "homeGoal": 2,
+   "awayGoal": 1,
+   "type": "substitute",
+   "subtype": "__default",
+   "primaryRole": {
+    "player": {
+     "id": 836396,
+     "slug": "lukas-alexander-litwitz-836396",
+     "firstName": "Lukas-Alexander",
+     "lastName": "Litwitz"
+    },
+    "seasonCount": 1
+   },
+   "secondaryRole": {
+    "player": {
+     "id": 2456314,
+     "slug": "paul-matthes-2456314",
+     "firstName": "Paul",
+     "lastName": "Matthes"
+    },
+    "seasonCount": 3
+   }
+  }
+ },
+ {
+  "type": "matchevent",
+  "entity": {
+   "id": 86305477,
+   "minute": 47,
+   "additionalMinute": 0,
+   "text": "Spiel läuft wieder und die Schlange an der Theke wird nicht weniger.",
+   "team": null,
+   "homeGoal": 2,
+   "awayGoal": 1,
+   "type": "text",
+   "subtype": "__default",
+   "primaryRole": null,
+   "secondaryRole": null
+  }
+ },
+ {
+  "type": "matchevent",
+  "entity": {
+   "id": 86305218,
+   "minute": 46,
+   "additionalMinute": 0,
+   "text": "Anpfiff zur 2. Halbzeit",
+   "team": null,
+   "homeGoal": 2,
+   "awayGoal": 1,
+   "type": "whistle",
+   "subtype": "whistle_regular_start_second_halftime",
+   "primaryRole": null,
+   "secondaryRole": null
+  }
+ },
+ {
+  "type": "matchevent",
+  "entity": {
+   "id": 86302314,
+   "minute": 46,
+   "additionalMinute": 0,
+   "text": "Das Spiel macht viel Spass. Gute Stimmung neben und auf dem Platz. Was will man mehr auf einen Sonntag!",
+   "team": null,
+   "homeGoal": 2,
+   "awayGoal": 1,
+   "type": "text",
+   "subtype": "__default",
+   "primaryRole": null,
+   "secondaryRole": null
+  }
+ },
+ {
+  "type": "matchevent",
+  "entity": {
+   "id": 86302041,
+   "minute": 45,
+   "additionalMinute": 1,
+   "text": "Halbzeit",
+   "team": null,
+   "homeGoal": 2,
+   "awayGoal": 1,
+   "type": "whistle",
+   "subtype": "whistle_regular_stop_first_halftime",
+   "primaryRole": null,
+   "secondaryRole": null
+  }
+ },
+ {
+  "type": "matchevent",
+  "entity": {
+   "id": 86363407,
+   "minute": 45,
+   "additionalMinute": 0,
+   "text": "",
+   "team": {
+    "slug": "deinster-sv-m1-2026-27",
+    "name": {
+     "full": "Deinster SV",
+     "middle": "Deinster SV",
+     "short": "SV D"
+    }
+   },
+   "homeGoal": null,
+   "awayGoal": null,
+   "type": "substitute",
+   "subtype": "__default",
+   "primaryRole": {
+    "player": {
+     "id": 2572783,
+     "slug": "connor-wilkens-2572783",
+     "firstName": "Connor",
+     "lastName": "Wilkens"
+    },
+    "seasonCount": 2
+   },
+   "secondaryRole": {
+    "player": {
+     "id": 1929074,
+     "slug": "hannes-grube-1929074",
+     "firstName": "Hannes",
+     "lastName": "Grube"
+    },
+    "seasonCount": 1
+   }
+  }
+ },
+ {
+  "type": "matchevent",
+  "entity": {
+   "id": 86299522,
+   "minute": 38,
+   "additionalMinute": 0,
+   "text": "Aaron darf erst nach 1min den Platz betreteb. Brünjes hat den Bus verpasst ubd geht zu Spät vom Feld ",
+   "team": null,
+   "homeGoal": 2,
+   "awayGoal": 1,
+   "type": "text",
+   "subtype": "__default",
+   "primaryRole": null,
+   "secondaryRole": null
+  }
+ },
+ {
+  "type": "matchevent",
+  "entity": {
+   "id": 86299331,
+   "minute": 37,
+   "additionalMinute": 0,
+   "text": "",
+   "team": {
+    "slug": "sv-agathenburg-dollern-m1-2026-27",
+    "name": {
+     "full": "SV Agathenburg Dollern",
+     "middle": "Agathenb./Do",
+     "short": "SVAD"
+    }
+   },
+   "homeGoal": 2,
+   "awayGoal": 1,
+   "type": "substitute",
+   "subtype": "__default",
+   "primaryRole": {
+    "player": {
+     "id": 2032583,
+     "slug": "aaron-warkehr-2032583",
+     "firstName": "Aaron",
+     "lastName": "Warkehr"
+    },
+    "seasonCount": 3
+   },
+   "secondaryRole": {
+    "player": {
+     "id": 1792205,
+     "slug": "janek-bruenjes-1792205",
+     "firstName": "Janek",
+     "lastName": "Brünjes"
+    },
+    "seasonCount": 1
+   }
+  }
+ },
+ {
+  "type": "matchevent",
+  "entity": {
+   "id": 86296225,
+   "minute": 26,
+   "additionalMinute": 0,
+   "text": "Malte mit einen guten Tag heute. Schuss aus 5m klärt er zur Ecke!",
+   "team": null,
+   "homeGoal": 2,
+   "awayGoal": 1,
+   "type": "text",
+   "subtype": "__default",
+   "primaryRole": null,
+   "secondaryRole": null
+  }
+ },
+ {
+  "type": "matchevent",
+  "entity": {
+   "id": 86295029,
+   "minute": 20,
+   "additionalMinute": 0,
+   "text": "Gutes Spiel bisher! Macht Spass zuzuschauen. Beide Teams mit guter Härte und Laufbereitschaft",
+   "team": null,
+   "homeGoal": 2,
+   "awayGoal": 1,
+   "type": "text",
+   "subtype": "__default",
+   "primaryRole": null,
+   "secondaryRole": null
+  }
+ },
+ {
+  "type": "matchevent",
+  "entity": {
+   "id": 86293813,
+   "minute": 15,
+   "additionalMinute": 0,
+   "text": "Fluschi auf Deinster Seite... no front no hate aber danke ",
+   "team": {
+    "slug": "sv-agathenburg-dollern-m1-2026-27",
+    "name": {
+     "full": "SV Agathenburg Dollern",
+     "middle": "Agathenb./Do",
+     "short": "SVAD"
+    }
+   },
+   "homeGoal": 2,
+   "awayGoal": 1,
+   "type": "goal",
+   "subtype": "goal_shoot",
+   "primaryRole": {
+    "player": {
+     "id": 1792205,
+     "slug": "janek-bruenjes-1792205",
+     "firstName": "Janek",
+     "lastName": "Brünjes"
+    },
+    "seasonCount": 2
+   },
+   "secondaryRole": {
+    "player": {
+     "id": 959857,
+     "slug": "marcel-neuber-959857",
+     "firstName": "Marcel",
+     "lastName": "Neuber"
+    },
+    "seasonCount": 2
+   }
+  }
+ },
+ {
+  "type": "matchevent",
+  "entity": {
+   "id": 86293034,
+   "minute": 12,
+   "additionalMinute": 0,
+   "text": "Gleich im Gegenzug das 1 zu 1.... Nr 7 mit einem guten Abschluss",
+   "team": {
+    "slug": "deinster-sv-m1-2026-27",
+    "name": {
+     "full": "Deinster SV",
+     "middle": "Deinster SV",
+     "short": "SV D"
+    }
+   },
+   "homeGoal": 1,
+   "awayGoal": 1,
+   "type": "goal",
+   "subtype": "goal_shoot",
+   "primaryRole": {
+    "player": {
+     "id": 1604391,
+     "slug": "tim-lukas-schult-1604391",
+     "firstName": "Tim-Lukas",
+     "lastName": "Schult"
+    },
+    "seasonCount": 2
+   },
+   "secondaryRole": {
+    "player": {
+     "id": 1018763,
+     "slug": "marvin-lindemann-1018763",
+     "firstName": "Marvin",
+     "lastName": "Lindemann"
+    },
+    "seasonCount": 1
+   }
+  }
+ },
+ {
+  "type": "matchevent",
+  "entity": {
+   "id": 86292905,
+   "minute": 12,
+   "additionalMinute": 0,
+   "text": "Guter pass in die Tiefe. Brünjes startet wunderbar rein und hämmert ihn ins kurze Eck",
+   "team": null,
+   "homeGoal": 0,
+   "awayGoal": 0,
+   "type": "text",
+   "subtype": "__default",
+   "primaryRole": null,
+   "secondaryRole": null
+  }
+ },
+ {
+  "type": "matchevent",
+  "entity": {
+   "id": 86292903,
+   "minute": 10,
+   "additionalMinute": 0,
+   "text": "",
+   "team": {
+    "slug": "sv-agathenburg-dollern-m1-2026-27",
+    "name": {
+     "full": "SV Agathenburg Dollern",
+     "middle": "Agathenb./Do",
+     "short": "SVAD"
+    }
+   },
+   "homeGoal": 1,
+   "awayGoal": 0,
+   "type": "goal",
+   "subtype": "goal_shoot",
+   "primaryRole": {
+    "player": {
+     "id": 1792205,
+     "slug": "janek-bruenjes-1792205",
+     "firstName": "Janek",
+     "lastName": "Brünjes"
+    },
+    "seasonCount": 1
+   },
+   "secondaryRole": {
+    "player": {
+     "id": 2159855,
+     "slug": "noah-pejas-2159855",
+     "firstName": "Noah",
+     "lastName": "Pejas"
+    },
+    "seasonCount": 2
+   }
+  }
+ },
+ {
+  "type": "matchevent",
+  "entity": {
+   "id": 86289931,
+   "minute": 1,
+   "additionalMinute": 0,
+   "text": "Anpfiff",
+   "team": null,
+   "homeGoal": null,
+   "awayGoal": null,
+   "type": "whistle",
+   "subtype": "whistle_regular_start_first_halftime",
+   "primaryRole": null,
+   "secondaryRole": null
+  }
+ },
+ {
+  "type": "matchevent",
+  "entity": {
+   "id": 86363296,
+   "minute": 0,
+   "additionalMinute": 0,
+   "text": "Aufstellungen sind eingetragen",
+   "team": null,
+   "homeGoal": null,
+   "awayGoal": null,
+   "type": "lineupscompleted",
+   "subtype": "__default",
+   "primaryRole": null,
+   "secondaryRole": null
+  }
+ },
+ {
+  "type": "matchevent",
+  "entity": {
+   "id": 86363295,
+   "minute": 0,
+   "additionalMinute": 0,
+   "text": "Aufstellung eingetragen",
+   "team": {
+    "slug": "deinster-sv-m1-2026-27",
+    "name": {
+     "full": "Deinster SV",
+     "middle": "Deinster SV",
+     "short": "SV D"
+    }
+   },
+   "homeGoal": null,
+   "awayGoal": null,
+   "type": "lineupentered",
+   "subtype": "__default",
+   "primaryRole": null,
+   "secondaryRole": null
+  }
+ },
+ {
+  "type": "matchevent",
+  "entity": {
+   "id": 86290794,
+   "minute": 0,
+   "additionalMinute": 0,
+   "text": "Aufstellung eingetragen",
+   "team": {
+    "slug": "sv-agathenburg-dollern-m1-2026-27",
+    "name": {
+     "full": "SV Agathenburg Dollern",
+     "middle": "Agathenb./Do",
+     "short": "SVAD"
+    }
+   },
+   "homeGoal": null,
+   "awayGoal": null,
+   "type": "lineupentered",
+   "subtype": "__default",
+   "primaryRole": null,
+   "secondaryRole": null
+  }
+ },
+ {
+  "type": "matchevent",
+  "entity": {
+   "id": 86277400,
+   "minute": 0,
+   "additionalMinute": 0,
+   "text": "Der Platz sieht gut aus! Freuen wir uns heute auf ein guten Kick bei schönen Wetter. ",
+   "team": null,
+   "homeGoal": null,
+   "awayGoal": null,
+   "type": "text",
+   "subtype": "__default",
+   "primaryRole": null,
+   "secondaryRole": null
+  }
+ },
+ {
+  "type": "liveticker-eingetragen",
+  "entity": {
+   "id": 1721037,
+   "firstName": "Niko",
+   "lastName": "Hause"
+  }
+ }
+]

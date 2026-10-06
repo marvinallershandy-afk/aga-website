@@ -1,0 +1,127 @@
+{
+ "id": 15241638,
+ "slug": "sv-agathenburg-dollern-m1-deinster-sv-m1-261004",
+ "homeTeamName": "SV Agathenburg Dollern",
+ "awayTeamName": "Deinster SV",
+ "homeTeam": {
+  "slug": "sv-agathenburg-dollern-m1-2026-27",
+  "clubSlug": "sv-agathenburg-dollern",
+  "level": 1,
+  "name": {
+   "full": "SV Agathenburg Dollern",
+   "middle": "Agathenb./Do",
+   "short": "SVAD"
+  }
+ },
+ "awayTeam": {
+  "slug": "deinster-sv-m1-2026-27",
+  "clubSlug": "deinster-sv",
+  "level": 1,
+  "name": {
+   "full": "Deinster SV",
+   "middle": "Deinster SV",
+   "short": "SV D"
+  }
+ },
+ "kickoff": "2026-10-04T15:00:00+02:00",
+ "homeGoal": 2,
+ "awayGoal": 2,
+ "flags": [
+  "ticker"
+ ],
+ "tickerType": "live",
+ "section": "POST",
+ "round": {
+  "id": 2467890,
+  "type": "league",
+  "slug": "9",
+  "number": 9
+ },
+ "category": "league",
+ "updatedAt": 1791267141,
+ "streamUpdatedAt": 1791174635,
+ "live": null,
+ "tickerAuthor": {
+  "id": 224890,
+  "firstName": "Niko",
+  "lastName": "Hause"
+ },
+ "highlights": [
+  {
+   "id": 86292903,
+   "minute": 10,
+   "additionalMinute": 0,
+   "date": "2026-10-04T13:12:45+00:00",
+   "team": {
+    "teamSlug": "sv-agathenburg-dollern-m1-2026-27"
+   },
+   "homeGoal": 1,
+   "awayGoal": 0,
+   "type": "goal",
+   "subtype": "goal_shoot",
+   "primaryRole": {
+    "id": 1792205,
+    "slug": "janek-bruenjes-1792205",
+    "firstName": "Janek",
+    "lastName": "Brünjes"
+   }
+  },
+  {
+   "id": 86293034,
+   "minute": 12,
+   "additionalMinute": 0,
+   "date": "2026-10-04T13:13:14+00:00",
+   "team": {
+    "teamSlug": "deinster-sv-m1-2026-27"
+   },
+   "homeGoal": 1,
+   "awayGoal": 1,
+   "type": "goal",
+   "subtype": "goal_shoot",
+   "primaryRole": {
+    "id": 1604391,
+    "slug": "tim-lukas-schult-1604391",
+    "firstName": "Tim-Lukas",
+    "lastName": "Schult"
+   }
+  },
+  {
+   "id": 86293813,
+   "minute": 15,
+   "additionalMinute": 0,
+   "date": "2026-10-04T13:16:24+00:00",
+   "team": {
+    "teamSlug": "sv-agathenburg-dollern-m1-2026-27"
+   },
+   "homeGoal": 2,
+   "awayGoal": 1,
+   "type": "goal",
+   "subtype": "goal_shoot",
+   "primaryRole": {
+    "id": 1792205,
+    "slug": "janek-bruenjes-1792205",
+    "firstName": "Janek",
+    "lastName": "Brünjes"
+   }
+  },
+  {
+   "id": 86317708,
+   "minute": 86,
+   "additionalMinute": 0,
+   "date": "2026-10-04T14:39:27+00:00",
+   "team": {
+    "teamSlug": "deinster-sv-m1-2026-27"
+   },
+   "homeGoal": 2,
+   "awayGoal": 2,
+   "type": "goal",
+   "subtype": "goal_shoot",
+   "primaryRole": {
+    "id": 1169171,
+    "slug": "moritz-glodeck-1169171",
+    "firstName": "Moritz",
+    "lastName": "Glodeck"
+   }
+  }
+ ]
+}

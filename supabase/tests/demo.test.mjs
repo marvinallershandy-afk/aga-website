@@ -46,7 +46,12 @@ const one = async (sql, params) => (await db.query(sql, params)).rows[0]
 
 // Zeitstempel des Aufrufs (now()) sind die einzigen Felder, die sich von
 // Aufruf zu Aufruf ändern dürfen.
-const ZEIT = new Set(['generatedAt', 'serverNow', 'erzeugt'])
+// serverNow u. ä. ändern sich je Aufruf. Zusätzlich (v23-L): web_live() wurde zu
+// Version 2 erweitert (additive Felder source/reactions/conference/tipp/fupaUrl/
+// fupaAutor). Diese werden beim „neu = bisher"-Vergleich gegen die Pre-v23-Baseline
+// ignoriert — die Demo-Ausschluss- und Idempotenz-Prüfungen bleiben voll wirksam.
+const ZEIT = new Set(['generatedAt', 'serverNow', 'erzeugt',
+  'version', 'source', 'reactions', 'conference', 'tipp', 'fupaUrl', 'fupaAutor'])
 const ohneZeit = (o) => JSON.parse(JSON.stringify(o, (k, v) => (ZEIT.has(k) ? undefined : v)))
 /** Feld-für-Feld-Vergleich; bei Abweichung die ersten unterschiedlichen Pfade. */
 function diff(a, b, pfad = '$', out = []) {

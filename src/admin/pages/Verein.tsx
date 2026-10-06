@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ExternalLink, Save, Loader2, CheckCircle2, AlertCircle, Link2, Phone, Clock, Scale, ListOrdered } from 'lucide-react'
+import { ExternalLink, Save, Loader2, CheckCircle2, AlertCircle, Link2, Phone, Clock, Scale, ListOrdered, Radio } from 'lucide-react'
 import { parseWidgetId } from '../../live/model'
 import { PageHeader } from './Placeholder'
 import { Button } from '../components/ui/button'
@@ -40,9 +40,17 @@ interface Form {
   amPlatz: string
   saison: string
   rechtstexteOk: boolean
+  // v23-L: FuPa-Live-Bot
+  fupaLiveModus: boolean
+  fupaErlaubnisNotiz: string
+  fupaErlaubnisDatum: string
+  fupaErlaubnisArt: string
+  fupaTexteAutoren: string
+  konferenzAn: boolean
+  reaktionenAn: boolean
 }
 
-const LEER: Form = { widgetTabelle: '', widgetSpielplan: '', trainingOrt: '', fussballDe: '', fupa: '', instagram: '', whatsapp: '', email: '', training: '', adresse: '', amPlatz: '', saison: '', rechtstexteOk: false }
+const LEER: Form = { widgetTabelle: '', widgetSpielplan: '', trainingOrt: '', fussballDe: '', fupa: '', instagram: '', whatsapp: '', email: '', training: '', adresse: '', amPlatz: '', saison: '', rechtstexteOk: false, fupaLiveModus: false, fupaErlaubnisNotiz: '', fupaErlaubnisDatum: '', fupaErlaubnisArt: '', fupaTexteAutoren: '', konferenzAn: true, reaktionenAn: true }
 
 export function Verein() {
   const toast = useToast()
@@ -68,6 +76,13 @@ export function Verein() {
       amPlatz: s.am_platz ?? '',
       saison: s.saison ?? '',
       rechtstexteOk: s.rechtstexte_ok,
+      fupaLiveModus: s.fupa_live_modus === 'an',
+      fupaErlaubnisNotiz: s.fupa_erlaubnis_notiz ?? '',
+      fupaErlaubnisDatum: s.fupa_erlaubnis_datum ?? '',
+      fupaErlaubnisArt: s.fupa_erlaubnis_art ?? '',
+      fupaTexteAutoren: (s.fupa_texte_autoren ?? []).join(', '),
+      konferenzAn: s.konferenz_an ?? true,
+      reaktionenAn: s.reaktionen_an ?? true,
     }
     setF(form)
     setGeladen(form)
@@ -97,6 +112,7 @@ export function Verein() {
     !mailOk && 'E-Mail sieht nicht richtig aus.',
     !wTabOk && 'fussball.de-Widget Tabelle: ID nicht erkannt (32 Zeichen).',
     !wPlanOk && 'fussball.de-Widget Spielplan: ID nicht erkannt (32 Zeichen).',
+    f.fupaLiveModus && !f.fupaErlaubnisNotiz.trim() && 'FuPa-Live-Bot „an“ geht nur mit eingetragener Erlaubnis-Notiz.',
   ].filter(Boolean) as string[]
 
   const speichern = async () => {
@@ -116,6 +132,13 @@ export function Verein() {
         am_platz: f.amPlatz.trim() || null,
         saison: f.saison.trim() || null,
         rechtstexte_ok: f.rechtstexteOk,
+        fupa_live_modus: f.fupaLiveModus ? 'an' : 'aus',
+        fupa_erlaubnis_notiz: f.fupaErlaubnisNotiz.trim() || null,
+        fupa_erlaubnis_datum: f.fupaErlaubnisDatum || null,
+        fupa_erlaubnis_art: f.fupaErlaubnisArt || null,
+        fupa_texte_autoren: f.fupaTexteAutoren.split(',').map((x) => x.trim()).filter(Boolean),
+        konferenz_an: f.konferenzAn,
+        reaktionen_an: f.reaktionenAn,
       })
       toast.success('Gespeichert. Erscheint nach „Website veröffentlichen“.')
     } catch (e) {
@@ -231,6 +254,44 @@ export function Verein() {
           </Abschnitt>
 
           <MannschaftenKarte />
+
+          <Abschnitt icon={Radio} titel="Live-Daten von FuPa">
+            <p className="text-sm text-muted-foreground">
+              Mit dem FuPa-Live-Bot füllen sich <b className="text-foreground">/live</b> und die Tipp-Liga automatisch aus dem
+              FuPa-Ticker unserer Reporter. <b className="text-foreground">Nur einschalten, wenn FuPa schriftlich zugestimmt hat</b>
+              {' '}(Nutzungsbedingungen Ziffer 4.1.4). Ohne Eintrag unten lässt sich der Bot gar nicht aktivieren.
+            </p>
+            <Feld id="v-erl" label="Erlaubnis von FuPa" hint="Wer hat wann wie zugestimmt? Pflicht vor dem Einschalten (z. B. „Mail C. Nähring, 12.10.2026“).">
+              <Textarea id="v-erl" className="text-base" rows={2} value={f.fupaErlaubnisNotiz} onChange={(e) => set('fupaErlaubnisNotiz', e.target.value)} placeholder="Mail von Christian Nähring (FuPa Lüneburg) vom 12.10.2026, Zustimmung für SVA-Spiele + Kreisliga-Tabelle" />
+            </Feld>
+            <div className="flex flex-wrap gap-4">
+              <Feld id="v-erl-dat" label="Datum der Zusage">
+                <Input id="v-erl-dat" className="h-12 w-44 text-base" type="date" value={f.fupaErlaubnisDatum} onChange={(e) => set('fupaErlaubnisDatum', e.target.value)} />
+              </Feld>
+              <div className="space-y-1.5">
+                <Label htmlFor="v-erl-art">Art der Zusage</Label>
+                <select id="v-erl-art" className="h-12 rounded-md border border-input bg-background px-3 text-base" value={f.fupaErlaubnisArt} onChange={(e) => set('fupaErlaubnisArt', e.target.value)}>
+                  <option value="">— bitte wählen —</option>
+                  <option value="vorlaeufig">vorläufig</option>
+                  <option value="dauerhaft">dauerhaft</option>
+                </select>
+              </div>
+            </div>
+            <Switch
+              checked={f.fupaLiveModus}
+              onChange={(v) => set('fupaLiveModus', v)}
+              label="Bot aktiv (Live-Daten von FuPa holen)"
+              hint={f.fupaErlaubnisNotiz.trim() ? 'Der Bot läuft nur im Spielfenster und schreibt nur SVA-Spiele.' : 'Erst die Erlaubnis-Notiz ausfüllen, dann lässt sich der Bot einschalten.'}
+            />
+            {f.fupaLiveModus && !f.fupaErlaubnisNotiz.trim() && (
+              <p className="flex items-center gap-1 text-xs text-primary"><AlertCircle className="h-3.5 w-3.5" /> Ohne Erlaubnis-Notiz wird „an“ nicht gespeichert.</p>
+            )}
+            <Feld id="v-autoren" label="Texte unserer Reporter übernehmen" hint="FuPa-Reporter-IDs (Komma-getrennt), deren Tickertexte 1:1 gezeigt werden dürfen — nur mit deren Einwilligung (Niko, Marcel). Leer = nur unsere Satzvorlagen.">
+              <Input id="v-autoren" className="h-12 text-base" value={f.fupaTexteAutoren} onChange={(e) => set('fupaTexteAutoren', e.target.value)} placeholder="z. B. 224890, 115233" inputMode="numeric" />
+            </Feld>
+            <Switch checked={f.konferenzAn} onChange={(v) => set('konferenzAn', v)} label="Konferenz zeigen" hint="Andere Kreisliga-Spiele des Spieltags auf /live (eingeklappt)." />
+            <Switch checked={f.reaktionenAn} onChange={(v) => set('reaktionenAn', v)} label="Reaktionen (Mitjubeln)" hint="Angemeldete Fans dürfen an Tor/Karte/Abpfiff mit Emojis mitjubeln." />
+          </Abschnitt>
 
           <Abschnitt icon={Scale} titel="Rechtliches">
             <p className="text-sm text-muted-foreground">

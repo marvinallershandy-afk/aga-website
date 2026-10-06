@@ -1,0 +1,397 @@
+{
+ "homeTeam": {
+  "lineup": [
+   {
+    "jerseyNumber": 1,
+    "captain": false,
+    "coach": false,
+    "starting": true,
+    "position": "Torwart",
+    "player": {
+     "id": 814469,
+     "slug": "malte-pils-814469",
+     "firstName": "Malte",
+     "lastName": "Pils"
+    },
+    "statistics": {
+     "minutes": 90,
+     "goals": 0,
+     "assists": 0,
+     "yellowCard": 0,
+     "redCard": 0,
+     "yellowRedCard": 0,
+     "substituteIn": 0,
+     "substituteOut": 0
+    }
+   },
+   {
+    "jerseyNumber": 32,
+    "captain": false,
+    "coach": false,
+    "starting": true,
+    "position": "Abwehr",
+    "player": {
+     "id": 2162761,
+     "slug": "joshua-elsen-2162761",
+     "firstName": "Joshua",
+     "lastName": "Elsen"
+    },
+    "statistics": {
+     "minutes": 90,
+     "goals": 0,
+     "assists": 0,
+     "yellowCard": 0,
+     "redCard": 0,
+     "yellowRedCard": 0,
+     "substituteIn": 0,
+     "substituteOut": 0
+    }
+   },
+   {
+    "jerseyNumber": 15,
+    "captain": false,
+    "coach": false,
+    "starting": true,
+    "position": "Abwehr",
+    "player": {
+     "id": 2160030,
+     "slug": "noel-nauerz-2160030",
+     "firstName": "Noel",
+     "lastName": "Nauerz"
+    },
+    "statistics": {
+     "minutes": 90,
+     "goals": 0,
+     "assists": 0,
+     "yellowCard": 0,
+     "redCard": 0,
+     "yellowRedCard": 0,
+     "substituteIn": 0,
+     "substituteOut": 0
+    }
+   },
+   {
+    "jerseyNumber": 14,
+    "captain": false,
+    "coach": false,
+    "starting": true,
+    "position": "Abwehr",
+    "player": {
+     "id": 959857,
+     "slug": "marcel-neuber-959857",
+     "firstName": "Marcel",
+     "lastName": "Neuber"
+    },
+    "statistics": {
+     "minutes": 90,
+     "goals": 0,
+     "assists": 1,
+     "yellowCard": 0,
+     "redCard": 0,
+     "yellowRedCard": 0,
+     "substituteIn": 0,
+     "substituteOut": 0
+    }
+   },
+   {
+    "jerseyNumber": 11,
+    "captain": true,
+    "coach": false,
+    "starting": true,
+    "position": "Abwehr",
+    "player": {
+     "id": 1461103,
+     "slug": "justin-sladek-1461103",
+     "firstName": "Justin",
+     "lastName": "Sladek"
+    },
+    "statistics": {
+     "minutes": 90,
+     "goals": 0,
+     "assists": 0,
+     "yellowCard": 0,
+     "redCard": 0,
+     "yellowRedCard": 0,
+     "substituteIn": 0,
+     "substituteOut": 0
+    }
+   },
+   {
+    "jerseyNumber": 33,
+    "captain": false,
+    "coach": false,
+    "starting": true,
+    "position": "Mittelfeld",
+    "player": {
+     "id": 1792205,
+     "slug": "janek-bruenjes-1792205",
+     "firstName": "Janek",
+     "lastName": "Brünjes"
+    },
+    "statistics": {
+     "minutes": 45,
+     "goals": 2,
+     "assists": 0,
+     "yellowCard": 0,
+     "redCard": 0,
+     "yellowRedCard": 0,
+     "substituteIn": 1,
+     "substituteOut": 1
+    }
+   },
+   {
+    "jerseyNumber": 44,
+    "captain": false,
+    "coach": false,
+    "starting": true,
+    "position": "Mittelfeld",
+    "player": {
+     "id": 2456314,
+     "slug": "paul-matthes-2456314",
+     "firstName": "Paul",
+     "lastName": "Matthes"
+    },
+    "statistics": {
+     "minutes": 64,
+     "goals": 0,
+     "assists": 0,
+     "yellowCard": 0,
+     "redCard": 0,
+     "yellowRedCard": 0,
+     "substituteIn": 0,
+     "substituteOut": 1
+    }
+   },
+   {
+    "jerseyNumber": 7,
+    "captain": false,
+    "coach": false,
+    "starting": true,
+    "position": "Mittelfeld",
+    "player": {
+     "id": 1461113,
+     "slug": "julio-paruzel-1461113",
+     "firstName": "Julio",
+     "lastName": "Paruzel"
+    },
+    "statistics": {
+     "minutes": 90,
+     "goals": 0,
+     "assists": 0,
+     "yellowCard": 0,
+     "redCard": 0,
+     "yellowRedCard": 0,
+     "substituteIn": 0,
+     "substituteOut": 0
+    }
+   },
+   {
+    "jerseyNumber": 20,
+    "captain": false,
+    "coach": false,
+    "starting": true,
+    "position": "Mittelfeld",
+    "player": {
+     "id": 2159855,
+     "slug": "noah-pejas-2159855",
+     "firstName": "Noah",
+     "lastName": "Pejas"
+    },
+    "statistics": {
+     "minutes": 90,
+     "goals": 0,
+     "assists": 1,
+     "yellowCard": 0,
+     "redCard": 0,
+     "yellowRedCard": 0,
+     "substituteIn": 0,
+     "substituteOut": 0
+    }
+   },
+   {
+    "jerseyNumber": 22,
+    "captain": false,
+    "coach": false,
+    "starting": true,
+    "position": "Mittelfeld",
+    "player": {
+     "id": 2160027,
+     "slug": "elias-pejas-2160027",
+     "firstName": "Elias",
+     "lastName": "Pejas"
+    },
+    "statistics": {
+     "minutes": 81,
+     "goals": 0,
+     "assists": 0,
+     "yellowCard": 0,
+     "redCard": 0,
+     "yellowRedCard": 0,
+     "substituteIn": 0,
+     "substituteOut": 1
+    }
+   },
+   {
+    "jerseyNumber": 37,
+    "captain": false,
+    "coach": false,
+    "starting": true,
+    "position": "Angriff",
+    "player": {
+     "id": 1086940,
+     "slug": "marc-kevin-biedermann-1086940",
+     "firstName": "Marc Kevin",
+     "lastName": "Biedermann"
+    },
+    "statistics": {
+     "minutes": 90,
+     "goals": 0,
+     "assists": 0,
+     "yellowCard": 0,
+     "redCard": 0,
+     "yellowRedCard": 0,
+     "substituteIn": 0,
+     "substituteOut": 0
+    }
+   },
+   {
+    "jerseyNumber": 5,
+    "captain": false,
+    "coach": false,
+    "starting": false,
+    "position": "Mittelfeld",
+    "player": {
+     "id": 836396,
+     "slug": "lukas-alexander-litwitz-836396",
+     "firstName": "Lukas-Alexander",
+     "lastName": "Litwitz"
+    },
+    "statistics": {
+     "minutes": 26,
+     "goals": 0,
+     "assists": 0,
+     "yellowCard": 0,
+     "redCard": 0,
+     "yellowRedCard": 0,
+     "substituteIn": 1,
+     "substituteOut": 0
+    }
+   },
+   {
+    "jerseyNumber": 6,
+    "captain": false,
+    "coach": false,
+    "starting": false,
+    "position": "Angriff",
+    "player": {
+     "id": 2032583,
+     "slug": "aaron-warkehr-2032583",
+     "firstName": "Aaron",
+     "lastName": "Warkehr"
+    },
+    "statistics": {
+     "minutes": 54,
+     "goals": 0,
+     "assists": 0,
+     "yellowCard": 0,
+     "redCard": 0,
+     "yellowRedCard": 0,
+     "substituteIn": 1,
+     "substituteOut": 0
+    }
+   },
+   {
+    "jerseyNumber": 3,
+    "captain": false,
+    "coach": false,
+    "starting": false,
+    "position": "Abwehr",
+    "player": {
+     "id": 939817,
+     "slug": "justin-huettry-939817",
+     "firstName": "Justin",
+     "lastName": "Hüttry"
+    },
+    "statistics": {
+     "minutes": 0,
+     "goals": 0,
+     "assists": 0,
+     "yellowCard": 0,
+     "redCard": 0,
+     "yellowRedCard": 0,
+     "substituteIn": 0,
+     "substituteOut": 0
+    }
+   },
+   {
+    "jerseyNumber": 17,
+    "captain": false,
+    "coach": false,
+    "starting": false,
+    "position": "Mittelfeld",
+    "player": {
+     "id": 2595550,
+     "slug": "sam-luca-jochim-2595550",
+     "firstName": "Sam Luca",
+     "lastName": "Jochim"
+    },
+    "statistics": {
+     "minutes": 0,
+     "goals": 0,
+     "assists": 0,
+     "yellowCard": 0,
+     "redCard": 0,
+     "yellowRedCard": 0,
+     "substituteIn": 0,
+     "substituteOut": 0
+    }
+   },
+   {
+    "jerseyNumber": null,
+    "captain": false,
+    "coach": true,
+    "starting": false,
+    "position": "Torwart",
+    "player": {
+     "id": 1461117,
+     "slug": "adolf-ebeling-1461117",
+     "firstName": "Adolf",
+     "lastName": "Ebeling"
+    },
+    "statistics": {
+     "minutes": 0,
+     "goals": 0,
+     "assists": 0,
+     "yellowCard": 0,
+     "redCard": 0,
+     "yellowRedCard": 0,
+     "substituteIn": 0,
+     "substituteOut": 0
+    }
+   },
+   {
+    "jerseyNumber": null,
+    "captain": false,
+    "coach": true,
+    "starting": false,
+    "position": "unbekannt",
+    "player": {
+     "id": 452281,
+     "slug": "carsten-junge-452281",
+     "firstName": "Carsten",
+     "lastName": "Junge"
+    },
+    "statistics": {
+     "minutes": 0,
+     "goals": 0,
+     "assists": 0,
+     "yellowCard": 0,
+     "redCard": 0,
+     "yellowRedCard": 0,
+     "substituteIn": 0,
+     "substituteOut": 0
+    }
+   }
+  ]
+ }
+}
