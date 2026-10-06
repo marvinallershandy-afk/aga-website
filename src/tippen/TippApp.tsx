@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { lazy, memo, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { animate, motion, MotionConfig } from 'framer-motion'
 import { CalendarClock, ListOrdered, UserRound, Users } from 'lucide-react'
@@ -430,7 +430,7 @@ export function TippApp() {
                 hidden={tab !== t.id}
                 aria-label={t.label}
               >
-                {inhalt(t.id)}
+                <Bereich aktiv={tab === t.id}>{inhalt(t.id)}</Bereich>
               </section>
             ))}
         </main>
@@ -479,6 +479,15 @@ export function TippApp() {
     </MotionConfig>
   )
 }
+
+/** Ausgeblendete Bereiche nicht bei jeder Datenänderung neu zeichnen (Live: jede Minute) —
+ *  sie holen den aktuellen Stand nach, sobald sie wieder sichtbar werden. */
+const Bereich = memo(
+  function Bereich({ children }: { aktiv: boolean; children: React.ReactNode }) {
+    return <>{children}</>
+  },
+  (vorher, nachher) => !vorher.aktiv && !nachher.aktiv,
+)
 
 function Skelett() {
   return (
