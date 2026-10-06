@@ -301,10 +301,13 @@
 
 # ── Sicherheits-Header (v19-K, Audit C §5) ────────────────────
 # Auf ALLE Antworten. Setzt KEIN Cache-Control → kein Konflikt mit den
-# Cache-Regeln unten. CSP zunächst als Report-Only (nur Konsolen-Report, blockt
-# nichts) — three.js nutzt WASM (draco) + Blob-Worker, /live bindet den
-# fussball.de-Widget-Iframe ein, Live/Statistik sprechen Supabase an. Nach ~1
-# Woche Beobachtung ohne Fehlalarme scharf schalten (Report-Only → CSP).
+# Cache-Regeln unten. three.js nutzt WASM (draco) + Blob-Worker, /live bindet den
+# fussball.de-Widget-Iframe ein, Live/Statistik sprechen Supabase an.
+# v25-C6: scharf geschaltet (Report-Only → CSP). Belegt in BUILD_LOG_V25.md:
+# alle Routen (/, /live, /tippen, /album, /partner, /galerie, /admin-Login,
+# Rechtsseiten) in Chromium + WebKit bei 390×844 und 1440×900 durchgeklickt —
+# 0 echte Verstöße (nur WebKits report-only-Hinweis zu frame-ancestors, der beim
+# Scharfschalten gerade entfällt). Prüf-Skript: _v25_csp.mjs (nicht committet).
 [[headers]]
   for = "/*"
   [headers.values]
@@ -312,7 +315,7 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
-    Content-Security-Policy-Report-Only = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://fwiivwmoyagcdrjvhaou.supabase.co; font-src 'self'; connect-src 'self' https://fwiivwmoyagcdrjvhaou.supabase.co; worker-src 'self' blob:; child-src 'self' blob:; media-src 'self' https://fwiivwmoyagcdrjvhaou.supabase.co; frame-src 'self' https://www.fussball.de https://www.fupa.net; form-action 'self'; manifest-src 'self'"
+    Content-Security-Policy = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://fwiivwmoyagcdrjvhaou.supabase.co; font-src 'self'; connect-src 'self' https://fwiivwmoyagcdrjvhaou.supabase.co; worker-src 'self' blob:; child-src 'self' blob:; media-src 'self' https://fwiivwmoyagcdrjvhaou.supabase.co; frame-src 'self' https://www.fussball.de https://www.fupa.net; form-action 'self'; manifest-src 'self'"
 
 # ── Cache-Kontrolle (v13-E10 · v19-K Audit C §5) ──────────────
 # HTML-Einstiege NIE lange cachen (Bundle-Hashes wechseln je Deploy — sonst
