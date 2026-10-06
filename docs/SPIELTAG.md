@@ -116,3 +116,34 @@ In `public/datenschutz.html` stehen neu die Abschnitte 6a (Supabase-Abruf auf `/
   - `ONLY=live OUT=./shots-live/admin node scripts/admin-audit.mjs` für das Ticker-Pult mit Funkloch, die Rollen und die Zugänge
   - `node scripts/matchday-bar-audit.mjs` für die Leiste und die Request-Zählung
   - Für alle drei läuft vorher der Dev-Server mit `npx vite --port 5186`. Die Datenbank ist dabei gemockt.
+
+---
+
+## FuPa-Live-Bot (v23-L)
+
+Mit FuPa-Erlaubnis füllen sich `/live` und die Tipp-Liga automatisch aus dem FuPa-Ticker unserer Reporter. Niko/Marcel tickern dann **nur noch bei FuPa** (dort mit Reichweite), der Bot übernimmt die Fakten. Ohne Erlaubnis bleibt das Ticker-Pult die einzige Quelle.
+
+### Teil A — Wenn FuPa tickert (am Spieltag)
+Oben im Ticker-Pult steht eine **Quelle**-Zeile (nur sichtbar, wenn der Bot aktiv ist und das Spiel eine FuPa-ID hat):
+- **Auto / FuPa / Selbst tickern** — Standard ist *Auto*: Sobald FuPa einen Live-Ticker meldet, übernimmt der Bot; sonst das Pult.
+- **grün „FuPa läuft"**: nichts zu tun. Bot-Zeilen tragen ein kleines **FuPa**-Etikett.
+- **gelb „nur Spielstand (Soft-Ticker)"**: FuPa meldet nur den Stand. Der Bot legt Platzhalter-Tore an („Torschütze folgt"); **Torschützen bei Bedarf selbst eintragen** (Duplikate fängt der Bot ab).
+- **rot „FuPa liefert seit … nichts" / „nicht erreichbar"**: großer Knopf **Selbst tickern** → stellt auf Pult, die Minute läuft nahtlos weiter.
+- **„FuPa sagt 2:1, wir zählen 1:1"**: nur ein Hinweis, keine Automatik — über *Prüfen* zur Liste springen.
+- **„Jetzt abrufen"**: holt sofort (20-Sekunden-Sperre).
+
+Bearbeitest du eine **FuPa-Zeile** von Hand (z. B. Torschütze korrigieren), wird sie **gesperrt** — der Bot fasst sie nie wieder an (Etikett „FuPa · bearbeitet"). „Rückgängig" wirkt nur auf eigene Pult-Zeilen; Bot-Zeilen blendest du stattdessen aus. Als doppelt erkannte Bot-Zeilen sind eingeklappt („… Duplikate ausgeblendet").
+
+### Teil B — FuPa-Live einschalten (einmalig, Marvin)
+Voraussetzung: **schriftliche FuPa-Zustimmung** (Gate G-FUPA, Konzept 2.7). Dann in Reihenfolge:
+1. Migration `20261015100000_sva_live_v23.sql` anwenden.
+2. In Supabase prüfen: `select extname, extversion from pg_extension where extname in ('pg_cron','pg_net');` (pg_cron ≥ 1.5 für `'30 seconds'`). Fehlt etwas → Dashboard → Database → Extensions aktivieren.
+3. Vault-Secrets anlegen: `sva_fupa_live_url` = `https://<ref>.supabase.co/functions/v1/fupa-live`, `sva_fupa_live_secret` = ein zufälliges Geheimnis. Function-Secret `FUPA_LIVE_CRON_SECRET` = **gleicher Wert**.
+4. `supabase functions deploy fupa-live --no-verify-jwt`.
+5. Migration `20261015110000_sva_live_v23_cron.sql` anwenden (richtet den 30-s-Zeitplan ein).
+6. Netlify neu deployen (Admin + `/live`-Typen).
+7. Admin → **Verein & Links → Live-Daten von FuPa**: Erlaubnis-Notiz/Datum/Art eintragen, ggf. Reporter-IDs (nur mit Einwilligung von Niko/Marcel), **Bot aktiv** einschalten.
+8. Admin → **Kader**: FuPa-Spieler-IDs zuordnen (geht am besten nach dem ersten Bot-Spiel über die Aufstellung; vorher per Hand).
+9. Erstes Spiel: Pult offen lassen, Quelle-Zeile beobachten. Prüfen, ob `live.minute` im FuPa-Kopf steht (sonst fällt die Minute auf die Anpfiff-Uhr zurück).
+
+Ausschalten jederzeit: **Bot aktiv** aus (der Cron läuft weiter, tut aber nichts). Details: `docs/LIVE_BOT.md`.

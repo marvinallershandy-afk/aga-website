@@ -193,3 +193,7 @@ Ein in der Vorführung abgegebener Tipp wird in Live/Abpfiff/Montag weiterverwen
   Spieltage, Story, Kabine). Beide mit gemockter DB:
   `VITE_SUPABASE_URL=https://mock.supabase.co VITE_SUPABASE_ANON_KEY=x npx vite --port 5193`, dann
   `BASE=http://localhost:5193 OUT=./shots-v20-tipp node scripts/tippen-audit.mjs`.
+
+## Live im Echtbetrieb (v23-L)
+
+Im Status `live`/`halbzeit` liefert `web_live()` jetzt **echte Ereignisse** (vom Ticker-Pult oder – mit FuPa-Erlaubnis – vom FuPa-Live-Bot). `/tippen` kann daraus die Live-Hochrechnung der Elf speisen (bisher nur in der Vorführung). Die öffentliche Kurzkennzahl `tipp_live_kurz(spiel)` (Anzahl Tipps; Tendenz in % erst **nach** Tippschluss) erscheint in der Brückenzeile auf `/live`. Platzhalter-Tore („Torschütze folgt") zählen nur fürs Ergebnis, nicht für die Elf. Der Spielbericht lässt sich aus der FuPa-Aufstellung vorbefüllen (`tipp_admin_fupa_vorschlag`, nur leere Felder; gewertet wird weiterhin per „Werten"). Die `/tippen`- und `/live`-Oberfläche dazu kommt in der UI-Runde; das Backend (RPCs) steht.
