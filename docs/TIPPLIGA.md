@@ -159,6 +159,36 @@ Ein in der Vorführung abgegebener Tipp wird in Live/Abpfiff/Montag weiterverwen
 - **Einführung** (3 Schritte) beim ersten Besuch, danach über „?“, Profil und Fuß („So funktioniert’s“).
 - Bewegung: `src/tippen/bewegung.ts` (DESIGN.md: ease-out, 200/300/400 ms, gedämpfte Feder).
 
+## 9. v22-T (06.10.2026): ein Fokus, TOR!, Trailer, Preise
+- **Ein Fokus pro Zeitpunkt.** Vor dem Anpfiff: nur der Tipp fürs anstehende Spiel. Live: nur das
+  Live-Spiel (Live-Punkte, Live-Rangliste) — der nächste Spieltag steht als gestrichelte Vorschau
+  („öffnet nach der Auflösung · spätestens Mi 16:53 Uhr“). Nach dem Abpfiff bis zur Wertung:
+  „Abpfiff · Wertung folgt“. Das nächste Spiel öffnet mit der **Wertung**, spätestens **24 h nach
+  dem Abpfiff** (Abpfiff aus dem Ticker, sonst Anstoß + 2 h). Serverseitig: Trigger
+  `sva_tipp_abgabe_waechter` (Tipp + Elf) wirft `tipp_noch_nicht_offen`, solange ein früheres
+  Tipp-Spiel angepfiffen und ungewertet ist; `tipp_lage()` liefert das gesperrte Spiel als
+  `naechstes` (mit `oeffnetAb`), nicht als `offen`. Vorab-Tipps vor dem 1. Anpfiff bleiben
+  serverseitig möglich (Joker-Logik), die Seite bietet sie nicht an.
+- **Live-Leiste** (Status, Minute, Stand, deine Punkte) immer sichtbar, in jedem Bereich;
+  **TOR!-Einblendung** über allem (Freisteller bzw. Greenscreen-Jubel `playerMedia(id).jubel`/`.loop`,
+  Rückennummer, Bauchbinde mit Minute/Name/Nummer/Vorlage/neuem Stand, 2,6 s, antippen schließt,
+  Haptik; Gegentor ruhig). Gemeinsam mit /live: `src/ui/tor/TorJubel.tsx`, `LiveLeiste.tsx`,
+  `useTor.ts`. Echtbetrieb: /tippen liest während des Spiels alle 20 s `web_live` (Minute, Torschütze).
+- **Einführung** = Trailer, 5 Szenen à 3,6 s (`src/tippen/Einfuehrung.tsx`, `einfuehrung.css`),
+  danach „Das bekommst du“.
+- **Preise**: Tabelle `sva_tipp_preise` (Saison Platz 1–5, Monat Platz 1–3, Partner, Altersgrenze 16/18
+  mit U18-Alternative — leer = „Softdrink-Variante“). Pflege: Admin → Tipp-Liga → Kabine & Regeln →
+  **Preise**. Anzeige: Rangliste (Saison/Monat) „Das kannst du gewinnen“ (`src/tippen/Preise.tsx`).
+  Leer = unsichtbar. Kabine ausgeschlossen, Hinweis auf die Teilnahmebedingungen.
+- **Startelf-Vorschlag**: `tipp_lage().vorschlagElf` aus der neuesten Aufstellung (`sva_lineup`) →
+  Knopf „Startelf übernehmen“ (ohne Kapitän, nie automatisch abgegeben).
+- **Tippschein**: Ergebnis startet neutral „– : –“; ohne gewähltes Ergebnis fragt „Tipp abgeben“
+  nach („Noch offen: …“). Fußstapel mobil ≤ 20 % der Höhe.
+- **Vorführung**: Abpfiff zeigt erst „Wertung folgt“ (Steuerleiste „Jetzt werten“, sonst nach 6 s),
+  dann Auflösung + SG Lühe öffnet. Direkt-Link `&phase=abpfiff&wertung=folgt`. Album-Links →
+  `/album?vorfuehrung=1`.
+- Abnahme: `docs/UX_ABNAHME_V21.md`.
+
 ## 6. Scharf schalten (Marvin)
 
 1. Migration `20261012100000_sva_tippliga.sql` anwenden (nach `20261011110000_sva_am_platz.sql`).
@@ -166,6 +196,8 @@ Ein in der Vorführung abgegebener Tipp wird in Live/Abpfiff/Montag weiterverwen
    **v21:** zusätzlich `20261013100000_sva_tippliga_v21.sql` (idempotent; Test:
    `supabase/tests/tippliga_v21.test.mjs`). Ohne sie zeigt Admin → Kader einen Hinweis, /tippen
    funktioniert weiter (Zweitposition/Kabinen-Liga erscheinen erst danach).
+   **v22:** `20261014100000_sva_tippliga_v22.sql` (idempotent; Test `supabase/tests/tippliga_v22.test.mjs`)
+   — ein Fokus, Preise, Startelf-Vorschlag. Ohne sie zeigt Admin → Preise einen Hinweis.
 2. Supabase → Authentication → **Redirect URLs**: `https://<domain>/tippen*` ergänzen (wie `/album*`).
 3. Netlify deployen (Redirects `/tippen`, `/teilnahmebedingungen`, Kurz-Link `/tipp`).
 4. Admin → Tipp-Liga → Kabine & Regeln: Partner „präsentiert von“ und Preise (optional) setzen,
@@ -182,6 +214,10 @@ Ein in der Vorführung abgegebener Tipp wird in Live/Abpfiff/Montag weiterverwen
   Ranglisten mit Trend, Fans vs. Kabine, Abzeichen, Album-Karte/-Missionen (gekapselt), Konto löschen.
 - `supabase/tests/tippliga_v21.test.mjs` — Formation 1-1-2-1, Zweitposition, nicht verfügbar,
   Migration alter Elfen, Punkte unverändert, Kabinen-Liga, Rechte.
+- `supabase/tests/tippliga_v22.test.mjs` — ein Fokus (live/Abpfiff/Wertung/24 h/ohne Ticker/Vorführ-Spiel),
+  Preise (RLS, Altersgrenze, Partner, leer = unsichtbar), Startelf-Vorschlag, Rechte.
+- `scripts/tippen-ux-abnahme.mjs` — Abnahme-Checkliste UX v21 + v22 (Chromium/`ENG=webkit`).
+- `scripts/tippen-album-sitzung-test.mjs` — gleiche Anmeldung /tippen ↔ /album (gemockte Sitzung, Anker).
 - `scripts/tippen-nav-test.mjs` — jeder Tab mehrfach hin und her (Handy/Desktop, Chromium oder
   `ENG=webkit`), Browser-Zurück, Zustand bleibt, Wischen, Deep-Links, Vorführung.
 - `scripts/tippen-vorfuehrung-shots.mjs` — Vorführung: alle Phasen, Tabs, Live-Serie, Elf, Einführung.
