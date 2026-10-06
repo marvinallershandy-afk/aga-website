@@ -1,91 +1,224 @@
-/* v25-D: Check-in-Anzeige (iPad-Vollbild). Site-Design: Rot/Schwarz/Weiß,
-   Anton/Archivo (mit Fallback), nur CSS-Transforms (flüssig auf älterem iPad). */
+/* v25-D / v26: Check-in-Anzeige (iPad-Vollbild) — Premium-Bühne in 3 Ebenen.
+   Site-Design: Rot/Gold/Schwarz, Anton/Archivo. Nur CSS-Transform/Opacity
+   (flüssig auf älterem iPad), kein Blur auf großen Flächen in Animation,
+   max. 2 Held-Bilder im DOM. prefers-reduced-motion wird respektiert. */
 .ca {
   position: fixed; inset: 0; z-index: 100; overflow: hidden;
   display: flex; flex-direction: column;
-  background: #0e0c0b; color: #f4f2ef;
+  background: #0b0a09; color: #f4f2ef;
   font-family: 'Archivo', system-ui, sans-serif;
   user-select: none; -webkit-user-select: none; touch-action: none;
   -webkit-tap-highlight-color: transparent;
+  --red: #E91D29; --red-deep: #b4141d; --gold: #e8c15a; --gold-deep: #c4952f;
+  --ink: #f4f2ef; --rand: clamp(20px, 3.2vmin, 46px);
 }
 .ca * { box-sizing: border-box; }
 
-/* Ken-Burns-Hintergrund */
-.ca-bg { position: absolute; inset: 0; z-index: 0; }
-.ca-bg__bild {
-  position: absolute; inset: 0; background-size: cover; background-position: 50% 22%;
-  opacity: 0; transition: opacity 1.6s ease; will-change: transform, opacity;
+/* ── Ebene 1: Grund + Flutlicht ─────────────────────────────── */
+.ca-grund { position: absolute; inset: 0; z-index: 0; overflow: hidden; background:
+    radial-gradient(130% 100% at 50% -10%, #1a1512 0%, #110e0c 46%, #0b0a09 100%); }
+.ca-grund__kegel {
+  position: absolute; width: 85vmax; height: 85vmax; border-radius: 50%;
+  mix-blend-mode: screen; opacity: .5; pointer-events: none; will-change: transform;
 }
-.ca-bg__bild.is-da { opacity: .32; animation: ca-ken 12s ease-in-out both; }
-@keyframes ca-ken {
-  from { transform: scale(1.06) translate3d(-1.5%, -1%, 0); }
-  to   { transform: scale(1.16) translate3d(1.5%, 1.5%, 0); }
+.ca-grund__kegel--a {
+  top: -48vmax; left: -22vmax;
+  background: radial-gradient(closest-side, rgba(255,241,214,.26), rgba(255,241,214,.07) 46%, transparent 72%);
+  animation: ca-kegel-a 34s ease-in-out infinite alternate;
 }
-.ca-bg__flor {
-  position: absolute; inset: 0;
-  background: radial-gradient(120% 90% at 50% 20%, rgba(14,12,11,.35), rgba(14,12,11,.82) 70%, #0e0c0b 100%),
-              linear-gradient(180deg, rgba(14,12,11,.5), rgba(14,12,11,.2) 40%, rgba(14,12,11,.85));
+.ca-grund__kegel--b {
+  top: -52vmax; right: -24vmax;
+  background: radial-gradient(closest-side, rgba(233,29,41,.22), rgba(233,29,41,.06) 48%, transparent 74%);
+  animation: ca-kegel-b 42s ease-in-out infinite alternate;
+}
+@keyframes ca-kegel-a { from { transform: translate3d(0,0,0); } to { transform: translate3d(14vmax, 6vmax, 0); } }
+@keyframes ca-kegel-b { from { transform: translate3d(0,0,0); } to { transform: translate3d(-12vmax, 8vmax, 0); } }
+.ca-grund__struktur {
+  position: absolute; inset: 0; opacity: .5;
+  background-image: repeating-linear-gradient(115deg, rgba(255,255,255,.018) 0 2px, transparent 2px 7px);
+}
+.ca-grund__wappen {
+  position: absolute; right: -6vmin; bottom: -9vmin; width: 52vmin; height: auto;
+  object-fit: contain; opacity: .05; filter: grayscale(1); pointer-events: none;
+}
+.ca-grund__vignette {
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(8,7,6,.86) 0%, rgba(8,7,6,.5) 34%, rgba(8,7,6,0) 58%),
+    radial-gradient(120% 120% at 50% 42%, transparent 52%, rgba(6,5,5,.6) 100%),
+    linear-gradient(180deg, rgba(8,7,6,.42), transparent 22%, transparent 68%, rgba(6,5,5,.74));
 }
 
-/* Kopf */
-.ca-kopf { position: relative; z-index: 2; display: flex; align-items: center; gap: 18px; padding: clamp(16px, 3vw, 34px); }
-.ca-wappen { flex: none; width: clamp(48px, 6vw, 72px); height: auto; object-fit: contain; }
-.ca-kopf__txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.ca-kopf__kicker { font-size: clamp(12px, 1.4vw, 15px); font-weight: 800; letter-spacing: .18em; text-transform: uppercase; color: #e91d29; }
-.ca-kopf__paar { font-family: 'Anton', 'Archivo', sans-serif; font-weight: 400; font-size: clamp(22px, 3.4vw, 44px); line-height: 1.02; letter-spacing: .01em; }
-.ca-kopf__zeile { display: inline-flex; align-items: center; gap: 8px; font-size: clamp(14px, 1.7vw, 20px); color: rgba(244,242,239,.82); }
-.ca-live { width: 10px; height: 10px; border-radius: 50%; background: #e91d29; animation: ca-puls 1.4s ease-in-out infinite; }
+/* ── Ebene 2: Spieler-Held ──────────────────────────────────── */
+.ca-held { position: absolute; z-index: 1; inset: 0 0 0 auto; width: 52%; pointer-events: none; }
+.ca-held__bild {
+  position: absolute; inset: 0; opacity: 0;
+  background-repeat: no-repeat; background-position: center bottom; background-size: contain;
+  transition: opacity 1.4s ease; will-change: transform, opacity;
+  filter: drop-shadow(0 18px 42px rgba(0,0,0,.55)) saturate(1.04) contrast(1.03);
+}
+.ca-held__bild.is-da { opacity: 1; animation: ca-ken 9s ease-out both; }
+@keyframes ca-ken {
+  from { transform: scale(1.05) translate3d(2%, 1.6%, 0); }
+  to   { transform: scale(1.12) translate3d(-1.5%, -1%, 0); }
+}
+.ca-held__sockel {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 36%;
+  background: linear-gradient(180deg, transparent, rgba(8,7,6,.78) 68%, #0b0a09);
+}
+
+/* Namensschild über dem Held */
+.ca-schild {
+  position: absolute; z-index: 2; right: var(--rand); bottom: calc(var(--rand) + 6px);
+  display: flex; align-items: flex-end; gap: 16px; text-align: right;
+  animation: ca-schild-ein .9s ease both;
+}
+@keyframes ca-schild-ein { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+.ca-schild__nr {
+  font-family: 'Anton', 'Archivo', sans-serif; font-weight: 400; line-height: .8;
+  font-size: clamp(62px, 11vmin, 150px); color: transparent;
+  -webkit-text-stroke: 2px rgba(232,193,90,.9);
+  text-shadow: 0 2px 18px rgba(0,0,0,.5);
+}
+.ca-schild__txt { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; padding-bottom: 8px; }
+.ca-schild__txt b {
+  font-family: 'Anton', 'Archivo', sans-serif; font-weight: 400; letter-spacing: .01em;
+  font-size: clamp(22px, 3.4vmin, 40px); line-height: 1; text-transform: uppercase;
+  text-shadow: 0 2px 14px rgba(0,0,0,.6);
+}
+.ca-schild__txt i {
+  font-style: normal; font-size: clamp(12px, 1.5vmin, 16px); font-weight: 700;
+  letter-spacing: .16em; text-transform: uppercase; color: var(--gold);
+}
+
+/* ── Kopf ───────────────────────────────────────────────────── */
+.ca-kopf { position: relative; z-index: 4; display: flex; align-items: center; gap: 18px; padding: var(--rand) var(--rand) 0; }
+.ca-wappen { flex: none; width: clamp(50px, 6vmin, 76px); height: auto; object-fit: contain; filter: drop-shadow(0 3px 10px rgba(0,0,0,.5)); }
+.ca-kopf__txt { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.ca-kopf__kicker { font-size: clamp(11px, 1.3vmin, 15px); font-weight: 800; letter-spacing: .2em; text-transform: uppercase; color: var(--red); }
+.ca-kopf__paar {
+  font-family: 'Anton', 'Archivo', sans-serif; font-weight: 400; line-height: .98; letter-spacing: .01em;
+  font-size: clamp(30px, 5.2vmin, 62px); text-transform: uppercase; text-shadow: 0 2px 16px rgba(0,0,0,.55);
+}
+.ca-kopf__paar span { color: var(--red); margin: 0 .12em; }
+.ca-kopf__zeile { display: inline-flex; align-items: center; gap: 9px; font-size: clamp(14px, 1.8vmin, 21px); color: rgba(244,242,239,.84); }
+.ca-live { width: 11px; height: 11px; border-radius: 50%; background: var(--red); box-shadow: 0 0 12px rgba(233,29,41,.8); animation: ca-puls 1.4s ease-in-out infinite; }
 @keyframes ca-puls { 50% { opacity: .3; } }
 .ca-netz { margin-left: auto; width: 12px; height: 12px; border-radius: 50%; background: #3ddc84; box-shadow: 0 0 10px rgba(61,220,132,.6); }
 .ca-netz.is-weg { background: #e0a53a; box-shadow: 0 0 10px rgba(224,165,58,.6); }
 
-/* Mitte: QR + Text */
-.ca-mitte { position: relative; z-index: 2; flex: 1; display: flex; align-items: center; justify-content: center; gap: clamp(24px, 5vw, 80px); padding: clamp(10px, 2vw, 28px); }
-
-.ca-qr { position: relative; display: grid; place-items: center; width: min(46vh, 46vw, 560px); aspect-ratio: 1; }
-.ca-ring { position: absolute; inset: -3.5%; width: 107%; height: 107%; transform: rotate(-90deg); }
-.ca-ring__spur { fill: none; stroke: rgba(244,242,239,.12); stroke-width: 2.4; }
-.ca-ring__lauf { fill: none; stroke: #e91d29; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 295.3; transition: stroke-dashoffset .5s linear; }
-.ca-qr__rahmen {
-  position: relative; width: 86%; aspect-ratio: 1; border-radius: 22px; padding: clamp(10px, 1.6vw, 20px);
-  background: #f6f4f1; box-shadow: 0 24px 70px rgba(0,0,0,.55), inset 0 0 0 1px rgba(0,0,0,.05);
+/* ── Mitte: QR-Karte + Panel ────────────────────────────────── */
+.ca-mitte {
+  position: relative; z-index: 4; flex: 1; display: flex; align-items: center;
+  justify-content: flex-start; gap: clamp(24px, 4vw, 64px); padding: clamp(14px, 2.4vmin, 32px) var(--rand);
 }
-.ca-qr__bild { width: 100%; height: 100%; image-rendering: pixelated; display: block; }
-.ca-qr__leer { display: grid; place-items: center; height: 100%; padding: 12px; color: #6b6560; font-size: 15px; text-align: center; }
-.ca-qr.is-wechsel .ca-qr__rahmen { animation: ca-wechsel .6s ease; }
-@keyframes ca-wechsel { 0% { transform: scale(.98); } 50% { transform: scale(1.015); } 100% { transform: none; } }
-.ca-qr__rest { position: absolute; bottom: -2.2em; font-size: clamp(13px, 1.5vw, 17px); color: rgba(244,242,239,.6); letter-spacing: .02em; }
 
-/* Text rechts */
-.ca-text { max-width: 34ch; display: flex; flex-direction: column; gap: 14px; }
-.ca-schritte { font-family: 'Anton', 'Archivo', sans-serif; font-weight: 400; font-size: clamp(26px, 3.6vw, 52px); line-height: 1.05; text-transform: uppercase; letter-spacing: .01em; margin: 0; }
-.ca-sub { font-size: clamp(16px, 1.9vw, 22px); line-height: 1.4; color: rgba(244,242,239,.86); margin: 0; }
-.ca-zaehler { display: flex; align-items: baseline; gap: 12px; margin-top: 6px; }
-.ca-zaehler b { font-family: 'Anton', 'Archivo', sans-serif; font-weight: 400; font-size: clamp(44px, 6.5vw, 96px); line-height: 1; color: #e91d29; }
-.ca-zaehler span { font-size: clamp(15px, 1.8vw, 21px); color: rgba(244,242,239,.82); }
-.ca-fort { height: 10px; border-radius: 999px; background: rgba(244,242,239,.12); overflow: hidden; }
-.ca-fort__balken { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #e91d29, #e0a53a); transition: width .6s ease; }
-.ca-fort__text { font-size: clamp(14px, 1.6vw, 18px); color: rgba(244,242,239,.7); margin: 0; }
+/* QR-Karte als Sammelkarte */
+.ca-karte-wrap { position: relative; display: flex; flex-direction: column; align-items: center; gap: .9em; flex: none; width: min(44vw, 60vh, 540px); }
+.ca-karte-rahmen { position: relative; width: 100%; }
+.ca-ring { position: absolute; inset: -11px; width: auto; height: auto; filter: drop-shadow(0 0 7px rgba(233,29,41,.28)); pointer-events: none; }
+.ca-ring__spur { fill: none; stroke: rgba(232,193,90,.22); stroke-width: 2; }
+.ca-ring__lauf { fill: none; stroke: var(--red); stroke-width: 2.6; stroke-linecap: round; stroke-dasharray: 100; transition: stroke-dashoffset .5s linear; }
 
-/* Start-Overlay (Geste für Vollbild) */
+.ca-karte {
+  position: relative; width: 100%; border-radius: clamp(20px, 2.4vmin, 30px);
+  padding: clamp(8px, 1.1vmin, 14px);
+  background: linear-gradient(140deg, #f4da82 0%, var(--gold-deep) 22%, #8f6a1f 42%, var(--red) 70%, var(--red-deep) 100%);
+  box-shadow: 0 30px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.5);
+  overflow: hidden; transform: translateZ(0);
+}
+.ca-karte.is-wechsel { animation: ca-flip .9s ease; }
+@keyframes ca-flip { 0% { transform: perspective(900px) rotateY(0) scale(1); } 46% { transform: perspective(900px) rotateY(9deg) scale(.985); } 100% { transform: perspective(900px) rotateY(0) scale(1); } }
+.ca-karte__innen {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: clamp(7px, 1vmin, 12px);
+  border-radius: clamp(14px, 1.8vmin, 22px); padding: clamp(10px, 1.6vmin, 20px);
+  background: linear-gradient(170deg, #1b1512, #120e0c); box-shadow: inset 0 0 0 1px rgba(232,193,90,.25);
+}
+.ca-karte__kopf { display: flex; align-items: center; gap: 10px; }
+.ca-karte__kopf img { width: clamp(26px, 3.2vmin, 40px); height: auto; object-fit: contain; }
+.ca-karte__kopf span {
+  font-family: 'Anton', 'Archivo', sans-serif; font-weight: 400; letter-spacing: .14em; text-transform: uppercase;
+  font-size: clamp(16px, 2.3vmin, 28px);
+  background: linear-gradient(180deg, #ffe9a8, var(--gold-deep)); -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.ca-karte__qr {
+  position: relative; width: 100%; aspect-ratio: 1; border-radius: clamp(10px, 1.4vmin, 16px);
+  padding: clamp(8px, 1.3vmin, 16px); background: #f7f5f1; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08);
+}
+.ca-karte__bild { width: 100%; height: 100%; image-rendering: pixelated; display: block; }
+.ca-karte__leer { display: grid; place-items: center; height: 100%; padding: 12px; color: #6b6560; font-size: 15px; text-align: center; }
+.ca-karte__fuss {
+  font-family: 'Anton', 'Archivo', sans-serif; font-weight: 400; letter-spacing: .05em; text-transform: uppercase;
+  font-size: clamp(13px, 1.7vmin, 20px); color: rgba(244,242,239,.9); text-align: center;
+}
+.ca-karte__glanz {
+  position: absolute; inset: 0; pointer-events: none; border-radius: inherit; opacity: 0;
+  background: linear-gradient(115deg, transparent 38%, rgba(255,255,255,.5) 50%, transparent 62%);
+}
+.ca-karte.is-wechsel .ca-karte__glanz { animation: ca-glanz .9s ease; }
+@keyframes ca-glanz { 0% { opacity: 0; transform: translateX(-60%); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateX(60%); } }
+.ca-karte__rest { font-size: clamp(13px, 1.6vmin, 18px); color: rgba(244,242,239,.6); letter-spacing: .02em; white-space: nowrap; }
+.ca-karte__rest b { color: var(--ink); font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* Panel: Claim + Zähler + Fortschritt + Info */
+.ca-panel { max-width: 30ch; display: flex; flex-direction: column; gap: clamp(10px, 1.6vmin, 18px); }
+.ca-panel__claim { font-size: clamp(16px, 2vmin, 24px); line-height: 1.38; color: rgba(244,242,239,.9); margin: 0; }
+.ca-panel__claim b { color: var(--gold); font-weight: 700; }
+.ca-zaehler { display: flex; align-items: baseline; gap: 14px; margin-top: 2px; }
+.ca-zaehler__zahl {
+  font-family: 'Anton', 'Archivo', sans-serif; font-weight: 400; line-height: .9; font-variant-numeric: tabular-nums;
+  font-size: clamp(56px, 10vmin, 128px); color: var(--red); text-shadow: 0 4px 24px rgba(233,29,41,.4);
+  transform-origin: left center;
+}
+.ca-zaehler__zahl.is-puls { animation: ca-zpuls .9s cubic-bezier(.3,1.4,.5,1); }
+@keyframes ca-zpuls { 0% { transform: scale(1); } 32% { transform: scale(1.16); color: var(--gold); } 100% { transform: scale(1); } }
+.ca-zaehler__wort { font-size: clamp(16px, 2vmin, 24px); color: rgba(244,242,239,.86); }
+.ca-fort { height: 12px; border-radius: 999px; background: rgba(244,242,239,.1); overflow: hidden; box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); }
+.ca-fort__balken { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--red), var(--gold)); transition: width .7s ease; box-shadow: 0 0 14px rgba(232,193,90,.4); }
+.ca-fort__text { font-size: clamp(14px, 1.7vmin, 19px); color: rgba(244,242,239,.74); margin: 0; }
+.ca-info {
+  margin: 4px 0 0; padding: clamp(9px, 1.3vmin, 14px) clamp(14px, 1.8vmin, 20px); border-radius: 14px;
+  font-size: clamp(14px, 1.8vmin, 20px); font-weight: 600; color: var(--ink);
+  background: rgba(232,193,90,.1); box-shadow: inset 0 0 0 1px rgba(232,193,90,.3);
+  animation: ca-info-ein .6s ease both;
+}
+@keyframes ca-info-ein { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* ── Start-Overlay (Geste für Vollbild) ─────────────────────── */
 .ca-start {
-  position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
-  background: rgba(14,12,11,.72); backdrop-filter: blur(4px); border: 0; color: #f4f2ef; cursor: pointer;
+  position: absolute; inset: 0; z-index: 6; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  background: rgba(11,10,9,.76); backdrop-filter: blur(4px); border: 0; color: var(--ink); cursor: pointer;
 }
-.ca-start > span { font-family: 'Anton', 'Archivo', sans-serif; font-size: clamp(26px, 4vw, 48px); }
+.ca-start > span { font-family: 'Anton', 'Archivo', sans-serif; font-size: clamp(26px, 4vw, 48px); text-transform: uppercase; }
 .ca-start > small { font-size: clamp(14px, 1.7vw, 18px); color: rgba(244,242,239,.7); }
-.ca-exit-hinweis { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); z-index: 3; font-size: 12px; color: rgba(244,242,239,.28); letter-spacing: .04em; }
+.ca-exit-hinweis { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); z-index: 5; font-size: 12px; color: rgba(244,242,239,.24); letter-spacing: .04em; }
 
-/* Hochformat (iPad hoch): QR oben, Text darunter */
+/* ── Hochformat (iPad hoch): Held oben hinter der Karte, Panel darunter ── */
 @media (orientation: portrait) {
-  .ca-mitte { flex-direction: column; gap: clamp(18px, 4vh, 48px); }
-  .ca-qr { width: min(62vw, 58vh, 620px); }
-  .ca-text { max-width: 30ch; text-align: center; align-items: center; }
+  .ca-held { inset: 0 0 auto 0; width: 100%; height: 54%; }
+  .ca-held__bild { background-size: cover; background-position: center 22%; }
+  .ca-held__sockel { height: 60%; background: linear-gradient(180deg, transparent, rgba(8,7,6,.55) 42%, rgba(8,7,6,.92) 74%, #0b0a09); }
+  /* Namensschild ins freie Dunkel rechts neben den Kopf (nicht aufs Gesicht) */
+  .ca-schild { left: auto; right: var(--rand); top: calc(var(--rand) + 84px); bottom: auto; transform: none; flex-direction: row; align-items: flex-end; text-align: right; }
+  .ca-schild__nr { font-size: clamp(48px, 13vw, 104px); }
+  .ca-grund__vignette { background:
+    linear-gradient(180deg, rgba(8,7,6,.46) 0%, rgba(8,7,6,.08) 22%, rgba(8,7,6,.44) 46%, rgba(8,7,6,.92) 66%),
+    radial-gradient(120% 120% at 50% 38%, transparent 55%, rgba(6,5,5,.6) 100%); }
+  .ca-mitte { flex-direction: column; justify-content: flex-end; gap: clamp(14px, 2.6vh, 30px); padding-bottom: calc(var(--rand) + 6px); }
+  .ca-karte-wrap { width: min(54vw, 34vh, 410px); }
+  .ca-panel { max-width: 34ch; text-align: center; align-items: center; }
   .ca-zaehler { justify-content: center; }
-  .ca-fort { width: min(80vw, 420px); }
+  .ca-zaehler__zahl { transform-origin: center; }
+  .ca-fort { width: min(78vw, 440px); }
 }
 
+/* ── Ruhe-Modus ─────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  .ca-bg__bild.is-da { animation: none; }
+  .ca-held__bild.is-da { animation: none; }
+  .ca-grund__kegel--a, .ca-grund__kegel--b { animation: none; }
   .ca-live { animation: none; }
+  .ca-karte.is-wechsel { animation: none; }
+  .ca-karte.is-wechsel .ca-karte__glanz { animation: none; }
+  .ca-zaehler__zahl.is-puls { animation: none; }
+  .ca-schild, .ca-info { animation: none; }
 }

@@ -4,20 +4,40 @@ import { qrMatrix, zeichneQr } from '../lib/qr'
 import { useCheckinCode, useAlbumEinstellungen, useAlbumStatistik } from '../lib/album'
 import { useRoster, useSpiele } from '../lib/queries'
 import type { SpielRow } from '../lib/db'
+import { playerMedia } from '../../data/playerMedia'
+import { hdCutout } from '../../ui/hdCutout'
 import './checkin-anzeige.css'
 
 // ─────────────────────────────────────────────────────────────────────────────
-// v25-D: „Check-in-Anzeige" — Vollbild-Bühne fürs iPad am Eingang/an der Kasse.
-// Großer QR mit Countdown-Ring (rotierender Code, docs weiter in BUILD_LOG_V25),
-// ruhig wechselnde Spieler-Freisteller (Ken-Burns, nur CSS-Transforms), Spieltags-
-// Kopf (SVA – Gegner, Anstoß bzw. Live-Stand aus /api/live), Live-Zähler
-// „heute schon X eingecheckt" + Fortschritt zur 1. Belohnung. Bildschirm bleibt an
-// (Wake Lock). Kein Admin-UI; Ausstieg nur per langem Druck. Die Codes der nächsten
-// 2 h liegen vor (Offline-Puffer) — kurze WLAN-Aussetzer tun nichts.
+// v25-D / v26: „Check-in-Anzeige" — Premium-Vollbild-Bühne fürs iPad am Eingang.
+// Drei Ebenen (alle nur CSS-Transform/Opacity, flüssig auf älterem iPad):
+//   (1) Grund: dunkel + langsam wandernde Flutlicht-Kegel, dezentes Wappen.
+//   (2) Spieler-Held: HD-Freisteller (playerMedia → hdCutout), Zwei-Slot-Crossfade
+//       (max. 2 Bilder im DOM) alle 8 s mit Ken-Burns + leichter Parallax,
+//       edles Namensschild (Rückennummer groß + Name).
+//   (3) QR als Sammelkarte: Rot/Gold-Kante, Wappen + „Check-in"-Prägung,
+//       Countdown-Ring + „neuer Code in m:ss", weicher Glanz-Wechsel.
+// Kopf: Spieltag groß (SVA – Gegner), Anstoß bzw. Live-Stand mit Minute + Live-Badge.
+// Zähler: große hochzählende Zahl „X Fans heute dabei" (Puls bei neuem Check-in),
+// Fortschritt zur Belohnung, rotierende Info-Zeile (alle 30 s, kein Alkohol-Wording).
+// Funktion unverändert: Rotation, 2-h-Offline-Puffer, Wake Lock, Datenquellen.
+// prefers-reduced-motion wird respektiert. Ausstieg nur per langem Druck.
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface LiveMini {
   match?: { status?: string; home?: boolean; opponent?: string; goalsFor?: number; goalsAgainst?: number; minute?: string } | null
+}
+
+// Belohnungs-Texte am Eingang bleiben familiengerecht (kein Alkohol-Wording).
+const ALKOHOL = /freibier|\bbier\b|alkohol|schnaps|\bkorn\b|prosecco|\bsekt\b|\bwein\b|shot/i
+const belohnungSauber = (text: string | null | undefined) => {
+  const t = (text ?? '').trim()
+  return !t || ALKOHOL.test(t) ? 'ein Getränk nach Wahl' : t
+}
+
+const mmss = (sek: number) => {
+  const s = Math.max(0, sek)
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 }
 
 function waehleSpiel(spiele: SpielRow[] | undefined): SpielRow | null {
@@ -80,7 +100,7 @@ export default function CheckinAnzeige() {
     zeichneQr(ctx, qrMatrix(url), 0, 0, c.width, '#17120f')
     if (letzteUrl.current && letzteUrl.current !== url) {
       setWechsel(true)
-      const t = window.setTimeout(() => setWechsel(false), 650)
+      const t = window.setTimeout(() => setWechsel(false), 900)
       return () => window.clearTimeout(t)
     }
     letzteUrl.current = url
@@ -111,17 +131,87 @@ export default function CheckinAnzeige() {
     }
   }, [])
 
-  // Ken-Burns-Hintergrund: aktive Spieler mit Foto, alle 9 s wechseln
-  const fotos = useMemo(
-    () => (rosterQ.data ?? []).filter((r) => r.aktiv && r.rolle === 'spieler' && r.foto_url).map((r) => ({ foto: r.foto_url as string, name: r.name, nummer: r.nummer })),
+  // Spieler-Helden: HD-Freisteller (playerMedia → Greenscreen/HD zuerst, dann Foto)
+  const helden = useMemo(
+    () =>
+      (rosterQ.data ?? [])
+        .filter((r) => r.aktiv && r.rolle === 'spieler' && (r.freisteller_url || r.foto_url))
+        .map((r) => {
+          const m = playerMedia(r.slug, { cutoutUrl: r.freisteller_url, photoUrl: r.foto_url })
+          const bild = m.figure ? hdCutout(m.figure) : r.foto_url
+          return { bild: bild as string, cutout: m.cutout, name: r.name, nummer: r.nummer, position: r.position, kapitaen: r.kapitaen }
+        })
+        .filter((h) => h.bild),
     [rosterQ.data],
   )
-  const [bgIdx, setBgIdx] = useState(0)
+
+  // Bilder vorladen → sofortiger Crossfade
   useEffect(() => {
-    if (fotos.length < 2) return
-    const t = window.setInterval(() => setBgIdx((i) => (i + 1) % fotos.length), 9000)
+    helden.forEach((h) => {
+      const img = new Image()
+      img.decoding = 'async'
+      img.src = h.bild
+    })
+  }, [helden])
+
+  // Zwei-Slot-Crossfade: nur der aktuelle + der vorige Held sind im DOM
+  const [tick, setTick] = useState(0)
+  useEffect(() => {
+    if (helden.length < 2) return
+    const t = window.setInterval(() => setTick((x) => x + 1), 8000)
     return () => window.clearInterval(t)
-  }, [fotos.length])
+  }, [helden.length])
+  const n = helden.length
+  const curIdx = n ? tick % n : 0
+  const prevIdx = n ? (tick - 1 + n) % n : 0
+  const slotAIdx = tick % 2 === 0 ? curIdx : prevIdx
+  const slotBIdx = tick % 2 === 1 ? curIdx : prevIdx
+  const held = helden[curIdx] ?? null
+
+  // Zähler hochzählen + Puls bei neuem Check-in
+  const checkins = statQ.data?.spiele?.find((s) => s.spielId === spiel?.id)?.checkins ?? 0
+  const [zeigeZahl, setZeigeZahl] = useState(checkins)
+  const [puls, setPuls] = useState(false)
+  const letzteZahl = useRef(checkins)
+  useEffect(() => {
+    if (checkins === letzteZahl.current) return
+    const start = letzteZahl.current
+    const ende = checkins
+    letzteZahl.current = checkins
+    if (ende > start) {
+      setPuls(true)
+      window.setTimeout(() => setPuls(false), 900)
+    }
+    const mm = window.matchMedia?.('(prefers-reduced-motion: reduce)')
+    if (mm?.matches) {
+      setZeigeZahl(ende)
+      return
+    }
+    const t0 = performance.now()
+    const dauer = 750
+    let raf = 0
+    const lauf = (t: number) => {
+      const p = Math.min(1, (t - t0) / dauer)
+      const eased = 1 - Math.pow(1 - p, 3)
+      setZeigeZahl(Math.round(start + (ende - start) * eased))
+      if (p < 1) raf = requestAnimationFrame(lauf)
+    }
+    raf = requestAnimationFrame(lauf)
+    return () => cancelAnimationFrame(raf)
+  }, [checkins])
+
+  // Rotierende Info-Zeile (alle 30 s)
+  const schwelle = einstQ.data?.schwelle_1 ?? 3
+  const belohnung = belohnungSauber(einstQ.data?.belohnung_1)
+  const infos = useMemo(
+    () => [`Beim ${schwelle}. Besuch: ${belohnung}`, 'Tipp fürs Spiel gleich abgeben', 'Folge @svagathenburg für alle Updates'],
+    [schwelle, belohnung],
+  )
+  const [infoIdx, setInfoIdx] = useState(0)
+  useEffect(() => {
+    const t = window.setInterval(() => setInfoIdx((i) => (i + 1) % infos.length), 30_000)
+    return () => window.clearInterval(t)
+  }, [infos.length])
 
   // Wake Lock (Bildschirm bleibt an)
   useEffect(() => {
@@ -165,33 +255,59 @@ export default function CheckinAnzeige() {
   }
 
   const offline = codeQ.isError || (spieleQ.isError && !spieleQ.data)
-  const checkins = statQ.data?.spiele?.find((s) => s.spielId === spiel?.id)?.checkins ?? 0
-  const schwelle = einstQ.data?.schwelle_1 ?? 3
   const stand = live?.match
   const liveLaeuft = stand?.status === 'live' || stand?.status === 'halbzeit'
+  // „Stadion füllt sich": Fortschritt zur nächsten runden Marke (25er-Schritte)
+  const ziel = Math.max(25, Math.ceil((zeigeZahl + 1) / 25) * 25)
+  const fortschritt = Math.min(100, (zeigeZahl / ziel) * 100)
+  const fortText = zeigeZahl >= ziel ? `Starker Spieltag — schon ${zeigeZahl} dabei!` : `Noch ${ziel - zeigeZahl} bis ${ziel} Fans heute`
 
   return (
     <div className="ca" onPointerDown={druckStart} onPointerUp={druckEnde} onPointerLeave={druckEnde} onPointerCancel={druckEnde}>
-      {/* Hintergrund: Ken-Burns-Spielerbilder */}
-      <div className="ca-bg" aria-hidden="true">
-        {fotos.map((p, i) => (
-          <div key={p.foto} className={`ca-bg__bild${i === bgIdx ? ' is-da' : ''}`} style={{ backgroundImage: `url(${p.foto})` }} />
-        ))}
-        <div className="ca-bg__flor" />
+      {/* Ebene 1: dunkler Grund mit wandernden Flutlicht-Kegeln + dezentem Wappen */}
+      <div className="ca-grund" aria-hidden="true">
+        <span className="ca-grund__kegel ca-grund__kegel--a" />
+        <span className="ca-grund__kegel ca-grund__kegel--b" />
+        <span className="ca-grund__struktur" />
+        <img className="ca-grund__wappen" src="/brand/wappen.png" alt="" />
+        <span className="ca-grund__vignette" />
       </div>
+
+      {/* Ebene 2: Spieler-Held (Zwei-Slot-Crossfade) */}
+      <div className="ca-held" aria-hidden="true">
+        {held && (
+          <>
+            <div key={`a-${slotAIdx}`} className={`ca-held__bild${tick % 2 === 0 ? ' is-da' : ''}`} style={{ backgroundImage: `url(${helden[slotAIdx]?.bild})` }} />
+            <div key={`b-${slotBIdx}`} className={`ca-held__bild${tick % 2 === 1 ? ' is-da' : ''}`} style={{ backgroundImage: `url(${helden[slotBIdx]?.bild})` }} />
+          </>
+        )}
+        <span className="ca-held__sockel" />
+      </div>
+      {held && (
+        <div className="ca-schild" key={curIdx}>
+          {held.nummer != null && <b className="ca-schild__nr">{held.nummer}</b>}
+          <span className="ca-schild__txt">
+            <b>{held.name}</b>
+            {held.position && <i>{held.kapitaen ? `${held.position} · Kapitän` : held.position}</i>}
+          </span>
+        </div>
+      )}
 
       <header className="ca-kopf">
         <img className="ca-wappen" src="/brand/wappen.png" alt="" width="64" height="64" />
         <div className="ca-kopf__txt">
           <span className="ca-kopf__kicker">Check-in am Eingang</span>
-          <b className="ca-kopf__paar">SV Agathenburg-Dollern{spiel ? ` – ${spiel.gegner}` : ''}</b>
+          <b className="ca-kopf__paar">
+            SVA <span>–</span> {spiel ? spiel.gegner : 'Heimspiel'}
+          </b>
           <span className="ca-kopf__zeile">
             {liveLaeuft ? (
               <>
-                <i className="ca-live" aria-hidden="true" /> {stand?.minute ?? 'Live'} · {stand?.home ? `${stand?.goalsFor ?? 0}:${stand?.goalsAgainst ?? 0}` : `${stand?.goalsAgainst ?? 0}:${stand?.goalsFor ?? 0}`}
+                <i className="ca-live" aria-hidden="true" /> Live {stand?.minute ?? ''} ·{' '}
+                {stand?.home ? `${stand?.goalsFor ?? 0}:${stand?.goalsAgainst ?? 0}` : `${stand?.goalsAgainst ?? 0}:${stand?.goalsFor ?? 0}`}
               </>
             ) : spiel ? (
-              new Date(spiel.anstoss).toLocaleString('de-DE', { weekday: 'long', day: '2-digit', month: 'long', hour: '2-digit', minute: '2-digit' }) + ' Uhr'
+              'Anstoß ' + new Date(spiel.anstoss).toLocaleString('de-DE', { weekday: 'long', day: '2-digit', month: 'long', hour: '2-digit', minute: '2-digit' }) + ' Uhr'
             ) : (
               'Kein Heimspiel eingetragen'
             )}
@@ -201,33 +317,52 @@ export default function CheckinAnzeige() {
       </header>
 
       <main className="ca-mitte">
-        <div className={`ca-qr${wechsel ? ' is-wechsel' : ''}`}>
-          <svg className="ca-ring" viewBox="0 0 100 100" aria-hidden="true">
-            <circle className="ca-ring__spur" cx="50" cy="50" r="47" />
-            <circle className="ca-ring__lauf" cx="50" cy="50" r="47" style={{ strokeDashoffset: 295.3 * (1 - ringPct) }} />
+        {/* Ebene 3: QR als Premium-Sammelkarte */}
+        <div className="ca-karte-wrap">
+          <div className="ca-karte-rahmen">
+          <svg className="ca-ring" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <rect className="ca-ring__spur" x="1.6" y="1.6" width="96.8" height="96.8" rx="7" pathLength={100} vectorEffect="non-scaling-stroke" />
+            <rect className="ca-ring__lauf" x="1.6" y="1.6" width="96.8" height="96.8" rx="7" pathLength={100} vectorEffect="non-scaling-stroke" style={{ strokeDashoffset: 100 * (1 - ringPct) }} />
           </svg>
-          <div className="ca-qr__rahmen">
-            {url ? (
-              <canvas ref={canvasRef} width={720} height={720} className="ca-qr__bild" aria-label="QR-Code zum Einchecken" />
-            ) : (
-              <div className="ca-qr__leer">{spiel ? 'Erst einen QR-Code für dieses Spiel erzeugen (Album → Spieltage).' : 'Kein Heimspiel.'}</div>
-            )}
+          <div className={`ca-karte${wechsel ? ' is-wechsel' : ''}`}>
+            <div className="ca-karte__innen">
+              <div className="ca-karte__kopf">
+                <img src="/brand/wappen.png" alt="" width="40" height="40" />
+                <span>Check-in</span>
+              </div>
+              <div className="ca-karte__qr">
+                {url ? (
+                  <canvas ref={canvasRef} width={720} height={720} className="ca-karte__bild" aria-label="QR-Code zum Einchecken" />
+                ) : (
+                  <div className="ca-karte__leer">{spiel ? 'Erst einen QR-Code für dieses Spiel erzeugen (Album → Spieltage).' : 'Kein Heimspiel.'}</div>
+                )}
+              </div>
+              <div className="ca-karte__fuss">Scannen · Pack holen · mitmachen</div>
+            </div>
+            <span className="ca-karte__glanz" aria-hidden="true" />
           </div>
-          {rotation && url && <span className="ca-qr__rest">wechselt in {restSek}s</span>}
+          </div>
+          {rotation && url && (
+            <span className="ca-karte__rest">
+              neuer Code in <b>{mmss(restSek)}</b>
+            </span>
+          )}
         </div>
 
-        <div className="ca-text">
-          <p className="ca-schritte">Scannen · Pack holen · mitmachen</p>
-          <p className="ca-sub">Sammelkarten wie früher Panini — kostenlos, nur fürs Dabeisein.</p>
+        <div className="ca-panel">
+          <p className="ca-panel__claim">
+            Sammelkarten wie früher Panini — <b>kostenlos</b>, nur fürs Dabeisein.
+          </p>
           <div className="ca-zaehler">
-            <b>{checkins}</b>
-            <span>heute schon eingecheckt</span>
+            <b className={`ca-zaehler__zahl${puls ? ' is-puls' : ''}`}>{zeigeZahl}</b>
+            <span className="ca-zaehler__wort">Fans heute dabei</span>
           </div>
           <div className="ca-fort" aria-hidden="true">
-            <div className="ca-fort__balken" style={{ width: `${Math.min(100, (checkins / Math.max(1, schwelle)) * 100)}%` }} />
+            <div className="ca-fort__balken" style={{ width: `${fortschritt}%` }} />
           </div>
-          <p className="ca-fort__text">
-            Beim {schwelle}. Heimspiel gibt’s {einstQ.data?.belohnung_1 ?? 'ein Getränk nach Wahl'}.
+          <p className="ca-fort__text">{fortText}</p>
+          <p className="ca-info" key={infoIdx}>
+            {infos[infoIdx]}
           </p>
         </div>
       </main>
