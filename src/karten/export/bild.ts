@@ -304,3 +304,69 @@ export async function teilen(blob: Blob, dateiname: string, text: string): Promi
     return 'fehler'
   }
 }
+
+/** v26-B: Fan-Barometer-Story 1080×1920 (großer Balken, „NOCH N BIS ZUM PACK"). */
+export async function storyBarometer(b: { gegner: string; anstoss: string; ziel: number; stand: number }): Promise<HTMLCanvasElement> {
+  const c = document.createElement('canvas')
+  c.width = STORY_W
+  c.height = STORY_H
+  const ctx = c.getContext('2d')!
+  const W = c.width
+  const H = c.height
+  // Hintergrund
+  ctx.fillStyle = '#070506'
+  ctx.fillRect(0, 0, W, H)
+  const g = ctx.createRadialGradient(W / 2, H * 0.42, 40, W / 2, H * 0.42, H * 0.62)
+  g.addColorStop(0, 'rgba(92,19,27,0.55)')
+  g.addColorStop(1, 'rgba(7,5,6,0)')
+  ctx.fillStyle = g
+  ctx.fillRect(0, 0, W, H)
+  const w = await wappen()
+  kopf(ctx, 'FAN-BAROMETER', w)
+  const anteil = Math.max(0, Math.min(1, b.stand / Math.max(1, b.ziel)))
+  const rest = Math.max(0, b.ziel - b.stand)
+  const voll = b.stand >= b.ziel
+  // Großer Stand
+  ctx.textAlign = 'center'
+  ctx.fillStyle = '#F4F2EF'
+  ctx.font = `220px ${F_DISPLAY}`
+  ctx.fillText(String(b.stand), W / 2, H * 0.44)
+  ctx.font = `800 40px ${F_TEXT}`
+  ctx.fillStyle = 'rgba(244,242,239,0.66)'
+  ctx.fillText(`VON ${b.ziel} EINGECHECKT`, W / 2, H * 0.48)
+  // Balken
+  const bx = 120
+  const bw = W - 240
+  const by = H * 0.56
+  const bh = 46
+  ctx.fillStyle = 'rgba(244,242,239,0.12)'
+  roundRect(ctx, bx, by, bw, bh, bh / 2)
+  ctx.fill()
+  const bg = ctx.createLinearGradient(bx, 0, bx + bw, 0)
+  bg.addColorStop(0, '#E91D29')
+  bg.addColorStop(1, voll ? '#3ddc84' : '#E8C15A')
+  ctx.fillStyle = bg
+  roundRect(ctx, bx, by, Math.max(bh, bw * anteil), bh, bh / 2)
+  ctx.fill()
+  // Call-to-action
+  ctx.fillStyle = '#F4F2EF'
+  ctx.font = `92px ${F_DISPLAY}`
+  ctx.fillText(voll ? 'GESCHAFFT!' : `NOCH ${rest} BIS ZUM PACK`, W / 2, H * 0.68)
+  ctx.font = `800 34px ${F_TEXT}`
+  ctx.fillStyle = 'rgba(244,242,239,0.7)'
+  const datum = new Date(b.anstoss).toLocaleString('de-DE', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+  ctx.fillText(`SVA – ${b.gegner.toUpperCase()}  ·  ${datum.toUpperCase()}`, W / 2, H * 0.72)
+  fuss(ctx, voll ? 'Event-Pack für alle' : 'Gemeinsam einchecken')
+  return c
+}
+
+function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  const rr = Math.min(r, w / 2, h / 2)
+  ctx.beginPath()
+  ctx.moveTo(x + rr, y)
+  ctx.arcTo(x + w, y, x + w, y + h, rr)
+  ctx.arcTo(x + w, y + h, x, y + h, rr)
+  ctx.arcTo(x, y + h, x, y, rr)
+  ctx.arcTo(x, y, x + w, y, rr)
+  ctx.closePath()
+}

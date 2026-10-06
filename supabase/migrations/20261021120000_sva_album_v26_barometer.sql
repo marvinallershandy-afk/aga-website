@@ -146,15 +146,20 @@ as $$
 declare
   v_schnitt numeric;
   v_vorschlag integer;
+  v_ziel integer;
 begin
   perform public.sva_album_admin_pruefen();
-  if p_ziel is not null and p_ziel not between 1 and 999 then
+  -- p_ziel: null = nur Vorschlag (nichts ändern), 0 = ausschalten, 1..999 = setzen
+  if p_ziel is not null and p_ziel not between 0 and 999 then
     raise exception 'album_ungueltig:ziel' using errcode = '22023';
   end if;
   if not exists (select 1 from public.sva_album_spielcodes where spiel_id = p_spiel) then
     raise exception 'album_code_unbekannt' using errcode = 'P0001';
   end if;
-  update public.sva_album_spielcodes set barometer_ziel = p_ziel where spiel_id = p_spiel;
+  if p_ziel is not null then
+    update public.sva_album_spielcodes set barometer_ziel = nullif(p_ziel, 0) where spiel_id = p_spiel;
+  end if;
+  select barometer_ziel into v_ziel from public.sva_album_spielcodes where spiel_id = p_spiel;
   -- Vorschlag: Ø Check-ins je Heimspiel × 1,15, mind. 10
   select avg(n) into v_schnitt from (
     select count(*)::int as n from public.sva_album_checkins c
@@ -162,7 +167,7 @@ begin
      where s.heim and not coalesce(s.demo, false)
      group by c.spiel_id) q;
   v_vorschlag := greatest(10, round(coalesce(v_schnitt, 0) * 1.15))::int;
-  return jsonb_build_object('spielId', p_spiel, 'ziel', p_ziel, 'vorschlag', v_vorschlag,
+  return jsonb_build_object('spielId', p_spiel, 'ziel', v_ziel, 'vorschlag', v_vorschlag,
                             'schnitt', round(coalesce(v_schnitt, 0), 1));
 end;
 $$;

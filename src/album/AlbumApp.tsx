@@ -15,6 +15,8 @@ import {
   ladeKatalog,
   ladeMein,
   ladeRangliste,
+  ladeBarometer,
+  type Barometer as BarometerDaten,
   supabase,
   type Gutschein,
   type Karte,
@@ -37,6 +39,7 @@ import type { KartenDaten } from '../karten/typen'
 import { GEHEIM_EREIGNIS, fundErledigt, fundMelden, gesteRichtung, istGeheimToken, offeneFunde, type GeheimFund } from './geheim/ei'
 import { CodeEinloesen, NaechstesZiel, SammelSeite, Advent, type PackNeu } from './Sammeln'
 import { ZieleSeite } from './Ziele'
+import { Barometer } from './Barometer'
 import { TauschDialog } from './Tausch'
 import { SvaKarte } from '../karten/SvaKarte'
 import { kartenDaten } from './kartenDaten'
@@ -234,6 +237,9 @@ export function AlbumApp() {
   const [gutschein, setGutschein] = useState<Gutschein | null>(null)
   const [konto, setKonto] = useState(false)
   const [rangliste, setRangliste] = useState<RanglistenEintrag[] | null>(null)
+  const [barometer, setBarometer] = useState<BarometerDaten | null>(
+    ALBUM_VORFUEHRUNG ? { spielId: 'vf', gegner: 'TuS Harsefeld', anstoss: new Date(Date.now() + 36e5).toISOString(), ziel: 40, stand: 28, erreicht: false } : null,
+  )
   const [abschied, setAbschied] = useState(false)
   const [offen, setOffen] = useState(() => {
     try {
@@ -274,6 +280,15 @@ export function AlbumApp() {
       .then(setKatalog)
       .catch(() => setKatalogFehlt(true))
   }, [])
+
+  // v26-B: Fan-Barometer des nächsten/laufenden Heimspiels laden
+  const barometerLaden = useCallback(() => {
+    if (ALBUM_VORFUEHRUNG) return
+    ladeBarometer().then(setBarometer).catch(() => {})
+  }, [])
+  useEffect(() => {
+    barometerLaden()
+  }, [barometerLaden])
 
   useEffect(() => {
     let aktiv = true
@@ -336,8 +351,10 @@ export function AlbumApp() {
       if (r.freundPackId) neu.push({ id: r.freundPackId, art: 'freund', titel: r.freunde?.length ? `Freundes-Bonus · mit ${r.freunde.join(', ')}` : 'Freundes-Bonus' })
       setPacks((p) => [...p, ...neu])
       void neuLaden()
+      // v26-B: Barometer nach dem Check-in aktualisieren (füllt sichtbar weiter)
+      barometerLaden()
     },
-    [neuLaden],
+    [neuLaden, barometerLaden],
   )
 
   const einchecken = useCallback(
@@ -796,7 +813,7 @@ export function AlbumApp() {
             </button>
           </div>
         )}
-        {ci && <CheckinBanner ci={ci} onNochmal={() => token && void einchecken(token)} onWeg={() => setCi(null)} />}
+        {ci && <CheckinBanner ci={ci} barometer={barometer} onNochmal={() => token && void einchecken(token)} onWeg={() => setCi(null)} />}
 
         {meldung && (
           <div className="al-ci al-ci--ok al-meldung" role="status" key={meldung.n}>
@@ -836,6 +853,11 @@ export function AlbumApp() {
                     </button>
                   )}
                   <Gesamtstand fs={fs} name={mein.profil?.anzeigename} onKapitel={kapitelAufschlagen} />
+                  {barometer && (
+                    <div className="sa-block">
+                      <Barometer b={barometer} />
+                    </div>
+                  )}
                   <KartenQuellen katalog={katalog} onMehr={() => setEinf(true)} />
                   {mein.advent ? (
                     <Advent tage={mein.advent} onPack={packNeu} onNeu={() => void neuLaden()} />
@@ -1058,7 +1080,7 @@ function CheckinNaechster({ anstoss }: { anstoss?: string }) {
   )
 }
 
-function CheckinBanner({ ci, onNochmal, onWeg }: { ci: CheckinStatus; onNochmal: () => void; onWeg: () => void }) {
+function CheckinBanner({ ci, barometer, onNochmal, onWeg }: { ci: CheckinStatus; barometer?: BarometerDaten | null; onNochmal: () => void; onWeg: () => void }) {
   if (ci.status === 'laeuft') {
     return (
       <div className="al-ci al-ci--laeuft" role="status">
@@ -1072,6 +1094,11 @@ function CheckinBanner({ ci, onNochmal, onWeg }: { ci: CheckinStatus; onNochmal:
         <span>
           <b>Eingecheckt: SVA gegen {ci.gegner}.</b> Das ist dein {ci.checkins}. Heimspiel diese Saison.
           <CheckinNaechster anstoss={ci.anstoss} />
+          {barometer && (
+            <span className="al-ci__baro">
+              <Barometer b={barometer} kompakt />
+            </span>
+          )}
         </span>
         <button type="button" className="al-ci__x" onClick={onWeg} aria-label="Hinweis schließen">
           ×

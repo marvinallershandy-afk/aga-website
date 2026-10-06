@@ -107,6 +107,16 @@ export function useKultKarte() {
   })
 }
 
+// ── v26-B: Fan-Barometer ────────────────────────────────────
+export function useBarometer() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (a: { spiel: string; ziel: number | null }) =>
+      rpc<{ spielId: string; ziel: number | null; vorschlag: number; schnitt: number }>('album_admin_barometer', { p_spiel: a.spiel, p_ziel: a.ziel }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['album_admin_statistik'] }),
+  })
+}
+
 // ── Codes ───────────────────────────────────────────────────
 export interface KartenCodeRow {
   id: string

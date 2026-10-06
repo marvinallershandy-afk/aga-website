@@ -1,0 +1,35 @@
+/* v26-B: Fan-Barometer — Gemeinschaftsbalken (Album + Live). */
+.bm {
+  position: relative; display: grid; gap: var(--s-2, 8px);
+  padding: var(--s-3, 12px) var(--s-4, 16px); border-radius: var(--r-l, 14px);
+  background: linear-gradient(180deg, rgba(244, 242, 239, .04), rgba(244, 242, 239, .015));
+  border: 1px solid var(--c-line, rgba(244, 242, 239, .12));
+  overflow: hidden;
+}
+.bm--kompakt { padding: var(--s-2, 8px) var(--s-3, 12px); }
+.bm__kopf { display: flex; align-items: center; justify-content: space-between; gap: var(--s-2, 8px); }
+.bm__label { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: .6875rem; letter-spacing: .1em; text-transform: uppercase; color: var(--c-text-3, #9a9496); }
+.bm__zahl { font-family: var(--f-display, inherit); font-weight: 400; font-size: 1.25rem; color: var(--c-white, #fff); font-variant-numeric: tabular-nums; }
+.bm__zahl small { font-size: .8125rem; color: var(--c-text-3, #9a9496); }
+.bm__balken { position: relative; height: 12px; border-radius: 999px; background: rgba(244, 242, 239, .08); overflow: hidden; }
+.bm__balken i { position: absolute; inset: 0; border-radius: 999px; transform-origin: 0 50%; background: linear-gradient(90deg, var(--c-red, #e1282f), var(--c-accent, #e8c15a)); transition: transform 1.1s cubic-bezier(.22, 1, .36, 1); }
+.bm.is-voll .bm__balken i { background: linear-gradient(90deg, #e8c15a, #3ddc84); }
+.bm__voll-glanz { position: absolute; inset: 0; background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, .5) 50%, transparent 65%); transform: translateX(-120%); animation: bm-glanz 1.4s cubic-bezier(.22, 1, .36, 1) .3s; }
+@keyframes bm-glanz { to { transform: translateX(120%); } }
+.bm__text { font-size: .8125rem; line-height: 1.35; color: var(--c-text-2, #c9c4c5); display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.bm__text b { color: var(--c-white, #fff); font-weight: 800; }
+.bm.is-voll .bm__text { color: #3ddc84; }
+/* dezentes Konfetti */
+.bm__konfetti { position: absolute; inset: 0; pointer-events: none; }
+.bm__konfetti i {
+  position: absolute; top: -8px; left: calc(6% + var(--k) * 6.5%); width: 6px; height: 9px; border-radius: 1px;
+  background: var(--c-accent, #e8c15a); opacity: .9;
+  animation: bm-fall 2.4s cubic-bezier(.3, .7, .4, 1) calc(var(--k) * 60ms) forwards;
+}
+.bm__konfetti i:nth-child(3n) { background: #3ddc84; }
+.bm__konfetti i:nth-child(3n+1) { background: var(--c-red, #e1282f); }
+@keyframes bm-fall { to { transform: translateY(240%) rotate(420deg); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .bm__balken i { transition: none; }
+  .bm__voll-glanz, .bm__konfetti { display: none; }
+}

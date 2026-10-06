@@ -81,6 +81,18 @@ for (const motor of MOTOREN) {
     await page.screenshot({ path: `${OUT}/${k}-06-kult-gross.png` }).catch(() => {})
     await b.close()
   }
+  if (soll('baro')) {
+    const { b, page } = await kontext(motor)
+    await heftAuf(page)
+    await warte(page, 900)
+    await page.screenshot({ path: `${OUT}/${k}-07-album-barometer.png`, fullPage: true }).catch(() => page.screenshot({ path: `${OUT}/${k}-07-album-barometer.png` }))
+    await page.goto(`${BASE}/live?vorfuehrung=1`, { waitUntil: 'networkidle' })
+    await warte(page, 2500)
+    await page.locator('.bm').scrollIntoViewIfNeeded().catch(() => {})
+    await warte(page, 400)
+    await page.screenshot({ path: `${OUT}/${k}-08-live-barometer.png`, fullPage: true }).catch(() => page.screenshot({ path: `${OUT}/${k}-08-live-barometer.png` }))
+    await b.close()
+  }
   if (soll('teaser')) {
     const { b, page } = await kontext(motor)
     await heftAuf(page)

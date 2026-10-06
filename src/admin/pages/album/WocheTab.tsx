@@ -6,7 +6,10 @@ import { useToast } from '../../components/ui/toast'
 import { friendlyError } from '../../lib/db'
 import { useRoster, useSpiele, useSponsoren } from '../../lib/queries'
 import { useAlbumStatistik, useKarten } from '../../lib/album'
-import { adminKartenDaten, useCodeMutations, useKartenCodes, useMotm } from '../../lib/albumV20'
+import { adminKartenDaten, useBarometer, useCodeMutations, useKartenCodes, useMotm } from '../../lib/albumV20'
+import { Input } from '../../components/ui/input'
+import { Gauge, Image as ImageIcon } from 'lucide-react'
+import { alsBlob, storyBarometer, teilen } from '../../../karten/export/bild'
 import { reelHerunterladen, storyHerunterladen } from './exportHelfer'
 import { PackKontrolleKarte } from './PackTypen'
 
@@ -185,6 +188,74 @@ export function WocheTab() {
           )
         })}
       </ul>
+      <BarometerKarte spiele={spiele.data ?? []} jetzt={jetzt} />
+    </div>
+  )
+}
+
+// v26-B: Sonntags-Punkt — Fan-Barometer fürs nächste Heimspiel setzen.
+function BarometerKarte({ spiele, jetzt }: { spiele: { id: string; gegner: string; anstoss: string; heim?: boolean }[]; jetzt: number }) {
+  const toast = useToast()
+  const baro = useBarometer()
+  const naechstes = useMemo(
+    () => spiele.filter((s) => s.heim && new Date(s.anstoss).getTime() > jetzt - 3 * 3600e3).sort((a, b) => a.anstoss.localeCompare(b.anstoss))[0],
+    [spiele, jetzt],
+  )
+  const [ziel, setZiel] = useState('')
+  const [vorschlag, setVorschlag] = useState<number | null>(null)
+  if (!naechstes) return null
+  const setzen = async (n: number | null) => {
+    try {
+      const r = await baro.mutateAsync({ spiel: naechstes.id, ziel: n })
+      setVorschlag(r.vorschlag)
+      if (n != null) toast.success(`Fan-Barometer für SVA – ${naechstes.gegner}: Ziel ${n} Check-ins. Erreichen alle gemeinsam, gibt's ein Event-Pack für jede/n.`)
+      else toast.success('Fan-Barometer für dieses Spiel ausgeschaltet.')
+    } catch (e) {
+      toast.error(friendlyError(e))
+    }
+  }
+  return (
+    <div className="rounded-lg border border-border bg-card/40 p-4 space-y-2">
+      <div className="flex items-center gap-2">
+        <Gauge className="h-5 w-5 text-muted-foreground" />
+        <div>
+          <p className="font-medium">Fan-Barometer · SVA – {naechstes.gegner}</p>
+          <p className="text-sm text-muted-foreground">
+            Gemeinsames Check-in-Ziel. Lieber knapp erreichbar als ambitioniert — erreichen es alle, bekommt jede/r Eingecheckte ein Event-Pack.
+          </p>
+        </div>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <Input type="number" min={1} max={999} value={ziel} onChange={(e) => setZiel(e.target.value)} placeholder={vorschlag ? `Vorschlag ${vorschlag}` : 'Ziel'} className="w-32" aria-label="Barometer-Ziel" />
+        <Button size="sm" variant="outline" onClick={() => void setzen(null)} disabled={baro.isPending}>
+          Vorschlag holen
+        </Button>
+        <Button size="sm" onClick={() => ziel && void setzen(Math.max(1, Math.min(999, parseInt(ziel, 10) || 0)))} disabled={baro.isPending || !ziel}>
+          Ziel setzen
+        </Button>
+        {vorschlag != null && (
+          <button type="button" className="text-sm underline" onClick={() => setZiel(String(vorschlag))}>
+            Vorschlag {vorschlag} übernehmen
+          </button>
+        )}
+        <Button
+          size="sm"
+          variant="ghost"
+          disabled={!ziel}
+          onClick={async () => {
+            try {
+              const n = Math.max(1, Math.min(999, parseInt(ziel, 10) || 0))
+              const canvas = await storyBarometer({ gegner: naechstes.gegner, anstoss: naechstes.anstoss, ziel: n, stand: 0 })
+              const r = await teilen(await alsBlob(canvas), `fan-barometer-${naechstes.id}.png`, 'Fan-Barometer')
+              toast.success(r === 'gespeichert' ? 'Story-Bild im Download-Ordner.' : 'Story-Bild geteilt.')
+            } catch (e) {
+              toast.error(friendlyError(e))
+            }
+          }}
+        >
+          <ImageIcon className="h-4 w-4" /> Story-Bild
+        </Button>
+      </div>
     </div>
   )
 }

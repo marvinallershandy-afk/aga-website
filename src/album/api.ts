@@ -335,6 +335,23 @@ export interface CheckinErgebnis {
   /** v20-K: Freund-Bonus (Freund ist beim selben Spiel eingecheckt) */
   freundPackId?: string
   freunde?: string[]
+  /** v26-K: Anzahl angehängter Kult-Karten */
+  kult?: number
+  /** v26-B: Fan-Barometer-Stand nach diesem Check-in */
+  barometer?: Barometer | null
+}
+
+/** v26-B: Fan-Barometer (Gemeinschaftsziel je Heimspiel) — keine PII. */
+export interface Barometer {
+  spielId: string
+  gegner: string
+  anstoss: string
+  ziel: number
+  /** Stand (null unter der Anzeige-Schwelle) */
+  stand?: number | null
+  text?: string
+  erreicht: boolean
+  erreichtAt?: string
 }
 
 export interface PackInhalt {
@@ -484,6 +501,8 @@ export const checkinVormerken = (spiel: string, email: string, code: string) =>
   rpc<{ ok: true }>('album_checkin_vormerken', { p_spiel: spiel, p_email: email, p_code: code })
 export const ladeKatalog = () => rpc<Katalog>('album_katalog')
 export const ladeRangliste = () => rpc<RanglistenEintrag[]>('album_rangliste')
+/** v26-B: Fan-Barometer des nächsten/laufenden Heimspiels (oder eines bestimmten Spiels). */
+export const ladeBarometer = (spiel?: string) => rpc<Barometer | null>('album_barometer', { p_spiel: spiel ?? null })
 
 // ── Eingeloggt ──────────────────────────────────────────────
 export const ladeMein = () => rpc<Mein>('album_mein')
