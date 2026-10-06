@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { AnimatePresence, motion, type PanInfo } from 'framer-motion'
 import { ArrowRight, Crown, Radio, Ticket, Users } from 'lucide-react'
 import { BELOHNUNGEN, haptik } from './model'
@@ -15,6 +15,17 @@ const SCHRITTE = ['tippen', 'belohnung', 'live'] as const
 export function Einfuehrung({ offen, onZu }: { offen: boolean; onZu: () => void }) {
   const [i, setI] = useState(0)
   const [richtung, setRichtung] = useState(1)
+  const gehe = useCallback(
+    (d: number) => {
+      const n = i + d
+      if (n < 0) return
+      if (n >= SCHRITTE.length) return onZu()
+      setRichtung(d)
+      setI(n)
+      haptik(6)
+    },
+    [i, onZu],
+  )
   useEffect(() => {
     if (!offen) return
     const k = (e: KeyboardEvent) => {
@@ -29,15 +40,7 @@ export function Einfuehrung({ offen, onZu }: { offen: boolean; onZu: () => void 
       window.removeEventListener('keydown', k)
       document.documentElement.style.overflow = vorher
     }
-  })
-  const gehe = (d: number) => {
-    const n = i + d
-    if (n < 0) return
-    if (n >= SCHRITTE.length) return onZu()
-    setRichtung(d)
-    setI(n)
-    haptik(6)
-  }
+  }, [offen, gehe, onZu])
   const ende = (_: unknown, info: PanInfo) => {
     if (Math.abs(info.offset.x) < 60 && Math.abs(info.velocity.x) < 500) return
     gehe(info.offset.x < 0 ? 1 : -1)

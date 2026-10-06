@@ -28,7 +28,7 @@ function dauer(ms: number): string {
   return `${r.min} Min`
 }
 
-export function schrittFuer(lage: Lage, now: number, angemeldet: boolean): Schritt | null {
+function schrittFuer(lage: Lage, now: number, angemeldet: boolean): Schritt | null {
   const { offen, gesperrt, gewertet } = lage
   // 1. frische Auflösung, noch nicht angesehen
   if (gewertet?.meinePunkte && now - new Date(gewertet.anstoss).getTime() < 4 * 86400_000 && !aufloesungGesehen(gewertet.id) && !gesperrt) {

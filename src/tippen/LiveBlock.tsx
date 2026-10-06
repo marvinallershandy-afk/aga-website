@@ -23,36 +23,41 @@ function minuteText(m: number, nach?: number) {
 
 export function LiveBlock({ spiel, kader }: { spiel: TippSpiel; kader: Map<string, KaderSpieler> }) {
   const live = spiel.live
-  const stand: [number, number] = [spiel.toreSva ?? 0, spiel.toreGegner ?? 0]
+  const s0 = spiel.toreSva ?? 0
+  const s1 = spiel.toreGegner ?? 0
   const ende = spiel.status === 'beendet'
   // Echtbetrieb ohne Ereignisse: Hochrechnung nur aus dem Spielstand
   const ich: LiveHochrechnung | undefined = useMemo(
     () =>
       live?.ich ??
       (spiel.meinTipp
-        ? hochrechnen({ spiel, tipp: spiel.meinTipp, stand, ereignisse: [], minute: 0, ende, startelf: [], position: (id) => kader.get(id)?.position ?? 'MIT' })
+        ? hochrechnen({ spiel, tipp: spiel.meinTipp, stand: [s0, s1], ereignisse: [], minute: 0, ende, startelf: [], position: (id) => kader.get(id)?.position ?? 'MIT' })
         : undefined),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [live?.ich, spiel.meinTipp, stand[0], stand[1], ende],
+    [live?.ich, spiel, s0, s1, ende, kader],
   )
   const minute = live ? minuteText(live.minute, live.nachspielzeit) : undefined
 
-  // „TOR!“-Einblendung bei neuem Treffer
-  const [tor, setTor] = useState<null | { sva: boolean; text: string }>(null)
-  const alt = useRef<string>(`${stand[0]}:${stand[1]}`)
+  // „TOR!“-Einblendung bei neuem Treffer (nur wenn sich der Stand ändert)
+  const [tor, setTor] = useState<null | { sva: boolean; text: string; n: number }>(null)
+  const alt = useRef<string>(`${s0}:${s1}`)
+  const ereignisse = live?.ereignisse
   useEffect(() => {
-    const neu = `${stand[0]}:${stand[1]}`
+    const neu = `${s0}:${s1}`
     if (neu === alt.current) return
     const [a0, b0] = alt.current.split(':').map(Number)
     alt.current = neu
-    const sva = stand[0] > a0
-    if (!sva && stand[1] <= b0) return
-    const e = [...(live?.ereignisse ?? [])].reverse().find((x) => x.typ === 'tor' || x.typ === 'gegentor')
-    setTor({ sva, text: sva ? (e?.spieler ? nachname(kader.get(e.spieler)?.name ?? '') : 'SVA') : 'Gegentor' })
+    const sva = s0 > a0
+    if (!sva && s1 <= b0) return
+    const e = [...(ereignisse ?? [])].reverse().find((x) => x.typ === 'tor' || x.typ === 'gegentor')
+    setTor({ sva, text: sva ? (e?.spieler ? nachname(kader.get(e.spieler)?.name ?? '') : 'SVA') : 'Gegentor', n: s0 + s1 })
     haptik(sva ? [20, 60, 20, 60, 40] : 30)
+  }, [s0, s1, ereignisse, kader])
+  // eigener Zeitgeber: blendet sicher wieder aus (auch wenn die Seite jede Sekunde neu zeichnet)
+  useEffect(() => {
+    if (!tor) return
     const t = window.setTimeout(() => setTor(null), 2200)
     return () => window.clearTimeout(t)
-  }, [stand, live?.ereignisse, kader])
+  }, [tor])
 
   const elfPunkte = useMemo(() => new Map((ich?.elfSpieler ?? []).map((e) => [e.id, e.p])), [ich])
 
