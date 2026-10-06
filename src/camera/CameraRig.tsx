@@ -296,6 +296,7 @@ function tourFrame(r: Rig, state: FrameState, delta: number) {
   // die Bild-nach-rechts-Verschiebung (Punkt 1/3) und das Banden-Karussell.
   const wSp = 1 - smoothstep(0.06, 0.5, Math.abs(sNow - SPONSOR_STOP))
   const wKon = 1 - smoothstep(0.06, 0.5, Math.abs(sNow - KONTAKT_STOP))
+  const wDoor = 1 - smoothstep(0.0, 0.5, Math.min(Math.abs(sNow - STOP_INDEX['musik-tuer']), Math.abs(sNow - STOP_INDEX['musik-raus'])))
 
   // Portrait-Anpassung: die Halte sind für 16:9 komponiert — auf schmalen
   // Viewports zieht die Kamera vom Blickpunkt zurück (Komposition bleibt).
@@ -308,9 +309,11 @@ function tourFrame(r: Rig, state: FrameState, delta: number) {
   if (aspect < 1) {
     const kFull = Math.min(1.75, 1 + (1 - aspect) * 1.1)
     const kTeam = 1 + (1 - aspect) * (phone ? 1.25 : 1.05)
-    const door = 1 - smoothstep(0.0, 0.5, Math.min(Math.abs(sNow - STOP_INDEX['musik-tuer']), Math.abs(sNow - STOP_INDEX['musik-raus'])))
+    const door = wDoor
     let k = THREE.MathUtils.lerp(kFull, kTeam, wMann)
-    k = THREE.MathUtils.lerp(k, 1 + (1 - aspect) * 0.6, door)
+    // v19-F (Punkt 2, Handy): an der Tür weniger Rückzug → die Tür-Bühne füllt
+    // mehr Bild, statt dass oben ein großer schwarzer Dach-/Himmelrand bleibt.
+    k = THREE.MathUtils.lerp(k, 1 + (1 - aspect) * 0.32, door)
     // v19-F (Punkt 1, Handy): an der Bande weniger Rückzug → die Tafel bleibt
     // groß und oben im Bild, statt dass der Rückzug die Fan-Kurve darüber zeigt.
     k = THREE.MathUtils.lerp(k, 1 + (1 - aspect) * 0.5, wSp)
@@ -329,9 +332,9 @@ function tourFrame(r: Rig, state: FrameState, delta: number) {
   // v19-F: Sponsoren + Finale teilen dieselbe Landscape-Verschiebung (Motiv
   // nach rechts, DOM-Spalte links auf ruhiger Fläche).
   const wantShift = aspect >= 1 ? TEAM_VIEW_SHIFT * wMann + SPONSOR_VIEW_SHIFT * wSp + KONTAKT_VIEW_SHIFT * wKon : 0
-  // v19-F (Punkt 1, Handy): an der Bande das Bild nach oben schieben → die
-  // Tafel sitzt im oberen Bilddrittel, der DOM-Konfigurator darunter.
-  const wantShiftY = aspect < 1 ? (phone ? -0.06 : 0.13) * wMann + (phone ? -0.13 : -0.08) * wSp : 0
+  // v19-F (Punkt 1/2, Handy): an Bande und Tür das Bild nach oben schieben →
+  // Motiv sitzt im oberen Bilddrittel statt unter viel schwarzem Himmel.
+  const wantShiftY = aspect < 1 ? (phone ? -0.06 : 0.13) * wMann + (phone ? -0.13 : -0.08) * wSp + (phone ? -0.16 : -0.1) * wDoor : 0
   if (Math.abs(wantShift) + Math.abs(wantShiftY) > 0.0005) {
     const w = state.size.width
     const h = state.size.height

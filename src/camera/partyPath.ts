@@ -83,8 +83,12 @@ const HALF = ROOM.width / 2
 // das schwarze Dachband oben aus dem Bild wandert und die neue Tür-Bühne
 // (Schild, Leuchte, Bank, Foto) mittig im Bild sitzt.
 export const DOOR_STAND = {
-  pos: new THREE.Vector3(5.12, 0.66, -2.66),
-  look: new THREE.Vector3(6.45, 0.13, -2.5),
+  // v19-F (Punkt 2): höher + stärker nach unten geneigt und etwas näher an
+  // die Tür — vorher füllte ein schwarzes Dachband/Nachthimmel die obere
+  // Bildhälfte. Jetzt sitzt die Tür-Bühne (Schild, Leuchte, Bank, Kisten,
+  // Foto) warm in der Bildmitte, das Vordach bleibt nur schmaler Rand oben.
+  pos: new THREE.Vector3(5.45, 0.6, -2.5),
+  look: new THREE.Vector3(6.46, 0.12, -2.47),
 } as const
 
 const approachPos = new THREE.CatmullRomCurve3(
