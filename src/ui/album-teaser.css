@@ -17,6 +17,31 @@
   font: 700 var(--t-micro)/1 var(--f-body); letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--c-white);
 }
 
+/* v21-A: eingeloggter Fan — „Angemeldet als …“, Stand, wartende Tütchen */
+.alb-t__wer {
+  display: inline-flex; align-items: center; gap: 6px;
+  font: 700 var(--t-micro)/1.2 var(--f-body); letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--c-text-2);
+}
+.alb-t__wer i { width: 6px; height: 6px; border-radius: 50%; background: #3ddc84; box-shadow: 0 0 0 3px rgba(61, 220, 132, .16); }
+.alb-t__stand { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px var(--s-2); font-variant-numeric: tabular-nums; }
+.alb-t__stand > b { font: 400 1rem/1 var(--f-display); letter-spacing: .02em; color: var(--c-white); }
+.alb-t__packs {
+  display: inline-flex; align-items: center; gap: 5px; padding: 1px 6px; border-radius: var(--r-s);
+  background: var(--c-red); color: var(--c-white); font-weight: 700; font-size: .625rem; letter-spacing: .08em; text-transform: uppercase;
+}
+.alb-t__packs i { position: relative; width: 6px; height: 6px; border-radius: 50%; background: var(--c-white); }
+.alb-t__packs i::after { content: ""; position: absolute; inset: -3px; border-radius: 50%; border: 1px solid var(--c-white); animation: alb-puls 1.8s cubic-bezier(.22, 1, .36, 1) infinite; }
+@keyframes alb-puls { from { transform: scale(.6); opacity: 1; } to { transform: scale(1.9); opacity: 0; } }
+.alb-t__balken { position: relative; display: block; height: 2px; margin-top: 4px; border-radius: 1px; background: var(--c-line); overflow: hidden; }
+.alb-t__balken i { position: absolute; inset: 0; background: var(--c-red); transform-origin: 0 50%; transition: transform .9s var(--ease); }
+.alb-t.is-fan { border-color: var(--c-line-strong); }
+/* Handy: eingeloggte Kachel so flach wie die normale (Karte bleibt frei) */
+@media (max-width: 759px), (max-aspect-ratio: 1/1) {
+  .alb-t--karte.is-fan .alb-t__text > b { display: none; }
+  .alb-t--karte.is-fan .alb-t__wer { color: var(--c-white); }
+}
+@media (prefers-reduced-motion: reduce) { .alb-t__packs i::after { animation: none; } }
+
 /* Panel / Rundgang */
 .alb-t--panel, .alb-t--rundgang { padding: var(--s-4); align-items: flex-start; }
 .alb-t--panel img, .alb-t--rundgang img { width: 96px; margin-top: 2px; }

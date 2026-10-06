@@ -124,6 +124,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     rolle: devPreviewRolle() ?? rolle,
     loading,
     signInWithMagicLink: async (email) => {
+      // v21-A: Merker für die Startseiten-Weiche (src/main.tsx) — Admin-Link → /admin
+      try {
+        localStorage.setItem('sva-login-ziel', JSON.stringify({ pfad: '/admin', t: Date.now() }))
+      } catch {
+        /* privat-Modus */
+      }
       const { error } = await supabase.auth.signInWithOtp({
         email,
         // shouldCreateUser:false → ein Magic-Link legt NIE ein neues Konto an.

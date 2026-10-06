@@ -67,7 +67,10 @@ die Karte skaliert von 60 px bis Vollbild. CSS kommt mit der Komponente.
 - **Trainerstab:** Rolle senkrecht in Rot statt Nummer, Gold-Basis.
 - **Moment / Kurve:** Foto im Fenster (Querformat sauber ins Hochformat über `bild_fokus`),
   Serie oben („Meister 2026“ in Gold), Titel groß, Credit senkrecht am Rand
-  („Foto: picture by Nele“ — Pflicht). Ohne Foto: typografische Karte (z. B. „Dodos Raum“).
+  („Foto: picture by Nele“ — Pflicht). v21-A: Fotos liegen als Ausschnitt im Format des
+  Foto-Fensters (100 : 106,4) unter `/album/karten/<name>.webp` (1080 px, ≤ 200 KB) +
+  `-640.webp`; erzeugt mit `node scripts/karten-fotos.mjs`. Kurve-Karten haben **immer** ein
+  Foto — fehlt `bild_url`, springt `/album/karten/kurve.webp` ein (`adapter.ts`, `KURVE_ERSATZ`).
 - **Partner:** Logo auf warm-weißer Tafel (wie die Bande), Name, „Partner seit 2024“ (aus
   `sm_sponsoren.laufzeit_von`). Ohne Logo: typografisch.
 - **Rückseite** (alle): Wappen, „Sammelkarte · Saison 2026/27“, Art/Position, Titel, sachliche
@@ -197,11 +200,26 @@ Admin einstellbar.
 | Trainerstab (3) | je 1 Basis | Gold | ja |
 | Momente „Meister 2026“ | Die Meister-Elf · Meister-Shirt · Ab in die Kurve · Die Umarmung | Spezial · Gold · Gold · Silber | ja |
 | Momente „Urknall-Pokal 2026“ | Der Pokal · Siegerfoto · Einer fliegt · Die Parade | Spezial · Gold · Gold · Silber | ja |
-| Kurve | Die Kurve · Die Fahne · Dodos Raum | Silber · Bronze · Silber | ja |
+| Kurve | Die Kurve · Die Fahne · Das Urknall-Banner | Silber · Bronze · Silber | ja |
 | Partner | je aktivem Sponsor 1 | Bronze | ja |
 
 Bei 6 Partnern sind das **44 Album-Plätze**. Momente tragen `serie`, `credit = 'picture by Nele'`,
-`bild_url` unter `/karten/…` und `bild_fokus`. Bestehende Karten werden nie verdoppelt.
+`bild_url` unter `/album/karten/…` und `bild_fokus = '50% 50%'`. Bestehende Karten werden nie verdoppelt.
+
+**v21-A (Migration `20261013200000_sva_album_v21.sql`):** „Dodos Raum“ (kein Foto zu bekommen) heißt
+jetzt **„Das Urknall-Banner“** — gleiche Karten-ID, Besitz bleibt. Alle Moment- und Kurve-Karten
+zeigen auf die neuen Ausschnitte; Kurve-Karten haben Credit + Rückseiten-Text. Nachziehen einer
+bestehenden DB: Die Migration ruft `sva_album_v21_nachziehen()` selbst auf; erneut als Admin:
+Admin → Album → Karten → „Standard-Katalog anlegen“ (zieht mit nach) oder `select album_admin_katalog_v21();` (idempotent, ändert nur Karten mit altem Standardbild bzw.
+ohne Bild — eigene Admin-Uploads bleiben).
+
+| Karte | Foto (picture by Nele) |
+|---|---|
+| Die Kurve | Fans hinter der Bande mit Bannern (Lauf zu den Fans, linker Ausschnitt) |
+| Die Fahne | Schwarz-rote Fahne über dem Mannschaftskreis (Urknall-Pokal) |
+| Das Urknall-Banner | „AGA Urknall est. 2024“ am Tornetz (ohne Personen im Ausschnitt) |
+| Die Meister-Elf · Meister-Shirt · Ab in die Kurve · Die Umarmung | Meistertag 2026 |
+| Der Pokal · Siegerfoto · Einer fliegt · Die Parade | Urknall-Pokal 2026 (Pokal: Jubel mit Pokal statt Einzelbild) |
 Partner sind bewusst Bronze: so kleben sie früh im Album, und der Sponsor ist sofort sichtbar.
 
 ### Kartenquellen und Packgrößen
@@ -264,10 +282,14 @@ bleibt bei 70 / 22 / 7 / 1.
   oder Fanartikel“ · 8 (`schwelle_3`, abschaltbar) → „Los für die Saison-Verlosung (alle
   Heimspiele)“. Album komplett (alle Spieler-Plätze) → Verlosungs-Los. `schwelle_3` und `komplett`
   sind am Stand **nicht** einlösbar (`grund: 'verlosung'`). Jugendschutz: es heißt „Getränk nach Wahl“.
-- **Ziele/Missionen** (`sva_album_ziele`, `album_admin_ziele_standard()`, 29 Standard-Ziele):
+- **Ziele/Missionen** (`sva_album_ziele`, `album_admin_ziele_standard()`, 30 Standard-Ziele):
   - Sets: Die Zwillinge (Pejas), Die Warkehr-Brüder, Vater & Sohn (Adolf + Tino Ebeling,
     Trainerstab zählt mit) und **Familie SVA** (alle Paare; 3 Karten, mind. Gold). Dazu Meister 2026
     (1 Karte, mind. Spezial), Rückennummern 1–11, Die Kurve und Partner-Set.
+  - v21-A: **Die Rote Familie** (`rote_familie`, Set): Lennard Brettschneider, Noel Nauerz, Janek
+    Brünjes — „Drei Mann, drei Platzverweise – sammle die Rote Familie“ (1 Karte, mind. Silber).
+    Augenzwinkernd: Medaille in Rot mit roter Karte als Symbol. In bestehenden DBs legt die
+    Migration v21 sie an (nur wenn die Standard-Ziele schon da sind).
   - Kapitel komplett (8 Kapitel) und Meilensteine 10 / 25 / 50 / 75 / 100 % (je 1 Karte plus
     1 / 1 / 2 / 3 / 5 Lose).
   - Dauerkarte: 3 Heimspiele mit Code in Folge, mind. Gold. Tipp-Serie: 4 ISO-Wochen in Folge.
@@ -384,10 +406,29 @@ tauschMinTage, tauschProWoche, wunschKosten, loseCheckin, loseKomplett, teilnahm
 | `album_admin_story_codes_massen(start date, tage, titel, karten=1)` | `[{ id, datum, code, gueltigVon, gueltigBis }]`, je Tag ein Code (Europe/Berlin) |
 | `album_admin_advent(jahr, karte?)` | `[{ tag, code }]` × 24, idempotent; Tag 24 liefert die Karte |
 | `album_admin_motm(roster, spiel?, bild?, tage?)` | `{ id, neu, ziehbarVon, ziehbarBis }`. Titel = Spielername, Untertitel „MOTM · 7. Spieltag · Gegner“, ziehbar Mo 00:00 bis So 23:59:59 der aktuellen Woche; idempotent je (Spieler, Spiel) |
-| `album_admin_ziele_standard()` | `{ angelegt, gesamt, standard }` |
+| `album_admin_ziele_standard()` | `{ angelegt, gesamt, standard }` (v21: 30 inkl. Rote Familie) |
+| `album_admin_katalog_v21()` | `{ saison, umbenannt, bilder, rueckseiten, roteFamilie }` — v21-Bilder/Umbenennung/Rote Familie nachziehen, idempotent |
 | `album_admin_ziel_status(ziel?)` | `{ saison, ziele[{id,schluessel,typ,titel,aktiv,geheim,erreicht,fans}], erreicht[{ziel,titel,name,at,bezug,lose,pack}] }` |
 | `album_admin_verlosung_ziehen(id, seed?)` | `{ gewinner{name,lose}, teilnehmer[{name,lose}], gewinnerIndex, seed, loseGesamt, losNummer }`; Fehler `album_verlosung_schon_gezogen`, `album_verlosung_keine_teilnehmer` |
 | `album_admin_statistik()` | wie bisher, dazu `codesEingeloest, tauscheErledigt, starterGeholt, zieleErreicht, loseSaison` |
 
 Verlosungen, Ziele und Codes pflegt der Admin direkt in den Tabellen (RLS: nur `is_sm_admin()`).
 Das Ergebnis einer Verlosung setzt nur die Ziehungs-RPC.
+
+## v21-A: Abzeichen als Medaillen, Tiefe, Login
+
+- **Medaillen** (`src/album/Medaille.tsx`, `medaille-logik.ts`, `ziele.css`): erreichte Ziele als
+  geprägtes Metall (Kupfer-Rot · Silber · Gold · Holo, Rote Familie in Rot) mit gerändeltem Rand,
+  Licht folgt dem Zeiger, Glanz-Streif beim Zeigen. Offene Ziele = dunkler Rohling mit
+  Fortschrittsring, der sich beim Hineinscrollen füllt. Neu erreichte Ziele werden beim ersten
+  Sehen „geprägt“ (Freischalt-Animation; gemerkt in `localStorage['sva-album-ziele-gesehen']`).
+  Sammel-Seite: „Deine Vitrine“ (Handy: wischen) + „Als Nächstes“ (6, dann alle) + geheime Mission.
+- **Tiefe** (`tiefe.css`, `useKippen`): Album-Plätze, Medaillen und Cover neigen sich zum Zeiger
+  (ein Listener je Raster, rAF, nur Maus/Stift), Licht-Blend auf der Karte. Touch bleibt ruhig.
+- **Lose:** Ticket-Stapel (je mehr Lose, desto mehr Tickets), Zahl zählt hoch.
+- **Kopf:** Umschalter „Album | Tipp-Liga“, rotes Tütchen-Abzeichen mit Puls (öffnet die Packs),
+  Initiale + Vorname = angemeldet. Start-Seite: Kapitel-Zeilen blättern ins Kapitel.
+- **Startseite (Karte):** Album-Kachel zeigt eingeloggten Fans „Angemeldet als Vorname · 3/42 ·
+  1 Tütchen wartet“ (`src/album/fanStand.ts`, ohne Supabase-Bundle).
+- **Login bleibt:** siehe docs/ALBUM.md → „Angemeldet bleiben“.
+- Audit/Screenshots: `scripts/album-v21-audit.mjs` (Mocks, Handy + Desktop).

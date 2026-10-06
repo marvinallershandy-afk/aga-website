@@ -29,8 +29,32 @@ const authReturn =
   /(^|[#&])(access_token|refresh_token|error_description)=/.test(window.location.hash) ||
   /[?&](code|token_hash)=/.test(window.location.search)
 
+// v21-A: Fan-Logins (Album/Tipp-Liga) NICHT ins Admin schicken — sonst landet
+// die Fan-Sitzung im Admin-Speicher und der Fan ist im Album nicht angemeldet.
+// Erkennung: Merker aus dem Album (gleicher Browser) oder user_metadata.app im
+// Zugangs-Token (Link in einem anderen Browser geöffnet).
+function authZiel(): string {
+  try {
+    const m = JSON.parse(localStorage.getItem('sva-login-ziel') || 'null') as { pfad?: string; t?: number } | null
+    if (m?.pfad && /^\/(album|tippen|admin)$/.test(m.pfad) && Date.now() - (m.t ?? 0) < 24 * 3600_000) return m.pfad
+  } catch {
+    /* egal */
+  }
+  try {
+    const at = /(?:^|[#&])access_token=([^&]+)/.exec(window.location.hash)?.[1]
+    const teil = at?.split('.')[1]
+    if (teil) {
+      const claims = JSON.parse(atob(teil.replace(/-/g, '+').replace(/_/g, '/'))) as { user_metadata?: { app?: string } }
+      if (claims.user_metadata?.app === 'sva-album') return '/album'
+    }
+  } catch {
+    /* kein JWT → Admin */
+  }
+  return '/admin'
+}
+
 if (!isAdmin && authReturn) {
-  window.location.replace('/admin' + window.location.search + window.location.hash)
+  window.location.replace(authZiel() + window.location.search + window.location.hash)
 } else if (isAdmin) {
   import('./admin/mountAdmin').then(({ mountAdmin }) => mountAdmin(rootEl))
 } else if (isLive) {

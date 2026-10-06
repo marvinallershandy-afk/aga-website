@@ -157,5 +157,13 @@ export function vonAlbumKarte(k: AlbumKarteQuelle, opts: { nr?: number; gesamt?:
       partnerSeit: k.partner?.seit ?? null,
     }
   }
+  // v21-A: Kurve-Karten nie ohne Foto — fehlt eins (z. B. frisch im Admin
+  // angelegt), springt das Kurve-Foto ein (picture by Nele).
+  if (k.typ === 'fan' && !k.bildUrl) {
+    return { ...basis, foto: KURVE_ERSATZ, fokus: '50% 50%', credit: k.credit ?? 'picture by Nele' }
+  }
   return { ...basis, foto: k.bildUrl ?? null }
 }
+
+/** Ersatzfoto für Kurve-Karten ohne eigenes Bild (scripts/karten-fotos.mjs). */
+export const KURVE_ERSATZ = '/album/karten/kurve.webp'
