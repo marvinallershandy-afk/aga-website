@@ -102,7 +102,8 @@ for (const motor of MOTOREN) {
     await page.screenshot({ path: `${OUT}/${k}-02-start.png`, fullPage: true })
     for (const [r, n] of [['Shiny', 'shiny-vitrine'], ['???', 'geheimseite'], ['Bonus', 'bonus'], ['Abwehr', 'abwehr'], ['Sammeln', 'sammeln']]) {
       await reiter(page, r)
-      await page.screenshot({ path: `${OUT}/${k}-03-${n}.png`, fullPage: true })
+      // sehr lange Seiten (Sammeln) sprengen in Chromium die Screenshot-Größe → dann nur der Ausschnitt
+      await page.screenshot({ path: `${OUT}/${k}-03-${n}.png`, fullPage: true }).catch(() => page.screenshot({ path: `${OUT}/${k}-03-${n}.png` }))
     }
     await b.close()
   }
