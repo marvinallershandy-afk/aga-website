@@ -330,8 +330,11 @@ function Vorderseite({ d, id, stufe, lebend, eager, streif }: { d: KartenDaten; 
   )
 }
 
-/** Kartenfotos unter /karten/ gibt es in zwei Größen (scripts/karten-fotos.mjs). */
+/** Kartenfotos gibt es in zwei Größen (scripts/karten-fotos.mjs):
+ *  v21-A /album/karten/ (Ausschnitt im Kartenformat, 1080 px) · v20 /karten/ (1400 px). */
 function fotoSrcSet(url: string): string | undefined {
+  const neu = /^(\/album\/karten\/[^/?#]+)\.webp$/.exec(url)
+  if (neu) return `${neu[1]}-640.webp 640w, ${url} 1080w`
   const m = /^(\/karten\/[^/?#]+)\.webp$/.exec(url)
   return m ? `${m[1]}-640.webp 640w, ${url} 1400w` : undefined
 }
