@@ -20,8 +20,8 @@ import { LiveTabelle } from './LiveTabelle'
 import { Icon } from './icons'
 // v18-A: gemeinsame Kalender-Komponente (Spiel + Abo)
 import { KalenderKnopf } from '../alltag/Kalender'
-import { ArrowRight, QrCode } from 'lucide-react'
-import { ALBUM_LINK } from '../data/club'
+import { ArrowRight, QrCode, Trophy } from 'lucide-react'
+import { ALBUM_LINK, TIPP_LINK } from '../data/club'
 // v18-T: Vorführ-Spiel nur über /live?vorfuehrung=1
 import { VORFUEHRUNG } from './vorfuehrung'
 import { VorfuehrungsHinweis } from './VorfuehrungsHinweis'
@@ -190,6 +190,7 @@ export function LiveApp() {
         <a href="/">Zur Vereinsseite</a>
         <a href="/probetraining">Mitspielen</a>
         <a href="/album">Sammelalbum</a>
+        <a href="/tippen">Tipp-Liga</a>
         <a href="/impressum">Impressum</a>
         <a href="/datenschutz">Datenschutz</a>
         <span>Eigener Liveticker des Vereins · ohne Gewähr</span>
@@ -301,9 +302,27 @@ function Hero({ m, now, players, adresse, prev, onTeilen }: { m: LiveMatch; now:
         )}
       </div>
 
+      {/* v20-T: Tipp-Liga — vor Anpfiff „Jetzt tippen“, danach „Auflösung“ (nie im Vorführ-Modus) */}
+      {!m.demo && <TippEinstieg status={m.status} />}
+
       {/* v18-P: Heimspiel → am Eingang einchecken (Sammelalbum, QR am Tor) */}
       {m.home && m.status !== 'beendet' && <AlbumCheckin laeuft={m.status === 'live' || m.status === 'halbzeit'} />}
     </section>
+  )
+}
+
+function TippEinstieg({ status }: { status: LiveMatch['status'] }) {
+  const titel = status === 'geplant' ? TIPP_LINK.titel : status === 'beendet' ? TIPP_LINK.aufloesung : 'Tipp-Liga läuft'
+  const text = status === 'geplant' ? TIPP_LINK.nutzen : status === 'beendet' ? 'Punkte, Spieltagssieger und Fans vs. Kabine — sobald der Spielbericht drin ist.' : TIPP_LINK.live
+  return (
+    <a className="lv-album" href={`${TIPP_LINK.href}?utm_source=intern`}>
+      <Trophy size={24} strokeWidth={1.5} aria-hidden="true" />
+      <span>
+        <b>{titel}</b>
+        <small>{text}</small>
+      </span>
+      <ArrowRight size={18} strokeWidth={1.5} aria-hidden="true" />
+    </a>
   )
 }
 

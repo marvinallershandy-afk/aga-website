@@ -18,6 +18,8 @@ export default defineConfig({
         album: fileURLToPath(new URL('./album.html', import.meta.url)),
         // v17-D: Galerien „Spieltag in Bildern“ /galerie (kein three.js)
         galerie: fileURLToPath(new URL('./galerie.html', import.meta.url)),
+        // v20-T: Tipp-Liga /tippen (gemeinsames Konto mit dem Album, kein three.js)
+        tippen: fileURLToPath(new URL('./tippen.html', import.meta.url)),
       },
     },
   },

@@ -19,6 +19,7 @@ import {
   BookOpen,
   Camera,
   BarChart3,
+  Trophy,
 } from 'lucide-react'
 import { useAuth } from './auth/AuthProvider'
 import { cn } from './lib/utils'
@@ -53,6 +54,8 @@ const NAV: NavItem[] = [
   { to: '/live', label: 'Live', icon: Radio, team: true },
   { to: '/aufstellung', label: 'Aufstellung', icon: LayoutGrid, team: true },
   { to: '/spiele', label: 'Spiele', icon: CalendarDays, team: true },
+  // v20-T: Tipp-Liga (Spielbericht nach Abpfiff, Bonusfragen, Story-Grafiken)
+  { to: '/tippliga', label: 'Tipp-Liga', icon: Trophy, team: true },
   { to: '/kader', label: 'Kader', icon: Users },
   { to: '/tabelle', label: 'Tabelle', icon: ListOrdered },
   // v16-S: Bereich „Partner“ (Sponsoren, Pakete, Zahlen, Anfragen) — Pfad bleibt

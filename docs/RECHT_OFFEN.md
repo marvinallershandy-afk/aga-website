@@ -29,3 +29,5 @@ Diese Punkte sollte Marvin bzw. der Vorstand noch erledigen:
     - Partner-Formular: Checkbox klingt nach Einwilligung, die Erklärung stützt sich aber auf Art. 6 Abs. 1 lit. b/f. Formulierung angleichen.
     - Fotos: Verhältnis DSGVO/KUG
 14. Danach ggf. `noindex` auf Impressum/Datenschutz entfernen (optional).
+
+- **Tipp-Liga:** Teilnahmebedingungen (`/teilnahmebedingungen`) und Datenschutz-Abschnitt 11a juristisch prüfen (Preise von Partnern/Gewinnspielrecht, Mindestalter, Ausschluss der Kabine).

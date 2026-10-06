@@ -5,7 +5,9 @@ import { test } from 'node:test'
 import fs from 'node:fs'
 import { ORTE, SEITEN, QUELLEN, MEDIEN, istBotUa, pfadAusAdresse, quelleErmitteln } from './quelle.ts'
 
+// v20-T: die Pfadliste wurde in der Tipp-Liga-Migration erweitert → beide lesen
 const SQL = fs.readFileSync(new URL('../../supabase/migrations/20261009100000_sva_statistik.sql', import.meta.url), 'utf8')
+  + fs.readFileSync(new URL('../../supabase/migrations/20261012100000_sva_tippliga.sql', import.meta.url), 'utf8')
 const HOST = 'aga-erste.de'
 const UA_SAFARI = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1'
 const UA_IG = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 Instagram 345.0.0.0'
@@ -18,6 +20,8 @@ test('Pfade: nur feste Kennungen, nie Query/volle URL', () => {
   assert.equal(pfadAusAdresse('/live.html', ''), '/live')
   assert.equal(pfadAusAdresse('/partner/', ''), '/partner')
   assert.equal(pfadAusAdresse('/irgendwas', '#x?y'), '/')
+  assert.equal(pfadAusAdresse('/tippen', ''), '/tippen')
+  assert.equal(pfadAusAdresse('/tippen.html', ''), '/tippen')
 })
 
 test('Quelle aus utm_*', () => {
