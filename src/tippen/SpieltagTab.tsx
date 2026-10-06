@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { ArrowRight, Lock, Share2, Snowflake } from 'lucide-react'
 import { ladeDuell, ladeRangliste, ladeVerteilung, type Duell, type KaderSpieler, type Lage, type NaechstesSpiel, type Rangliste, type TippSpiel, type Verteilung } from './api'
-import { ABZEICHEN, BONUS, bonusLabel, datumKurz, nachname, paarung, uhrzeit } from './model'
+import { ABZEICHEN, BONUS, bonusLabel, datumKurz, nachname, paarung, uhrzeit, tippPackText } from './model'
 import { SpieltagKarte } from './SpieltagKarte'
 import { TippFormular } from './TippFormular'
 import { Aufloesung } from './Aufloesung'
@@ -70,7 +70,7 @@ export function SpieltagTab({
 
   return (
     <div className={`tp-spieltag${live ? ' is-live' : ''}`}>
-      {!angemeldet && !live && <Intro onAnmelden={() => onAnmelden('allgemein')} />}
+      {!angemeldet && !live && <Intro lage={lage} onAnmelden={() => onAnmelden('allgemein')} />}
 
       {gesperrt && <GesperrtBlock spiel={gesperrt} kader={kader} angemeldet={angemeldet} />}
 
@@ -134,14 +134,14 @@ function Vorschau({ n }: { n: NaechstesSpiel; live?: boolean }) {
   )
 }
 
-function Intro({ onAnmelden }: { onAnmelden: () => void }) {
+function Intro({ onAnmelden, lage }: { onAnmelden: () => void; lage: Lage }) {
   return (
     <section className="tp-intro" aria-label="So funktioniert die Tipp-Liga">
       <p className="tp-kicker">Kostenlos · für alle Fans</p>
       <h1 className="tp-held">Tipp den Sonntag.</h1>
       <p className="tp-lead">
         Ergebnis, drei Bonusfragen, deine Elf — in 20 Sekunden. Punkte sammeln, mit Freunden eine eigene Liga gründen und die Kabine schlagen. Jeder Tipp
-        bringt eine Karte fürs Album.
+        bringt ein {tippPackText(lage)} fürs Album.
       </p>
       <div className="tp-zeile-knoepfe">
         <button type="button" className="tp-btn tp-btn--line tp-btn--sm" onClick={() => window.dispatchEvent(new Event('tp-einfuehrung'))}>

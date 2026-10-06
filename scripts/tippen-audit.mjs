@@ -168,7 +168,7 @@ for (const v of ['m', 'd']) {
     await page.getByRole('button', { name: 'Tipp abgeben' }).click()
     await page.waitForTimeout(1400)
     await shot(page, `06-belohnung-${v}`, false)
-    check(await page.getByText('+1 Karte fürs Album').isVisible(), `[${v}] Belohnung „+1 Karte fürs Album“`)
+    check(await page.locator('.tp-belohnung').getByText(/Tipp-Pack · 2 Karten/).first().isVisible(), `[${v}] Belohnung „Tipp-Pack · 2 Karten“`)
     const abg = rpcLog.find((r) => r[0] === 'tipp_abgeben')?.[1]
     check(abg && abg.p_joker === true && abg.p_erster === 'p-biedermann' && Object.keys(abg.p_bonus).length === 3, `[${v}] tipp_abgeben mit Joker, Torschütze, 3 Bonus`)
     check(rpcLog.some((r) => r[0] === 'tipp_elf_speichern' && r[1].p_spieler.length === 5), `[${v}] Elf gespeichert`)

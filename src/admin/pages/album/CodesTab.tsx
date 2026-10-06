@@ -19,7 +19,7 @@ import { cn } from '../../lib/utils'
 // Adventskalender (24 Codes, am 24.12. die Weihnachts-Spezialkarte).
 // ─────────────────────────────────────────────────────────────
 
-const ART: Record<string, string> = { story: 'Story', partner: 'Partner', advent: 'Advent' }
+const ART: Record<string, string> = { story: 'Story', partner: 'Partner', advent: 'Advent', event: 'Event-Pack' }
 const heute = () => new Date().toISOString().slice(0, 10)
 
 export function CodesTab() {
@@ -28,7 +28,7 @@ export function CodesTab() {
   const karten = useKarten()
   const { einzel, massen, advent, aktiv } = useCodeMutations()
   const [titel, setTitel] = useState('Story-Code')
-  const [art, setArt] = useState<'story' | 'partner'>('story')
+  const [art, setArt] = useState<'story' | 'partner' | 'event'>('story')
   const [karte, setKarte] = useState('')
   const [stunden, setStunden] = useState(24)
   const [start, setStart] = useState(heute())
@@ -53,9 +53,10 @@ export function CodesTab() {
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1.5">
               <Label htmlFor="co-art">Art</Label>
-              <Select id="co-art" value={art} onChange={(e) => setArt(e.target.value as 'story' | 'partner')}>
+              <Select id="co-art" value={art} onChange={(e) => setArt(e.target.value as 'story' | 'partner' | 'event')}>
                 <option value="story">Story (Instagram)</option>
                 <option value="partner">Partner (im Laden)</option>
+                <option value="event">Event-Pack (Derby, MOTM-Woche …)</option>
               </Select>
             </div>
             <div className="space-y-1.5">
@@ -67,6 +68,20 @@ export function CodesTab() {
             <Label htmlFor="co-titel">Titel (im Pack)</Label>
             <Input id="co-titel" value={titel} maxLength={60} onChange={(e) => setTitel(e.target.value)} />
           </div>
+          {art === 'event' && (
+            <div className="space-y-1.5">
+              <Label htmlFor="co-ev">Event-Karte (limitiert, mit Chance laut Pack-Typ „Event“)</Label>
+              <Select id="co-ev" value={karte} onChange={(e) => setKarte(e.target.value)}>
+                <option value="">— gerade ziehbare Wochenkarte —</option>
+                {limitierte.map((k) => (
+                  <option key={k.id} value={k.id}>
+                    {k.titel}
+                  </option>
+                ))}
+              </Select>
+              <p className="text-xs text-muted-foreground">Event-Pack mit der Kartenzahl des Pack-Typs; die Event-Karte kommt mit der eingestellten Chance (je Fan höchstens einmal).</p>
+            </div>
+          )}
           {art === 'partner' && (
             <div className="space-y-1.5">
               <Label htmlFor="co-karte">Partnerkarte</Label>
@@ -84,7 +99,7 @@ export function CodesTab() {
             disabled={einzel.isPending || (art === 'partner' && !karte)}
             onClick={async () => {
               try {
-                const r = await einzel.mutateAsync({ art, titel, karte: art === 'partner' ? karte : null, stunden })
+                const r = await einzel.mutateAsync({ art, titel, karte: art === 'partner' || art === 'event' ? karte || null : null, stunden })
                 kopieren(r.code)
               } catch (e) {
                 toast.error(friendlyError(e))

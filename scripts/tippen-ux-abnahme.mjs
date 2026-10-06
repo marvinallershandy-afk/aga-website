@@ -122,7 +122,7 @@ for (const [v, view] of [['m', M], ['d', D]]) {
   // Abgabe → Belohnung
   await page.locator('.tp-abgabe__los').click()
   await page.waitForTimeout(900)
-  ok(await page.locator('.tp-belohnung').isVisible(), 'B2-ab', 'mit gewähltem Ergebnis: direkt abgegeben (kein Zwischenschritt), Belohnung „+1 Karte“')
+  ok(await page.locator('.tp-belohnung').isVisible(), 'B2-ab', 'mit gewähltem Ergebnis: direkt abgegeben (kein Zwischenschritt), Belohnung „Tipp-Pack · 2 Karten“')
   ok(fehler.length === 0, 'D-fehler-tippen', `/tippen ohne Seitenfehler ${fehler.slice(0, 1)}`)
   await ctx.close()
 }
