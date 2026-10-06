@@ -329,5 +329,39 @@ ok((await count(`select count(*)::int n from sva_album_ziel_erreicht e join sva_
 const SB3 = await baroSpiel('Ohne Barometer')
 ok((await val(asAnon, `select album_barometer($1)`, [SB3.id])) === null, 'Ohne gesetztes Ziel → album_barometer liefert null (UI blendet aus)')
 
+// ── V26-E: Goldene Seite + Wall of Fame ─────────────────────────────────────
+const alleBasis = `insert into sva_album_besitz (fan_user_id, karte_id) select $1, k.id from sva_album_karten k where k.aktiv and not k.variante and not k.limitiert and not coalesce(k.geheim, false) and not coalesce(k.kult, false) on conflict do nothing`
+const bronzeK = (await one(`select id from sva_album_karten where seltenheit = 'bronze' and not variante and not limitiert limit 1`)).id
+// W1: ohne Opt-in → anonym
+const W1 = await neuerFan('Wiebke', 'W')
+await db.query(alleBasis, [W1.id])
+let opw = await val(W1.f, `select album_pack_oeffnen($1)`, [await festPack(W1.id, bronzeK)])
+ok((await erreicht(W1.id, 'meilenstein_100')) === 1, 'Album komplett → meilenstein_100 erreicht')
+const wall1 = await one(`select * from sva_album_wall_of_fame where fan_user_id = $1`, [W1.id])
+ok(wall1 && wall1.name === 'Fan aus Agathenburg', 'Wall of Fame: ohne Opt-in anonym („Fan aus Agathenburg")')
+const meinW1 = await val(W1.f, `select album_mein()`)
+ok(meinW1.komplett === true && meinW1.profil.wallOptIn === false, 'album_mein: komplett=true, wallOptIn=false')
+// Opt-in nachträglich → eigener Eintrag bekommt den Namen
+await val(W1.f, `select album_wall_optin(true)`)
+ok((await one(`select name from sva_album_wall_of_fame where fan_user_id = $1`, [W1.id])).name === 'Wiebke W.', 'album_wall_optin(true): eigener Wall-Eintrag bekommt den Klarnamen')
+// W2: Opt-in VOR dem Komplettieren → direkt mit Namen
+const W2 = await neuerFan('Wilma', 'M')
+await val(W2.f, `select album_wall_optin(true)`)
+await db.query(alleBasis, [W2.id])
+opw = await val(W2.f, `select album_pack_oeffnen($1)`, [await festPack(W2.id, bronzeK)])
+ok((await one(`select name from sva_album_wall_of_fame where fan_user_id = $1`, [W2.id])).name === 'Wilma M.', 'Opt-in vor 100 % → Wall-Eintrag direkt mit Namen')
+// nur ein Eintrag je Fan
+ok((await count(`select count(*)::int n from sva_album_wall_of_fame where fan_user_id = $1`, [W1.id])) === 1, 'Wall: genau ein Eintrag je Fan (idempotent)')
+// anon lesbar, keine weiteren Felder
+const wallPublic = await val(asAnon, `select album_wall_of_fame()`)
+ok(Array.isArray(wallPublic) && wallPublic.length >= 2 && wallPublic.every((w) => Object.keys(w).sort().join() === 'at,name,saison'), 'album_wall_of_fame (anon): nur saison/name/at')
+// Konto löschen → fan_user_id null, Name bleibt
+await val(W1.f, `select album_konto_loeschen()`)
+const nachLoesch = await one(`select fan_user_id, name from sva_album_wall_of_fame where name = 'Wiebke W.'`)
+ok(nachLoesch && nachLoesch.fan_user_id === null && nachLoesch.name === 'Wiebke W.', 'Konto gelöscht → fan_user_id null, Name-Snapshot bleibt')
+// Statistik komplettFans
+const statE = await val(admin, `select album_admin_statistik()`)
+ok(statE.komplettFans >= 2 && statE.barometer && 'spiele' in statE.barometer, 'Admin-Statistik: komplettFans + barometer')
+
 console.log(fails ? `\n${fails} FEHLER` : '\nALLES GRÜN')
 process.exit(fails ? 1 : 0)
