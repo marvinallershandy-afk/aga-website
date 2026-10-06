@@ -200,9 +200,9 @@ for (const [eng, launcher, opts] of engines) {
       await warte(page, '.ca-score__anstoss')
       await page.waitForTimeout(800)
       await shot(page, `${eng}-${oname}-vorf-vorkick`)
-      // TOR!-Einblendung (um 24 s)
+      // TOR!-Einblendung (um 24 s) — etwas später, damit die Freisteller-Bewegung greift
       if (await warte(page, '.tj', 30000)) {
-        await page.waitForTimeout(900)
+        await page.waitForTimeout(1700)
         await shot(page, `${eng}-${oname}-vorf-tor`)
       }
       // Torschütze-Szene (nach dem Overlay)

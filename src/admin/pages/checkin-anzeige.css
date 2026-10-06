@@ -294,6 +294,8 @@
   .ca-stage { gap: clamp(8px, 1.4vmin, 18px); }
   .ca-score__zahl, .ca-score__anstoss b { font-size: clamp(42px, 9vmin, 92px); }
   .ca-score__stand i { font-size: clamp(30px, 6.4vmin, 60px); }
+  /* Team-Wand hoch: weniger Reihen (eigene Spaltenzahl) → nichts abgeschnitten */
+  .ca-wall__grid { grid-template-columns: repeat(var(--cols-h, 5), minmax(0, 1fr)); }
   /* Karten etwas kleiner → volle Karte sichtbar, etwas Luft nach unten */
   .ca-show__card--focus, .ca-shiny__card, .ca-scorer__card { height: min(78%, 44vh); }
   .ca-show__card--links, .ca-show__card--rechts { height: min(60%, 34vh); }

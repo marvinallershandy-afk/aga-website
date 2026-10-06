@@ -479,7 +479,9 @@ export default function CheckinAnzeige() {
   // Team-Wand: ganzer Kader als dichte Kachelwand (bis 3 Reihen, bleibt edel)
   const wall = karten.slice(0, 27)
   const wallHeld = wall.length ? szeneTick % wall.length : 0
+  // Quer: bis 3 Reihen · Hoch (weniger Höhe): bis 2 Reihen → nichts wird abgeschnitten
   const wallCols = wall.length <= 12 ? Math.min(5, Math.max(1, wall.length)) : Math.ceil(wall.length / 3)
+  const wallColsHoch = wall.length <= 10 ? Math.min(5, Math.max(1, wall.length)) : Math.ceil(wall.length / 2)
   const shinyKarte = n ? { ...karten[szeneTick % n], shiny: true, variante: false } : null
   const scorerKarte = scorerSlug && kader.has(scorerSlug) ? karteVonRoster(kader.get(scorerSlug)!) : null
 
@@ -591,7 +593,7 @@ export default function CheckinAnzeige() {
           {szene === 'team' && (
             <div className="ca-wall" style={{ ['--held' as string]: String(wallHeld) }}>
               <span className="ca-show__kicker">Das Team · {spielerRows.length} Spieler zum Sammeln</span>
-              <div className="ca-wall__grid" style={{ ['--cols' as string]: String(wallCols) }}>
+              <div className="ca-wall__grid" style={{ ['--cols' as string]: String(wallCols), ['--cols-h' as string]: String(wallColsHoch) }}>
                 {wall.map((k, i) => (
                   <div key={k.id} className={`ca-card ca-wall__card${i === wallHeld ? ' is-held' : ''}`} style={{ ['--i' as string]: String(i) }}>
                     <SvaKarte daten={k} stufe="klein" eager={i === wallHeld} />
