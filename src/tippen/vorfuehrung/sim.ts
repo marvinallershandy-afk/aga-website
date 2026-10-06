@@ -289,6 +289,10 @@ function liveDaten(minute: number): LiveDaten {
     ich: jetzt[0].p,
     rangliste,
     duell: { fans: avg(fans), kabine: avg(kab) },
+    // v23-U: neue Elemente der UI-Runde auch in der Vorführung zeigen.
+    tippLive: { tipps: TIPPER.length, sieg: 58, remis: 24, niederlage: 18 },
+    quelle: 'fupa',
+    fupaUrl: 'https://www.fupa.net/match/901',
   }
 }
 

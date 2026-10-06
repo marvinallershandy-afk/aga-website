@@ -1118,3 +1118,14 @@ img { display: block; max-width: 100%; }
 .tp-steuer__wertung { flex: 1; display: inline-flex; align-items: center; gap: 8px; font-size: .6875rem; color: var(--c-text-2); }
 .tp-steuer__wertung i { width: 8px; height: 8px; border-radius: 50%; background: var(--tp-gold); animation: tp-puls 1.4s var(--ease) infinite; }
 .tp-steuer__wertung + .tp-steuer__knopf--text { flex: none; padding: 0 var(--s-3); }
+
+/* v23-U: Live-Block — Tipp-Kurzkennzahl, Mini-Ticker-Link, FuPa-Quelle */
+.tp-tipplive {
+  display: flex; align-items: center; gap: 7px; margin: 10px 0 2px;
+  font-size: .9rem; color: var(--tp-mut, rgba(236,234,232,.7));
+}
+.tp-tipplive b { color: var(--tp-fg, #ECEAE8); font-weight: 800; }
+.tp-tipplive small { font-size: .82rem; }
+.tp-ticker__alle { display: inline-block; margin-top: 10px; font-weight: 700; }
+.tp-ticker__quelle { margin: 6px 0 0; font-size: .74rem; color: var(--tp-mut, rgba(236,234,232,.62)); }
+.tp-ticker__quelle a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }

@@ -116,6 +116,11 @@ export interface LiveDaten {
   rangliste?: RangEintrag[]
   /** Fans vs. Kabine im Spiel (Ø live) */
   duell?: { fans: number; kabine: number }
+  /** v23-U: öffentliche Kurzkennzahl (tipp_live_kurz) — Tipps + Tendenz (nach Tippschluss). */
+  tippLive?: { tipps: number; sieg?: number; remis?: number; niederlage?: number }
+  /** v23-U: Ticker-Quelle (für den FuPa-Fuß). */
+  quelle?: 'fupa' | 'pult'
+  fupaUrl?: string
 }
 
 export interface TippSpiel {
