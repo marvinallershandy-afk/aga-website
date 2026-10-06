@@ -77,7 +77,9 @@ const rpc = async (who, sql, p) => Object.values((await who(sql, p)).rows[0])[0]
 
 ok((await count(`select count(*)::int n from sva_album_einstellungen`)) === 1, 'Einstellungen: genau 1 Zeile (nach 2 Läufen)')
 const e0 = await one(`select * from sva_album_einstellungen`)
-ok(e0.gewicht_bronze === 70 && e0.gewicht_silber === 22 && e0.gewicht_gold === 7 && e0.gewicht_spezial === 1 && e0.schwelle_1 === 5 && e0.schwelle_2 === 10, 'Standard: 70/22/7/1, Schwellen 5 und 10')
+// v20-K: neue Standards nach 20261012100000_sva_karten.sql (3/6/8, „Getränk nach Wahl“)
+ok(e0.gewicht_bronze === 70 && e0.gewicht_silber === 22 && e0.gewicht_gold === 7 && e0.gewicht_spezial === 1 && e0.schwelle_1 === 3 && e0.schwelle_2 === 6 && e0.schwelle_3 === 8
+  && e0.belohnung_1 === 'Getränk nach Wahl' && e0.belohnung_2 === 'Bratwurst + Getränk nach Wahl oder Fanartikel', 'Standard: 70/22/7/1, Schwellen 3, 6 und 8 (v20-K)')
 
 // ── Katalog ────────────────────────────────────────────────────────────────
 let r = await rpc(admin, `select album_admin_spielerkarten()`)
@@ -102,7 +104,11 @@ ok(kat.karten.length === 31 && kat.saison === '2026/27', 'anon: Katalog der Sais
 ok(kat.karten.find((k) => k.typ === 'trainer')?.spieler?.rolle === 'trainer' && kat.karten[0].spieler.fotoUrl?.endsWith('.webp'), 'Katalog: Trainerstab mit Rolle, Sticker mit Foto')
 ok(kat.karten[0].typ === 'spieler' && kat.karten[0].spieler?.slug === 'p-pils' && kat.karten[0].spieler.position === 'TW', 'Katalog: Spieler zuerst, mit Slug/Position')
 ok(kat.karten.some((k) => k.typ === 'partner' && k.partner?.name === 'Mr. Döner'), 'Katalog: Partnerkarte mit Sponsor')
-ok(kat.regeln.chancen.bronze === 70 && kat.regeln.chancen.spezial === 1 && kat.regeln.kartenProPack === 3 && kat.regeln.belohnungen.length === 3, 'Katalog: Regeln (Chancen, Pack-Größe, Belohnungen)')
+// v20-K: belohnungen jetzt 4 (Schwelle 3 = Verlosungs-Los)
+ok(kat.regeln.chancen.bronze === 70 && kat.regeln.chancen.spezial === 1 && kat.regeln.kartenProPack === 3 && kat.regeln.belohnungen.length === 4, 'Katalog: Regeln (Chancen, Pack-Größe, Belohnungen)')
+// v20-K: alte Testkette auf den alten Stand zurücksetzen (Schwellen 5/10 ohne 3.,
+// Kapitel-Bonus-Pack aus — sonst entstünden beim Öffnen zusätzliche Packs)
+await db.exec(`update sva_album_einstellungen set schwelle_1 = 5, schwelle_2 = 10, schwelle_3 = null, karten_kapitel = 0`)
 ok(!JSON.stringify(kat).includes('stand_pin') && !JSON.stringify(kat).includes('roster_id'), 'Katalog: keine internen Felder')
 
 // ── Spiele + Codes ─────────────────────────────────────────────────────────
