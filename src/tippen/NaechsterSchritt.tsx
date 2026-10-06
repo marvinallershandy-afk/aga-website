@@ -49,7 +49,14 @@ function schrittFuer(lage: Lage, now: number, angemeldet: boolean): Schritt | nu
     }
   }
   if (gesperrt && gesperrt.status === 'beendet') {
-    return { key: 'nach', ton: 'ruhig', icon: Clock, stark: 'Abpfiff', text: 'die Auflösung kommt nach dem Spielbericht, meist am selben Abend', ziel: 'live' }
+    return {
+      key: 'nach',
+      ton: 'ruhig',
+      icon: Clock,
+      stark: 'Abpfiff · Wertung folgt',
+      text: lage.naechstes ? `danach öffnet der nächste Spieltag (${lage.naechstes.heim ? 'gegen' : 'bei'} ${lage.naechstes.gegner})` : 'die Auflösung kommt mit dem Spielbericht, meist am selben Abend',
+      ziel: 'live',
+    }
   }
   // 3. Tipp offen
   if (offen?.offen) {

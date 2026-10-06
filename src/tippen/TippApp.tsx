@@ -329,6 +329,12 @@ export function TippApp() {
     }
   })
 
+  // Einführung: ein echter Spieler auf der Karte, die ins Album fliegt
+  const einfFigur = useMemo(() => {
+    const k = (lage?.kader ?? []).find((x) => x.cutoutUrl && x.kapitaen) ?? (lage?.kader ?? []).find((x) => x.cutoutUrl)
+    return k ? (playerMedia(k.id, { cutoutUrl: k.cutoutUrl, photoUrl: k.fotoUrl }).figure ?? undefined) : undefined
+  }, [lage?.kader])
+
   const istTeilnehmer = !!lage?.ich?.teilnehmer
   const anmelden = (grund: 'tipp' | 'allgemein' | 'liga' = 'allgemein') => setLogin(grund)
   const initial = lage?.ich?.profil?.vorname?.[0]
@@ -535,6 +541,8 @@ export function TippApp() {
 
         <Einfuehrung
           offen={einf}
+          preise={lage?.preise}
+          figur={einfFigur}
           onZu={() => {
             setEinf(false)
             einfuehrungMerken()

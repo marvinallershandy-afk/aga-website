@@ -56,7 +56,7 @@ export function LiveBlock({ spiel, kader }: { spiel: TippSpiel; kader: Map<strin
 
       {ich && (
         <section className="tp-abschnitt tp-livepunkte" aria-labelledby="tp-h-livep">
-          <Kapitel id="tp-h-livep" titel="Deine Punkte · live" meta={ende ? 'vorläufig bis zum Spielbericht' : 'Hochrechnung, Stand jetzt'} />
+          <Kapitel id="tp-h-livep" titel={ende ? 'Deine Punkte · vorläufig' : 'Deine Punkte · live'} meta={ende ? 'vorläufig bis zum Spielbericht' : 'Hochrechnung, Stand jetzt'} />
           <div className="tp-livepunkte__kopf">
             <b className="tp-livepunkte__zahl" aria-live="polite">
               <Zaehler wert={ich.gesamt} dauer={0.9} start={false} />
