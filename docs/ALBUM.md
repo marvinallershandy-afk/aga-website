@@ -171,3 +171,36 @@ nie im Browser. Sticker werden beim Öffnen des Tütchens gutgeschrieben.
 - Optionale Standort-Prüfung (Waldsportplatz ± 300 m) — bewusst nicht gebaut.
 - Sticker tauschen zwischen Fans.
 - Spieltags-Erinnerung per E-Mail (Einwilligung wird schon gespeichert; Versand per n8n).
+
+## Angemeldet bleiben (v21-A)
+
+Die Fan-Sitzung (Album + Tipp-Liga, gleiches Konto) liegt in `localStorage['sva-album-auth']`
+(supabase-js, `persistSession`, `autoRefreshToken`, implicit flow). Warum Fans trotzdem
+„ständig“ neu anmelden mussten — und was dagegen getan ist:
+
+1. **Jede Netlify-Vorschau-/Draft-URL ist eine eigene Herkunft** (eigener Speicher). Wer auf
+   `https://<hash>--sva-agathenburg-dollern.netlify.app` testet und danach die Produktion öffnet
+   (oder umgekehrt), ist dort nicht angemeldet. Das ist kein Fehler; dauerhaft gilt nur die
+   Produktions-Domain. Zusätzlich: Steht die Vorschau-URL nicht in der Redirect-Allowlist, schickt
+   Supabase den Login-Link auf die Site-URL (Startseite der Produktion).
+2. **Fehler behoben — Login-Link landete im Admin:** Kam ein Fan-Link auf der Startseite an,
+   leitete `src/main.tsx` die Tokens nach `/admin` weiter → die Sitzung landete im Admin-Speicher,
+   nicht im Album. Jetzt: Merker `sva-login-ziel` (Album/Tipp-Liga/Admin setzen ihn beim Senden)
+   bzw. `user_metadata.app = 'sva-album'` im Token → `/album`.
+3. **Safari/iOS (ITP):** Safari löscht per Skript geschriebenen Speicher nach 7 Tagen
+   Safari-Nutzung ohne Besuch der Seite — zwischen zwei Heimspielen liegen oft 14 Tage. Neu:
+   **Sitzungs-Anker** `netlify/functions/album-sitzung.mts` (`/api/album-sitzung`): nach jedem
+   Login/Token-Wechsel liegt der aktuelle Refresh-Token zusätzlich in einem HttpOnly-Cookie der
+   eigenen Domain (Secure, SameSite=Strict, Pfad nur `/api/album-sitzung`, 400 Tage; nur gleiche
+   Herkunft + eigener Header). Ist localStorage leer, stellt `aktuelleSitzung()` die Sitzung daraus
+   wieder her (`refreshSession`). Abmelden/Konto löschen löscht den Anker.
+   Grenzen: privater Modus und In-App-Browser (Instagram/Facebook) haben eigenen, kurzlebigen
+   Speicher — dort hilft nur der 6-stellige Code aus der Mail im selben Browser.
+4. **Seitenwechsel /album ↔ /tippen ↔ /:** gleiche Herkunft + gleicher Schlüssel → Sitzung wird
+   übernommen; die Startseite liest sie nur (kein zweiter Refresh). Tab-Rückkehr: supabase-js
+   erneuert bei `visibilitychange`; das Album lädt danach den Stand neu (Packs aus der Tipp-Liga).
+
+**Supabase-Einstellungen (Dashboard → Authentication), Soll:** JWT-Ablauf 3600 s; Refresh-Token-
+Rotation an (Reuse-Intervall 10 s); **keine** Timebox für Sitzungen; **kein** Inaktivitäts-Timeout;
+„Single session per user“ aus. Redirect-Allowlist: `https://sva-agathenburg-dollern.netlify.app/**`
+(+ spätere eigene Domain). Site-URL = Produktion.
