@@ -28,6 +28,17 @@ function json(obj: unknown, status = 200) {
   return new Response(JSON.stringify(obj), { status, headers: { ...CORS, 'Content-Type': 'application/json' } })
 }
 
+// v25-C: konstant-zeitlicher Secret-Vergleich (SHA-256 beider Werte, dann
+// Byte-XOR) — kein Timing-Seitenkanal, keine Längen-Preisgabe.
+async function sicherGleich(a: string, b: string): Promise<boolean> {
+  const enc = new TextEncoder()
+  const ha = new Uint8Array(await crypto.subtle.digest('SHA-256', enc.encode(a)))
+  const hb = new Uint8Array(await crypto.subtle.digest('SHA-256', enc.encode(b)))
+  let diff = 0
+  for (let i = 0; i < ha.length; i++) diff |= ha[i] ^ hb[i]
+  return diff === 0
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
   if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, 405)
@@ -40,7 +51,7 @@ Deno.serve(async (req: Request) => {
   // ── Berechtigung: Cron-Secret ODER Admin-JWT ──────────────────────────────
   const cronSecret = Deno.env.get('BACKUP_CRON_SECRET')?.trim()
   const reqSecret = req.headers.get('x-cron-secret')?.trim()
-  if (!(cronSecret && reqSecret && reqSecret === cronSecret)) {
+  if (!(cronSecret && reqSecret && (await sicherGleich(reqSecret, cronSecret)))) {
     const authHeader = req.headers.get('Authorization') ?? ''
     if (!authHeader) return json({ error: 'not_authenticated' }, 401)
     const asUser = createClient(url, Deno.env.get('SUPABASE_ANON_KEY')!, {

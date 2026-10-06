@@ -52,6 +52,17 @@ function effektiveQuelle(s: Record<string, unknown>, modus: string): 'fupa' | 'p
   return s.fupa_ticker_typ === 'live' || s.fupa_ticker_typ === 'soft' ? 'fupa' : 'pult'
 }
 
+// v25-C: konstant-zeitlicher Secret-Vergleich (SHA-256 beider Werte, dann
+// Byte-XOR) — kein Timing-Seitenkanal, keine Längen-Preisgabe.
+async function sicherGleich(a: string, b: string): Promise<boolean> {
+  const enc = new TextEncoder()
+  const ha = new Uint8Array(await crypto.subtle.digest('SHA-256', enc.encode(a)))
+  const hb = new Uint8Array(await crypto.subtle.digest('SHA-256', enc.encode(b)))
+  let diff = 0
+  for (let i = 0; i < ha.length; i++) diff |= ha[i] ^ hb[i]
+  return diff === 0
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
   if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, 405)
@@ -63,7 +74,7 @@ Deno.serve(async (req: Request) => {
   let manuell = false
   const cronSecret = Deno.env.get('FUPA_LIVE_CRON_SECRET')?.trim()
   const reqSecret = req.headers.get('x-cron-secret')?.trim()
-  if (cronSecret && reqSecret && reqSecret === cronSecret) {
+  if (cronSecret && reqSecret && (await sicherGleich(reqSecret, cronSecret))) {
     manuell = false
   } else {
     const authHeader = req.headers.get('Authorization') ?? ''

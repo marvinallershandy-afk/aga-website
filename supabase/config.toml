@@ -1,0 +1,33 @@
+# Supabase-Projektkonfiguration (v25-C). Ziel dieser Datei: die JWT-Prüfung je
+# Edge Function versioniert festhalten, damit ein Deploy ohne das manuelle Flag
+# `--no-verify-jwt` nicht versehentlich eine öffentlich erreichbare Funktion
+# wieder hinter die Gateway-Login-Pflicht sperrt (und umgekehrt).
+#
+# Quelle der Wahrheit bisher: die Deploy-Befehle in docs/ (LIVE_BOT, BACKUP,
+# VEREINSPFLEGE, STATISTIK, LIVEGANG). Die hier gesetzten Werte spiegeln sie 1:1.
+project_id = "sva-fussball"
+
+# ── Öffentlich erreichbar: ohne JWT (Cron/Kalender-Apps schicken keins) ──
+# Eigene Absicherung in der Function selbst (konstant-zeitlicher Cron-Secret-
+# Vergleich bzw. rein lesender, öffentlicher Endpunkt).
+[functions.kalender]
+verify_jwt = false   # Kalender-Abos (ICS) schicken keinen Login — docs/VEREINSPFLEGE.md
+
+[functions.backup]
+verify_jwt = false   # Cron-Aufruf ohne JWT, Cron-Secret-Vergleich — docs/BACKUP.md
+
+[functions.fupa-sync]
+verify_jwt = false   # Cron-Aufruf ohne JWT, Cron-Secret-Vergleich — docs/LIVEGANG.md
+
+[functions.fupa-live]
+verify_jwt = false   # Cron-Aufruf ohne JWT, Cron-Secret-Vergleich — docs/LIVE_BOT.md
+
+# ── Nur eingeloggt: JWT bleibt an (Gateway-Default, hier explizit dokumentiert) ──
+[functions.publish-site]
+verify_jwt = true
+
+[functions.drive-bridge]
+verify_jwt = true
+
+[functions.tabelle-aus-bild]
+verify_jwt = true
