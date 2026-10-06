@@ -14,6 +14,10 @@ export { aktuelleSitzung, abmelden, codeBestaetigen } from '../album/api'
 /** v21: /tippen?vorfuehrung=1 — rein clientseitige Simulation, KEINE Datenbank. */
 export const IST_VORFUEHRUNG = VORFUEHRUNG
 
+/** v22-T: Album-Ziel — in der Vorführung der Album-Vorführmodus (kein Login),
+ *  sonst das echte Album (gleiches Konto, 'sva-album-auth'). */
+export const ALBUM_HREF = IST_VORFUEHRUNG ? '/album?vorfuehrung=1' : '/album'
+
 export type Position = 'TW' | 'ABW' | 'MIT' | 'ANG'
 export type BonusKey = 'gelb' | 'rot' | 'tor20' | 'tore_hz1' | 'elfmeter' | 'zuschauer' | 'erstes_tor'
 

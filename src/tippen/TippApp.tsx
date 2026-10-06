@@ -2,7 +2,7 @@ import { lazy, memo, Suspense, useCallback, useEffect, useLayoutEffect, useMemo,
 import type { Session } from '@supabase/supabase-js'
 import { animate, motion, MotionConfig } from 'framer-motion'
 import { CalendarClock, ListOrdered, UserRound, Users } from 'lucide-react'
-import { aktuelleSitzung, IST_VORFUEHRUNG, ladeLage, supabase, TippFehler, type KaderSpieler, type Lage } from './api'
+import { aktuelleSitzung, IST_VORFUEHRUNG, ladeLage, supabase, TippFehler, type KaderSpieler, type Lage, ALBUM_HREF } from './api'
 import { einfuehrungGesehen, einfuehrungMerken, entwurfLesen, haptik, kuerzel, nachname, reduzierteBewegung } from './model'
 import { hochrechnen } from './punkte'
 import { useLiveTicker } from './liveTicker'
@@ -512,7 +512,7 @@ export function TippApp() {
             <button type="button" className="tp-fuss__hilfe" onClick={() => setEinf(true)}>
               So funktioniert’s
             </button>{' '}
-            · <a href="/">Vereinsseite</a> · <a href="/live">Live-Ticker</a> · <a href="/album">Sammelalbum</a> · <a href="/teilnahmebedingungen">Teilnahmebedingungen</a> ·{' '}
+            · <a href="/">Vereinsseite</a> · <a href="/live">Live-Ticker</a> · <a href={ALBUM_HREF}>Sammelalbum</a> · <a href="/teilnahmebedingungen">Teilnahmebedingungen</a> ·{' '}
             <a href="/datenschutz#tippliga">Datenschutz</a> · <a href="/impressum">Impressum</a>
           </span>
           <InstagramZeile className="ig-zeile--fuss" text="Jeden Freitag: „Jetzt tippen“ in der Story · @svagathenburg" />

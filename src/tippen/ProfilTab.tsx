@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { motion } from 'framer-motion'
 import { ArrowRight, BookOpen, HelpCircle, LogOut, Share2, Users } from 'lucide-react'
-import { abmelden, IST_VORFUEHRUNG, ladeAlbumStand, profilSpeichern, TippFehler, type AlbumStand, type Lage } from './api'
+import { abmelden, IST_VORFUEHRUNG, ladeAlbumStand, profilSpeichern, TippFehler, type AlbumStand, type Lage, ALBUM_HREF } from './api'
 import { ABZEICHEN, haptik } from './model'
 import { bildAbzeichen, teilen } from './share'
 import { zaehleEreignis } from '../statistik/zaehlen'
@@ -170,7 +170,7 @@ export function ProfilTab({
             </ul>
           </section>
 
-          <a className="tp-albumkarte" href="/album">
+          <a className="tp-albumkarte" href={ALBUM_HREF}>
             <span className="tp-albumkarte__icon" aria-hidden="true">
               <BookOpen size={22} strokeWidth={1.5} />
             </span>

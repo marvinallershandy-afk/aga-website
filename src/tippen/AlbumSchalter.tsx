@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ladeAlbumStand, type AlbumStand } from './api'
+import { ladeAlbumStand, type AlbumStand, ALBUM_HREF } from './api'
 
 // ─────────────────────────────────────────────────────────────
 // v21-T: Umschalter „Album | Tipp-Liga“ im Kopf — gleicher Aufbau und
@@ -23,7 +23,7 @@ export function AlbumSchalter({ angemeldet }: { angemeldet: boolean }) {
     <nav className="tp-wechsel" aria-label="Bereich">
       <a
         className="tp-wechsel__b"
-        href="/album"
+        href={ALBUM_HREF}
         aria-label={stand ? `Sammelalbum: ${stand.belegt} von ${stand.gesamt} Karten${stand.tuetchen ? `, ${stand.tuetchen} ungeöffnete Tütchen` : ''}` : 'Sammelalbum'}
       >
         Album

@@ -1,3 +1,4 @@
+import { ALBUM_HREF } from './api'
 import { useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { ArrowRight, Check } from 'lucide-react'
@@ -68,7 +69,7 @@ export function Belohnung({
           )}
           <div className="tp-belohnung__knoepfe">
             {karte && (
-              <a className="tp-btn" href="/album">
+              <a className="tp-btn" href={ALBUM_HREF}>
                 Ins Album <ArrowRight size={18} strokeWidth={1.5} aria-hidden="true" />
               </a>
             )}
