@@ -234,6 +234,11 @@ ok(kat.regeln.loseCheckin === 1 && kat.regeln.loseKomplett === 5 && /kostenlos/.
 const V_SAISON = '2030/31'
 const P1 = await neuerFan('Paul', 'P')  // 1 Los
 const P3 = await neuerFan('Pia', 'Q')   // 3 Lose
+// v22-A: Reihenfolge des Glücksrads = Profil-Anlage. Beide Profile entstehen in
+// derselben Millisekunde → bei Gleichstand entschied die (zufällige) user_id und
+// der Test war gelegentlich rot. Anlage-Zeitpunkte deshalb fest vorgeben.
+await db.query(`update sva_album_fans set created_at = now() - interval '2 hours' where user_id = $1`, [P1.id])
+await db.query(`update sva_album_fans set created_at = now() - interval '1 hour' where user_id = $1`, [P3.id])
 await db.query(`insert into sva_album_lose (fan_user_id, anzahl, quelle, bezug, saison, at) values ($1, 1, 'admin', 'v1', $3, now() - interval '2 days'), ($2, 3, 'admin', 'v3', $3, now())`, [P1.id, P3.id, V_SAISON])
 const verlosung = async (titel) => val(admin, `insert into sva_album_verlosungen (titel, preis, saison) values ($1, 'Trikot', '${V_SAISON}') returning id`, [titel])
 const V1 = await verlosung('Trikot-Verlosung')
