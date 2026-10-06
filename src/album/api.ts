@@ -209,6 +209,15 @@ export interface Profil {
   anzeigename: string
   rangliste: boolean
   erinnerung: boolean
+  /** v26-E: Opt-in, mit Namen an die Wall of Fame (sonst „Fan aus Agathenburg") */
+  wallOptIn?: boolean
+}
+
+/** v26-E: Eintrag der Wall of Fame (volles Album). */
+export interface WallEintrag {
+  saison: string
+  name: string
+  at: string
 }
 
 export interface Mein {
@@ -244,6 +253,9 @@ export interface Mein {
   shinyErstfunde?: { karteId: string; name: string; at: string; ich?: boolean }[]
   /** Geheimseite: Rätsel + (nach dem Fund) die Karte */
   geheim?: GeheimPlatz[]
+  /** v26-E: Album zu 100 % voll (Goldene Seite) */
+  komplett?: boolean
+  komplettAt?: string
 }
 
 export interface Erstfund {
@@ -503,6 +515,10 @@ export const ladeKatalog = () => rpc<Katalog>('album_katalog')
 export const ladeRangliste = () => rpc<RanglistenEintrag[]>('album_rangliste')
 /** v26-B: Fan-Barometer des nächsten/laufenden Heimspiels (oder eines bestimmten Spiels). */
 export const ladeBarometer = (spiel?: string) => rpc<Barometer | null>('album_barometer', { p_spiel: spiel ?? null })
+/** v26-E: Wall of Fame (volle Alben, öffentlich). */
+export const ladeWall = () => rpc<WallEintrag[]>('album_wall_of_fame')
+/** v26-E: Opt-in „mit Namen an die Wall of Fame". */
+export const wallOptin = (opt: boolean) => rpc<{ wallOptIn: boolean }>('album_wall_optin', { p_opt: opt })
 
 // ── Eingeloggt ──────────────────────────────────────────────
 export const ladeMein = () => rpc<Mein>('album_mein')

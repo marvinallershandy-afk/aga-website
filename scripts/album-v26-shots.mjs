@@ -93,6 +93,22 @@ for (const motor of MOTOREN) {
     await page.screenshot({ path: `${OUT}/${k}-08-live-barometer.png`, fullPage: true }).catch(() => page.screenshot({ path: `${OUT}/${k}-08-live-barometer.png` }))
     await b.close()
   }
+  if (soll('gold')) {
+    const { b, page } = await kontext(motor)
+    await heftAuf(page)
+    // Wall of Fame auf der Startseite
+    await page.locator('.eg-wall').scrollIntoViewIfNeeded().catch(() => {})
+    await warte(page, 500)
+    await page.screenshot({ path: `${OUT}/${k}-09-wall.png`, fullPage: true }).catch(() => page.screenshot({ path: `${OUT}/${k}-09-wall.png` }))
+    // Album füllen → Goldene Seite
+    await page.locator('.vf-leiste__knopf').click().catch(() => {})
+    await page.locator('.vf-leiste__panel button').filter({ hasText: 'Album füllen' }).click().catch(() => {})
+    await warte(page, 1200)
+    await reiter(page, '100 %').catch(() => {})
+    await warte(page, 1200)
+    await page.screenshot({ path: `${OUT}/${k}-10-goldene-seite.png`, fullPage: true }).catch(() => page.screenshot({ path: `${OUT}/${k}-10-goldene-seite.png` }))
+    await b.close()
+  }
   if (soll('teaser')) {
     const { b, page } = await kontext(motor)
     await heftAuf(page)

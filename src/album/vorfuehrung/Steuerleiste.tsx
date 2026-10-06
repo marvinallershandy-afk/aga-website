@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { FlaskConical, RotateCcw, Sparkles, Star, Wand2, X, Layers } from 'lucide-react'
+import { FlaskConical, RotateCcw, Sparkles, Star, Trophy, Wand2, X, Layers } from 'lucide-react'
 import { PACK_TYPEN_STANDARD, garantieText, kartenWort } from '../packTypen'
-import { VF_PACK_EREIGNIS, vfPackAnlegen, vfZuruecksetzen, type TestPack } from './backend'
+import { VF_PACK_EREIGNIS, vfAlbumFuellen, vfPackAnlegen, vfZuruecksetzen, type TestPack } from './backend'
 import { gesteRichtung, fundMelden, wappenTipp } from '../geheim/ei'
 import './vorfuehrung.css'
 
@@ -104,6 +104,9 @@ export default function Steuerleiste({ onNeu, onLabor, versteckt }: { onNeu: () 
             </button>
             <button type="button" role="menuitem" onClick={finden}>
               <Wand2 size={16} aria-hidden="true" /> Geheimkarte finden <small>{['Geste', 'Ball', '7× Wappen'][eiNr % 3]}</small>
+            </button>
+            <button type="button" role="menuitem" onClick={() => { vfAlbumFuellen(); setAuf(false); onNeu() }}>
+              <Trophy size={16} aria-hidden="true" /> Album füllen <small>Goldene Seite</small>
             </button>
             <button
               type="button"

@@ -370,3 +370,38 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.arcTo(x, y, x + w, y, rr)
   ctx.closePath()
 }
+
+/** v26-E: „Album komplett"-Story 1080×1920 (Gold, Name + 100 %). */
+export async function storyKomplett(opts: { name?: string; saison: string; datum?: string }): Promise<HTMLCanvasElement> {
+  const c = document.createElement('canvas')
+  c.width = STORY_W
+  c.height = STORY_H
+  const ctx = c.getContext('2d')!
+  const W = c.width
+  const H = c.height
+  ctx.fillStyle = '#0a0806'
+  ctx.fillRect(0, 0, W, H)
+  const g = ctx.createRadialGradient(W / 2, H * 0.42, 40, W / 2, H * 0.42, H * 0.66)
+  g.addColorStop(0, 'rgba(232,193,90,0.42)')
+  g.addColorStop(0.55, 'rgba(43,33,18,0.5)')
+  g.addColorStop(1, 'rgba(10,8,6,0)')
+  ctx.fillStyle = g
+  ctx.fillRect(0, 0, W, H)
+  const w = await wappen()
+  kopf(ctx, 'ALBUM KOMPLETT', w)
+  ctx.textAlign = 'center'
+  ctx.fillStyle = '#fff1bd'
+  ctx.font = `360px ${F_DISPLAY}`
+  ctx.fillText('100', W / 2, H * 0.47)
+  ctx.font = `800 54px ${F_TEXT}`
+  ctx.fillStyle = '#c9a94e'
+  ctx.fillText('PROZENT', W / 2, H * 0.52)
+  ctx.fillStyle = '#F4F2EF'
+  ctx.font = `96px ${F_DISPLAY}`
+  ctx.fillText((opts.name ?? 'Ein SVA-Fan').toUpperCase(), W / 2, H * 0.64)
+  ctx.font = `800 34px ${F_TEXT}`
+  ctx.fillStyle = 'rgba(255,231,160,0.75)'
+  ctx.fillText(`SAISON ${opts.saison}${opts.datum ? '  ·  ' + opts.datum.toUpperCase() : ''}`, W / 2, H * 0.68)
+  fuss(ctx, 'Alle Karten gesammelt')
+  return c
+}

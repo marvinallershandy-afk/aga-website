@@ -47,6 +47,8 @@ interface Zustand {
   lose: number
   checkins: number
   n: number
+  /** v26-E: Opt-in „mit Namen an die Wall of Fame" */
+  wallOptIn?: boolean
 }
 
 const tage = (n: number) => new Date(Date.now() - n * 864e5).toISOString()
@@ -297,13 +299,29 @@ function ziele(s: Zustand): Ziel[] {
   }))
 }
 
+// v26-E: Steuerleiste — Album auf 100 % füllen (Goldene Seite erlebbar machen).
+export function vfAlbumFuellen() {
+  const s = zustand()
+  for (const k of karten()) if (!k.variante && !k.limitiert && !k.geheim) s.besitz.set(k.id, Math.max(1, s.besitz.get(k.id) ?? 0))
+  speichern(s)
+}
+export function vfWallOptin(v: boolean) {
+  const s = zustand()
+  s.wallOptIn = v
+  speichern(s)
+}
+
 function mein(): Mein {
   const s = zustand()
   const zl = ziele(s)
+  const base = karten().filter((k) => !k.variante && !k.limitiert && !k.geheim)
+  const komplett = base.length > 0 && base.every((k) => (s.besitz.get(k.id) ?? 0) > 0)
   return {
     email: 'lena@vorfuehrung.sva',
     saison: SAISON,
-    profil: { ...FAN, rangliste: true, erinnerung: false },
+    profil: { ...FAN, rangliste: true, erinnerung: false, wallOptIn: s.wallOptIn ?? false },
+    komplett,
+    komplettAt: komplett ? tage(0) : undefined,
     checkins: s.checkins,
     checkinsGesamt: s.checkins + 6,
     spiele: [],

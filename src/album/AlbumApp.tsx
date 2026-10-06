@@ -17,6 +17,9 @@ import {
   ladeRangliste,
   ladeBarometer,
   type Barometer as BarometerDaten,
+  ladeWall,
+  wallOptin,
+  type WallEintrag,
   supabase,
   type Gutschein,
   type Karte,
@@ -40,6 +43,8 @@ import { GEHEIM_EREIGNIS, fundErledigt, fundMelden, gesteRichtung, istGeheimToke
 import { CodeEinloesen, NaechstesZiel, SammelSeite, Advent, type PackNeu } from './Sammeln'
 import { ZieleSeite } from './Ziele'
 import { Barometer } from './Barometer'
+import { GoldeneSeite, WallOfFame } from './Endgame'
+import { alsBlob, storyKomplett, teilen } from '../karten/export/bild'
 import { TauschDialog } from './Tausch'
 import { SvaKarte } from '../karten/SvaKarte'
 import { kartenDaten } from './kartenDaten'
@@ -240,6 +245,9 @@ export function AlbumApp() {
   const [barometer, setBarometer] = useState<BarometerDaten | null>(
     ALBUM_VORFUEHRUNG ? { spielId: 'vf', gegner: 'TuS Harsefeld', anstoss: new Date(Date.now() + 36e5).toISOString(), ziel: 40, stand: 28, erreicht: false } : null,
   )
+  const [wall, setWall] = useState<WallEintrag[] | null>(
+    ALBUM_VORFUEHRUNG ? [{ saison: '2026/27', name: 'Tom K.', at: new Date(Date.now() - 6 * 864e5).toISOString() }, { saison: '2026/27', name: 'Fan aus Agathenburg', at: new Date(Date.now() - 2 * 864e5).toISOString() }] : null,
+  )
   const [abschied, setAbschied] = useState(false)
   const [offen, setOffen] = useState(() => {
     try {
@@ -290,6 +298,12 @@ export function AlbumApp() {
     barometerLaden()
   }, [barometerLaden])
 
+  // v26-E: Wall of Fame (öffentlich) laden
+  useEffect(() => {
+    if (ALBUM_VORFUEHRUNG) return
+    ladeWall().then(setWall).catch(() => {})
+  }, [])
+
   useEffect(() => {
     let aktiv = true
     aktuelleSitzung().then((s) => aktiv && setSession(s))
@@ -317,6 +331,32 @@ export function AlbumApp() {
       return null
     }
   }, [])
+  // v26-E: Wall-Opt-in + „Album komplett" teilen
+  const wallUmschalten = useCallback(
+    async (v: boolean) => {
+      if (ALBUM_VORFUEHRUNG) {
+        setMein((m) => (m?.profil ? { ...m, profil: { ...m.profil, wallOptIn: v } } : m))
+        return
+      }
+      try {
+        await wallOptin(v)
+        await neuLaden()
+        ladeWall().then(setWall).catch(() => {})
+      } catch {
+        /* egal */
+      }
+    },
+    [neuLaden],
+  )
+  const goldTeilen = useCallback(async () => {
+    if (!meinRoh) return
+    try {
+      const c = await storyKomplett({ name: meinRoh.profil?.anzeigename, saison: meinRoh.saison, datum: meinRoh.komplettAt ? new Date(meinRoh.komplettAt).toLocaleDateString('de-DE') : undefined })
+      await teilen(await alsBlob(c), 'album-komplett.png', 'Mein SVA-Album ist komplett!')
+    } catch {
+      /* egal */
+    }
+  }, [meinRoh])
 
   useEffect(() => {
     if (uid) queueMicrotask(() => void neuLaden())
@@ -867,10 +907,12 @@ export function AlbumApp() {
                       <CodeEinloesen onPack={packNeu} onNeu={() => void neuLaden()} vorbelegt={storyCode ?? undefined} />
                     </div>
                   )}
+                  {(wall?.length || mein.komplett) && <WallOfFame eintraege={wall} />}
                 </div>
               }
               sammeln={<SammelSeite katalog={katalog} mein={mein} ps={ps} besitz={besitz} onPack={packNeu} onNeu={() => void neuLaden()} />}
               ziele={<ZieleSeite ziele={mein.ziele ?? []} geheimZiele={mein.geheimZiele} />}
+              komplett={mein.komplett ? <GoldeneSeite mein={mein} optIn={!!mein.profil?.wallOptIn} onOptIn={(v) => void wallUmschalten(v)} onTeilen={() => void goldTeilen()} /> : undefined}
             />
             {wartende.length > 0 && !packs.length && (
               <button type="button" className={`al-fach${fussNah ? ' is-weg' : ''}`} onClick={packsOeffnen}>
