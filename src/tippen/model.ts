@@ -305,9 +305,22 @@ export function aufloesungMerken(spielId: string) {
 
 export const TIPPEN_URL = 'aga-erste.de/tippen'
 
-/** v21: Was bekomme ich wann? (Album-Belohnungen laut 20261012110000_sva_karten.sql) */
+/** v24-P: „Tipp-Pack · 2 Karten“ aus der Lage (Admin-Wert), sonst Standard. */
+export function tippPackText(lage?: { tippPack?: { titel: string; karten: number } } | null): string {
+  const t = lage?.tippPack ?? { titel: 'Tipp-Pack', karten: 2 }
+  return `${t.titel} · ${t.karten === 1 ? '1 Karte' : `${t.karten} Karten`}`
+}
+
+/** v21/v24: Was bekomme ich wann? (Album-Belohnungen, Pack-Typen 20261017100000_sva_album_packs_v24.sql) */
+export function belohnungen(lage?: { tippPack?: { titel: string; karten: number } } | null): { wann: string; was: string; art: 'karte' | 'lose' | 'abzeichen' | 'punkte' }[] {
+  return [
+    { wann: 'Jeder getippte Spieltag', was: lage && !lage.tippPack ? '—' : tippPackText(lage), art: 'karte' },
+    { wann: 'Heimsieg (getippt oder am Platz)', was: 'Sieg-Pack · mind. 1 Gold', art: 'karte' },
+    ...BELOHNUNGEN.slice(1),
+  ]
+}
 export const BELOHNUNGEN: { wann: string; was: string; art: 'karte' | 'lose' | 'abzeichen' | 'punkte' }[] = [
-  { wann: 'Jeder getippte Spieltag', was: '+1 Karte fürs Album', art: 'karte' },
+  { wann: 'Jeder getippte Spieltag', was: 'Tipp-Pack · 2 Karten', art: 'karte' },
   { wann: 'Ergebnis exakt getippt', was: '+1 Karte (mind. Silber)', art: 'karte' },
   { wann: 'Dein Kapitän trifft', was: '+1 Karte', art: 'karte' },
   { wann: '4 Wochen am Stück getippt', was: '+1 Karte', art: 'karte' },

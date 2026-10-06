@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { FlaskConical, Gift, RotateCcw, Sparkles, Star, Trophy, Wand2, X, Layers } from 'lucide-react'
+import { FlaskConical, RotateCcw, Sparkles, Star, Wand2, X, Layers } from 'lucide-react'
+import { PACK_TYPEN_STANDARD, garantieText, kartenWort } from '../packTypen'
 import { VF_PACK_EREIGNIS, vfPackAnlegen, vfZuruecksetzen, type TestPack } from './backend'
 import { gesteRichtung, fundMelden, wappenTipp } from '../geheim/ei'
 import './vorfuehrung.css'
@@ -63,12 +64,22 @@ export default function Steuerleiste({ onNeu, onLabor, versteckt }: { onNeu: () 
             <p className="vf-leiste__titel">
               Vorführung <span>nichts wird gespeichert</span>
             </p>
-            <button type="button" role="menuitem" onClick={() => pack('normal')}>
-              <Gift size={16} aria-hidden="true" /> Normales Pack
-            </button>
-            <button type="button" role="menuitem" onClick={() => pack('gold')}>
-              <Trophy size={16} aria-hidden="true" /> Gold-Pack <small>Walkout</small>
-            </button>
+            {/* v24-P: jeder Pack-Typ mit eigener Tütchen-Optik und Reveal-Intensität */}
+            <p className="vf-leiste__gruppe">Pack-Typen</p>
+            <div className="vf-leiste__typen">
+              {PACK_TYPEN_STANDARD.map((t) => (
+                <button key={t.typ} type="button" role="menuitem" className={`vf-typ vf-typ--${t.optik}`} onClick={() => pack(t.typ)}>
+                  <i aria-hidden="true" />
+                  <span>
+                    {t.titel}
+                    <small>
+                      {kartenWort(t.karten)}
+                      {garantieText(t) ? ` · ${garantieText(t)}` : t.typ === 'event' ? ' · MOTM' : ''}
+                    </small>
+                  </span>
+                </button>
+              ))}
+            </div>
             <button type="button" role="menuitem" className="is-shiny" onClick={() => pack('shiny')}>
               <Sparkles size={16} aria-hidden="true" /> Shiny-Pack
             </button>

@@ -18,6 +18,12 @@ export const IST_VORFUEHRUNG = VORFUEHRUNG
  *  sonst das echte Album (gleiches Konto, 'sva-album-auth'). */
 export const ALBUM_HREF = IST_VORFUEHRUNG ? '/album?vorfuehrung=1' : '/album'
 
+/** v24-P: Album-Deep-Link, der genau dieses Pack sofort öffnet (ohne ID: alle wartenden Tütchen). */
+export function albumPackHref(packId?: string | null): string {
+  if (!packId) return `${ALBUM_HREF}#tuetchen`
+  return `${ALBUM_HREF}${ALBUM_HREF.includes('?') ? '&' : '?'}oeffnen=${encodeURIComponent(packId)}`
+}
+
 export type Position = 'TW' | 'ABW' | 'MIT' | 'ANG'
 export type BonusKey = 'gelb' | 'rot' | 'tor20' | 'tore_hz1' | 'elfmeter' | 'zuschauer' | 'erstes_tor'
 
@@ -221,6 +227,8 @@ export interface Lage {
   vorschlagElf?: VorschlagElf
   /** v22-T: Preise (Saison Platz 1–5, Monat) */
   preise?: Preis[]
+  /** v24-P: Pack-Typ „tipp“ des Albums (fehlt = Tipp-Pack aus) */
+  tippPack?: { titel: string; karten: number }
 }
 
 export interface RangEintrag {
@@ -295,6 +303,9 @@ export interface AbgabeErgebnis {
   karte: boolean
   abzeichen: string[]
   anzahlTipps: number
+  /** v24-P: gutgeschriebenes Tipp-Pack (nur beim ersten Tipp eines Spieltags) */
+  packId?: string
+  pack?: { id: string; typ: string; titel: string; karten: number }
 }
 
 // ── Fehler → freundlicher Text ──────────────────────────────

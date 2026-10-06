@@ -12,6 +12,8 @@
 // ─────────────────────────────────────────────────────────────
 import { createClient, isAuthRetryableFetchError, type Session } from '@supabase/supabase-js'
 import { VORFUEHRUNG } from '../live/vorfuehrung'
+import type { PackTyp, PackTypInfo } from './packTypen'
+export type { PackTyp, PackTypInfo } from './packTypen'
 
 const URL_BASE = import.meta.env.VITE_SUPABASE_URL as string | undefined
 const KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
@@ -180,6 +182,8 @@ export interface Katalog {
     vereinsGeburtstag?: string
     /** v22: Anzahl aktiver Geheimkarten */
     geheimAnzahl?: number
+    /** v24-P: Pack-Typen (Größe, Garantie, Optik, Reveal, Wochen-Slot) */
+    packTypen?: PackTypInfo[]
   }
   karten: Karte[]
 }
@@ -212,7 +216,7 @@ export interface Mein {
   checkinsGesamt: number
   spiele: { gegner: string; anstoss: string; at: string }[]
   besitz: { karteId: string; anzahl: number }[]
-  packs: { id: string; art: PackArt; anzahl: number; gegner?: string; at: string; titel?: string }[]
+  packs: { id: string; art: PackArt; anzahl: number; gegner?: string; at: string; titel?: string; typ?: PackTyp }[]
   gutscheine: Gutschein[]
   // ── v20-K ──
   freundCode?: string
@@ -295,7 +299,7 @@ export interface Verlosung {
   teilnahme?: boolean
 }
 
-export type PackArt = 'checkin' | 'heimsieg' | 'geschenk' | 'starter' | 'tipp' | 'story' | 'partner' | 'advent' | 'freund' | 'kapitel' | 'wunsch' | 'ziel' | 'geheim'
+export type PackArt = 'checkin' | 'heimsieg' | 'geschenk' | 'starter' | 'tipp' | 'story' | 'partner' | 'advent' | 'freund' | 'kapitel' | 'wunsch' | 'ziel' | 'geheim' | 'event'
 
 export interface CheckinErgebnis {
   ok: true
@@ -313,6 +317,8 @@ export interface CheckinErgebnis {
 export interface PackInhalt {
   id: string
   art: PackArt
+  /** v24-P */
+  typ?: PackTyp
   gegner?: string
   karten: {
     karteId: string
@@ -467,7 +473,7 @@ export const gutscheinEinloesen = (id: string) =>
 // ── v20-K: Karten-Quellen, Freunde, Tausch, Wunschkarte ───
 export const starterHolen = () => rpc<{ packId: string | null }>('album_starter_holen')
 export type CodeErgebnis =
-  | { ok: true; packId: string; art: PackArt; titel?: string }
+  | { ok: true; packId: string; art: PackArt; titel?: string; typ?: PackTyp }
   | { ok: false; grund: 'ungueltig' | 'noch_nicht' | 'abgelaufen' | 'schon' | 'gesperrt' | 'kein_profil' | 'nicht_heute'; geheim?: boolean }
 export const codeEinloesen = (code: string) => rpc<CodeErgebnis>('album_code_einloesen', { p_code: code })
 export const freundHinzufuegen = (code: string) => rpc<{ ok: true; name: string }>('album_freund_hinzufuegen', { p_code: code })

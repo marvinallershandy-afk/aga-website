@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { Check, Crown, Share2, Sparkles } from 'lucide-react'
-import { elfSpeichern, tippAbgeben, TippFehler, type BonusKey, type KaderSpieler, type Lage, type TippSpiel } from './api'
+import { albumPackHref, elfSpeichern, tippAbgeben, TippFehler, type BonusKey, type KaderSpieler, type Lage, type TippSpiel } from './api'
 import { datumKurz, elfEinordnen, entwurfLesen, entwurfSchreiben, haptik, kuerzel, uhrzeit, verfuegbar, type Entwurf } from './model'
 import { Kapitel } from './teile'
 import { ErgebnisStepper } from './Stepper'
 import { SpielerLeiste } from './SpielerLeiste'
 import { BonusDeck } from './BonusDeck'
 import { DeineElf, type ElfStand } from './DeineElf'
-import { Belohnung } from './Belohnung'
+import { Belohnung, type BelohnungsPack } from './Belohnung'
 import { bildMeinTipp, bildMeineElf, teilen } from './share'
 import { zaehleEreignis } from '../statistik/zaehlen'
 
@@ -96,7 +96,10 @@ export function TippFormular({
   const [gespeichert, setGespeichert] = useState<Stand | null>(() => (spiel.meinTipp ? startStand(spiel, lage, kader) : null))
   const [laeuft, setLaeuft] = useState(false)
   const [fehler, setFehler] = useState('')
-  const [belohnung, setBelohnung] = useState<null | { karte: boolean; abzeichen: string[] }>(null)
+  const [belohnung, setBelohnung] = useState<null | { pack: BelohnungsPack | null; abzeichen: string[] }>(null)
+  // v24-P: laufende Abgabe + Lage-Nachladen — der Album-Knopf wartet darauf (kein Abbruch durch den Seitenwechsel)
+  const abgabeLauf = useRef<Promise<unknown> | null>(null)
+  const neuLauf = useRef<Promise<unknown> | null>(null)
   const [teilt, setTeilt] = useState(false)
   // v21-UX (Befund 3): Ergebnis erst nach bewusster Wahl gültig; unberührtes 0:0 → Rückfrage.
   const [beruehrt, setBeruehrt] = useState(() => startBeruehrt(spiel))
@@ -119,7 +122,9 @@ export function TippFormular({
 
   // Entwurf mitschreiben (falls die Seite zugeht, bevor man sich anmeldet)
   useEffect(() => {
-    if (teilnehmer && spiel.meinTipp && !geaendert) return
+    // v24-P: gespeichert und unverändert → kein Entwurf (vorher blieb nach dem ersten
+    // Tipp bis zum Nachladen der Lage ein Entwurf liegen)
+    if (teilnehmer && gespeichert && !geaendert) return
     const e: Entwurf = {
       spielId: spiel.id,
       toreSva: s.toreSva,
@@ -136,7 +141,7 @@ export function TippFormular({
       absenden: entwurfLesen()?.absenden && entwurfLesen()?.spielId === spiel.id,
     }
     entwurfSchreiben(e)
-  }, [s, spiel.id, spiel.meinTipp, teilnehmer, geaendert, beruehrt])
+  }, [s, spiel.id, gespeichert, teilnehmer, geaendert, beruehrt])
 
   const abgeben = useCallback(
     async (stand: Stand) => {
@@ -148,6 +153,8 @@ export function TippFormular({
         return
       }
       setLaeuft(true)
+      let fertig: () => void = () => {}
+      abgabeLauf.current = new Promise<void>((res) => (fertig = res))
       try {
         const r = await tippAbgeben(spiel.id, {
           toreSva: stand.toreSva,
@@ -164,17 +171,23 @@ export function TippFormular({
         }
         entwurfSchreiben(null)
         setGespeichert(stand)
-        setBelohnung({ karte: r.karte, abzeichen: r.abzeichen ?? [] })
+        const pack: BelohnungsPack | null = r.pack
+          ? { id: r.pack.id, titel: r.pack.titel, karten: r.pack.karten }
+          : r.karte
+            ? { id: r.packId, titel: lage.tippPack?.titel ?? 'Tipp-Pack', karten: lage.tippPack?.karten ?? 2 }
+            : null
+        setBelohnung({ pack, abzeichen: r.abzeichen ?? [] })
         haptik([12, 60, 18])
-        void onNeu()
+        neuLauf.current = onNeu()
       } catch (err) {
         setFehler(err instanceof TippFehler ? err.message : 'Das hat nicht geklappt.')
         if (err instanceof TippFehler && err.code === 'tipp_geschlossen') void onNeu()
       } finally {
         setLaeuft(false)
+        fertig()
       }
     },
-    [angemeldet, teilnehmer, spiel.id, onAnmelden, onNeu, kader],
+    [angemeldet, teilnehmer, spiel.id, onAnmelden, onNeu, kader, lage.tippPack],
   )
 
   // Nach dem Login: Entwurf automatisch abschicken
@@ -403,9 +416,16 @@ export function TippFormular({
       <AnimatePresence>
         {belohnung && (
           <Belohnung
-            karte={belohnung.karte}
+            pack={belohnung.pack}
             abzeichenNeu={belohnung.abzeichen}
             onWeiter={() => setBelohnung(null)}
+            onAlbum={async () => {
+              // erst wenn die Abgabe (inkl. Elf) bestätigt ist; das Nachladen der Lage
+              // darf höchstens kurz warten — gespeichert ist der Tipp da längst
+              await abgabeLauf.current
+              await Promise.race([neuLauf.current, new Promise((r) => window.setTimeout(r, 1200))])
+              window.location.assign(albumPackHref(belohnung.pack?.id))
+            }}
             onTeilen={() => {
               setBelohnung(null)
               void (elfVoll ? teilenElf() : teilenTipp())

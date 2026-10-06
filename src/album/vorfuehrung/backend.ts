@@ -7,9 +7,15 @@
 // garantierter Gold-Karte, eins mit garantiertem Shiny), Ziele/Medaillen,
 // Lose, Verlosungen, Shiny-Vitrine mit Erstfunden, Geheimseite (1 von 4).
 // Die Steuerleiste (Steuerleiste.tsx) legt weitere Test-Packs an.
+// v24-P: Stand im sessionStorage dieses Tabs (überlebt den Wechsel zur
+// Tipp-Liga und zurück); übernimmt die Packs der Tipp-Vorführung
+// (uebergabe.ts) und zieht sie wie der Server nach Pack-Typ (Größe,
+// Garantie, Smart-Pack, Wochen-Slot). „Zurücksetzen“ = von vorn.
 // ─────────────────────────────────────────────────────────────
 import type { Karte, Mein, PackArt, PackInhalt, Seltenheit, Ziel } from '../api'
-import { GEHEIM, MOTM_ID, SAISON, basisId, glanzId, vorfuehrKatalog } from './katalog'
+import { GEHEIM, MOTM_ID, MOTM_WOCHE_ID, SAISON, basisId, glanzId, vorfuehrKatalog } from './katalog'
+import { packTypInfo, typVonArt, type PackTyp } from '../packTypen'
+import { uebergabeGeoeffnet, uebergabeLeeren, uebergabeLesen } from './uebergabe'
 
 async function sha256hex(text: string): Promise<string> {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text))
@@ -22,6 +28,7 @@ export const VF_PACK_EREIGNIS = 'album-vf-pack'
 interface VfPack {
   id: string
   art: PackArt
+  typ?: PackTyp
   titel?: string
   gegner?: string
   karten: string[]
@@ -44,6 +51,7 @@ interface Zustand {
 
 const tage = (n: number) => new Date(Date.now() - n * 864e5).toISOString()
 let z: Zustand | null = null
+const SPEICHER_KEY = 'sva-album-vf'
 
 function karten() {
   return vorfuehrKatalog().karten
@@ -82,17 +90,52 @@ function start(): Zustand {
   // garantierter Shiny auf einer Person ohne Erstfund → „Erstfund! Du bist die Erste“
   const shinyKarte = fehlt.find((k) => k !== fehlt[0] && k !== fehlt[1] && !erstfunde.has(k.id)) ?? spieler[3]
   const packs: VfPack[] = [
-    { id: 'vf-pack-1', art: 'checkin', gegner: 'TuS Harsefeld', titel: 'Check-in-Pack', karten: [fehlt[0].id, glanzId(fehlt[1].spieler!.slug), trainer.id], shiny: [false, false, false], geoeffnet: false, at: tage(0) },
-    { id: 'vf-pack-2', art: 'tipp', titel: 'Tipp-Karte', karten: [shinyKarte.id], shiny: [true], geoeffnet: false, at: tage(0) },
+    { id: 'vf-pack-1', art: 'checkin', typ: 'spieltag', gegner: 'TuS Harsefeld', titel: 'Spieltags-Pack', karten: [fehlt[0].id, glanzId(fehlt[1].spieler!.slug), trainer.id], shiny: [false, false, false], geoeffnet: false, at: tage(0) },
+    { id: 'vf-pack-2', art: 'tipp', typ: 'tipp', titel: 'Tipp-Pack', karten: [shinyKarte.id, glanzId(fehlt[2]?.spieler?.slug ?? fehlt[1].spieler!.slug)], shiny: [true, false], geoeffnet: false, at: tage(0) },
   ]
   return { besitz, packs, shiny, erstfunde, codes: new Set(), lose: 7, checkins: 4, n: 10 }
 }
+// ── v24-P: Stand merken (sessionStorage) + Übergabe aus der Tipp-Liga ──
+function laden(): Zustand | null {
+  try {
+    const g = JSON.parse(sessionStorage.getItem(SPEICHER_KEY) ?? 'null')
+    if (!g || !Array.isArray(g.packs)) return null
+    return {
+      besitz: new Map(g.besitz), packs: g.packs, shiny: new Map(g.shiny), erstfunde: new Map(g.erstfunde),
+      codes: new Set(g.codes), lose: g.lose, checkins: g.checkins, n: g.n,
+    }
+  } catch {
+    return null
+  }
+}
+function speichern(s: Zustand) {
+  try {
+    const plaetze = karten().filter((k) => !k.variante && !k.limitiert)
+    const stand = { belegt: plaetze.filter((k) => (s.besitz.get(k.id) ?? 0) > 0).length, gesamt: plaetze.length, tuetchen: s.packs.filter((p) => !p.geoeffnet).length }
+    sessionStorage.setItem(SPEICHER_KEY, JSON.stringify({
+      besitz: [...s.besitz], packs: s.packs, shiny: [...s.shiny], erstfunde: [...s.erstfunde], codes: [...s.codes],
+      lose: s.lose, checkins: s.checkins, n: s.n, stand, packIds: s.packs.map((p) => p.id),
+    }))
+  } catch {
+    /* privat-Modus: Vorführung läuft trotzdem, nur ohne Gedächtnis */
+  }
+}
+function uebernehmen(s: Zustand) {
+  for (const u of uebergabeLesen()) {
+    if (u.geoeffnet || s.packs.some((p) => p.id === u.id)) continue
+    const { ids, shiny } = vfZiehen(s, u.typ, u.karten)
+    s.packs.push({ id: u.id, art: u.art as PackArt, typ: u.typ, titel: u.titel, gegner: u.gegner, karten: ids, shiny, geoeffnet: false, at: u.at })
+  }
+}
 function zustand(): Zustand {
-  if (!z) z = start()
+  if (!z) z = laden() ?? start()
+  uebernehmen(z)
   return z
 }
 export function vfZuruecksetzen() {
+  uebergabeLeeren()
   z = start()
+  speichern(z)
 }
 
 // ── Ziehen (nur Demo, fair nach den Standard-Gewichten) ─────
@@ -114,15 +157,63 @@ function zufallsKarte(min?: Seltenheit): Karte {
   return st[Math.floor(Math.random() * st.length)]
 }
 
-export type TestPack = 'normal' | 'gold' | 'shiny' | 'alle'
-/** Steuerleiste: neues Tütchen anlegen (nur im Speicher). */
-export function vfPackAnlegen(art: TestPack): { id: string; art: PackArt; titel: string } {
+// v24-P: Ziehung nach Pack-Typ — wie sva_album_pack_ziehen_v24 (Demo, fair nach
+// den Standard-Gewichten): Smart-Karte zuerst, Garantie ersetzt die letzte Karte,
+// Wochen-Slot (MOTM der Woche) ersetzt die letzte Karte, wenn die Fanin sie noch nicht hat.
+const RANG: Record<Seltenheit, number> = { bronze: 1, silber: 2, gold: 3, spezial: 4 }
+function vfZiehen(s: Zustand, typ: PackTyp, anzahl?: number, opt: { slot?: number } = {}): { ids: string[]; shiny: boolean[] } {
+  const t = packTypInfo(typ)!
+  const n = Math.max(1, anzahl ?? t.karten)
+  const kat = karten()
+  const imPack = new Set(s.packs.filter((p) => !p.geoeffnet).flatMap((p) => p.karten))
+  const hat = (id: string) => (s.besitz.get(id) ?? 0) > 0 || imPack.has(id)
+  const ids: string[] = []
+  const fehlend = kat.filter((k) => !k.variante && !k.limitiert && !k.geheim && !hat(k.id))
+  if (fehlend.length && (t.smart ?? true) && typ !== 'ziel') {
+    const stufen = (Object.keys(GEWICHT) as Seltenheit[]).filter((x) => fehlend.some((k) => k.seltenheit === x))
+    let r = Math.random() * stufen.reduce((a, x) => a + GEWICHT[x], 0)
+    let st = stufen[stufen.length - 1]
+    for (const x of stufen) {
+      if (r < GEWICHT[x]) {
+        st = x
+        break
+      }
+      r -= GEWICHT[x]
+    }
+    const c = fehlend.filter((k) => k.seltenheit === st)
+    ids.push(c[Math.floor(Math.random() * c.length)].id)
+  }
+  while (ids.length < n) ids.push(zufallsKarte().id)
+  const selt = (id: string) => kat.find((k) => k.id === id)?.seltenheit ?? 'bronze'
+  if (t.minSeltenheit && !ids.some((id) => RANG[selt(id)] >= RANG[t.minSeltenheit!])) ids[ids.length - 1] = zufallsKarte(t.minSeltenheit).id
+  const chance = opt.slot ?? t.limitiertChance ?? 0
+  if (chance > 0 && Math.random() * 100 < chance && !hat(MOTM_WOCHE_ID)) {
+    if (ids.length === 1) ids.push(MOTM_WOCHE_ID)
+    else ids[ids.length - 1] = MOTM_WOCHE_ID
+  }
+  return { ids, shiny: ids.map((id) => person(karteVon(id)) && Math.random() * 250 < 1) }
+}
+
+const ART_VON_TYP: Record<PackTyp, PackArt> = { tipp: 'tipp', spieltag: 'checkin', sieg: 'heimsieg', starter: 'starter', ziel: 'ziel', event: 'event' }
+
+export type TestPack = PackTyp | 'shiny' | 'alle'
+/** Steuerleiste: neues Tütchen anlegen (nur in diesem Tab). */
+export function vfPackAnlegen(art: TestPack): { id: string; art: PackArt; titel: string; typ?: PackTyp } {
   const s = zustand()
   const id = `vf-pack-${++s.n}`
   let ids: string[]
   let shiny: boolean[]
   let titel: string
   const kat = karten()
+  if (art !== 'alle' && art !== 'shiny') {
+    // v24-P: echte Pack-Typen; das Event-Pack zeigt in der Vorführung immer die Wochenkarte (falls noch nicht da)
+    const t = packTypInfo(art)!
+    const z2 = vfZiehen(s, art, undefined, art === 'event' ? { slot: 100 } : {})
+    titel = art === 'event' ? 'Event-Pack · MOTM-Woche' : t.titel
+    s.packs.push({ id, art: ART_VON_TYP[art], typ: art, titel, gegner: art === 'spieltag' || art === 'sieg' ? 'TuS Fischbek' : undefined, karten: z2.ids, shiny: z2.shiny, geoeffnet: false, at: new Date().toISOString() })
+    speichern(s)
+    return { id, art: ART_VON_TYP[art], titel, typ: art }
+  }
   if (art === 'alle') {
     // jede Kartenart und Seltenheit einmal, mit echter Reveal-Animation
     const fehlendKader = kat.find((k) => k.typ === 'spieler' && !k.variante && !k.limitiert && k.seltenheit === 'bronze' && !s.besitz.has(k.id)) ?? kat.find((k) => k.seltenheit === 'bronze' && k.typ === 'spieler')!
@@ -136,23 +227,16 @@ export function vfPackAnlegen(art: TestPack): { id: string; art: PackArt; titel:
     ids = [fehlendKader.id, glanz.id, gold.id, moment.id, MOTM_ID, partner.id, kurve.id, shinyP.id, geheim.id]
     shiny = ids.map((x) => x === shinyP.id)
     titel = 'Test-Pack · alle Karten'
-  } else if (art === 'gold') {
-    ids = [zufallsKarte().id, zufallsKarte().id, zufallsKarte('gold').id]
-    shiny = [false, false, false]
-    titel = 'Gold-Pack (Vorführung)'
-  } else if (art === 'shiny') {
+  } else {
     const p = kat.filter((k) => person(k) && !k.variante)
     const sk = p[Math.floor(Math.random() * p.length)]
     ids = [zufallsKarte().id, zufallsKarte().id, sk.id]
     shiny = [false, false, true]
     titel = 'Shiny-Pack (Vorführung)'
-  } else {
-    ids = [zufallsKarte().id, zufallsKarte().id, zufallsKarte().id]
-    shiny = [false, false, false]
-    titel = 'Check-in-Pack (Vorführung)'
   }
-  s.packs.push({ id, art: art === 'normal' ? 'checkin' : 'geschenk', titel, karten: ids, shiny, geoeffnet: false, at: new Date().toISOString() })
-  return { id, art: art === 'normal' ? 'checkin' : 'geschenk', titel }
+  s.packs.push({ id, art: 'geschenk', titel, karten: ids, shiny, geoeffnet: false, at: new Date().toISOString() })
+  speichern(s)
+  return { id, art: 'geschenk', titel }
 }
 
 // ── Ziele (aus dem Demo-Stand berechnet) ────────────────────
@@ -198,7 +282,7 @@ function mein(): Mein {
     checkinsGesamt: s.checkins + 6,
     spiele: [],
     besitz: [...s.besitz].filter(([, n]) => n > 0).map(([karteId, anzahl]) => ({ karteId, anzahl })),
-    packs: s.packs.filter((p) => !p.geoeffnet).map((p) => ({ id: p.id, art: p.art, anzahl: p.karten.length, gegner: p.gegner, at: p.at, titel: p.titel })),
+    packs: s.packs.filter((p) => !p.geoeffnet).map((p) => ({ id: p.id, art: p.art, typ: p.typ ?? typVonArt(p.art), anzahl: p.karten.length, gegner: p.gegner, at: p.at, titel: p.titel })),
     gutscheine: [{ id: 'vf-g1', stufe: 'schwelle_1', titel: 'Getränk nach Wahl', code: 'SVA-VORF1', status: 'offen', saison: SAISON, at: tage(14) }],
     freundCode: 'LENA42',
     freunde: ['Tom K.', 'Jana W.'],
@@ -248,11 +332,14 @@ function oeffnen(id: string): PackInhalt {
       if (!s.erstfunde.has(b)) s.erstfunde.set(b, { name: FAN.anzeigename, at: new Date().toISOString(), ich: true })
     })
     p.geoeffnet = true
+    uebergabeGeoeffnet(p.id)
+    speichern(s)
   }
   const neuErreicht = ziele(s).filter((x) => x.erreicht && !vorher.includes(x.schluessel))
   return {
     id: p.id,
     art: p.art,
+    typ: p.typ ?? typVonArt(p.art),
     titel: p.titel,
     gegner: p.gegner,
     karten: p.karten.map((k, i) => {
@@ -282,6 +369,14 @@ const fehler = (code: string) => Object.assign(new Error(code), { message: code 
 
 export async function simRpc(fn: string, a: Record<string, unknown>): Promise<unknown> {
   const s = zustand()
+  try {
+    return await simRpcInnen(s, fn, a)
+  } finally {
+    speichern(s)
+  }
+}
+
+async function simRpcInnen(s: Zustand, fn: string, a: Record<string, unknown>): Promise<unknown> {
   switch (fn) {
     case 'album_katalog':
       return vorfuehrKatalog()

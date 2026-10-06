@@ -1,7 +1,9 @@
 import { useEffect, useState, useSyncExternalStore } from 'react'
 import { motion } from 'framer-motion'
-import { ClipboardCheck, FastForward, Pause, Play, SkipForward } from 'lucide-react'
-import { ENDE_MINUTE, PHASEN, naechstesEreignis, phaseSetzen, simAbo, simLesen, simSetzen, wertungAusloesen } from './store'
+import { ClipboardCheck, FastForward, Pause, Play, RotateCcw, SkipForward } from 'lucide-react'
+import { ENDE_MINUTE, PHASEN, naechstesEreignis, phaseSetzen, simAbo, simLesen, simSetzen, simVergessen, wertungAusloesen } from './store'
+import { PACK_TYPEN_STANDARD, kartenWort, type PackTyp } from '../../album/packTypen'
+import { uebergeben, uebergabeLeeren } from '../../album/vorfuehrung/uebergabe'
 import { EREIGNIS_MINUTEN } from './sim'
 import { haptik } from '../model'
 
@@ -27,6 +29,16 @@ function useKompakt(): boolean {
 // markiert. Phasen durchschalten; live: Pause/Weiter, nächstes Ereignis,
 // Tempo. Alles nur im Browser.
 // ─────────────────────────────────────────────────────────────
+
+// v24-P: jeden Pack-Typ vorführen — Pack wird an die Album-Vorführung übergeben
+// und dort sofort geöffnet (gleicher Weg wie das Tipp-Pack nach dem Tippen).
+const ART: Record<PackTyp, string> = { tipp: 'tipp', spieltag: 'checkin', sieg: 'heimsieg', starter: 'starter', ziel: 'ziel', event: 'event' }
+let packNr = 0
+function packVorfuehren(typ: PackTyp) {
+  const t = PACK_TYPEN_STANDARD.find((x) => x.typ === typ)!
+  const p = uebergeben({ id: `vf-typ-${typ}-${Date.now().toString(36)}-${++packNr}`, art: ART[typ], typ, titel: typ === 'event' ? 'Event-Pack · MOTM-Woche' : t.titel, karten: t.karten, gegner: typ === 'spieltag' || typ === 'sieg' ? 'TuS Fischbek' : undefined })
+  window.location.assign(`/album?vorfuehrung=1&oeffnen=${encodeURIComponent(p.id)}`)
+}
 
 export default function Steuerleiste() {
   const z = useSyncExternalStore(simAbo, simLesen)
@@ -57,6 +69,27 @@ export default function Steuerleiste() {
             <span>{p.label}</span>
           </button>
         ))}
+      </div>
+      <div className="tp-steuer__packs" role="group" aria-label="Pack-Typen vorführen">
+        <span className="tp-steuer__packs-label">Packs</span>
+        {PACK_TYPEN_STANDARD.map((t) => (
+          <button key={t.typ} type="button" className={`tp-steuer__pack tp-steuer__pack--${t.optik}`} onClick={() => packVorfuehren(t.typ)} title={`${t.titel} · ${kartenWort(t.karten)} — im Album öffnen`}>
+            <i aria-hidden="true" />
+            {t.titel.replace(/-?Pack$/, '')}
+          </button>
+        ))}
+        <button
+          type="button"
+          className="tp-steuer__pack tp-steuer__pack--neu"
+          onClick={() => {
+            simVergessen()
+            uebergabeLeeren()
+            window.location.assign('/tippen?vorfuehrung=1')
+          }}
+          title="Vorführung von vorn (Tipp, Ligen, Packs)"
+        >
+          <RotateCcw size={13} strokeWidth={2} aria-hidden="true" /> Neu
+        </button>
       </div>
       {z.phase === 'live' && (
         <div className="tp-steuer__live">
