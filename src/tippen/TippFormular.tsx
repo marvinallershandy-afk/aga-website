@@ -206,7 +206,7 @@ export function TippFormular({
   }
 
   return (
-    <div className="tp-formular">
+    <div className="tp-formular" id="tp-tippschein">
       <section className="tp-abschnitt" aria-labelledby="tp-h-ergebnis">
         <Kapitel id="tp-h-ergebnis" titel="Dein Ergebnis" meta="Exakt 4 · Differenz 3 · Tendenz 2" />
         <ErgebnisStepper heim={spiel.heim} gegner={spiel.gegner} toreSva={s.toreSva} toreGegner={s.toreGegner} onChange={(a, b) => setS((x) => ({ ...x, toreSva: a, toreGegner: b }))} />

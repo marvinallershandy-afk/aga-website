@@ -302,3 +302,30 @@ export function aufloesungMerken(spielId: string) {
 }
 
 export const TIPPEN_URL = 'aga-erste.de/tippen'
+
+/** v21: Was bekomme ich wann? (Album-Belohnungen laut 20261012110000_sva_karten.sql) */
+export const BELOHNUNGEN: { wann: string; was: string; art: 'karte' | 'lose' | 'abzeichen' | 'punkte' }[] = [
+  { wann: 'Jeder getippte Spieltag', was: '+1 Karte fürs Album', art: 'karte' },
+  { wann: 'Ergebnis exakt getippt', was: '+1 Karte (mind. Silber)', art: 'karte' },
+  { wann: 'Dein Kapitän trifft', was: '+1 Karte', art: 'karte' },
+  { wann: '4 Wochen am Stück getippt', was: '+1 Karte', art: 'karte' },
+  { wann: 'Spieltagssieger', was: '2 Lose für die Verlosungen', art: 'lose' },
+  { wann: 'Meilensteine (Hellseher, Torriecher …)', was: 'Abzeichen fürs Profil', art: 'abzeichen' },
+]
+
+// ── Erster Besuch: 3-Schritt-Einführung (einmal, überspringbar) ─
+const ONBOARDING_KEY = VORFUEHRUNG ? 'sva-tipp-einfuehrung-vorfuehrung' : 'sva-tipp-einfuehrung'
+export function einfuehrungGesehen(): boolean {
+  try {
+    return localStorage.getItem(ONBOARDING_KEY) === '1'
+  } catch {
+    return true
+  }
+}
+export function einfuehrungMerken() {
+  try {
+    localStorage.setItem(ONBOARDING_KEY, '1')
+  } catch {
+    /* privat */
+  }
+}

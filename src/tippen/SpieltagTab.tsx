@@ -104,9 +104,14 @@ function Intro({ onAnmelden }: { onAnmelden: () => void }) {
         Ergebnis, drei Bonusfragen, deine Elf — in 20 Sekunden. Punkte sammeln, mit Freunden eine eigene Liga gründen und die Kabine schlagen. Jeder Tipp
         bringt eine Karte fürs Album.
       </p>
-      <button type="button" className="tp-link" onClick={onAnmelden}>
-        Schon dabei? Anmelden <ArrowRight size={14} strokeWidth={1.5} aria-hidden="true" />
-      </button>
+      <div className="tp-zeile-knoepfe">
+        <button type="button" className="tp-btn tp-btn--line tp-btn--sm" onClick={() => window.dispatchEvent(new Event('tp-einfuehrung'))}>
+          So funktioniert’s
+        </button>
+        <button type="button" className="tp-btn tp-btn--text tp-btn--sm" onClick={onAnmelden}>
+          Schon dabei? Anmelden <ArrowRight size={14} strokeWidth={1.5} aria-hidden="true" />
+        </button>
+      </div>
     </section>
   )
 }

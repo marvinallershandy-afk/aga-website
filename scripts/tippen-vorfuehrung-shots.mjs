@@ -10,7 +10,7 @@ import fs from 'node:fs'
 const BASE = process.env.BASE || 'http://localhost:5193'
 const OUT = process.env.OUT || './shots-v21-tipp'
 const NUR = (process.env.NUR || 'm,d').split(',')
-const TEIL = (process.env.TEIL || 'phasen,live,tabs,elf').split(',')
+const TEIL = (process.env.TEIL || 'phasen,live,tabs,elf,einf').split(',')
 fs.mkdirSync(OUT, { recursive: true })
 const VIEWS = {
   m: { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true },
@@ -19,8 +19,9 @@ const VIEWS = {
 const log = []
 const browser = await chromium.launch({ args: ['--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist'] })
 
-async function seite(v, phase = 'vor', extra = '') {
+async function seite(v, phase = 'vor', extra = '', einfuehrung = false) {
   const ctx = await browser.newContext(VIEWS[v])
+  if (!einfuehrung) await ctx.addInitScript(() => { try { localStorage.setItem('sva-tipp-einfuehrung-vorfuehrung', '1') } catch { /* */ } })
   let db = 0
   await ctx.route(/supabase\.co\//, (r) => {
     db++
@@ -104,6 +105,18 @@ for (const v of NUR) {
       if (/phase=abpfiff/.test(s.page.url())) break
     }
     log.push(`[${v}] Live-Serie: ${n} Ereignisse, Fehler ${s.fehler.length}, DB ${s.db()}`)
+    await s.ctx.close()
+  }
+  if (TEIL.includes('einf')) {
+    const s = await seite(v, 'vor', '', true)
+    await s.page.waitForTimeout(900)
+    for (let i = 1; i <= 3; i++) {
+      await bild(s.page, `einfuehrung-${i}-${v}`)
+      await s.page.getByRole('button', { name: /Weiter|Los geht/ }).click()
+      await s.page.waitForTimeout(700)
+    }
+    await bild(s.page, `einfuehrung-danach-${v}`)
+    log.push(`[${v}] Einführung: Fehler ${s.fehler.length}, DB ${s.db()}`)
     await s.ctx.close()
   }
   if (TEIL.includes('elf')) {

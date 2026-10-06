@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { motion } from 'framer-motion'
-import { ArrowRight, BookOpen, LogOut, Share2, Users } from 'lucide-react'
+import { ArrowRight, BookOpen, HelpCircle, LogOut, Share2, Users } from 'lucide-react'
 import { abmelden, IST_VORFUEHRUNG, ladeAlbumStand, profilSpeichern, TippFehler, type AlbumStand, type Lage } from './api'
 import { ABZEICHEN, haptik } from './model'
 import { bildAbzeichen, teilen } from './share'
@@ -47,7 +47,7 @@ export function ProfilTab({
 
   if (!session) {
     return (
-      <div className="tp-leer">
+      <div className="tp-profil tp-leer">
         <p className="tp-kicker">Profil</p>
         <h1 className="tp-titel">Noch nicht dabei?</h1>
         <p className="tp-lead">Ein Konto für Tipp-Liga und Sammelalbum. Kein Passwort — nur deine E-Mail.</p>
@@ -238,6 +238,9 @@ export function ProfilTab({
       </details>
 
       <div className="tp-zeile-knoepfe">
+        <button type="button" className="tp-btn tp-btn--line tp-btn--sm" onClick={() => window.dispatchEvent(new Event('tp-einfuehrung'))}>
+          <HelpCircle size={16} strokeWidth={1.5} aria-hidden="true" /> So funktioniert’s
+        </button>
         <button type="button" className="tp-btn tp-btn--line tp-btn--sm" onClick={() => onTab('ligen')}>
           <Users size={16} strokeWidth={1.5} aria-hidden="true" /> Meine Ligen
         </button>

@@ -64,7 +64,7 @@ async function lauf(v, lage, pfad = '/tippen') {
     if (new URL(route.request().url()).pathname.endsWith('/user')) return json(route, USER)
     return json(route, { error: 'test' }, 400)
   })
-  await ctx.addInitScript((s) => { try { localStorage.setItem('sva-album-auth', s) } catch { /* */ } }, SESSION)
+  await ctx.addInitScript((s) => { try { localStorage.setItem('sva-album-auth', s); localStorage.setItem('sva-tipp-einfuehrung', '1'); localStorage.setItem('sva-tipp-einfuehrung-vorfuehrung', '1') } catch { /* */ } }, SESSION)
   const page = await ctx.newPage()
   page.on('pageerror', (e) => errs.push(e.message))
   await page.goto(`${BASE}${pfad}`, { waitUntil: 'networkidle' })
@@ -88,16 +88,74 @@ async function lauf(v, lage, pfad = '/tippen') {
       ok = false
     }
     const cur = await page.locator(`${nav} a[aria-current="page"]`).textContent().catch(() => '')
-    const andere = await Promise.all(Object.entries(MERKMAL).filter(([k]) => k !== t).map(([, s]) => page.locator(s).count()))
+    // v21: besuchte Bereiche bleiben erhalten (ausgeblendet) → nur der aktive ist sichtbar
+    const andere = await Promise.all(Object.entries(MERKMAL).filter(([k]) => k !== t).map(([, s]) => page.locator(`${s}:visible`).count()))
     log(ok && cur?.includes(LABEL[t]) && andere.every((n) => n === 0), `[${v}/${lage}] #${i + 1} → ${LABEL[t]} (${ok ? 'sichtbar' : 'NICHT sichtbar'}, aktiv: ${cur?.trim()})`)
   }
+  // Browser-Zurück: die letzten Wechsel rückwärts (… ligen → profil → spieltag)
+  const aktiv = async () => (await page.locator(`${nav} a[aria-current="page"]`).textContent().catch(() => ''))?.trim()
+  await page.goBack()
+  await page.waitForTimeout(250)
+  const z1 = await aktiv()
+  await page.goBack()
+  await page.waitForTimeout(250)
+  const z2 = await aktiv()
+  log(z1 === LABEL.profil && z2 === LABEL.ligen && (await page.locator(`${MERKMAL.ligen}:visible`).count()) === 1, `[${v}/${lage}] Browser-Zurück: Profil → Ligen (${z1} → ${z2})`)
+  // Zustand bleibt: Rangliste „Monat“ wählen, weg und zurück → Monat noch aktiv
+  await page.locator(`${nav} a`, { hasText: 'Rangliste' }).click()
+  await page.getByRole('tab', { name: 'Monat' }).click().catch(() => {})
+  await page.locator(`${nav} a`, { hasText: 'Ligen' }).click()
+  await page.locator(`${nav} a`, { hasText: 'Rangliste' }).click()
+  await page.waitForTimeout(200)
+  log((await page.getByRole('tab', { name: 'Monat' }).getAttribute('aria-selected').catch(() => null)) === 'true', `[${v}/${lage}] Zustand bleibt erhalten (Wertung „Monat“ nach Tab-Wechsel)`)
+  // Wischen am Handy (Touch über CDP): von Rangliste nach links → Ligen
+  if (v === 'm' && ENGINE === chromium) {
+    const cdp = await ctx.newCDPSession(page)
+    const wisch = async (x0, x1) => {
+      const y = 330
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: x0, y }] })
+      for (let k = 1; k <= 8; k++) await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: x0 + ((x1 - x0) * k) / 8, y }] })
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+      await page.waitForTimeout(450)
+    }
+    await page.evaluate(() => window.scrollTo(0, 0))
+    await wisch(330, 90)
+    const w1 = await aktiv()
+    await wisch(90, 330)
+    const w2 = await aktiv()
+    log(w1 === LABEL.ligen && w2 === LABEL.rangliste, `[${v}/${lage}] Wischen: Rangliste → Ligen → Rangliste (${w1}, ${w2})`)
+  }
   log(errs.length === 0, `[${v}/${lage}] keine Seitenfehler ${errs.slice(0, 2).join(' | ')}`)
+  await ctx.close()
+}
+
+// Deep-Link #rangliste (und altes ?tab=ligen)
+async function deepLink(v, pfad, t) {
+  const ctx = await browser.newContext(VIEWS[v])
+  await ctx.route(/supabase\.co\//, (route) => json(route, null))
+  await ctx.addInitScript(() => { try { localStorage.setItem('sva-tipp-einfuehrung', '1') } catch { /* */ } })
+  await ctx.route('**/rest/v1/rpc/**', (route) => {
+    const name = new URL(route.request().url()).pathname.split('/rpc/')[1]
+    let args = {}
+    try { args = route.request().postDataJSON() ?? {} } catch { /* leer */ }
+    if (name === 'tipp_lage') return json(route, lageFixture('gast'))
+    if (name === 'tipp_rangliste') return json(route, ranglisteFixture(args.p_art, false))
+    if (name === 'tipp_duell') return json(route, DUELL)
+    return json(route, null)
+  })
+  const page = await ctx.newPage()
+  await page.goto(`${BASE}${pfad}`, { waitUntil: 'networkidle' })
+  const ok = await page.waitForSelector(MERKMAL[t], { state: 'visible', timeout: 5000 }).then(() => true).catch(() => false)
+  log(ok, `[${v}] Deep-Link ${pfad} öffnet ${LABEL[t]}`)
   await ctx.close()
 }
 
 for (const v of ['m', 'd']) {
   for (const lage of ['neu', 'nachspiel', 'live', 'aufloesung', 'gast']) await lauf(v, lage)
 }
+await deepLink('m', '/tippen#rangliste', 'rangliste')
+await deepLink('m', '/tippen?tab=ligen', 'ligen')
+await deepLink('d', '/tippen#profil', 'profil')
 if (!process.env.OHNE_VORFUEHRUNG) {
   await lauf('m', 'neu', '/tippen?vorfuehrung=1')
   await lauf('d', 'neu', '/tippen?vorfuehrung=1')
