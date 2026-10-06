@@ -20,16 +20,33 @@ const T = (d) => new Date(Date.now() + d * 864e5).toISOString()
 const uuid = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`
 const ISO = (ms) => new Date(Date.now() + ms).toISOString()
 
-// Echte Spieler mit vorhandenen HD-Freistellern (public/players/cutout/hd)
+// Echter Kader-Umfang: alle Spieler mit vorhandenen HD-Freistellern
+// (public/players/cutout/hd) + Trainerstab. [name, slug, position, nummer, kapitän, rolle?]
 const KADER = [
-  ['Tobias Helck', 'tobias-helck', 'MITTELFELD', 6, true],
   ['Julio Paruzel', 'julio-paruzel', 'STURM', 9, false],
-  ['Aaron Warkehr', 'aaron-warkehr', 'MITTELFELD', 10, false],
-  ['Elias Pejas', 'elias-pejas', 'ABWEHR', 4, false],
-  ['Malte Pils', 'malte-pils', 'TOR', 1, false],
-  ['Justin Sladek', 'justin-sladek', 'ABWEHR', 3, false],
   ['Dawid Neuber', 'dawid-neuber', 'STURM', 11, false],
+  ['Joshua Elsen', 'joshua-elsen', 'STURM', 21, false],
+  ['Marcel Neuber', 'marcel-neuber', 'STURM', 22, false],
+  ['Tobias Helck', 'tobias-helck', 'MITTELFELD', 6, true],
+  ['Aaron Warkehr', 'aaron-warkehr', 'MITTELFELD', 10, false],
   ['Noah Pejas', 'noah-pejas', 'MITTELFELD', 8, false],
+  ['Janek Brünjes', 'janek-bruenjes', 'MITTELFELD', 7, false],
+  ['Justin Hüttry', 'justin-huettry', 'MITTELFELD', 14, false],
+  ['Justin Kalwa', 'justin-kalwa', 'MITTELFELD', 18, false],
+  ['Noel Nauerz', 'noel-nauerz', 'MITTELFELD', 20, false],
+  ['Paul Matthes', 'paul-matthes', 'MITTELFELD', 17, false],
+  ['Niko Hause', 'niko-hause', 'MITTELFELD', 19, false],
+  ['Elias Pejas', 'elias-pejas', 'ABWEHR', 4, false],
+  ['Justin Sladek', 'justin-sladek', 'ABWEHR', 3, false],
+  ['Lennard Brettschneider', 'lennard-brettschneider', 'ABWEHR', 5, false],
+  ['Marc-Kevin Biedermann', 'marc-kevin-biedermann', 'ABWEHR', 2, false],
+  ['Isaak Warkehr', 'isaak-warkehr', 'ABWEHR', 15, false],
+  ['Oliver Marchel', 'oliver-marchel', 'ABWEHR', 16, false],
+  ['Malte Pils', 'malte-pils', 'TOR', 1, false],
+  ['Niclas Becker', 'niclas-becker', 'TOR', 12, false],
+  ['Adolf Ebeling', 'adolf-ebeling', 'STURM', 23, false],
+  ['Carsten Junge', 'carsten-junge', null, null, false, 'trainer'],
+  ['Tino Ebeling', 'tino-ebeling', null, null, false, 'co-trainer'],
 ]
 
 const spielLive = (status) => ({
@@ -43,8 +60,8 @@ const spielLive = (status) => ({
 
 const dbFuer = (status) => ({
   sm_spiele: [spielLive(status)].map((s) => ({ demo: false, notizen: null, created_at: T(-30), updated_at: T(-1), anpfiff_at: null, wiederanpfiff_at: null, motm_roster_id: null, live_updated_at: null, ...s })),
-  sm_roster: KADER.map(([name, slug, position, nummer, kapitaen], i) => ({
-    id: uuid(100 + i), slug, name, nummer, position, rolle: 'spieler',
+  sm_roster: KADER.map(([name, slug, position, nummer, kapitaen, rolle = 'spieler'], i) => ({
+    id: uuid(100 + i), slug, name, nummer, position, rolle,
     foto_url: `/players/${slug}.webp`, freisteller_url: `/players/cutout/${slug}.webp`,
     aktiv: true, kapitaen, neuzugang: false, im_verein_seit: 2018, fupa_spieler_id: null,
     kontakt_text: null, steckbrief: {}, sortierung: i * 10, created_at: T(-90), updated_at: T(-3),

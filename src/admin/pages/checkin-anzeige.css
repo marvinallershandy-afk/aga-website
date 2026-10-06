@@ -182,19 +182,20 @@
 /* Szene 2: Team-Wand */
 .ca-wall { position: absolute; inset: 0; display: grid; place-items: center; padding-top: clamp(24px, 3.4vmin, 44px); }
 .ca-wall__grid {
-  display: grid; grid-template-columns: repeat(5, 1fr); gap: clamp(6px, 1vmin, 14px);
-  width: 100%; height: 100%; align-content: center; justify-items: center;
-  transition: transform .9s cubic-bezier(.16,1,.3,1);
+  display: grid; grid-template-columns: repeat(var(--cols, 5), minmax(0, 1fr)); grid-auto-rows: 1fr;
+  gap: clamp(5px, .9vmin, 13px); width: 100%; height: 100%; align-content: center; justify-items: center;
 }
-/* Aufbau-Stagger (je Karte verzögert) + nach 4,2 s dimmen alle ab … */
-.ca-wall__card { height: auto; width: 100%; max-height: 100%; filter: drop-shadow(0 8px 18px rgba(0,0,0,.5));
-  animation: ca-wall-ein .55s cubic-bezier(.16,1,.3,1) calc(var(--i) * 70ms) both, ca-wall-dim .7s ease 4.2s forwards; }
-@keyframes ca-wall-ein { from { opacity: 0; transform: translateY(16px) scale(.86); } to { opacity: 1; transform: none; } }
-@keyframes ca-wall-dim { to { opacity: .3; filter: drop-shadow(0 6px 14px rgba(0,0,0,.5)) brightness(.55) saturate(.9); } }
+/* Höhen-getriebene Kacheln → ganzer Kader passt sauber in max. 3 Reihen (bleibt edel) */
+.ca-wall__card { height: 100%; min-height: 0; display: grid; place-items: center;
+  animation: ca-wall-ein .5s cubic-bezier(.16,1,.3,1) calc(var(--i) * 42ms) both, ca-wall-dim .7s ease 4.2s forwards; }
+.ca-wall__card .sk { width: auto; height: 100%; filter: drop-shadow(0 8px 18px rgba(0,0,0,.5)); transition: filter .7s ease; }
+@keyframes ca-wall-ein { from { opacity: 0; transform: translateY(14px) scale(.84); } to { opacity: 1; transform: none; } }
+@keyframes ca-wall-dim { to { opacity: .32; filter: brightness(.55) saturate(.9); } }
 /* … und der Held zoomt heraus */
 .ca-wall__card.is-held { z-index: 5;
-  animation: ca-wall-ein .55s cubic-bezier(.16,1,.3,1) calc(var(--i) * 70ms) both, ca-wall-pop .9s cubic-bezier(.16,1,.3,1) 4.2s forwards; }
-@keyframes ca-wall-pop { to { transform: scale(1.9); filter: drop-shadow(0 22px 40px rgba(0,0,0,.65)); } }
+  animation: ca-wall-ein .5s cubic-bezier(.16,1,.3,1) calc(var(--i) * 42ms) both, ca-wall-pop .9s cubic-bezier(.16,1,.3,1) 4.2s forwards; }
+.ca-wall__card.is-held .sk { filter: drop-shadow(0 22px 40px rgba(0,0,0,.65)); }
+@keyframes ca-wall-pop { to { transform: scale(2.2); } }
 
 /* Szene 3: Heute */
 .ca-heute { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: clamp(12px, 2vmin, 24px); padding: clamp(28px, 4vmin, 52px); text-align: center; }
@@ -255,6 +256,18 @@
 .ca-ende__paar { position: relative; font-family: 'Anton', 'Archivo', sans-serif; font-weight: 400; letter-spacing: .04em; text-transform: uppercase; font-size: clamp(22px, 3.4vmin, 44px); animation: ca-ein-auf .6s ease .2s both; }
 .ca-ende__danke { position: relative; font-size: clamp(14px, 1.9vmin, 22px); color: rgba(244,242,239,.8); margin-top: clamp(4px, 1vmin, 12px); animation: ca-ein-auf .6s ease .35s both; }
 
+/* ── TOR!-Einblendung: Standbild-Freisteller soll leben (nicht „Fototermin") ──
+   Nur wenn KEIN Jubel-/Pose-Video da ist (dann greift .tj__figur--video).
+   Zoom-in über die vorhandene Animation, danach sanftes Atmen/Neigen. */
+.ca .tj--tor .tj__figur:not(.tj__figur--video) {
+  transform-origin: 50% 88%;
+  animation: tj-figur .95s cubic-bezier(.16,1,.3,1) .2s both, ca-torfigur 3.6s ease-in-out 1.2s infinite alternate;
+}
+@keyframes ca-torfigur {
+  from { transform: translate(-50%, 4%) scale(1.015) rotate(-1.3deg); }
+  to   { transform: translate(-50%, 1%) scale(1.075) rotate(1.3deg); }
+}
+
 /* ── Netz / Vorführung / Exit ───────────────────────────────── */
 .ca-netz { position: absolute; top: clamp(12px, 2vmin, 24px); right: clamp(12px, 2vmin, 24px); z-index: 6; width: 11px; height: 11px; border-radius: 50%; background: #3ddc84; box-shadow: 0 0 10px rgba(61,220,132,.6); }
 .ca-netz.is-weg { background: #e0a53a; box-shadow: 0 0 10px rgba(224,165,58,.6); }
@@ -282,7 +295,6 @@
   .ca-stage { gap: clamp(8px, 1.4vmin, 18px); }
   .ca-score__zahl, .ca-score__anstoss b { font-size: clamp(42px, 9vmin, 92px); }
   .ca-score__stand i { font-size: clamp(30px, 6.4vmin, 60px); }
-  .ca-wall__grid { grid-template-columns: repeat(4, 1fr); }
   /* Karten etwas kleiner → volle Karte sichtbar, etwas Luft nach unten */
   .ca-show__card--focus, .ca-shiny__card, .ca-scorer__card { height: min(78%, 44vh); }
   .ca-show__card--links, .ca-show__card--rechts { height: min(60%, 34vh); }
@@ -303,4 +315,5 @@
   .ca-score__punkt { animation: none; }
   .ca-shiny__aura, .ca-ende__pfiff, .ca-ende__glanz { animation: none; }
   .ca-ende__stand, .ca-ende__label, .ca-ende__paar, .ca-ende__danke { animation: none; }
+  .ca .tj--tor .tj__figur:not(.tj__figur--video) { animation: tj-figur .6s ease both; }
 }

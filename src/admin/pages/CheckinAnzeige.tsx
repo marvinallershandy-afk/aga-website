@@ -283,6 +283,9 @@ export default function CheckinAnzeige() {
   const gegTore = m ? m.goalsAgainst : spiel?.tore_gegner ?? null
   const gegner = m?.opponent ?? spiel?.gegner ?? 'Gegner'
   const gegnerKurz = teamKurz(gegner)
+  const wettbewerb = spiel?.wettbewerb
+    ? `${spiel.wettbewerb}${spiel.spieltag_nr ? ` · ${spiel.spieltag_nr}. Spieltag` : ''}`
+    : 'Heimspiel'
   const anstossZeit = vorfuehrung
     ? VORF_DREHBUCH.anstossText
     : spiel
@@ -323,7 +326,8 @@ export default function CheckinAnzeige() {
         toreGast: b,
         heimTrifft: sva,
         figur: media?.figure ?? media?.bild ?? null,
-        video: media?.jubel ?? media?.loop ?? null,
+        // Action zuerst (Jubel → Pose-Loop → Walkout); nur sonst der Standbild-Freisteller
+        video: media?.jubel ?? media?.loop ?? media?.walkout ?? null,
         gegner,
       }
     },
@@ -472,8 +476,10 @@ export default function CheckinAnzeige() {
   const showStart = n ? (szeneTick * 3) % n : 0
   const showFocus = karten[showStart]
   const showBehind = n > 1 ? [karten[(showStart + 1) % n], karten[(showStart + 2) % n]] : []
-  const wall = karten.slice(0, 15)
+  // Team-Wand: ganzer Kader als dichte Kachelwand (bis 3 Reihen, bleibt edel)
+  const wall = karten.slice(0, 27)
   const wallHeld = wall.length ? szeneTick % wall.length : 0
+  const wallCols = wall.length <= 12 ? Math.min(5, Math.max(1, wall.length)) : Math.ceil(wall.length / 3)
   const shinyKarte = n ? { ...karten[szeneTick % n], shiny: true, variante: false } : null
   const scorerKarte = scorerSlug && kader.has(scorerSlug) ? karteVonRoster(kader.get(scorerSlug)!) : null
 
@@ -519,7 +525,7 @@ export default function CheckinAnzeige() {
       <main className="ca-stage">
         {/* Scorebug — TV-Anzeigetafel, immer sichtbar über allen Szenen */}
         <header className={`ca-score${liveLaeuft ? ' is-live' : ''}${beendet ? ' is-ende' : ''}`} data-status={status ?? 'geplant'}>
-          <span className="ca-score__kick">Check-in am Eingang</span>
+          <span className="ca-score__kick">{wettbewerb}</span>
           <div className="ca-score__tafel">
             <div className="ca-score__team ca-score__team--heim">
               <img className="ca-score__wappen" src="/brand/wappen.png" alt="" width="54" height="54" />
@@ -584,8 +590,8 @@ export default function CheckinAnzeige() {
 
           {szene === 'team' && (
             <div className="ca-wall" style={{ ['--held' as string]: String(wallHeld) }}>
-              <span className="ca-show__kicker">Das Team · {wall.length} Karten zum Sammeln</span>
-              <div className="ca-wall__grid">
+              <span className="ca-show__kicker">Das Team · {spielerRows.length} Spieler zum Sammeln</span>
+              <div className="ca-wall__grid" style={{ ['--cols' as string]: String(wallCols) }}>
                 {wall.map((k, i) => (
                   <div key={k.id} className={`ca-card ca-wall__card${i === wallHeld ? ' is-held' : ''}`} style={{ ['--i' as string]: String(i) }}>
                     <SvaKarte daten={k} stufe="klein" eager={i === wallHeld} />
