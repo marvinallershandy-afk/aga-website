@@ -249,6 +249,9 @@ export const ALBUM_LINK = {
   titel: 'Werde Teil der Kurve',
   nutzen: 'Bei jedem Heimspiel am Eingang einchecken und Sammelkarten holen — beim 3. Mal gibt’s ein Getränk nach Wahl, beim 6. Bratwurst und Getränk oder einen Fanartikel.',
   kurzNutzen: 'Bei jedem Heimspiel Sammelkarten holen',
+  // v25 Befund 3: einzige Wahrheit für die Check-in-Belohnung (Jugendschutz:
+  // „Getränk nach Wahl“, NIE „Freibier“). /live zieht diesen Text statt eines Duplikats.
+  belohnung: 'beim 3. Heimspiel ein Getränk nach Wahl, beim 6. Bratwurst und Getränk oder ein Fanartikel',
   cta: 'Zum Sammelalbum',
   bild: '/album/teaser.webp',
 } as const

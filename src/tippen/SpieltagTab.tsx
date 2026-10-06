@@ -67,32 +67,43 @@ export function SpieltagTab({
   const live = !!gesperrt && (gesperrt.status === 'live' || gesperrt.status === 'halbzeit')
   const wartet = !!gesperrt && gesperrt.status === 'beendet'
   const vorschau: NaechstesSpiel | undefined = lage.naechstes ?? (live && offen ? { id: offen.id, gegner: offen.gegner, heim: offen.heim, anstoss: offen.anstoss, spieltag: offen.spieltag } : undefined)
+  // v25 Befund 1: Ist der nächste Spieltag schon offen, während ein früheres Spiel
+  // noch auf die Wertung wartet, gewinnt der offene Tipp den Erstkontakt. Das
+  // beendete Spiel rutscht darunter und zeigt nur eine Nebenzeile („Wertung folgt“)
+  // statt der großen Gold-Box — sonst doppelt sich die Botschaft (NaechsterSchritt).
+  const offenVorrang = !!offen && !live
+
+  const offenBlock = offen && !live && (
+    <div className="tp-offen">
+      <SpieltagKarte spiel={offen} now={now} kicker={gesperrt ? 'Nächster Spieltag' : frisch && gewertet ? 'Jetzt offen · nächster Spieltag' : undefined} kompakt={!!gesperrt && !offenVorrang}>
+        <p className="tp-match__zahl">
+          {offen.anzahlTipps >= 10 ? (
+            <>
+              <b>{offen.anzahlTipps}</b> Fans haben schon getippt
+            </>
+          ) : (
+            'Sei einer der Ersten — +1 Karte fürs Album'
+          )}
+        </p>
+      </SpieltagKarte>
+      <TippFormular key={offen.id} spiel={offen} lage={lage} kader={kader} angemeldet={angemeldet} teilnehmer={teilnehmer} onAnmelden={onAnmelden} onNeu={onNeu} />
+    </div>
+  )
 
   return (
     <div className={`tp-spieltag${live ? ' is-live' : ''}`}>
       {!angemeldet && !live && <Intro onAnmelden={() => onAnmelden('allgemein')} />}
 
-      {gesperrt && <GesperrtBlock spiel={gesperrt} kader={kader} angemeldet={angemeldet} />}
+      {offenVorrang && offenBlock}
+
+      {gesperrt && <GesperrtBlock spiel={gesperrt} kader={kader} angemeldet={angemeldet} nebenzeile={offenVorrang} />}
 
       {(live || (wartet && !offen)) && vorschau && <Vorschau n={vorschau} live={live} />}
 
       {frisch && !gesperrt && gewertet && <AufloesungBlock spiel={gewertet} kader={kader} now={now} lage={lage} angemeldet={angemeldet} onTab={onTab} />}
 
       {offen && !live ? (
-        <div className="tp-offen">
-          <SpieltagKarte spiel={offen} now={now} kicker={gesperrt ? 'Nächster Spieltag' : frisch && gewertet ? 'Jetzt offen · nächster Spieltag' : undefined} kompakt={!!gesperrt}>
-            <p className="tp-match__zahl">
-              {offen.anzahlTipps > 0 ? (
-                <>
-                  <b>{offen.anzahlTipps}</b> {offen.anzahlTipps === 1 ? 'Fan hat' : 'Fans haben'} schon getippt
-                </>
-              ) : (
-                'Sei der Erste, der tippt'
-              )}
-            </p>
-          </SpieltagKarte>
-          <TippFormular key={offen.id} spiel={offen} lage={lage} kader={kader} angemeldet={angemeldet} teilnehmer={teilnehmer} onAnmelden={onAnmelden} onNeu={onNeu} />
-        </div>
+        !offenVorrang && offenBlock
       ) : winter && !gesperrt ? (
         <Winterpause bis={einstellungen.winterpause.bis} onTab={onTab} />
       ) : (
@@ -155,7 +166,7 @@ function Intro({ onAnmelden }: { onAnmelden: () => void }) {
   )
 }
 
-function GesperrtBlock({ spiel, kader, angemeldet }: { spiel: TippSpiel; kader: Map<string, KaderSpieler>; angemeldet: boolean }) {
+function GesperrtBlock({ spiel, kader, angemeldet, nebenzeile = false }: { spiel: TippSpiel; kader: Map<string, KaderSpieler>; angemeldet: boolean; nebenzeile?: boolean }) {
   const [v, setV] = useState<Verteilung | null>(null)
   useEffect(() => {
     let aktiv = true
@@ -168,16 +179,27 @@ function GesperrtBlock({ spiel, kader, angemeldet }: { spiel: TippSpiel; kader: 
   }, [spiel.id])
   const t = spiel.meinTipp
   return (
-    <div className="tp-gesperrt">
-      {spiel.status === 'beendet' && !spiel.gewertetAt && (
-        <div className="tp-wertungfolgt" role="status">
-          <span className="tp-wertungfolgt__puls" aria-hidden="true" />
-          <span>
-            <b>Abpfiff · Wertung folgt</b>
-            <small>Deine Punkte kommen mit dem Spielbericht — meist am selben Abend. Danach öffnet der nächste Spieltag.</small>
-          </span>
-        </div>
-      )}
+    <div className={`tp-gesperrt${nebenzeile ? ' is-neben' : ''}`}>
+      {spiel.status === 'beendet' &&
+        !spiel.gewertetAt &&
+        (nebenzeile ? (
+          // v25 Befund 1: wenn der nächste Spieltag schon offen ist, nur eine
+          // dezente Nebenzeile am alten Spiel statt der großen Gold-Box oben.
+          <div className="tp-wertung-neben" role="status">
+            <Lock size={13} strokeWidth={1.75} aria-hidden="true" />
+            <span>
+              {spiel.spieltag ? `${spiel.spieltag}. Spieltag` : 'Letzter Spieltag'} · Wertung folgt — meist am selben Abend
+            </span>
+          </div>
+        ) : (
+          <div className="tp-wertungfolgt" role="status">
+            <span className="tp-wertungfolgt__puls" aria-hidden="true" />
+            <span>
+              <b>Abpfiff · Wertung folgt</b>
+              <small>Deine Punkte kommen mit dem Spielbericht — meist am selben Abend. Danach öffnet der nächste Spieltag.</small>
+            </span>
+          </div>
+        ))}
       <LiveBlock spiel={spiel} kader={kader} />
       {!spiel.live && (
         <section className="tp-abschnitt" aria-labelledby="tp-h-meintipp">

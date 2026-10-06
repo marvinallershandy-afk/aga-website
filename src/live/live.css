@@ -37,10 +37,12 @@ img { display: block; }
 
 /* ── Kopfzeile ───────────────────────────────────────────── */
 .lv-top {
-  position: sticky; top: 0; z-index: 10;
+  position: sticky; top: 0; z-index: 30;
   display: flex; align-items: center; gap: 10px;
   margin: 0 -16px; padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
-  background: linear-gradient(180deg, rgba(14,13,13,.96), rgba(14,13,13,.86));
+  /* v25 Befund 4: opak — Spieler-Freisteller der Aufstellung dürfen nicht durch
+     Kopfzeile/Tabs scheinen (Text auf Text). Blur bleibt als Fallback. */
+  background: #0e0d0d;
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--line);
 }
@@ -190,10 +192,11 @@ img { display: block; }
 
 /* ── Tabs (nur mobil) ────────────────────────────────────── */
 .lv-tabs {
-  position: sticky; top: calc(65px + env(safe-area-inset-top)); z-index: 9;
+  position: sticky; top: calc(65px + env(safe-area-inset-top)); z-index: 29;
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px;
   margin: 0 0 14px; padding: 4px; border-radius: 14px;
-  background: rgba(23,21,22,.94); border: 1px solid var(--line); backdrop-filter: blur(8px);
+  /* v25 Befund 4: opak, damit Aufstellungs-Freisteller nicht durchscheinen */
+  background: #171516; border: 1px solid var(--line); backdrop-filter: blur(8px);
 }
 .lv-tabs button {
   min-height: 42px; border-radius: 10px; border: 0; background: none; cursor: pointer;

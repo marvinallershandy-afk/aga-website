@@ -1109,6 +1109,10 @@ img { display: block; max-width: 100%; }
 .tp-wertungfolgt small { display: block; margin-top: 2px; font-size: var(--t-micro); line-height: 1.4; color: var(--c-text-2); }
 .tp-wertungfolgt__puls { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--tp-gold); animation: tp-puls 1.4s var(--ease) infinite; }
 @media (min-width: 1024px) { .tp-gesperrt > .tp-wertungfolgt { max-width: 440px; } }
+/* v25 Befund 1: dezente Nebenzeile am alten Spiel, wenn der nächste Spieltag schon offen ist */
+.tp-gesperrt.is-neben { margin-top: var(--s-5); padding-top: var(--s-4); border-top: 1px solid var(--c-line); opacity: .92; }
+.tp-wertung-neben { display: flex; align-items: center; gap: var(--s-2); margin-bottom: var(--s-3); font-size: var(--t-micro); color: var(--c-text-2); }
+.tp-wertung-neben svg { flex: none; color: var(--tp-gold); }
 
 /* Live-Leiste (src/ui/tor): am Handy über der Tab-Leiste, am Desktop unten mittig */
 .tp .ll { --ll-unten: calc(58px + max(env(safe-area-inset-bottom), 6px) + 8px); }

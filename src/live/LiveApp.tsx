@@ -247,7 +247,9 @@ export function LiveApp() {
         <a href="/tippen">Tipp-Liga</a>
         <a href="/impressum">Impressum</a>
         <a href="/datenschutz">Datenschutz</a>
-        <span>Eigener Liveticker des Vereins · ohne Gewähr</span>
+        {/* v25 Befund 5: eine zustandsabhängige Quellenzeile (gleiche Quelle wie
+            der Ticker-Fuß) — kein Widerspruch „FuPa“ oben / „Eigener“ unten. */}
+        <span>{quelleFuss(m?.source, m?.fupaUrl, VORFUEHRUNG).text}</span>
         <InstagramZeile className="ig-zeile--fuss" text="Tore, Interviews, MOTM auch in der Story: @svagathenburg" />
       </footer>
       {m && laeuft && (
@@ -417,7 +419,9 @@ function AlbumCheckin({ laeuft }: { laeuft: boolean }) {
       <QrCode size={24} strokeWidth={1.5} aria-hidden="true" />
       <span>
         <b>{laeuft ? 'Am Platz? Noch schnell einchecken' : 'Am Eingang einchecken'}</b>
-        <small>QR-Code am Eingang scannen, Sticker-Tütchen öffnen — beim 5. Heimspiel gibt’s Freibier oder Bratwurst.</small>
+        {/* v25 Befund 3: Belohnungstext zentral aus club.ts (ALBUM_LINK.belohnung) —
+            „Getränk nach Wahl“ statt veraltetem „Freibier“ (Jugendschutz). */}
+        <small>QR-Code am Eingang scannen, Sticker-Tütchen öffnen — {ALBUM_LINK.belohnung}.</small>
       </span>
       <ArrowRight size={18} strokeWidth={1.5} aria-hidden="true" />
     </a>
@@ -501,7 +505,7 @@ function Ticker({ data, players, nabe }: { data: LiveData; players: Map<string, 
   const stand = useMemo(() => spielstandVerlauf(data.events), [data.events])
   const m = data.match!
   const spielerName = (slug?: string | null) => (slug ? players.get(slug)?.name ?? null : null)
-  const fuss = quelleFuss(m.source, m.fupaUrl)
+  const fuss = quelleFuss(m.source, m.fupaUrl, VORFUEHRUNG)
   if (!data.events.length) {
     return (
       <div className="lv-card lv-card--pad lv-leer">
@@ -574,7 +578,7 @@ function TickerZeile({
   const min = minuteLabel(e.minute, e.extra)
   const standText = stand ? (home ? `${stand[0]}:${stand[1]}` : `${stand[1]}:${stand[0]}`) : ''
   const t = zeileTexte(e, { opponent, stand: standText, spielerName })
-  const credit = reporterCredit(e, fupaAutor)
+  const credit = reporterCredit(e, fupaAutor, VORFUEHRUNG)
   const reaktBar = nabe.aktiv && REAKTION_TYPEN.includes(e.type) ? <ReaktionenLeiste id={e.id} nabe={nabe} /> : null
 
   if (e.type === 'anpfiff' || e.type === 'halbzeit' || e.type === 'wiederanpfiff' || e.type === 'abpfiff') {
