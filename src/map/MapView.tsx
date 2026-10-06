@@ -182,7 +182,10 @@ function MapDock() {
         <Target size={18} strokeWidth={1.5} aria-hidden="true" />
         Tippen
       </a>
-      <button className="kdock__btn kdock__btn--cta" data-active={place === 'training'} onClick={() => openPlace('training')}>
+      {/* v25 Befund 14: Mitspielen ist ein neutraler Tab wie Karte/Live/Tippen
+          (kein dauerrotes Feld, das als „aktiv“ fehlgedeutet wird). Der rote CTA
+          „Jetzt tippen“ lebt in der Kachel-Zeile darüber. */}
+      <button className="kdock__btn" data-active={place === 'training'} onClick={() => openPlace('training')}>
         <PlaceIcon id="training" size={18} />
         Mitspielen
       </button>

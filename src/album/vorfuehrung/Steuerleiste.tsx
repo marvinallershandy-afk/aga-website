@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { FlaskConical, Gift, RotateCcw, Sparkles, Star, Trophy, Wand2, X, Layers } from 'lucide-react'
 import { VF_PACK_EREIGNIS, vfPackAnlegen, vfZuruecksetzen, type TestPack } from './backend'
 import { gesteRichtung, fundMelden, wappenTipp } from '../geheim/ei'
@@ -18,6 +18,22 @@ export default function Steuerleiste({ onNeu, onLabor, versteckt }: { onNeu: () 
   const [auf, setAuf] = useState(false)
   const [geste, setGeste] = useState<number | null>(null)
   const [eiNr, setEiNr] = useState(0)
+  // v25 Befund 18: beim Scrollen klappt die Pill auf den Icon-Knopf ein, damit
+  // sie Inhalt/Fußzeile nicht verdeckt; nach kurzer Ruhe wieder ausgeschrieben.
+  const [kompakt, setKompakt] = useState(false)
+  useEffect(() => {
+    let t = 0
+    const onScroll = () => {
+      setKompakt(true)
+      window.clearTimeout(t)
+      t = window.setTimeout(() => setKompakt(false), 900)
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.clearTimeout(t)
+    }
+  }, [])
 
   const pack = (art: TestPack) => {
     const p = vfPackAnlegen(art)
@@ -105,9 +121,9 @@ export default function Steuerleiste({ onNeu, onLabor, versteckt }: { onNeu: () 
             </div>
           </div>
         )}
-        <button type="button" className="vf-leiste__knopf" onClick={() => setAuf((a) => !a)} aria-expanded={auf}>
+        <button type="button" className={`vf-leiste__knopf${kompakt && !auf ? ' is-kompakt' : ''}`} onClick={() => setAuf((a) => !a)} aria-expanded={auf} aria-label="Vorführung steuern">
           {auf ? <X size={16} aria-hidden="true" /> : <FlaskConical size={16} aria-hidden="true" />}
-          {auf ? 'Schließen' : 'Vorführung steuern'}
+          <span className="vf-leiste__wort">{auf ? 'Schließen' : 'Vorführung steuern'}</span>
         </button>
       </div>
     </>

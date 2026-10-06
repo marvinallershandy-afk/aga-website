@@ -568,7 +568,10 @@ img { display: block; max-width: 100%; }
   background: rgba(11, 10, 11, .97); border-top: var(--border);
   box-shadow: 0 -18px 28px rgba(11, 10, 11, .92);
 }
-@media (min-width: 1024px) { .tp-abgabe { bottom: var(--s-3); margin: var(--s-6) 0 0; border: var(--border); border-radius: var(--r-l); } }
+/* v25 Befund 17: Am Desktop NICHT mehr über den Inhalt schweben (verdeckte
+   Bonusfrage/Elf), sondern am Fuß der rechten Spalte andocken — die Spalte ist
+   lang genug, die Abgabe steht sauber am Ende statt zu überlagern. */
+@media (min-width: 1024px) { .tp-abgabe { position: static; margin: var(--s-6) 0 0; border: var(--border); border-radius: var(--r-l); box-shadow: none; } }
 .tp-abgabe__status { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: var(--s-2); }
 .tp-abgabe__status li {
   display: inline-flex; align-items: center; gap: 4px; padding: 4px 7px; border-radius: var(--r-s); border: 1px solid var(--c-line);
@@ -922,6 +925,9 @@ img { display: block; max-width: 100%; }
   .tp-rangliste > .tp-duell { margin-top: 0; position: sticky; top: 96px; padding: var(--s-5); border-radius: var(--r-l); border: var(--border); background: linear-gradient(160deg, #181516, #111010); }
   .tp-intro { padding: var(--s-6) 0 var(--s-7); }
   .tp-steuer { top: 61px; }
+  /* v25 Befund 17: im Live-Zustand unten Platz lassen, damit die fixierte
+     Live-Leiste die Spieler-Punktereihe nicht verdeckt. */
+  .tp-spieltag.is-live { padding-bottom: 96px; }
 }
 
 /* ── v21: Bereiche (bleiben erhalten), Nächster Schritt, Einführung ── */

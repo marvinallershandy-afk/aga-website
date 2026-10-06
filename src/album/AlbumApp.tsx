@@ -191,6 +191,17 @@ export function AlbumApp() {
     }
   })
   const [aufschlagen, setAufschlagen] = useState(false)
+  // v25 Befund 18: das „Packs warten“-Sticky soll über der Fußzeile enden,
+  // nicht Impressum/Plätze überlagern.
+  const fussRef = useRef<HTMLElement>(null)
+  const [fussNah, setFussNah] = useState(false)
+  useEffect(() => {
+    const el = fussRef.current
+    if (!el || typeof IntersectionObserver === 'undefined') return
+    const io = new IntersectionObserver((eintraege) => setFussNah(eintraege[0]?.isIntersecting ?? false), { rootMargin: '0px 0px -40px 0px' })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
   // Einkleben: Warteschlange neuer Karten (bis zur Landung im Heft unsichtbar)
   const [kleben, setKleben] = useState<string[]>([])
   const [flug, setFlug] = useState<{ karte: Karte; platzKey: string; nr: number; rect: DOMRect } | null>(null)
@@ -714,7 +725,7 @@ export function AlbumApp() {
               sammeln={<SammelSeite katalog={katalog} mein={mein} ps={ps} besitz={besitz} onPack={packNeu} onNeu={() => void neuLaden()} />}
             />
             {wartende.length > 0 && !packs.length && (
-              <button type="button" className="al-fach" onClick={packsOeffnen}>
+              <button type="button" className={`al-fach${fussNah ? ' is-weg' : ''}`} onClick={packsOeffnen}>
                 <span className="hf-tuetchen__bild" aria-hidden="true" />
                 <span>
                   <b>
@@ -751,7 +762,7 @@ export function AlbumApp() {
         )}
       </main>
 
-      <footer className="al-fuss">
+      <footer className="al-fuss" ref={fussRef}>
         <span className="al-fuss__links">
           <a href="/">Vereinsseite</a> · <a href="/live">Live-Ticker</a> · <a href="/tippen">Tipp-Liga</a> · <a href="/datenschutz#album">Datenschutz</a> · <a href="/impressum">Impressum</a>
         </span>
