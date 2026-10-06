@@ -618,6 +618,7 @@ export type Database = {
       sm_roster: {
         Row: {
           freisteller_url: string | null
+          fupa_spieler_id: number | null
           im_verein_seit: number | null
           kapitaen: boolean
           kontakt_text: string | null
@@ -637,6 +638,7 @@ export type Database = {
         }
         Insert: {
           freisteller_url?: string | null
+          fupa_spieler_id?: number | null
           im_verein_seit?: number | null
           kapitaen?: boolean
           kontakt_text?: string | null
@@ -656,6 +658,7 @@ export type Database = {
         }
         Update: {
           freisteller_url?: string | null
+          fupa_spieler_id?: number | null
           im_verein_seit?: number | null
           kapitaen?: boolean
           kontakt_text?: string | null
@@ -1073,40 +1076,70 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
+          duplikat_von: string | null
+          fupa_event_id: number | null
+          fupa_name: string | null
+          fupa_name_2: string | null
+          gesperrt: boolean
           id: string
           minute: number | null
           nachspielzeit: number | null
+          platzhalter: boolean
+          quelle: string
           roster_id: string | null
           roster_id_2: string | null
           spiel_id: string
+          team: string | null
           text: string | null
+          text_quelle: string | null
           typ: string
+          versteckt: boolean
           zeitpunkt: string
         }
         Insert: {
           created_at?: string
           created_by?: string | null
+          duplikat_von?: string | null
+          fupa_event_id?: number | null
+          fupa_name?: string | null
+          fupa_name_2?: string | null
+          gesperrt?: boolean
           id?: string
           minute?: number | null
           nachspielzeit?: number | null
+          platzhalter?: boolean
+          quelle?: string
           roster_id?: string | null
           roster_id_2?: string | null
           spiel_id: string
+          team?: string | null
           text?: string | null
+          text_quelle?: string | null
           typ: string
+          versteckt?: boolean
           zeitpunkt?: string
         }
         Update: {
           created_at?: string
           created_by?: string | null
+          duplikat_von?: string | null
+          fupa_event_id?: number | null
+          fupa_name?: string | null
+          fupa_name_2?: string | null
+          gesperrt?: boolean
           id?: string
           minute?: number | null
           nachspielzeit?: number | null
+          platzhalter?: boolean
+          quelle?: string
           roster_id?: string | null
           roster_id_2?: string | null
           spiel_id?: string
+          team?: string | null
           text?: string | null
+          text_quelle?: string | null
           typ?: string
+          versteckt?: boolean
           zeitpunkt?: string
         }
         Relationships: []
@@ -1291,12 +1324,19 @@ export type Database = {
           adresse: string | null
           am_platz: string | null
           email: string | null
+          fupa_erlaubnis_art: string | null
+          fupa_erlaubnis_datum: string | null
+          fupa_erlaubnis_notiz: string | null
+          fupa_live_modus: string
+          fupa_texte_autoren: string[]
           fupa_url: string | null
           fussball_de_team_id: string | null
           fussball_de_widget_spielplan: string | null
           fussball_de_widget_tabelle: string | null
           id: number
           instagram: string | null
+          konferenz_an: boolean
+          reaktionen_an: boolean
           rechtstexte_ok: boolean
           saison: string | null
           training: string | null
@@ -1309,12 +1349,19 @@ export type Database = {
           adresse?: string | null
           am_platz?: string | null
           email?: string | null
+          fupa_erlaubnis_art?: string | null
+          fupa_erlaubnis_datum?: string | null
+          fupa_erlaubnis_notiz?: string | null
+          fupa_live_modus?: string
+          fupa_texte_autoren?: string[]
           fupa_url?: string | null
           fussball_de_team_id?: string | null
           fussball_de_widget_spielplan?: string | null
           fussball_de_widget_tabelle?: string | null
           id?: number
           instagram?: string | null
+          konferenz_an?: boolean
+          reaktionen_an?: boolean
           rechtstexte_ok?: boolean
           saison?: string | null
           training?: string | null
@@ -1327,12 +1374,19 @@ export type Database = {
           adresse?: string | null
           am_platz?: string | null
           email?: string | null
+          fupa_erlaubnis_art?: string | null
+          fupa_erlaubnis_datum?: string | null
+          fupa_erlaubnis_notiz?: string | null
+          fupa_live_modus?: string
+          fupa_texte_autoren?: string[]
           fupa_url?: string | null
           fussball_de_team_id?: string | null
           fussball_de_widget_spielplan?: string | null
           fussball_de_widget_tabelle?: string | null
           id?: number
           instagram?: string | null
+          konferenz_an?: boolean
+          reaktionen_an?: boolean
           rechtstexte_ok?: boolean
           saison?: string | null
           training?: string | null
@@ -1385,6 +1439,11 @@ export type Database = {
       }
       is_sva_team: { Args: never; Returns: boolean }
       sva_meine_rolle: { Args: never; Returns: string | null }
+      sva_admin_live_status: { Args: { p_spiel: string }; Returns: Json }
+      sva_admin_live_quelle: { Args: { p_spiel: string; p_quelle: string }; Returns: Json }
+      sva_admin_fupa_kandidaten: { Args: { p_spiel: string }; Returns: Json }
+      sva_admin_fupa_zuordnung: { Args: { p_roster: string; p_fupa: number }; Returns: undefined }
+      tipp_admin_fupa_vorschlag: { Args: { p_spiel: string }; Returns: Json }
       sva_array_distinct: { Args: { a: string[] }; Returns: boolean }
       sm_spieltagspaket: {
         Args: { p_spiel_id: string }

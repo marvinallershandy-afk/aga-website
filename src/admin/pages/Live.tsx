@@ -27,6 +27,7 @@ import { useToast } from '../components/ui/toast'
 import { useConfirm } from '../components/ui/confirm'
 import { PflegeHinweis } from '../components/PflegeHinweis'
 import { PublishButton } from '../components/PublishButton'
+import { LiveBotStatus } from '../components/LiveBotStatus'
 import { useAuth } from '../auth/AuthProvider'
 import type { RosterRow, SpielRow } from '../lib/db'
 import { friendlyError, isMissingSchema } from '../lib/db'
@@ -333,6 +334,11 @@ export function Live() {
             }} />
           )}
 
+          {/* ── FuPa-Live-Bot: Quelle + Status (nur wenn Bot aktiv) ──── */}
+          {spiel && !istVorfuehrSpiel(spiel) && (
+            <LiveBotStatus spielId={spiel.id} istLive={spiel.status === 'live' || spiel.status === 'halbzeit'} />
+          )}
+
           {/* ── Verlauf ────────────────────────────────────────────── */}
           <div className="mt-5 flex items-center justify-between">
             <h2 className="font-display text-lg tracking-wide">Verlauf</h2>
@@ -358,15 +364,23 @@ export function Live() {
               ))}
             </div>
           )}
-          {events.length === 0 ? (
-            <p className="mt-2 text-sm text-muted-foreground">Noch keine Ereignisse.</p>
-          ) : (
-            <ol className="mt-2 divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
-              {[...events].reverse().map((e) => (
-                <EventZeile key={e.id} e={e} byId={byId} />
-              ))}
-            </ol>
-          )}
+          {(() => {
+            const sichtbar = events.filter((e) => !e.versteckt)
+            const versteckt = events.length - sichtbar.length
+            if (sichtbar.length === 0) return <p className="mt-2 text-sm text-muted-foreground">Noch keine Ereignisse.</p>
+            return (
+              <>
+                <ol className="mt-2 divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
+                  {[...sichtbar].reverse().map((e) => (
+                    <EventZeile key={e.id} e={e} byId={byId} />
+                  ))}
+                </ol>
+                {versteckt > 0 && (
+                  <p className="mt-1 text-xs text-muted-foreground">{versteckt} {versteckt === 1 ? 'Duplikat' : 'Duplikate'} ausgeblendet (vom Bot als doppelt erkannt).</p>
+                )}
+              </>
+            )
+          })()}
         </>
       )}
 
@@ -454,17 +468,22 @@ const TYP_FARBE: Partial<Record<TickerTyp, string>> = {
 function EventZeile({ e, byId }: { e: AdminEvent; byId: Map<string, RosterRow> }) {
   const p1 = e.player ? byId.get(e.player) : null
   const p2 = e.player2 ? byId.get(e.player2) : null
+  const n1 = p1?.name ?? e.fupaName ?? null
+  const n2 = p2?.name ?? e.fupaName2 ?? null
+  const typStr = e.type as string
   let detail = ''
-  if (e.type === 'tor') detail = [p1?.name ?? 'ohne Namen', p2 && `Vorlage ${nachname(p2.name)}`].filter(Boolean).join(' · ')
-  else if (e.type === 'wechsel') detail = `↑ ${p1?.name ?? '?'}  ↓ ${p2?.name ?? '?'}`
-  else if (e.type === 'gelb' || e.type === 'rot' || e.type === 'gelbrot') detail = p1?.name ?? 'Gegenspieler'
+  if (e.type === 'tor') detail = e.platzhalter ? '(Torschütze folgt)' : [n1 ?? 'ohne Namen', n2 && `Vorlage ${nachname(n2)}`].filter(Boolean).join(' · ')
+  else if (e.type === 'wechsel' || typStr === 'wechsel_gegner') detail = `↑ ${n1 ?? '?'}  ↓ ${n2 ?? '?'}`
+  else if (e.type === 'gelb' || e.type === 'rot' || e.type === 'gelbrot' || e.type === 'gegentor' || typStr === 'elfmeter_verschossen') detail = n1 ?? (e.team === 'gegner' ? 'Gegenspieler' : '')
+  const istBot = e.quelle === 'fupa'
   return (
     <li className={cn('flex items-start gap-3 px-3 py-2.5', e.sync !== 'gesendet' && 'bg-sva-gold/5')}>
       <span className="w-12 shrink-0 pt-0.5 text-right font-display text-lg tabular-nums">{minuteLabel(e.minute, e.extra)}</span>
       <span className="min-w-0 flex-1">
         <span className={cn('mr-2 inline-block rounded px-1.5 py-0.5 text-[11px] font-bold uppercase', TYP_FARBE[e.type] ?? 'bg-secondary text-muted-foreground')}>
-          {TYP_LABEL[e.type]}
+          {TYP_LABEL[e.type] ?? e.type}
         </span>
+        {istBot && <span className="mr-2 inline-block rounded bg-sky-500/15 px-1.5 py-0.5 text-[10px] font-bold uppercase text-sky-400" title={e.gesperrt ? 'FuPa-Zeile, von Hand bearbeitet (Bot lässt sie in Ruhe)' : 'automatisch von FuPa'}>{e.gesperrt ? 'FuPa · bearbeitet' : 'FuPa'}</span>}
         {detail && <span className="text-sm">{detail}</span>}
         {e.text && <span className="block text-sm text-muted-foreground">{e.text}</span>}
       </span>

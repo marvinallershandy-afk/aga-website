@@ -25,6 +25,14 @@ export interface AdminEvent {
   sync: Sync
   fehler?: string
   opId?: string
+  // v23-L: Herkunft/Status (FuPa-Bot)
+  quelle?: string
+  gesperrt?: boolean
+  versteckt?: boolean
+  platzhalter?: boolean
+  team?: string | null
+  fupaName?: string | null
+  fupaName2?: string | null
 }
 
 export const tickerKey = (spielId: string | null) => ['sva_ticker', spielId] as const
@@ -40,6 +48,13 @@ function ausRow(r: TickerRow, sync: Sync = 'gesendet'): AdminEvent {
     player2: r.roster_id_2,
     text: r.text,
     sync,
+    quelle: r.quelle,
+    gesperrt: r.gesperrt,
+    versteckt: r.versteckt,
+    platzhalter: r.platzhalter,
+    team: r.team,
+    fupaName: r.fupa_name,
+    fupaName2: r.fupa_name_2,
   }
 }
 
