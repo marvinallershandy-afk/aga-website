@@ -29,6 +29,18 @@ export interface KarteRow {
   sortierung: number
   created_at: string
   updated_at: string
+  // v20-K
+  variante?: boolean
+  limitiert?: boolean
+  ziehbar_von?: string | null
+  ziehbar_bis?: string | null
+  nur_spiel_id?: string | null
+  praesentiert_von?: string | null
+  credit?: string | null
+  bild_fokus?: string | null
+  rueckseite?: string | null
+  serie?: string | null
+  motm_spiel_id?: string | null
 }
 export type KarteInput = Partial<Omit<KarteRow, 'id' | 'created_at' | 'updated_at'>>
 
@@ -54,6 +66,26 @@ export interface EinstellungenRow {
   partner_komplett_id: string | null
   updated_at: string
   updated_by: string | null
+  // v20-K
+  karten_starter?: number
+  starter_min_silber?: boolean
+  karten_heimsieg?: number
+  karten_tipp?: number
+  karten_story?: number
+  karten_freund?: number
+  karten_kapitel?: number
+  smart_pack?: boolean
+  smart_pack_belohnung?: boolean
+  schwelle_3?: number | null
+  belohnung_3?: string
+  partner_3_id?: string | null
+  tausch_min_tage?: number
+  tausch_pro_woche?: number
+  wunsch_kosten?: number
+  code_fehler_limit?: number
+  lose_checkin?: number
+  lose_komplett?: number
+  teilnahme_text?: string
 }
 export type EinstellungenInput = Partial<Omit<EinstellungenRow, 'id' | 'updated_at' | 'updated_by'>>
 
@@ -97,10 +129,10 @@ export interface Statistik {
 }
 
 export const SELTEN = [
-  { value: 'bronze', label: 'Kader (normal)', chance: 'häufig' },
-  { value: 'silber', label: 'Silber-Folie', chance: 'selten' },
-  { value: 'gold', label: 'Gold-Folie', chance: 'sehr selten' },
-  { value: 'spezial', label: 'Glitzer-Spezial', chance: 'extrem selten' },
+  { value: 'bronze', label: 'Kader (Basis)', chance: '70 %' },
+  { value: 'silber', label: 'Silber', chance: '22 %' },
+  { value: 'gold', label: 'Gold', chance: '7 %' },
+  { value: 'spezial', label: 'Spezial', chance: '1 %' },
 ] as const
 export const seltenLabel = (s: string) => SELTEN.find((x) => x.value === s)?.label ?? s
 
@@ -207,9 +239,7 @@ export function useAlbumEinstellungen() {
     queryFn: async (): Promise<EinstellungenRow | null> => {
       const { data, error } = await db
         .from('sva_album_einstellungen')
-        .select(
-          'id, aktiv, gewicht_bronze, gewicht_silber, gewicht_gold, gewicht_spezial, karten_pro_pack, doppelte_bremse, fenster_vor_min, fenster_nach_min, bonus_heimsieg, schwelle_1, belohnung_1, partner_1_id, schwelle_2, belohnung_2, partner_2_id, belohnung_komplett, partner_komplett_id, updated_at, updated_by',
-        )
+        .select('*')
         .eq('id', 1)
         .maybeSingle()
       if (error) throw error

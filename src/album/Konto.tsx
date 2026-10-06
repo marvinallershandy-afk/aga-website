@@ -61,7 +61,7 @@ export function KontoDialog({ mein, onSchliessen, onGespeichert, onAbgemeldet, o
           Dein Konto
         </h2>
         <p className="al-klein">
-          {mein.checkinsGesamt} Check-ins insgesamt · {mein.besitz.reduce((a, b) => a + b.anzahl, 0)} Sticker
+          {mein.checkinsGesamt} Check-ins insgesamt · {mein.besitz.reduce((a, b) => a + b.anzahl, 0)} Karten
         </p>
         <ProfilForm profil={mein.profil} kompakt onGespeichert={onGespeichert} />
         <div className="al-konto__unten">
@@ -82,7 +82,7 @@ export function KontoDialog({ mein, onSchliessen, onGespeichert, onAbgemeldet, o
           ) : (
             <div className="al-hinweis al-hinweis--fehler" role="alert">
               <p>
-                <b>Wirklich löschen?</b> Sticker, Gutscheine und dein Profil sind dann endgültig weg. Deine Check-ins zählen nur noch anonym in
+                <b>Wirklich löschen?</b> Karten, Gutscheine und dein Profil sind dann endgültig weg. Deine Check-ins zählen nur noch anonym in
                 der Zuschauerzahl.
               </p>
               {fehler && <p>{fehler}</p>}

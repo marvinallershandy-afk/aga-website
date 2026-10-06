@@ -194,6 +194,8 @@ await expectErr(fan2(`select tipp_abgeben($1, 1, 0)`, [ST]), 'Testspiel ohne Sch
 
 // Album-Karte: Stub der RPC aus Paket v20-karten anlegen → beim ERSTEN Tipp gutgeschrieben
 await db.exec(`create table public._karten_log (quelle text, bezug uuid, uid uuid);
+  -- v20: die echte RPC aus 20261012110000_sva_karten.sql für diesen Isolations-Test durch einen Stub ersetzen
+  drop function if exists public.album_karte_gutschreiben(text, uuid);
   create function public.album_karte_gutschreiben(p_quelle text, p_bezug uuid) returns jsonb language plpgsql security definer as $$
   begin insert into public._karten_log values (p_quelle, p_bezug, auth.uid()); return jsonb_build_object('ok', true); end $$;`)
 r = await rpc(fan2, `select tipp_abgeben($1, 1, 1, $2, null, false, '{}') j`, [S1, ANG2.slug])

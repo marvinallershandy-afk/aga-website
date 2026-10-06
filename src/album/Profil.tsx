@@ -99,7 +99,7 @@ export function ProfilForm({ profil, email, onGespeichert, kompakt }: Props) {
         <label className="al-check">
           <input type="checkbox" checked={ok} onChange={(e) => setOk(e.target.checked)} />
           <span>
-            Ich bin einverstanden, dass der SVA meine E-Mail-Adresse, meinen Vornamen mit Initial sowie Check-ins, Sticker und Gutscheine
+            Ich bin einverstanden, dass der SVA meine E-Mail-Adresse, meinen Vornamen mit Initial sowie Check-ins, Karten und Gutscheine
             für das Sammelalbum speichert. <a href="/datenschutz#album">Datenschutz</a>
           </span>
         </label>

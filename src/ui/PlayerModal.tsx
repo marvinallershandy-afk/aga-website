@@ -3,26 +3,23 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { useStore } from '../store/useStore'
 import { POSITION_LABEL, type Player } from '../data/players'
 import { HoloCard } from './HoloCard'
-import { tierOf, loadCardAssets } from './cardArt'
-import { playerMedia } from '../data/playerMedia'
+import { ladeKartenAssets } from '../karten/zeichnen'
+import { vonSpieler } from '../karten/adapter'
 import { shareStory, type ShareResult } from './storyShare'
 import { IgIcon } from './Icons'
 import { lockScroll, unlockScroll } from './PlayerGallery'
-import { hdCutout } from './hdCutout'
 import { X, ChevronLeft, ChevronRight } from 'lucide-react'
 
 const close = () => useStore.getState().setSelectedPlayer(null)
 
-// v14-D: Detail-Modal mit Karten 2.0. Vorderseite = HoloCard, Rückseite
-// (Flip) zeigt NUR echte Angaben: Name, Nummer, Position, „im Verein seit"
-// (nur wenn bekannt) und den Story-Teilen-Button. Keine 0/0/0-Stats, kein
-// Platzhalter-Spruch.
+// v14-D / v20-K: Detail-Modal mit der Sammelkarte (SvaKarte, groß, Holo-
+// Neigung, lebend). Antippen dreht sie: Rückseite mit Steckbrief (nur
+// echte Angaben: Position, Nummer, „im Verein seit" wenn bekannt).
 function ModalContent({ player, from = 0 }: { player: Player; from?: number }) {
   const [sharing, setSharing] = useState(false)
   const [result, setResult] = useState<ShareResult | null>(null)
   const [flipped, setFlipped] = useState(false)
   const panelRef = useRef<HTMLDivElement>(null)
-  const tier = tierOf(player)
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -34,7 +31,7 @@ function ModalContent({ player, from = 0 }: { player: Player; from?: number }) {
     window.addEventListener('keydown', onKey, true)
     lockScroll()
     // Story-Assets vorladen → beim Teilen bleibt die Nutzergeste „frisch"
-    void loadCardAssets(hdCutout(playerMedia(player.id, player).figure))
+    void ladeKartenAssets(vonSpieler(player))
     const prev = document.activeElement as HTMLElement | null
     panelRef.current?.querySelector<HTMLElement>('.flip-scene')?.focus()
     return () => {
@@ -79,34 +76,7 @@ function ModalContent({ player, from = 0 }: { player: Player; from?: number }) {
           aria-label={flipped ? 'Karte zurückdrehen' : 'Karte umdrehen'}
           onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), setFlipped(!flipped))}
         >
-          <div className={`flip-inner${flipped ? ' is-flipped' : ''}`}>
-            <div className="flip-face">
-              <HoloCard player={player} large />
-            </div>
-            <div className={`flip-back holo holo--${tier}`} aria-hidden={!flipped}>
-              <div className="holo__body">
-                <div className="holo__emboss" />
-                <div className="holo__frame" />
-              </div>
-              <div className="flip-back__content">
-                <img className="flip-back__crest" src="/brand/aga-logo.png" alt="" />
-                {player.number !== null && <div className="flip-back__num">{player.number}</div>}
-                <div className="flip-back__name">{player.name}</div>
-                <div className="flip-back__pos">{POSITION_LABEL[player.position]}</div>
-                {player.since !== null && <div className="flip-back__since">im Verein seit {player.since}</div>}
-                {flags.length > 0 && <div className="flip-back__flags">{flags.join(' · ')}</div>}
-                <button
-                  className="btn btn--ig flip-back__share"
-                  onClick={(e) => void onShare(e)}
-                  disabled={sharing}
-                  tabIndex={flipped ? 0 : -1}
-                >
-                  <IgIcon size={16} />
-                  {sharing ? 'Erstelle …' : 'In Story teilen'}
-                </button>
-              </div>
-            </div>
-          </div>
+          <HoloCard player={player} large seite={flipped ? 'hinten' : 'vorne'} />
         </div>
         <div className="flip-hint">{flipped ? 'Nochmal tippen: Vorderseite' : 'Karte antippen zum Drehen'}</div>
       </div>

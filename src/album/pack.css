@@ -1,0 +1,216 @@
+/* ═══ v20-K · Pack-Öffnen (PackOpening.tsx) ═══════════════════════
+   Nur transform/opacity werden animiert (60 fps auf dem Handy).
+   Seltenheitsfarbe --c je data-selt: Licht, Glut, Spalt, Strahlen.
+   ════════════════════════════════════════════════════════════════ */
+.po {
+  --c: 233, 29, 41;
+  position: fixed; inset: 0; z-index: 100; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  padding: calc(var(--s-4) + env(safe-area-inset-top)) var(--s-4) calc(var(--s-4) + env(safe-area-inset-bottom));
+  user-select: none; -webkit-user-select: none;
+}
+.po[data-selt="silber"] { --c: 214, 224, 236; }
+.po[data-selt="gold"] { --c: 232, 193, 90; }
+.po[data-selt="spezial"] { --c: 255, 122, 168; }
+.po__bg { position: fixed; inset: 0; background: radial-gradient(70% 50% at 50% 42%, #1a1113 0%, #0b0a0b 70%); }
+.po__bg i { position: absolute; pointer-events: none; }
+.po__licht {
+  inset: 0; opacity: 0; transition: opacity .7s var(--ease);
+  background: radial-gradient(52% 38% at 50% 44%, rgba(var(--c), .34), rgba(var(--c), .08) 55%, rgba(var(--c), 0) 75%);
+}
+.po[data-selt] .po__licht { opacity: .55; }
+.po[data-kp="rein"] .po__licht { opacity: .25; }
+.po[data-kp="dunkel"] .po__licht { opacity: 0; transition-duration: .35s; }
+.po[data-kp="kamera"] .po__licht, .po[data-kp="hinweis"] .po__licht, .po[data-kp="dreh"] .po__licht { opacity: 1; }
+.po[data-kp="auf"] .po__licht { opacity: .8; }
+/* Dunkle Bühne vor dem Walkout */
+.po__bg::after { content: ""; position: absolute; inset: 0; background: #000; opacity: 0; transition: opacity .45s var(--ease); }
+.po[data-kp="dunkel"] .po__bg::after { opacity: .85; }
+/* Strahlen hinter der Karte (Gold/Spezial) */
+.po__strahlen {
+  left: 50%; top: 44%; width: 220vmax; height: 220vmax; margin: -110vmax 0 0 -110vmax; border-radius: 50%;
+  background: repeating-conic-gradient(from 0deg, rgba(var(--c), .13) 0deg 2.6deg, rgba(var(--c), 0) 2.6deg 12deg);
+  -webkit-mask: radial-gradient(closest-side, #000 0%, rgba(0, 0, 0, .55) 22%, transparent 55%);
+  mask: radial-gradient(closest-side, #000 0%, rgba(0, 0, 0, .55) 22%, transparent 55%);
+  opacity: 0; transform: rotate(0deg) scale(.6); transition: opacity .8s var(--ease), transform 1.2s var(--ease);
+  will-change: transform;
+}
+.po.is-walkout .po__strahlen { opacity: 1; transform: rotate(0deg) scale(1); animation: po-dreh 26s linear infinite; }
+.po[data-kp="dunkel"] .po__strahlen { opacity: 0; }
+.po[data-selt="spezial"] .po__strahlen {
+  background: repeating-conic-gradient(from 0deg, rgba(255, 122, 168, .14) 0deg 2.6deg, transparent 2.6deg 8deg, rgba(143, 220, 255, .14) 8deg 10.6deg, transparent 10.6deg 16deg, rgba(255, 233, 168, .14) 16deg 18.6deg, transparent 18.6deg 24deg);
+}
+@keyframes po-dreh { to { transform: rotate(360deg) scale(1); } }
+/* Lichtblitz beim Walkout */
+.po__blitz { left: 50%; top: 44%; width: 140vmax; height: 140vmax; margin: -70vmax 0 0 -70vmax; border-radius: 50%; opacity: 0; background: radial-gradient(closest-side, rgba(255, 255, 255, .95), rgba(var(--c), .55) 22%, rgba(var(--c), 0) 60%); }
+.po[data-kp="kamera"] .po__blitz { animation: po-blitz .9s var(--ease) both; }
+.po--reissen .po__blitz { animation: po-blitz 1.1s var(--ease) .25s both; }
+@keyframes po-blitz { 0% { opacity: 0; transform: scale(.15); } 18% { opacity: 1; } 100% { opacity: 0; transform: scale(1.1); } }
+
+.po__buehne { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: var(--s-4); width: 100%; max-width: 440px; }
+.po__kicker { font-size: var(--t-label); font-weight: 700; letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--c-red); text-align: center; }
+.po[data-selt="gold"] .po__kicker { color: var(--c-accent); }
+.po__hint { min-height: 1.4em; font-weight: 700; font-size: var(--t-label); letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--c-text-2); }
+.po__auf { min-width: 200px; transition: opacity var(--d-2) var(--ease); }
+.po--reissen .po__auf, .po--reissen .po__hint { opacity: 0; pointer-events: none; }
+
+/* ── Tütchen ─────────────────────────────────────────────────── */
+.po-tuete {
+  --riss: 0;
+  position: relative; width: min(60vw, 250px); aspect-ratio: 250 / 370; touch-action: none; cursor: grab;
+  animation: po-schweben 4.5s ease-in-out infinite;
+}
+.po-tuete.is-zieht { cursor: grabbing; animation-play-state: paused; }
+.po-tuete.is-laden { animation: po-zittern .5s ease-in-out infinite; }
+.po-tuete[data-selt="silber"] { --tc: 214, 224, 236; }
+.po-tuete[data-selt="gold"] { --tc: 232, 193, 90; }
+.po-tuete[data-selt="spezial"] { --tc: 255, 160, 200; }
+.po-tuete__koerper, .po-tuete__lasche {
+  position: absolute; left: 0; right: 0; overflow: hidden; color: var(--c-white);
+  background:
+    linear-gradient(170deg, #ec2633 0%, #b0131c 38%, #4a080d 78%, #1c0507 100%);
+}
+.po-tuete__koerper {
+  top: 14.5%; bottom: 0; border-radius: 0 0 3px 3px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 6% 10% 26%;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, .55), inset 0 0 0 1px rgba(255, 255, 255, .14);
+}
+.po-tuete__lasche {
+  top: 0; height: 15%; border-radius: 3px 3px 0 0; transform-origin: 0% 100%;
+  transform: translate(calc(var(--riss) * 16%), calc(var(--riss) * -34%)) rotate(calc(var(--riss) * -11deg));
+  transition: transform .35s var(--ease);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .14);
+}
+.po-tuete.is-zieht .po-tuete__lasche { transition: none; }
+/* Glanzbahn der Folie */
+.po-tuete__folie {
+  position: absolute; inset: -20%; pointer-events: none;
+  background: linear-gradient(112deg, transparent 32%, rgba(255, 255, 255, .26) 44%, rgba(255, 255, 255, .05) 52%, transparent 60%);
+  animation: po-folie 5s ease-in-out infinite; mix-blend-mode: screen;
+}
+@keyframes po-folie { 0%, 100% { transform: translateX(-18%); } 50% { transform: translateX(18%); } }
+/* Kerben (Siegelnaht) oben und unten */
+.po-tuete__kerbe { position: absolute; left: 0; right: 0; top: 0; height: 10px; background: repeating-linear-gradient(90deg, rgba(0, 0, 0, .32) 0 3px, rgba(255, 255, 255, .1) 3px 6px); }
+.po-tuete__kerbe--unten { top: auto; bottom: 0; }
+.po-tuete__perfo { position: absolute; left: 6%; right: 6%; bottom: 3px; border-top: 1.5px dashed rgba(255, 255, 255, .55); }
+.po-tuete__koerper img { width: 34%; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .4)); }
+.po-tuete__koerper b { margin-top: 6px; font-family: var(--f-display); font-weight: 400; font-size: clamp(1.7rem, 7vw, 2.15rem); line-height: .95; letter-spacing: .02em; text-transform: uppercase; }
+.po-tuete__koerper em { color: var(--c-white); font-weight: 700; font-size: .625rem; letter-spacing: .24em; text-transform: uppercase; opacity: .9; }
+.po-tuete__koerper small { margin-top: 2px; font-weight: 800; font-size: .6875rem; letter-spacing: .16em; text-transform: uppercase; opacity: .8; }
+.po-tuete__partner { position: absolute; left: 9%; right: 9%; bottom: 7%; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px; border-radius: var(--r-s); background: #f4f2ef; color: #222; font-size: .5625rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+.po-tuete__partner img { max-height: 22px; max-width: 80%; object-fit: contain; }
+.po-tuete__partner strong { font-size: .8rem; letter-spacing: .04em; text-transform: none; }
+/* Spalt: Licht der besten Karte leuchtet durch */
+.po-tuete__spalt {
+  --tc: 255, 120, 120;
+  position: absolute; left: 0; right: 0; top: 13.6%; height: 2.4%; pointer-events: none; z-index: 2;
+  background: linear-gradient(90deg, rgba(var(--tc), 1), rgba(255, 255, 255, .95) 50%, rgba(var(--tc), 1));
+  transform: scaleX(var(--riss)); transform-origin: 0 50%; opacity: calc(var(--riss) * 1.4);
+  box-shadow: 0 0 18px 6px rgba(var(--tc), .55);
+}
+.po-tuete[data-selt="silber"] .po-tuete__spalt { --tc: 214, 224, 236; }
+.po-tuete[data-selt="gold"] .po-tuete__spalt { --tc: 232, 193, 90; }
+.po-tuete[data-selt="spezial"] .po-tuete__spalt { --tc: 255, 160, 200; background: linear-gradient(90deg, #ff7aa8, #ffe9a8, #8fdcff, #c9ffb8, #ff7aa8); }
+/* verdeckte Karten im Tütchen */
+.po-tuete__karten { position: absolute; left: 9%; right: 9%; top: 6%; aspect-ratio: 100 / 140; opacity: 0; }
+.po-tuete__karten .sk { position: absolute; inset: 0; }
+.po-tuete__karten .sk:nth-child(2) { transform: translate(3%, 2%) rotate(2deg); }
+.po-tuete__karten .sk:nth-child(3) { transform: translate(-3%, 3%) rotate(-2deg); }
+/* Aufreißen */
+.po-tuete.is-auf { animation: none; cursor: default; }
+.po-tuete.is-auf .po-tuete__lasche { transition: none; animation: po-lasche .6s cubic-bezier(.3, .6, .4, 1) forwards; }
+.po-tuete.is-auf .po-tuete__koerper { animation: po-koerper .7s cubic-bezier(.5, 0, .75, 0) .35s forwards; }
+.po-tuete.is-auf .po-tuete__karten { animation: po-karten-raus 1.1s var(--ease) .1s forwards; }
+.po-tuete.is-auf .po-tuete__spalt { animation: po-spalt .5s ease-out .2s forwards; }
+@keyframes po-lasche { to { transform: translate(70%, -190%) rotate(-28deg); opacity: 0; } }
+@keyframes po-koerper { to { transform: translateY(80%); opacity: 0; } }
+@keyframes po-karten-raus { 0% { opacity: 1; transform: translateY(30%); } 60% { opacity: 1; transform: translateY(-22%); } 100% { opacity: 1; transform: translateY(-14%) scale(1.06); } }
+@keyframes po-spalt { to { opacity: 0; transform: scaleX(1) scaleY(6); } }
+@keyframes po-schweben { 0%, 100% { transform: translateY(0) rotate(-.4deg); } 50% { transform: translateY(-8px) rotate(.4deg); } }
+@keyframes po-zittern { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-1.2deg); } 75% { transform: rotate(1.2deg); } }
+
+/* ── Karte aufdecken ─────────────────────────────────────────── */
+.po__buehne--karte { gap: var(--s-3); max-width: 480px; height: 100%; justify-content: center; }
+.po__kopf { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; }
+.po__skip { background: none; border: 0; color: var(--c-text-3); font-weight: 700; font-size: var(--t-label); letter-spacing: var(--ls-label); text-transform: uppercase; min-height: 44px; }
+.po__skip:hover { color: var(--c-white); }
+.po__karte { position: relative; width: min(72vw, 330px, calc((100dvh - 290px) / 1.4)); aspect-ratio: 100 / 140; perspective: 1400px; }
+.po__glow {
+  position: absolute; inset: -30% -40%; border-radius: 50%; opacity: 0; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(var(--c), .62), rgba(var(--c), .2) 45%, rgba(var(--c), 0) 75%);
+  transition: opacity .6s var(--ease);
+}
+.po__karte.is-rein .po__glow { opacity: .35; animation: po-puls 1.1s ease-in-out infinite; }
+.po__karte.is-dreh .po__glow, .po__karte.is-hinweis .po__glow, .po__karte.is-kamera .po__glow { opacity: 1; }
+.po__karte.is-auf .po__glow { opacity: .55; }
+.po__karte--bronze.is-auf .po__glow { opacity: .3; }
+.po__karte--spezial .po__glow { background: conic-gradient(from 0deg, rgba(255, 122, 168, .5), rgba(255, 233, 168, .5), rgba(143, 220, 255, .5), rgba(201, 255, 184, .5), rgba(255, 122, 168, .5)); -webkit-mask: radial-gradient(closest-side, #000 20%, transparent 75%); mask: radial-gradient(closest-side, #000 20%, transparent 75%); animation: po-dreh 6s linear infinite; }
+@keyframes po-puls { 50% { transform: scale(1.08); } }
+.po__flip { position: absolute; inset: 0; transform-style: preserve-3d; transform: rotateY(180deg); transition: transform .75s cubic-bezier(.3, .1, .2, 1); }
+.po__karte.is-dreh .po__flip, .po__karte.is-auf .po__flip { transform: rotateY(0deg); }
+.po__seite { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.po__seite--hinten { transform: rotateY(180deg); }
+.po__karte.is-rein { animation: po-rein .6s var(--ease) both; }
+.po__karte--silber.is-rein .po__flip { animation: po-wackeln .5s ease-in-out .55s 1; }
+@keyframes po-rein { from { transform: translateY(46vh) scale(.72) rotate(-4deg); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes po-wackeln { 25% { transform: rotateY(180deg) rotate(-1.6deg); } 75% { transform: rotateY(180deg) rotate(1.6deg); } }
+.po__karte.is-dunkel { transition: transform .4s var(--ease); transform: scale(.9); }
+/* Kamerafahrt: Karte fliegt aus der Tiefe heran, dreht sich einmal */
+.po__karte.is-kamera { animation: po-kamera .95s cubic-bezier(.2, .7, .2, 1) both; }
+@keyframes po-kamera {
+  0% { transform: translateY(-6%) scale(.32) rotateZ(-8deg); }
+  55% { transform: translateY(1%) scale(1.07) rotateZ(1deg); }
+  100% { transform: none; }
+}
+.po__karte.is-kamera .po__flip { animation: po-spin .95s cubic-bezier(.2, .7, .2, 1) both; }
+@keyframes po-spin { from { transform: rotateY(-180deg); } to { transform: rotateY(180deg); } }
+.po__karte.is-auf .po__flip .sk { animation: po-anheben .7s var(--ease) .25s both; }
+@keyframes po-anheben { 0% { transform: scale(1); } 40% { transform: scale(1.035); } 100% { transform: scale(1); } }
+/* Hinweise beim Walkout */
+.po__hinweise { position: absolute; left: 50%; bottom: -14%; transform: translateX(-50%); list-style: none; display: flex; gap: var(--s-2); white-space: nowrap; }
+.po__hinweise li {
+  padding: 8px 14px; border-radius: var(--r-s); border: 1px solid rgba(var(--c), .7); background: rgba(11, 10, 11, .78);
+  font-family: var(--f-display); font-size: 1.25rem; letter-spacing: .03em; text-transform: uppercase; color: var(--c-white);
+  opacity: 0; transform: translateY(10px); transition: opacity .35s var(--ease), transform .35s var(--ease);
+}
+.po__hinweise li.is-da { opacity: 1; transform: none; }
+.po__info { min-height: 76px; display: flex; flex-direction: column; align-items: center; gap: var(--s-2); text-align: center; }
+.po__name { font-family: var(--f-display); font-size: clamp(1.6rem, 7vw, 2.1rem); line-height: 1; text-transform: uppercase; animation: po-einblenden .45s var(--ease) both; }
+.po__chips { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--s-2); animation: po-einblenden .45s var(--ease) .1s both; }
+@keyframes po-einblenden { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.po__punkte { display: flex; gap: 6px; }
+.po__punkte i { width: 22px; height: 3px; border-radius: 2px; background: rgba(244, 242, 239, .18); transition: background-color .3s var(--ease); }
+.po__punkte i.is-jetzt { background: rgba(244, 242, 239, .5); }
+.po__punkte i[data-selt="bronze"] { background: var(--c-red); }
+.po__punkte i[data-selt="silber"] { background: #dfe6ee; }
+.po__punkte i[data-selt="gold"] { background: var(--c-accent); }
+.po__punkte i[data-selt="spezial"] { background: linear-gradient(90deg, #ff7aa8, #8fdcff, #ffe9a8); }
+.po__weiter { max-width: 340px; }
+
+/* ── Übersicht ───────────────────────────────────────────────── */
+.po__buehne--ende { max-width: 560px; overflow-y: auto; max-height: 100%; padding: var(--s-4) 0; }
+.po .al-h2 { text-align: center; }
+.po__liste { list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-4) var(--s-3); width: 100%; }
+.po__liste:has(li:nth-child(4)) { grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); }
+.po__liste li { position: relative; display: flex; flex-direction: column; align-items: center; gap: var(--s-2); animation: po-einkleben-rein .5s var(--ease) calc(var(--n) * 90ms) both; }
+@keyframes po-einkleben-rein { from { opacity: 0; transform: translateY(16px) scale(.94); } to { opacity: 1; transform: none; } }
+.po__liste li .sk { width: 100%; }
+/* Doppelte: Stapelkanten dahinter */
+.po__liste li.is-doppelt::before, .po__liste li.is-doppelt::after {
+  content: ""; position: absolute; left: 0; right: 0; top: 0; aspect-ratio: 100 / 140; z-index: -1;
+  clip-path: polygon(6% 0, 94% 0, 100% 4.3%, 100% 93.6%, 50% 100%, 0 93.6%, 0 4.3%);
+  background: #3a2629;
+}
+.po__liste li.is-doppelt::before { transform: translate(5px, -5px); opacity: .7; }
+.po__liste li.is-doppelt::after { transform: translate(9px, -9px); opacity: .4; }
+.po__bonus { width: 100%; padding: var(--s-3) var(--s-4); border-radius: var(--r-s); background: var(--c-ink-2); border: var(--border); font-size: var(--t-small); text-align: center; }
+.po__bonus b { font-weight: 700; color: var(--c-white); }
+.po__bonus--gold { border-color: var(--c-accent); }
+.po__aktionen { display: grid; gap: var(--s-2); width: 100%; }
+.po__story { font-size: var(--t-small); color: var(--c-text-2); text-align: center; }
+
+/* ── Ruhige Bewegung ─────────────────────────────────────────── */
+.po--ruhig *, .po--ruhig *::before, .po--ruhig *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+.po--ruhig .po__flip { transform: none !important; }
+.po--ruhig .po__seite--hinten { display: none; }
+.po--ruhig .po__strahlen { display: none; }

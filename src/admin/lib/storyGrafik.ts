@@ -5,7 +5,10 @@
 // (src/ui/cardArt.ts) und dieselbe Bildsprache (src/ui/storyShare.ts):
 // Schwarz, rotes Flutlicht, CI-Streifen, Anton/Archivo.
 // ─────────────────────────────────────────────────────────────
-import { CARD_RATIO, FONT_BODY, FONT_DISPLAY, drawPlayerCard, ensureCardFonts, loadCardAssets, loadImage } from '../../ui/cardArt'
+import { CARD_RATIO, FONT_BODY, FONT_DISPLAY, ensureCardFonts, loadImage } from '../../ui/cardArt'
+import { ladeKartenAssets, zeichneKarte } from '../../karten/zeichnen'
+import { vonSpieler } from '../../karten/adapter'
+import { playerMedia } from '../../data/playerMedia'
 import type { Player } from '../../data/players'
 import { CONTACT } from '../../data/content'
 import type { RosterRow, SpielRow } from './db'
@@ -189,18 +192,13 @@ export async function renderErgebnisStory(d: StoryDaten): Promise<HTMLCanvasElem
     ctx.fillStyle = '#E8C15A'
     ctx.fillText('SPIELER DES SPIELS', W / 2 + 5, cy - 34)
     setSpacing(ctx, 0)
-    const figur = await sameOrigin(d.motm.freisteller_url)
-    const assets = await loadCardAssets(figur)
-    ctx.save()
-    ctx.shadowColor = 'rgba(0,0,0,0.7)'
-    ctx.shadowBlur = 70
-    ctx.shadowOffsetY = 36
-    ctx.fillStyle = '#000'
-    ctx.beginPath()
-    ctx.roundRect(cx + 10, cy + 10, cw - 20, ch - 20, 30)
-    ctx.fill()
-    ctx.restore()
-    drawPlayerCard(ctx, cx, cy, cw, alsPlayer(d.motm), assets, { hero: true })
+    // v20-K: dieselbe Sammelkarte wie im Album (Spezial „Spieler des Spiels")
+    const p = alsPlayer(d.motm)
+    const figur = await sameOrigin(playerMedia(p.id, p).figure)
+    const karte = vonSpieler(p, { figur, seltenheit: 'spezial', serie: 'Spieler des Spiels', limitiert: true })
+    const assets = await ladeKartenAssets(karte)
+    zeichneKarte(ctx, karte, assets, cx, cy, cw, { schatten: true, licht: 0.5, mx: 0.3, my: 0.2, zeit: 3 })
+    void ch
   }
 
   // v16-S: „Live-Ticker präsentiert von“ — Logo auf weißer Plakette über dem Fuß

@@ -1,9 +1,9 @@
 import type { Player } from '../data/players'
 import { POSITION_LABEL } from '../data/players'
 import { CLUB, CONTACT, NEXT_MATCH } from '../data/content'
-import { CARD_RATIO, FONT_BODY, FONT_DISPLAY, drawPlayerCard, loadCardAssets } from './cardArt'
-import { playerMedia } from '../data/playerMedia'
-import { hdCutout } from './hdCutout'
+import { CARD_RATIO, FONT_BODY, FONT_DISPLAY } from './cardArt'
+import { ladeKartenAssets, zeichneKarte } from '../karten/zeichnen'
+import { vonSpieler } from '../karten/adapter'
 
 // ─────────────────────────────────────────────────────────────
 // One-Tap Instagram-Story-Share. v14-D: das Story-Bild (1080×1920)
@@ -37,7 +37,9 @@ function setSpacing(ctx: CanvasRenderingContext2D, px: number) {
 
 /** Zeichnet das Story-Bild und liefert den Canvas zurück. */
 export async function renderStoryCanvas(player: Player): Promise<HTMLCanvasElement> {
-  const assets = await loadCardAssets(hdCutout(playerMedia(player.id, player).figure))
+  // v20-K: dieselbe Sammelkarte wie im Album (src/karten)
+  const karte = vonSpieler(player)
+  const assets = await ladeKartenAssets(karte)
   const canvas = document.createElement('canvas')
   canvas.width = W
   canvas.height = H
@@ -95,16 +97,7 @@ export async function renderStoryCanvas(player: Player): Promise<HTMLCanvasEleme
   const ch = cw * CARD_RATIO
   const cx = (W - cw) / 2
   const cy = 318
-  ctx.save()
-  ctx.shadowColor = 'rgba(0,0,0,0.7)'
-  ctx.shadowBlur = 80
-  ctx.shadowOffsetY = 40
-  ctx.fillStyle = '#000'
-  ctx.beginPath()
-  ctx.roundRect(cx + 10, cy + 10, cw - 20, ch - 20, 36)
-  ctx.fill()
-  ctx.restore()
-  drawPlayerCard(ctx, cx, cy, cw, player, assets, { hero: true })
+  zeichneKarte(ctx, karte, assets, cx, cy, cw, { schatten: true, licht: 0.45, mx: 0.3, my: 0.2, zeit: 3 })
 
   // Unter der Karte: Position · Nummer
   let y = cy + ch + 96

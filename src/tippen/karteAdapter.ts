@@ -2,15 +2,15 @@
 // v20-T: DÜNNER ADAPTER Tipp-Liga ↔ Kartensystem (ohne React, damit auch
 // der Admin ihn für Story-Grafiken nutzen kann). Die Tipp-Liga fragt
 // Spielerbilder/-karten NUR hier (bzw. in SpielerKarte.tsx) an.
-// Heute: playerMedia (Greenscreen → Freisteller → Foto) + cardArt.
-// Später: Umstieg auf das neue Sammelkarten-System (src/karten/*) —
-// dann ändern sich nur diese Datei und SpielerKarte.tsx.
+// Bilder über playerMedia (Greenscreen → Freisteller → Foto), gezeichnet mit
+// dem gemeinsamen Kartensystem (src/karten/*).
 // Keine Bewertungen/Ratings (nur Name, Nummer, Position).
 // ─────────────────────────────────────────────────────────────
 import type { Player } from '../data/players'
 import { playerMedia } from '../data/playerMedia'
-import { hdCutout } from '../ui/hdCutout'
-import { drawPlayerCard, loadCardAssets, CARD_RATIO } from '../ui/cardArt'
+import { CARD_RATIO } from '../ui/cardArt'
+import { vonSpieler } from '../karten/adapter'
+import { ladeKartenAssets, zeichneKarte as zeichneSvaKarte } from '../karten/zeichnen'
 import type { KaderSpieler } from './api'
 
 export { CARD_RATIO }
@@ -41,7 +41,8 @@ export function spielerBild(k: Pick<KaderSpieler, 'id' | 'cutoutUrl' | 'fotoUrl'
 
 /** Sammelkarte auf ein Canvas zeichnen (Story-Bilder). */
 export async function zeichneKarte(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, k: KaderSpieler, kapitaen = false) {
-  const figur = hdCutout(playerMedia(k.id, { cutoutUrl: k.cutoutUrl, photoUrl: k.fotoUrl }).figure)
-  const assets = await loadCardAssets(figur)
-  drawPlayerCard(ctx, x, y, w, alsPlayer(k, kapitaen), assets, { hero: true })
+  // v20: neues Kartensystem (src/karten) – gleiche Optik wie Album und Website
+  const karte = vonSpieler(alsPlayer(k, kapitaen))
+  const assets = await ladeKartenAssets(karte)
+  zeichneSvaKarte(ctx, karte, assets, x, y, w, { licht: 0.4, mx: 0.3, my: 0.2 })
 }

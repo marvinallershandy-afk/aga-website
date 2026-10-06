@@ -245,10 +245,10 @@ export const ALBUM_LINK = {
   href: '/album',
   label: 'Sammelalbum',
   kurz: 'Album',
-  beschreibung: 'Am Platz einchecken, Karten-Packs öffnen, Album füllen — Freibier beim 5. Heimspiel.',
+  beschreibung: 'Am Platz einchecken, Karten-Packs öffnen, Album füllen — ein Getränk nach Wahl beim 3. Heimspiel.',
   titel: 'Werde Teil der Kurve',
-  nutzen: 'Bei jedem Heimspiel am Eingang einchecken und Sticker sammeln — beim 5. Mal gibt’s Freibier oder Bratwurst, beim 10. einen Fanartikel.',
-  kurzNutzen: 'Bei jedem Heimspiel Sticker sammeln',
+  nutzen: 'Bei jedem Heimspiel am Eingang einchecken und Sammelkarten holen — beim 3. Mal gibt’s ein Getränk nach Wahl, beim 6. Bratwurst und Getränk oder einen Fanartikel.',
+  kurzNutzen: 'Bei jedem Heimspiel Sammelkarten holen',
   cta: 'Zum Sammelalbum',
   bild: '/album/teaser.webp',
 } as const
