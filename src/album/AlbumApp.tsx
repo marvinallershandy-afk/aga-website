@@ -20,6 +20,7 @@ import {
   type PartnerInfo,
   type RanglistenEintrag,
   starterHolen,
+  freundHinzufuegen,
 } from './api'
 import { Gesamtstand, Heft } from './Heft'
 import { BLAETTERN_MS, zuPlatzBlaettern } from './blaettern'
@@ -268,14 +269,12 @@ export function AlbumApp() {
   useEffect(() => {
     if (!freundCode || !mein?.profil || freundErledigt.current) return
     freundErledigt.current = true
-    import('./api').then(({ freundHinzufuegen }) =>
-      freundHinzufuegen(freundCode)
-        .then((r) => {
-          setMeldung({ text: `${r.name} ist jetzt dein Freund im Album — checkt zusammen ein!`, n: Date.now() })
-          void neuLaden()
-        })
-        .catch((e) => setMeldung({ text: e instanceof AlbumFehler ? e.message : 'Der Freundes-Code hat nicht geklappt.', n: Date.now() })),
-    )
+    freundHinzufuegen(freundCode)
+      .then((r) => {
+        setMeldung({ text: `${r.name} ist jetzt dein Freund im Album — checkt zusammen ein!`, n: Date.now() })
+        void neuLaden()
+      })
+      .catch((e) => setMeldung({ text: e instanceof AlbumFehler ? e.message : 'Der Freundes-Code hat nicht geklappt.', n: Date.now() }))
   }, [freundCode, mein, neuLaden])
   const packNeu = useCallback((p: PackNeu) => setPacks((q) => [...q, { id: p.id, art: p.art, titel: p.titel }]), [])
 

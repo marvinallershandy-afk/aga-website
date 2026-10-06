@@ -3,7 +3,6 @@ import { RotateCw, Share2, Smartphone } from 'lucide-react'
 import type { Karte } from './api'
 import { SvaKarte } from '../karten/SvaKarte'
 import { gyroAnfragen, gyroBeobachten, gyroBrauchtErlaubnis } from '../karten/gyro'
-import { pullBild, alsBlob, teilen } from '../karten/export/bild'
 import { kartenDaten } from './kartenDaten'
 import { SELTEN_LABEL, name, type Platz } from './model'
 
@@ -50,6 +49,7 @@ export function KarteDetail({ platz, besitz, gesamt, saison, fanName, onSchliess
   const karteTeilen = async () => {
     setTeilt('…')
     try {
+      const { pullBild, alsBlob, teilen } = await import('../karten/export/bild')
       const r = await teilen(await alsBlob(await pullBild([daten], fanName)), `sva-${name(aktiv).toLowerCase().replace(/[^a-z0-9]+/g, '-')}.png`, 'Aus meinem SVA-Sammelalbum · aga-erste.de/album · @svagathenburg')
       setTeilt(r === 'fehler' ? 'Hat nicht geklappt.' : '')
     } catch {

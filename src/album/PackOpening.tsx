@@ -4,7 +4,6 @@ import { SvaKarte } from '../karten/SvaKarte'
 import { KartenRuecken } from '../karten/Ruecken'
 import { ruhigeBewegung, vibriere } from '../karten/medien'
 import { POSITION_NAME, SELTEN_NAME, SELTEN_RANG, type KartenDaten, type Seltenheit } from '../karten/typen'
-import { pullBild, alsBlob, teilen } from '../karten/export/bild'
 import { kartenDaten } from './kartenDaten'
 import { InstagramZeile } from '../ui/InstagramZeile'
 import './pack.css'
@@ -258,6 +257,7 @@ export function PackOpening({ packId, art, gegner, titel, partner, karten, numme
   const pullTeilen = async () => {
     setTeilt('laeuft')
     try {
+      const { pullBild, alsBlob, teilen } = await import('../karten/export/bild')
       const c = await pullBild(
         reihe.map((k) => k.daten),
         fanName,
