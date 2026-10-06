@@ -383,7 +383,7 @@ function Rueckseite({ d, id }: { d: KartenDaten; id: string }) {
         )}
         {d.rueckseite && <p className="sk__steckbrief">{d.rueckseite}</p>}
         <div className="sk__rueck-fuss">
-          <b>{kartenNummer(d) ?? '—'}</b>
+          <b>{kartenNummer(d) ?? (d.nummer != null ? `#${d.nummer}` : 'SVA')}</b>
           <span>
             <Symbol s={d.seltenheit} />
             {SELTEN_NAME[d.seltenheit]}

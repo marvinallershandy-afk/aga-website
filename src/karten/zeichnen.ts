@@ -758,7 +758,7 @@ function hinten(ctx: CanvasRenderingContext2D, d: KartenDaten, a: KartenAssets, 
   ctx.font = `${9 * u}px ${F_DISPLAY}`
   abstand(ctx, 0.36 * u)
   ctx.fillStyle = '#F4F2EF'
-  ctx.fillText(kartenNummer(d) ?? '—', cx, y + 115 * u)
+  ctx.fillText(kartenNummer(d) ?? (d.nummer != null ? `#${d.nummer}` : 'SVA'), cx, y + 115 * u)
   ctx.font = `800 ${3 * u}px ${F_TEXT}`
   abstand(ctx, 0.48 * u)
   ctx.fillStyle = 'rgba(244,242,239,0.7)'

@@ -86,7 +86,7 @@ export function Gluecksrad({ ziehung, titel, preis, partner, onClose }: { ziehun
   }
 
   return (
-    <div ref={wrap} className="fixed inset-0 z-[80] flex flex-col items-center justify-center gap-6 bg-[#0B0A0B] p-6 text-[#F4F2EF]" role="dialog" aria-modal="true" aria-label="Glücksrad">
+    <div ref={wrap} className="fixed inset-0 z-[80] flex flex-col items-center justify-center gap-4 overflow-y-auto bg-[#0B0A0B] p-6 text-[#F4F2EF]" role="dialog" aria-modal="true" aria-label="Glücksrad">
       <div className="absolute right-4 top-4 flex gap-2">
         <button type="button" className="rounded-full border border-white/30 p-2" onClick={() => void wrap.current?.requestFullscreen?.()} aria-label="Vollbild">
           <Maximize2 className="h-5 w-5" />
@@ -101,7 +101,7 @@ export function Gluecksrad({ ziehung, titel, preis, partner, onClose }: { ziehun
         {preis && <p className="mt-1 text-white/70">{preis}</p>}
         {partner && <p className="mt-1 text-xs font-bold uppercase tracking-[.16em] text-white/50">präsentiert von {partner}</p>}
       </div>
-      <div className="relative" style={{ width: 'min(78vmin, 640px)', height: 'min(78vmin, 640px)' }}>
+      <div className="relative" style={{ width: 'min(60vmin, 560px)', height: 'min(60vmin, 560px)' }}>
         <canvas ref={rad} width={1000} height={1000} className="h-full w-full" />
         <svg className="absolute left-1/2 top-[-18px] h-12 w-10 -translate-x-1/2" viewBox="0 0 40 48" aria-hidden="true">
           <path d="M20 46L4 6h32z" fill="#E8C15A" stroke="#0B0A0B" strokeWidth="3" />
