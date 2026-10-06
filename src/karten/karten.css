@@ -251,6 +251,17 @@
 .sk__rueck-fuss span { display: inline-flex; align-items: center; gap: 1.4cqw; font-weight: 800; font-size: 3cqw; letter-spacing: .16em; text-transform: uppercase; color: rgba(244, 242, 239, .7); }
 .sk__rueck-fuss small { font-weight: 600; font-size: 2.7cqw; letter-spacing: .06em; color: rgba(244, 242, 239, .5); }
 
+/* ── Kartenrücken (verdeckt) ─────────────────────────────────── */
+.sk-ruecken__grund {
+  background:
+    linear-gradient(118deg, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, .07) 46%, rgba(255, 255, 255, 0) 60%),
+    radial-gradient(120% 70% at 50% 40%, #6a141d 0%, #2a0a0e 52%, #0d0809 100%);
+}
+.sk-ruecken__mitte { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2cqw; padding-bottom: 6cqw; }
+.sk-ruecken__mitte img { width: 34cqw; height: auto; filter: drop-shadow(0 1cqw 2cqw rgba(0, 0, 0, .5)); }
+.sk-ruecken__mitte b { margin-top: 3cqw; font-family: var(--f-display, Anton, sans-serif); font-weight: 400; font-size: 9cqw; letter-spacing: .02em; text-transform: uppercase; }
+.sk-ruecken__mitte span { font-weight: 800; font-size: 3cqw; letter-spacing: .22em; text-transform: uppercase; color: rgba(244, 242, 239, .6); }
+
 /* ── Ruhige Bewegung ─────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   .sk__dreh, .sk__figur, .sk__inhalt, .sk__schatten { transition: none !important; }

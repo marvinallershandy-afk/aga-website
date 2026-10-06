@@ -28,9 +28,11 @@ export function gyroSinnvoll(): boolean {
   return window.matchMedia('(pointer: coarse)').matches && !window.matchMedia('(prefers-reduced-motion: reduce)').matches && !!doe()
 }
 export const gyroZustand = () => zustand
-export function gyroBeobachten(f: (z: Zustand) => void) {
+export function gyroBeobachten(f: (z: Zustand) => void): () => void {
   hoerer.add(f)
-  return () => hoerer.delete(f)
+  return () => {
+    hoerer.delete(f)
+  }
 }
 
 /** Aus einer Nutzergeste aufrufen (Tipp auf Karte / Knopf „Bewegen"). */

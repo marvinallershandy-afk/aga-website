@@ -47,6 +47,19 @@ export interface Karte {
   walkoutUrl?: string
   seltenheit: Seltenheit
   sortierung?: number
+  /** v20-K: Glanz-Variante eines Spielers (füllt keinen Platz) */
+  variante?: boolean
+  /** v20-K: limitierte Karte (Bonus-Seite, zählt nicht fürs Album) */
+  limitiert?: boolean
+  ziehbarVon?: string
+  ziehbarBis?: string
+  /** v20-K: Derby-Karte (nur beim Check-in an einem bestimmten Spiel) */
+  derby?: boolean
+  serie?: string
+  credit?: string
+  bildFokus?: string
+  rueckseite?: string
+  praesentiertVon?: PartnerInfo
   spieler?: {
     slug: string
     name: string
@@ -57,12 +70,16 @@ export interface Karte {
     kapitaen?: boolean
     /** nur Trainerstab: trainer | co-trainer | torwart-trainer | teammanager */
     rolle?: string
+    seit?: number
+    neuzugang?: boolean
+    tore?: number
+    vorlagen?: number
   }
-  partner?: PartnerInfo
+  partner?: PartnerInfo & { seit?: number }
 }
 
 export interface Belohnung {
-  stufe: 'schwelle_1' | 'schwelle_2' | 'komplett'
+  stufe: 'schwelle_1' | 'schwelle_2' | 'schwelle_3' | 'komplett'
   checkins?: number
   titel: string
   partner?: PartnerInfo
@@ -78,6 +95,20 @@ export interface Katalog {
     fensterNachMin: number
     bonusHeimsieg: boolean
     belohnungen: Belohnung[]
+    /** v20-K */
+    kartenStarter?: number
+    kartenHeimsieg?: number
+    kartenTipp?: number
+    kartenStory?: number
+    kartenFreund?: number
+    kartenKapitel?: number
+    tauschMinTage?: number
+    tauschProWoche?: number
+    wunschKosten?: number
+    smartPack?: boolean
+    teilnahmeText?: string
+    loseCheckin?: number
+    loseKomplett?: number
   }
   karten: Karte[]
 }
@@ -110,11 +141,63 @@ export interface Mein {
   checkinsGesamt: number
   spiele: { gegner: string; anstoss: string; at: string }[]
   besitz: { karteId: string; anzahl: number }[]
-  packs: { id: string; art: PackArt; anzahl: number; gegner?: string; at: string }[]
+  packs: { id: string; art: PackArt; anzahl: number; gegner?: string; at: string; titel?: string }[]
   gutscheine: Gutschein[]
+  // ── v20-K ──
+  freundCode?: string
+  freunde?: string[]
+  abzeichen?: string[]
+  tausche?: TauschEintrag[]
+  tauscheWoche?: number
+  kontoTage?: number
+  starterOffen?: boolean
+  advent?: { tag: number; eingeloest: boolean }[] | null
+  ziele?: Ziel[]
+  naechstesZiel?: Ziel | null
+  lose?: number
+  loseVerlauf?: { anzahl: number; quelle: string; at: string }[]
+  verlosungen?: Verlosung[]
 }
 
-export type PackArt = 'checkin' | 'heimsieg' | 'geschenk'
+export interface TauschEintrag {
+  code: string
+  biete: string
+  wunsch: string
+  status: 'offen' | 'erledigt' | 'zurueckgezogen' | 'abgelaufen'
+  eigen: boolean
+  partner?: string
+  at: string
+}
+
+export interface Ziel {
+  id: string
+  schluessel: string
+  typ: string
+  titel: string
+  beschreibung?: string
+  fortschritt: number
+  benoetigt: number
+  erreicht: boolean
+  erreichtAt?: string
+  belohnung: { karten?: number; minSeltenheit?: Seltenheit; lose?: number }
+  gueltigBis?: string
+  geheim?: boolean
+}
+
+export interface Verlosung {
+  id: string
+  titel: string
+  preis?: string
+  bildUrl?: string
+  partner?: PartnerInfo
+  stichtag?: string
+  status: 'offen' | 'gezogen'
+  gewinnerName?: string
+  gewonnen?: boolean
+  teilnahme?: boolean
+}
+
+export type PackArt = 'checkin' | 'heimsieg' | 'geschenk' | 'starter' | 'tipp' | 'story' | 'partner' | 'advent' | 'freund' | 'kapitel' | 'wunsch' | 'ziel'
 
 export interface CheckinErgebnis {
   ok: true
@@ -124,14 +207,21 @@ export interface CheckinErgebnis {
   partner?: PartnerInfo
   checkins: number
   gutscheine: { id: string; stufe: string; titel: string; code: string }[]
+  /** v20-K: Freund-Bonus (Freund ist beim selben Spiel eingecheckt) */
+  freundPackId?: string
+  freunde?: string[]
 }
 
 export interface PackInhalt {
   id: string
   art: PackArt
   gegner?: string
-  karten: { karteId: string; seltenheit: Seltenheit; neu: boolean; anzahl: number }[]
+  karten: { karteId: string; seltenheit: Seltenheit; neu: boolean; anzahl: number; variante?: boolean; limitiert?: boolean }[]
   gutscheine: { id: string; stufe: string; titel: string; code: string }[]
+  /** v20-K */
+  titel?: string
+  kapitel?: { kapitel: string; packId: string }[]
+  ziele?: { titel: string; packId?: string; lose?: number }[]
 }
 
 export interface RanglistenEintrag {
@@ -191,6 +281,25 @@ export function fehlerText(code: string, detail?: string): string {
       return 'Dieses Pack gibt es nicht (mehr).'
     case 'album_gutschein_unbekannt':
       return 'Diesen Gutschein gibt es nicht (mehr).'
+    // v20-K
+    case 'album_tausch_keine_doppelte':
+      return 'Tauschen geht nur mit Doppelten — diese Karte hast du nur einmal.'
+    case 'album_tausch_zu_neu':
+      return 'Tauschen geht ab einer Woche im Album. Bis dahin: einfach weitersammeln.'
+    case 'album_tausch_limit':
+      return 'Diese Woche hast du schon fünfmal getauscht. Nächste Woche geht es weiter.'
+    case 'album_tausch_karte':
+      return 'Diese Karte kann man nicht tauschen.'
+    case 'album_tausch_unbekannt':
+      return 'Diesen Tausch gibt es nicht (mehr).'
+    case 'album_wunsch_karte':
+      return 'Als Wunschkarte gehen nur Kader- und Silber-Karten aus dem Album.'
+    case 'album_wunsch_doppelte':
+      return 'Dafür brauchst du genug Doppelte.'
+    case 'album_freund_unbekannt':
+      return 'Diesen Freundes-Code kennen wir nicht. Bitte noch einmal prüfen.'
+    case 'album_freund_selbst':
+      return 'Das ist dein eigener Code — schick ihn an deine Freunde.'
     case 'nicht-verfuegbar':
       return 'Das Album ist gerade nicht erreichbar. Bitte versuch es gleich noch einmal.'
     default:
@@ -239,6 +348,29 @@ export const profilSpeichern = (p: { vorname: string; initial: string; rangliste
   })
 export const gutscheinEinloesen = (id: string) =>
   rpc<EinloeseErgebnis>('album_gutschein_einloesen', { p_gutschein: id })
+// ── v20-K: Karten-Quellen, Freunde, Tausch, Wunschkarte ───
+export const starterHolen = () => rpc<{ packId: string | null }>('album_starter_holen')
+export type CodeErgebnis =
+  | { ok: true; packId: string; art: PackArt; titel?: string }
+  | { ok: false; grund: 'ungueltig' | 'noch_nicht' | 'abgelaufen' | 'schon' | 'gesperrt' | 'kein_profil' }
+export const codeEinloesen = (code: string) => rpc<CodeErgebnis>('album_code_einloesen', { p_code: code })
+export const freundHinzufuegen = (code: string) => rpc<{ ok: true; name: string }>('album_freund_hinzufuegen', { p_code: code })
+export const tauschAnbieten = (biete: string, wunsch: string) => rpc<{ code: string }>('album_tausch_anbieten', { p_biete: biete, p_wunsch: wunsch })
+export interface TauschAnsicht {
+  code: string
+  von: string
+  biete: string
+  wunsch: string
+  status: TauschEintrag['status']
+  eigen: boolean
+  kannAnnehmen: boolean
+  grund?: string
+}
+export const tauschAnsehen = (code: string) => rpc<TauschAnsicht>('album_tausch_ansehen', { p_code: code })
+export const tauschAnnehmen = (code: string) => rpc<{ ok: true; erhalten: string; abgegeben: string }>('album_tausch_annehmen', { p_code: code })
+export const tauschZurueckziehen = (code: string) => rpc<{ ok: true }>('album_tausch_zurueckziehen', { p_code: code })
+export const wunschkarte = (karte: string, gegen: string[]) => rpc<{ packId: string }>('album_wunschkarte', { p_karte: karte, p_gegen: gegen })
+
 export const kontoLoeschen = () => rpc<{ ok: true; loginGeloescht: boolean }>('album_konto_loeschen')
 
 // ── Login ───────────────────────────────────────────────────

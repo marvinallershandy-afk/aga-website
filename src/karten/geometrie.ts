@@ -57,6 +57,7 @@ const r = (n: number) => Math.round(n * 100) / 100
 export function clipPolygon(poly: readonly Punkt[]): string {
   return `polygon(${poly.map(([x, y]) => `${r(x)}% ${r((y / KARTE_H) * 100)}%`).join(', ')})`
 }
+export const CLIP_UMRISS = clipPolygon(UMRISS)
 /** SVG-Punktliste (viewBox 0 0 100 140). */
 export function svgPunkte(poly: readonly Punkt[]): string {
   return poly.map(([x, y]) => `${r(x)},${r(y)}`).join(' ')
