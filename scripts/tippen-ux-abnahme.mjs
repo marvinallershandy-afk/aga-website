@@ -114,7 +114,7 @@ for (const [v, view] of [['m', M], ['d', D]]) {
   ok(sel.trim() === '', 'C1', `5× schnell tippen / Doppeltipp: keine Textselektion („${sel.slice(0, 20)}“)`)
   // C3: Kontext im Sticky-Panel
   const fuer = (await page.locator('.tp-abgabe__fuer').textContent())?.trim()
-  ok(/FIS/.test(fuer ?? ''), 'C3', `Abgabe-Knopf nennt das Spiel: „${fuer}“`)
+  ok(/FIS|Fischbek/.test(fuer ?? ''), 'C3', `Abgabe-Knopf nennt das Spiel: „${fuer}“`)
   // C7: Steuerleiste klappt beim Scrollen ein
   await page.evaluate(() => window.scrollTo(0, 900))
   await page.waitForTimeout(300)
