@@ -78,10 +78,10 @@ const SAISON = '2026/27'
 // ── Standard-Ziele ─────────────────────────────────────────────────────────
 await expectErr(as((await neuerFan('Fremd', 'F')).id, 'fremd@fan.example', `select album_admin_ziele_standard()`), 'Fan legt keine Ziele an', /album_kein_admin/)
 let r = await val(admin, `select album_admin_ziele_standard()`)
-ok(r.angelegt === 68 && r.gesamt === 68, 'Standard-Ziele: 68 angelegt (v26-Katalog; pejas_kollektion folgt in V26-K → 69) ' + JSON.stringify(r))
+ok(r.angelegt === 68 && r.gesamt === 69, 'Standard-Ziele: 68 Katalog + pejas_kollektion (V26-K) = 69 gesamt ' + JSON.stringify(r))
 await db.exec(`update sva_album_ziele set titel = 'Die Pejas-Zwillinge' where schluessel = 'zwillinge'`)
 r = await val(admin, `select album_admin_ziele_standard()`)
-ok(r.angelegt === 0 && r.gesamt === 68 && (await one(`select titel from sva_album_ziele where schluessel = 'zwillinge'`)).titel === 'Die Pejas-Zwillinge', 'Zweimal → keine Doppelten, Admin-Titel bleibt')
+ok(r.angelegt === 0 && r.gesamt === 69 && (await one(`select titel from sva_album_ziele where schluessel = 'zwillinge'`)).titel === 'Die Pejas-Zwillinge', 'Zweimal → keine Doppelten, Admin-Titel bleibt')
 const Z = Object.fromEntries((await db.query(`select schluessel, id, typ, vorlage, cardinality(coalesce(karten, '{}')) nk, cardinality(coalesce(roster_ids, '{}')) nr, belohnung_karten bk, belohnung_min_seltenheit bm, belohnung_lose bl, geheim, wiederholbar from sva_album_ziele`)).rows.map((z) => [z.schluessel, z]))
 ok(Z.zwillinge.nr === 2 && Z.warkehr.nr === 2 && Z.vater_sohn.nr === 2 && Z.familie_sva.nr === 6 && Z.familie_sva.bk === 3 && Z.familie_sva.bm === 'gold'
   && ['zwillinge', 'warkehr', 'vater_sohn', 'familie_sva'].every((k) => Z[k].vorlage === 'familie'), 'Familien-Sets: Zwillinge, Warkehr-Brüder, Vater & Sohn (je 2), Familie SVA (6, 3 Karten mind. Gold), Vorlage „familie“')
@@ -231,7 +231,7 @@ r = await val(admin, `select album_admin_ziel_status($1)`, [Z.zwillinge.id])
 ok(r.ziele.length === 1 && r.ziele[0].erreicht === 2 && JSON.stringify(r.erreicht.map((x) => x.name).sort()) === '["Anna A.","Dana D."]' && r.erreicht.every((x) => !!x.at),
   'Ziel-Status: wer hat „Zwillinge“ wann erreicht (Anna, Dana) ' + JSON.stringify(r.erreicht.map((x) => x.name)))
 r = await val(admin, `select album_admin_ziel_status()`)
-ok(r.ziele.length === 68 && r.erreicht.length > 5, 'Ziel-Status gesamt: alle Ziele mit Zählungen + letzte Erfolge')
+ok(r.ziele.length === 69 && r.erreicht.length > 5, 'Ziel-Status gesamt: alle Ziele mit Zählungen + letzte Erfolge')
 
 // ── Katalog-Regeln: Lose + Teilnahmebedingungen ────────────────────────────
 const kat = await val(asAnon, `select album_katalog()`)

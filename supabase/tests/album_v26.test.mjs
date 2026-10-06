@@ -24,16 +24,23 @@ grant execute on all functions in schema auth to anon, authenticated, service_ro
 `)
 let fails = 0
 const ok = (cond, msg) => { console.log(cond ? 'OK  ' : 'FAIL', msg); if (!cond) fails++ }
-// Supabase-Default-Privilegien je neu angelegtem Objekt nachbilden; die Migrationen
-// entziehen anschließend selbst, was intern bleiben soll (letztes Wort = Migration).
+// Supabase-Default-Privilegien nachbilden; die Migrationen entziehen anschließend
+// selbst, was intern bleiben soll (letztes Wort = Migration). Wie ziele.test:
+// einmal kurz vor dem Haupt-Karten-Paket, danach legen die späteren Migrationen
+// (v21..v26) ihre Revokes drüber — so bleiben die v26-Interna am Ende gesperrt.
 const defaults = () => db.exec(`grant select, insert, update, delete on all tables in schema public to anon, authenticated, service_role;
                                 grant execute on all functions in schema public to anon, authenticated, service_role;`)
+const KARTEN = '20261012110000_sva_karten.sql'
 const alleMig = fs.readdirSync(M).filter((f) => f.endsWith('.sql')).sort()
 for (const f of alleMig) {
-  await defaults()  // frisch erzeugte Objekte bekommen PostgREST-Defaults …
+  if (f === KARTEN) await defaults()
   try { await db.exec(fs.readFileSync(M + f, 'utf8')) } catch (e) { console.log('FAIL migration', f, '→', e.message); process.exit(1) }
 }
-// … und die v26-Migration (letzte) hat ihre Revokes zuletzt gesetzt.
+await defaults()
+try { await db.exec(fs.readFileSync(M + KARTEN, 'utf8')) } catch (e) { console.log('FAIL migration (2)', KARTEN, '→', e.message); process.exit(1) }
+for (const f of alleMig.filter((x) => x > KARTEN)) {
+  try { await db.exec(fs.readFileSync(M + f, 'utf8')) } catch (e) { console.log('FAIL migration', f, '→', e.message); process.exit(1) }
+}
 // v25-D: Diese Tests checken als Fan über den statischen Token ein → Rotation aus.
 await db.exec(`update public.sva_album_einstellungen set checkin_rotation = false where id = 1`).catch(() => {})
 
@@ -71,13 +78,13 @@ const erreicht = (fanId, schluessel) => count(`select count(*)::int n from sva_a
 
 // ── AK-1: Katalog 68, idempotent, Kategorien + typen ────────────────────────
 const stand = await val(admin, `select album_admin_ziele_standard()`)
-ok(stand.standard === 68 && stand.gesamt === 68, 'Standard-Katalog v26: 68 Ziele (pejas_kollektion folgt in V26-K → 69) ' + JSON.stringify(stand))
+ok(stand.standard === 69 && stand.gesamt === 69, 'Standard-Katalog v26: 69 Ziele (inkl. pejas_kollektion aus V26-K) ' + JSON.stringify(stand))
 await db.exec(`update sva_album_ziele set titel = 'Mein eigener Titel' where schluessel = 'karten_25'`)
 const stand2 = await val(admin, `select album_admin_ziele_standard()`)
 ok(stand2.angelegt === 0 && (await one(`select titel from sva_album_ziele where schluessel = 'karten_25'`)).titel === 'Mein eigener Titel', 'Zweiter Lauf: keine Doppelten, Admin-Titel bleibt, kategorie/bedingung werden aktualisiert')
 const kats = Object.fromEntries((await db.query(`select kategorie, count(*)::int n from sva_album_ziele group by 1`)).rows.map((r) => [r.kategorie, r.n]))
-ok(kats.start === 8 && kats.platz === 7 && kats.woche === 2 && kats.monat === 1 && kats.sammeln === 24 && kats.sets === 10 && kats.tipp === 8 && kats.sozial === 4 && kats.geheim === 4,
-  'Kategorien-Verteilung ' + JSON.stringify(kats))
+ok(kats.start === 8 && kats.platz === 7 && kats.woche === 2 && kats.monat === 1 && kats.sammeln === 24 && kats.sets === 11 && kats.tipp === 8 && kats.sozial === 4 && kats.geheim === 4,
+  'Kategorien-Verteilung (sets 11 inkl. pejas_kollektion) ' + JSON.stringify(kats))
 const typen = Object.fromEntries((await db.query(`select typ, count(*)::int n from sva_album_ziele group by 1`)).rows.map((r) => [r.typ, r.n]))
 ok(typen.bestand === 20 && typen.woche === 2 && typen.monat === 1, 'Neue Typen angelegt: bestand 20, woche 2, monat 1')
 ok((await one(`select bedingung from sva_album_ziele where schluessel = 'karten_25'`)).bedingung?.n === 25, 'karten_25: bedingung {"was":"karten","n":25}')
@@ -187,6 +194,95 @@ const rechte = await one(`select
   has_function_privilege('authenticated', 'public.sva_album_v26_nachziehen()', 'execute') d,
   has_function_privilege('service_role', 'public.sva_album_v26_nachziehen()', 'execute') e`)
 ok(!rechte.a && !rechte.b && rechte.c && !rechte.d && rechte.e, 'Interna _sva_album_ziele_upsert_v26 + sva_album_v26_nachziehen nur service_role ' + JSON.stringify(rechte))
+
+// ── V26-K: Kabinen-Kult ─────────────────────────────────────────────────────
+// Katalog-Standard legt die 4 Pejas-Platzhalter (aktiv=false) + Set-Ziel an.
+await val(admin, `select album_admin_ziele_standard()`)
+const pejasRoster = (await one(`select id from sm_roster where slug = 'p-pejas-e'`)).id
+ok((await count(`select count(*)::int n from sva_album_karten where kult and kollektion = 'Pejas-Kollektion'`)) === 4
+  && (await count(`select count(*)::int n from sva_album_karten where kult and aktiv and kollektion = 'Pejas-Kollektion'`)) === 0,
+  'Pejas-Kollektion: 4 Kult-Platzhalter angelegt, alle inaktiv (Einverständnis G2 offen)')
+// Content-RPC: Kabinen-Kult (aktiv) + Monats-Moment-Pool (inaktiv, album-neutral)
+const kultStd = await val(admin, `select album_admin_kult_standard()`)
+ok(kultStd.kultNeu === 9 && kultStd.momentPoolNeu === 16, 'album_admin_kult_standard: 9 Kabinen-Kult (aktiv) + 16 Monats-Moment (inaktiv) ' + JSON.stringify(kultStd))
+ok((await count(`select count(*)::int n from sva_album_karten where serie = 'Monats-Moment' and aktiv`)) === 0
+  && (await count(`select count(*)::int n from sva_album_karten where serie = 'Monats-Moment' and limitiert`)) === 16,
+  'Monats-Moment-Pool: alle inaktiv + limitiert → Album-Ökonomie unverändert')
+const katV = await val(asAnon, `select album_katalog()`)
+ok(katV.karten.some((k) => k.kult && k.kollektion === 'Kabinen-Kult') && !katV.karten.some((k) => k.serie === 'Monats-Moment'),
+  'Katalog liefert aktive Kult-Karten (kult+kollektion), inaktiver Pool bleibt verborgen')
+// Constraint: aktive Kult-Karte ohne Einverständnis unmöglich
+await expectErr(db.query(`update sva_album_karten set aktiv = true where kult and titel = 'Volltreffer'`),
+  'Kult aktiv ohne Einverständnis → Constraint', /sva_album_karten_kult/)
+
+// Admin legt eine Kult-Karte an (Einverständnis-Pflicht)
+await expectErr(admin(`select album_admin_kult_karte($1, 'Testkult', 'Anekdote', 'Pejas-Kollektion', '/album/karten/kult-platzhalter.webp', false)`, [pejasRoster]),
+  'Kult ohne Einverständnis-Haken → Fehler', /album_kult_einverstaendnis/)
+await expectErr(as((await neuerFan('Kurt', 'K')).id, 'kurt@fan.example', `select album_admin_kult_karte($1, 'X', 'Y', 'Z', null, true)`, [pejasRoster]),
+  'Fan darf keine Kult-Karte anlegen', /album_kein_admin/)
+const neuKult = await val(admin, `select album_admin_kult_karte($1, 'Der Volltreffer', 'Ball in die Weichteile.', 'Test-Kult', '/album/karten/kult-platzhalter.webp', true)`, [pejasRoster])
+const nk = await one(`select * from sva_album_karten where id = $1`, [neuKult.id])
+ok(nk.kult && nk.limitiert && !nk.variante && nk.kollektion === 'Test-Kult' && nk.einverstaendnis_at && nk.aktiv && nk.roster_id === pejasRoster,
+  'album_admin_kult_karte: kult + limitiert + Kollektion + Einverständnis + Roster korrekt')
+
+// 4 Platzhalter freischalten (Einverständnis) → Set-Ziel scharf (4 aktiv)
+for (const k of (await db.query(`select id from sva_album_karten where kult and kollektion = 'Pejas-Kollektion' and not aktiv`)).rows) {
+  await admin(`select album_admin_kult_schalten($1, true, true)`, [k.id])
+}
+const aktiveKult = (await db.query(`select id from sva_album_karten where kult and aktiv and kollektion = 'Pejas-Kollektion' order by sortierung limit 4`)).rows.map((r) => r.id)
+ok(aktiveKult.length >= 4, 'Vier Pejas-Kult-Karten freigeschaltet')
+
+// AK-6.1: Kult nie in 100 Zufalls-Packs (geschenk)
+const Rk = await neuerFan('Rolf', 'R')
+for (let i = 0; i < 100; i++) await db.query(`select sva_album_pack_ziehen_v20($1, 'geschenk', null, 3, $2, 'Zufall', null, null, false)`, [Rk.id, 'zuf' + i])
+ok((await count(`select count(*)::int n from sva_album_packs p join sva_album_karten k on k.id = any(p.karten) where p.fan_user_id = $1 and k.kult`, [Rk.id])) === 0,
+  'Kult-Karte wird in 100 Zufalls-Packs NIE gezogen')
+
+// AK-2: Album-% + Plätze unverändert mit/ohne Kult
+const plaetzeVorher = await count(`select count(*)::int n from sva_album_plaetze($1) p where p.belegt`, [Rk.id])
+await setze(Rk.id, aktiveKult[0])
+ok((await count(`select count(*)::int n from sva_album_plaetze($1) p where p.belegt`, [Rk.id])) === plaetzeVorher,
+  'Kult-Besitz ändert die belegten Album-Plätze NICHT')
+
+// AK-6.1: Check-in-Pack mit kult_chance=100 → genau eine FEHLENDE Kult-Karte
+await db.exec(`update sva_album_einstellungen set kult_chance_prozent = 100 where id = 1`)
+const spielK = async (gegner) => {
+  const id = (await one(`insert into sm_spiele (gegner, heim, anstoss, spieltag_nr) values ($1, true, now() - interval '5 min', 12) returning id`, [gegner])).id
+  return { id, token: (await val(admin, `select album_admin_code($1)`, [id])).token }
+}
+const SK1 = await spielK('Kult Eins')
+const Ck = await neuerFan('Cord', 'C')
+let cik = await val(Ck.f, `select album_checkin($1)`, [SK1.token])
+const pk = await one(`select karten from sva_album_packs where id = $1`, [cik.packId])
+const kultImPack = (await db.query(`select count(*)::int n from sva_album_karten where id = any($1) and kult`, [pk.karten])).rows[0].n
+ok(kultImPack === 1 && cik.kult === 1, 'Check-in-Pack (Chance 100 %): genau eine fehlende Kult-Karte angehängt')
+
+// alle aktiven Kult-Karten besitzen → kein Anhang
+const Dk = await neuerFan('Dörte', 'D')
+for (const k of (await db.query(`select id from sva_album_karten where kult and aktiv`)).rows) await setze(Dk.id, k.id)
+const SK2 = await spielK('Kult Zwei')
+let cik2 = await val(Dk.f, `select album_checkin($1)`, [SK2.token])
+ok(!cik2.kult, 'Fan besitzt alle Kult-Karten → kein Kult-Anhang (keine Doppelten)')
+
+// chance=0 → nie
+await db.exec(`update sva_album_einstellungen set kult_chance_prozent = 0 where id = 1`)
+const SK3 = await spielK('Kult Drei')
+const Ek = await neuerFan('Elsa', 'E')
+let cik3 = await val(Ek.f, `select album_checkin($1)`, [SK3.token])
+ok(!cik3.kult, 'kult_chance_prozent = 0 → nie eine Kult-Karte im Check-in-Pack')
+
+// AK-6.4: pejas_kollektion zündet bei 4/4
+const Fk = await neuerFan('Fenna', 'F')
+for (const k of aktiveKult.slice(0, 3)) await setze(Fk.id, k)
+let opk = await val(Fk.f, `select album_pack_oeffnen($1)`, [await festPack(Fk.id, (await one(`select id from sva_album_karten where seltenheit='bronze' and not variante and not limitiert limit 1`)).id)])
+ok((await erreicht(Fk.id, 'pejas_kollektion')) === 0, 'pejas_kollektion: 3/4 Kult → noch nicht erreicht')
+await setze(Fk.id, aktiveKult[3])
+opk = await val(Fk.f, `select album_pack_oeffnen($1)`, [await festPack(Fk.id, (await one(`select id from sva_album_karten where seltenheit='silber' and not variante and not limitiert limit 1`)).id)])
+ok((await erreicht(Fk.id, 'pejas_kollektion')) === 1, 'pejas_kollektion: 4/4 Kult-Karten → erreicht')
+
+// AK-6.7: Wunschkarte liefert nie Kult (limitiert ausgeschlossen)
+const wunschKandidaten = await count(`select count(*)::int n from sva_album_karten where kult and aktiv and not limitiert`, [])
+ok(wunschKandidaten === 0, 'Kult ist immer limitiert → Wunschkarte/Zufall können es nie liefern')
 
 console.log(fails ? `\n${fails} FEHLER` : '\nALLES GRÜN')
 process.exit(fails ? 1 : 0)

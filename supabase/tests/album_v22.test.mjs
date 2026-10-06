@@ -111,7 +111,7 @@ const katText = JSON.stringify(kat)
 ok(kat.karten.length > 40 && !kat.karten.some((k) => k.geheim) && !/Platzwart|Geheimtaktik|verlorene Ball|Seit 1949/.test(katText), 'Öffentlicher Katalog ohne Geheimkarten (weder Titel noch IDs)')
 ok(kat.regeln.shinyChance === 250 && kat.regeln.geheimAnzahl === 4 && kat.regeln.vereinsGeburtstag === undefined, 'Katalog-Regeln: shinyChance 250, geheimAnzahl 4, kein Geburtstag gesetzt')
 const meinNach = await val(LENA.f, `select album_mein()`)
-ok(meinNach.besitz.length >= meinVorher.besitz.length && meinNach.lose === meinVorher.lose && JSON.stringify(meinNach.ziele.map((z) => z.schluessel).sort()) === JSON.stringify(meinVorher.ziele.map((z) => z.schluessel).sort()), 'album_mein: bisherige Felder unverändert')
+ok(meinNach.besitz.length >= meinVorher.besitz.length && meinNach.lose >= meinVorher.lose && JSON.stringify(meinNach.ziele.map((z) => z.schluessel).sort()) === JSON.stringify(meinVorher.ziele.map((z) => z.schluessel).sort()), 'album_mein: bisherige Felder unverändert (v26: Lose dürfen durch neue Bestand-Ziele wachsen)')
 ok(meinNach.geheim.length === 4 && meinNach.geheim.every((g) => g.gefunden === false && !g.karte && g.raetsel && !g.schluessel), 'Geheimseite: 4 Rätsel, ohne Karte/Schlüssel/Ort')
 ok(Array.isArray(meinNach.shiny) && meinNach.shiny.length === 0 && Array.isArray(meinNach.shinyErstfunde), 'album_mein: shiny + shinyErstfunde (leer)')
 
