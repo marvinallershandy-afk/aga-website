@@ -39,6 +39,7 @@ interface Form {
   aktiv: boolean
   seit: string
   kontaktText: string
+  fupaId: string
 }
 
 const LEER: Form = {
@@ -51,6 +52,7 @@ const LEER: Form = {
   aktiv: true,
   seit: '',
   kontaktText: '',
+  fupaId: '',
 }
 
 export interface KaderSpeichern {
@@ -104,6 +106,7 @@ export function KaderEditor({
         aktiv: row.aktiv,
         seit: row.im_verein_seit != null ? String(row.im_verein_seit) : '',
         kontaktText: row.kontakt_text ?? '',
+        fupaId: (row as RosterRow & { fupa_spieler_id?: number | null }).fupa_spieler_id != null ? String((row as RosterRow & { fupa_spieler_id?: number | null }).fupa_spieler_id) : '',
       })
       setFoto({ url: row.foto_url, cutout: row.freisteller_url ?? null })
     } else {
@@ -196,7 +199,9 @@ export function KaderEditor({
           kontakt_text: form.rolle === 'teammanager' ? form.kontaktText.trim() || null : null,
           foto_url,
           freisteller_url,
-        },
+          // v23-U: FuPa-Spieler-ID (für die Live-Bot-Zuordnung), nur Spieler.
+          fupa_spieler_id: istSpieler && form.fupaId.trim() ? Number(form.fupaId) : null,
+        } as RosterInput,
       })
       onClose()
     } catch (e) {
@@ -351,6 +356,18 @@ export function KaderEditor({
                   placeholder="–"
                 />
                 {nummerKonflikt && <p className="text-xs text-sva-gold">Nummer {form.nummer} hat schon {nummerKonflikt.name}.</p>}
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="k-fupa">FuPa-Spieler-ID (optional)</Label>
+                <Input
+                  id="k-fupa"
+                  className="h-12 w-36 text-base"
+                  inputMode="numeric"
+                  value={form.fupaId}
+                  onChange={(e) => set('fupaId', e.target.value.replace(/\D/g, '').slice(0, 10))}
+                  placeholder="z. B. 701234"
+                />
+                <p className="text-xs text-muted-foreground">Verbindet den Spieler mit FuPa, damit der Live-Bot Tore richtig zuordnet. Am einfachsten im Ticker-Pult über „FuPa-Spieler zuordnen“.</p>
               </div>
             </>
           )}
