@@ -1,5 +1,9 @@
 # SVA-Stickerheft („Sammelalbum“) mit QR-Check-in
 
+> **v22-A:** Shiny-Karten, Geheimkarten (Easter Eggs), Einführung, Album-Vorführung (`/album?vorfuehrung=1`)
+> und Kartenlabor — Konzept + Bedienung: **docs/KARTEN.md** §0 und „v22-A“. Migration
+> `20261014110000_sva_album_v22.sql` nach `20261013200000_sva_album_v21.sql`.
+>
 > **v20-K:** Das Album ist jetzt ein Sammelkarten-Album — Kartensystem, Pack-Öffnen, Kapitel,
 > Ziele, Tausch, Codes, Lose/Verlosungen, Admin-Woche: **docs/KARTEN.md**. Migration
 > `20261012110000_sva_karten.sql` nach `20261011110000_sva_am_platz.sql` anwenden; neue

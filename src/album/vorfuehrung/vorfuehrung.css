@@ -1,0 +1,44 @@
+/* v22-A · Album-Vorführung: Markierung + Steuerleiste */
+.al-vf-band {
+  position: sticky; top: 0; z-index: 60; display: flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 30px; padding: 4px 16px; background: repeating-linear-gradient(135deg, #E91D29 0 12px, #c4161f 12px 24px);
+  color: #fff; font-size: 11px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; text-align: center;
+}
+.al-vf-band span { font-weight: 600; letter-spacing: .04em; text-transform: none; opacity: .9; }
+.vf-leiste { position: fixed; right: 16px; bottom: calc(96px + env(safe-area-inset-bottom)); z-index: 90; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.vf-leiste__knopf {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border-radius: 999px;
+  background: #f4f2ef; color: #141213; border: 0; font-size: 13px; font-weight: 800; cursor: pointer;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .5), 0 0 0 3px rgba(233, 29, 41, .7);
+}
+.vf-leiste__panel {
+  display: flex; flex-direction: column; gap: 4px; width: min(300px, calc(100vw - 32px)); padding: 10px; border-radius: 14px;
+  background: #141213; border: 1px solid rgba(244, 242, 239, .14); box-shadow: 0 24px 60px rgba(0, 0, 0, .65);
+  animation: vf-auf .28s cubic-bezier(.22, 1, .36, 1) both; transform-origin: 100% 100%;
+}
+@keyframes vf-auf { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: none; } }
+.vf-leiste__titel { padding: 4px 8px 8px; font-size: 11px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: #E91D29; }
+.vf-leiste__titel span { display: block; margin-top: 2px; font-weight: 600; letter-spacing: .02em; text-transform: none; color: rgba(244, 242, 239, .55); }
+.vf-leiste__panel > button {
+  display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 10px; border-radius: 8px; border: 0;
+  background: transparent; color: #f4f2ef; font-size: 14px; font-weight: 700; text-align: left; cursor: pointer; transition: background-color .15s;
+}
+.vf-leiste__panel > button:hover, .vf-leiste__panel > button:focus-visible { background: rgba(244, 242, 239, .08); }
+.vf-leiste__panel > button small { margin-left: auto; font-size: 11px; font-weight: 600; color: rgba(244, 242, 239, .5); }
+.vf-leiste__panel > button.is-shiny { color: #f6d77c; }
+.vf-leiste__fuss { display: flex; justify-content: space-between; gap: 8px; margin-top: 6px; padding-top: 8px; border-top: 1px solid rgba(244, 242, 239, .1); }
+.vf-leiste__fuss button, .vf-leiste__fuss a {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 8px; border: 0; border-radius: 6px; background: none;
+  color: rgba(244, 242, 239, .7); font-size: 12px; font-weight: 700; text-decoration: none; cursor: pointer;
+}
+.vf-leiste__fuss button:hover, .vf-leiste__fuss a:hover { color: #fff; background: rgba(244, 242, 239, .06); }
+.vf-geste {
+  position: fixed; left: 50%; top: 22%; z-index: 95; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 14px 18px; border-radius: 14px;
+  background: rgba(11, 10, 11, .9); border: 1px solid rgba(232, 193, 90, .4); pointer-events: none;
+}
+.vf-geste small { font-size: 11px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: #e8c15a; }
+.vf-geste span { display: flex; gap: 6px; }
+.vf-geste b { font-size: 26px; line-height: 1; color: rgba(244, 242, 239, .25); transition: color .2s, transform .25s cubic-bezier(.22, 1, .36, 1); }
+.vf-geste b.is-da { color: #f4f2ef; transform: translateY(-3px); }
+@media (prefers-reduced-motion: reduce) { .vf-leiste__panel { animation: none; } }

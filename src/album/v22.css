@@ -1,0 +1,22 @@
+/* ═══ v22-A · Album: Geburtstags-Kerzen, Vorführungs-Markierung, UX-Feinschliff ═══ */
+
+/* Vereins-Geburtstag — drei kleine Kerzen (nur an diesem Tag; antippen = Geheimkarte) */
+.hb-startseite { position: relative; }
+.al-kerzen { position: absolute; right: 0; top: -6px; z-index: 2; display: flex; align-items: flex-end; gap: 5px; height: 44px; padding: 0 6px; border: 0; background: none; cursor: pointer; }
+.al-kerzen i { position: relative; display: block; width: 5px; height: 16px; border-radius: 1px; background: linear-gradient(90deg, #f4f2ef, #d8d4cf); }
+.al-kerzen i:nth-child(2) { height: 21px; background: linear-gradient(90deg, #E91D29, #b0131c); }
+.al-kerzen i::after {
+  content: ""; position: absolute; left: 50%; bottom: 100%; width: 7px; height: 11px; margin-left: -3.5px; border-radius: 50% 50% 45% 45% / 60% 60% 40% 40%;
+  background: radial-gradient(circle at 50% 70%, #fff6d6 0%, #ffd27a 40%, #ff8a3d 75%, rgba(255, 138, 61, 0) 100%);
+  transform-origin: 50% 100%; animation: al-flamme 1.2s ease-in-out infinite alternate;
+}
+.al-kerzen i:nth-child(2)::after { animation-delay: -.4s; }
+.al-kerzen i:nth-child(3)::after { animation-delay: -.8s; }
+@keyframes al-flamme { from { transform: scale(1, 1) rotate(-3deg); opacity: .85; } to { transform: scale(.85, 1.15) rotate(3deg); opacity: 1; } }
+
+/* Vorführung: Band oben (sticky) — Kopf rutscht darunter */
+.al--vorfuehrung .al-top { top: 30px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .al-kerzen i::after { animation: none; }
+}

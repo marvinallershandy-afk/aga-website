@@ -149,3 +149,8 @@ v20-K: Alle Karten (Album, Spielerkarten, Story, 3D) kommen aus `src/karten/` (`
 Gestaltung und Animationen: **docs/KARTEN.md**. Siehe docs/ALBUM.md. Gleiche Tokens; Panini nur als Akzent (helle Sticker-Kante,
 Tütchen). Seltenheit = Folienkante (`--folie-silber/-gold/-holo`), Bewegung nur
 beim Aufdecken.
+
+v22-A: **Shiny** ist die einzige bewusste Ausnahme von „Gold nur für Rückennummer, Kapitän,
+Meister/Pokal“: Schwarz-Gold-Inversion der ganzen Karte (extrem selten, 1 : 250), dazu Shiny-Vitrine und
+Shiny-Bühne im Pack. Überall sonst bleibt Gold Akzent. Geheimkarten: Graphit + feiner Goldfaden,
+typografisch. Details: docs/KARTEN.md §0 und „v22-A“.

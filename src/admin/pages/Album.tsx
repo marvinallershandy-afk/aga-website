@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { BookOpen, CalendarCheck, Download, KeyRound, ListChecks, QrCode, RefreshCw, Settings2, Sparkles, Target, Ticket, Trophy, Users } from 'lucide-react'
+import { BookOpen, CalendarCheck, Download, ExternalLink, FlaskConical, KeyRound, ListChecks, MonitorPlay, QrCode, RefreshCw, Settings2, Sparkles, Star, Target, Ticket, Trophy, Users } from 'lucide-react'
 import { PageHeader } from './Placeholder'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
@@ -32,6 +32,7 @@ import { ZieleTab } from './album/ZieleTab'
 import { CodesTab } from './album/CodesTab'
 import { VerlosungenTab } from './album/VerlosungenTab'
 import { WocheTab } from './album/WocheTab'
+import { ShinyGeheimTab, LaborTab } from './album/ShinyGeheimTab'
 
 // ─────────────────────────────────────────────────────────────
 // v17-A: Admin „Album“ (Sammelalbum / Stickerheft auf /album).
@@ -44,8 +45,10 @@ import { WocheTab } from './album/WocheTab'
 // Die Ziehung passiert in der Datenbank; hier wird nur gepflegt.
 // ─────────────────────────────────────────────────────────────
 
-type Tab = 'woche' | 'spieltage' | 'karten' | 'ziele' | 'codes' | 'verlosungen' | 'gutscheine' | 'einstellungen'
-const TABS: Tab[] = ['woche', 'spieltage', 'karten', 'ziele', 'codes', 'verlosungen', 'gutscheine', 'einstellungen']
+type Tab = 'woche' | 'spieltage' | 'karten' | 'ziele' | 'codes' | 'verlosungen' | 'gutscheine' | 'einstellungen' | 'shiny' | 'labor'
+const TABS: Tab[] = ['woche', 'spieltage', 'karten', 'ziele', 'codes', 'verlosungen', 'gutscheine', 'einstellungen', 'shiny', 'labor']
+/** v22-A: Album als Vorführung (rein im Browser, Demo-Fan, nichts wird gespeichert). */
+export const ALBUM_VORFUEHRUNG_PFAD = '/album?vorfuehrung=1'
 
 const datum = (iso: string) =>
   new Date(iso).toLocaleString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Berlin' })
@@ -70,8 +73,18 @@ export function Album() {
 
   return (
     <>
-      <PageHeader title="Album" subtitle="Das Sammelalbum auf /album: Wochen-Ablauf, QR-Check-in, Kartenkatalog, Ziele, Codes, Verlosungen, Gutscheine und Regeln." />
-      <div role="tablist" aria-label="Album-Bereiche" className="mb-5 grid grid-cols-2 gap-1 rounded-lg bg-secondary p-1 sm:inline-grid sm:grid-cols-4 lg:grid-cols-8">
+      <PageHeader
+        title="Album"
+        subtitle="Das Sammelalbum auf /album: Wochen-Ablauf, QR-Check-in, Kartenkatalog, Ziele, Codes, Verlosungen, Gutscheine, Regeln, Shiny & Geheimkarten."
+        actions={
+          <Button asChild variant="outline" className="h-11" data-testid="album-vorfuehrung">
+            <a href={ALBUM_VORFUEHRUNG_PFAD} target="_blank" rel="noreferrer" title="Simuliertes Album mit Demo-Fan: Packs (normal, Gold, Shiny, alle Karten), Geheimkarten, Kartenlabor. Nichts wird gespeichert.">
+              <MonitorPlay className="h-4 w-4" /> Album-Vorführung öffnen <ExternalLink className="h-3.5 w-3.5 opacity-60" />
+            </a>
+          </Button>
+        }
+      />
+      <div role="tablist" aria-label="Album-Bereiche" className="mb-5 grid grid-cols-2 gap-1 rounded-lg bg-secondary p-1 sm:inline-grid sm:grid-cols-5 lg:grid-cols-10">
         {(
           [
             ['woche', 'Woche', ListChecks],
@@ -82,6 +95,8 @@ export function Album() {
             ['verlosungen', 'Verlosungen', Trophy],
             ['gutscheine', 'Gutscheine', Ticket],
             ['einstellungen', 'Regeln', Settings2],
+            ['shiny', 'Shiny & Geheim', Star],
+            ['labor', 'Labor', FlaskConical],
           ] as const
         ).map(([value, label, Icon]) => (
           <button
@@ -115,6 +130,8 @@ export function Album() {
           {tab === 'verlosungen' && <VerlosungenTab />}
           {tab === 'gutscheine' && <GutscheineTab />}
           {tab === 'einstellungen' && <EinstellungenTab />}
+          {tab === 'shiny' && <ShinyGeheimTab />}
+          {tab === 'labor' && <LaborTab />}
         </>
       )}
     </>
@@ -543,6 +560,14 @@ function EinstellungenTab() {
           {zahl('code_fehler_limit', 'Code-Fehlversuche/Std.', 3, 100, 'danach gesperrt')}
           {zahl('lose_checkin', 'Lose je Check-in', 0, 10, 'Standard 1')}
           {zahl('lose_komplett', 'Lose für volles Album', 0, 100, 'Standard 5')}
+        </div>
+        <div className="grid gap-3 sm:grid-cols-4">
+          {zahl('shiny_chance', 'Shiny-Chance 1 : N', 0, 100000, 'je Spieler-/Trainerkarte · 0 = aus · Standard 250')}
+          <div className="space-y-1.5">
+            <Label htmlFor="e-geb">Vereins-Geburtstag</Label>
+            <Input id="e-geb" type="date" value={f.vereins_geburtstag ?? ''} onChange={(e) => set({ vereins_geburtstag: e.target.value || null })} />
+            <p className="text-xs text-muted-foreground">Gründungstag (1949). Nur an diesem Tag gibt es die Geheimkarte „Seit 1949“.</p>
+          </div>
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="e-tn">Teilnahmebedingungen Verlosung</Label>

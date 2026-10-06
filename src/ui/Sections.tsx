@@ -11,6 +11,7 @@ import { PlatzFinden } from './PlatzFinden'
 import { SponsorPitch } from './SponsorsStrip'
 import { FanGallery } from './FanGallery'
 import { AlbumTeaser } from './AlbumTeaser'
+import { GeheimHinweis, VersteckterBall } from '../album/geheim/GeheimHinweis'
 import { WaIcon, IgIcon, MailIcon } from './Icons'
 // v18-A: Kalender-Abo + Probetraining-Assistent (src/alltag/)
 import { KalenderKnopf } from '../alltag/Kalender'
@@ -177,6 +178,11 @@ export function Sections() {
         <div style={{ marginTop: 'var(--s-5)', maxWidth: 420, pointerEvents: 'auto' }}>
           <KalenderKnopf variante="zeile" adresse={CONTACT.address} />
         </div>
+        {/* v22-A: Easter Egg — hier liegt ein vergessener Ball (Geheimkarte) */}
+        <div className="gh-ball-ort">
+          <VersteckterBall />
+        </div>
+        <GeheimHinweis />
       </section>
 
       {/* 5 · MUSIK / PARTYRAUM — v18-R: die Sektion trägt VIER Halte (vor der

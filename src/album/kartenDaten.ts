@@ -16,3 +16,17 @@ export function kartenDaten(k: Karte, nr?: number, gesamt?: number, saison?: str
   }
   return d
 }
+
+/** v22: Shiny-Fassung derselben Karte (Schwarz-Gold), optional mit Erstfund. */
+const shinyCache = new WeakMap<KartenDaten, Map<string, KartenDaten>>()
+export function shinyDaten(d: KartenDaten, erstfund?: { name: string; at: string } | null): KartenDaten {
+  let m = shinyCache.get(d)
+  if (!m) shinyCache.set(d, (m = new Map()))
+  const key = erstfund ? `${erstfund.name}|${erstfund.at}` : '-'
+  let s = m.get(key)
+  if (!s) {
+    s = { ...d, id: `${d.id}-shiny`, shiny: true, erstfund: erstfund ?? null }
+    m.set(key, s)
+  }
+  return s
+}

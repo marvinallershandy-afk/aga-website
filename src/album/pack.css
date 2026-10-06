@@ -214,3 +214,82 @@
 .po--ruhig .po__flip { transform: none !important; }
 .po--ruhig .po__seite--hinten { display: none; }
 .po--ruhig .po__strahlen { display: none; }
+
+/* ═══ v22 · Shiny- und Geheim-Bühne ═══════════════════════════════
+   Shiny: noch stiller als der Walkout — völlige Dunkelheit, goldener
+   Sternenstaub sammelt sich zur Karte, ruhige Goldstrahlen, Prägestempel
+   „SHINY“, beim Aufdecken fliegt der Staub auseinander. Edel statt laut. */
+.po[data-selt="shiny"] { --c: 240, 200, 98; }
+.po[data-selt="geheim"] { --c: 214, 217, 222; }
+.po[data-selt="shiny"] .po__kicker, .po[data-selt="geheim"] .po__kicker { color: #f0c862; }
+.po[data-kp="stille"] .po__bg::after { opacity: .96; transition-duration: .6s; }
+.po[data-kp="stille"] .po__licht { opacity: 0; }
+.po[data-selt="shiny"] .po__strahlen {
+  background: repeating-conic-gradient(from 0deg, rgba(240, 200, 98, .16) 0deg 1.4deg, transparent 1.4deg 9deg);
+}
+.po[data-selt="shiny"].is-walkout .po__strahlen { animation-duration: 60s; }
+.po[data-kp="stille"] .po__strahlen { opacity: 0; }
+.po[data-selt="shiny"] .po__blitz { background: radial-gradient(closest-side, rgba(255, 248, 225, .98), rgba(240, 200, 98, .6) 24%, rgba(240, 200, 98, 0) 62%); }
+.po[data-selt="geheim"] .po__strahlen { background: repeating-conic-gradient(from 0deg, rgba(214, 217, 222, .1) 0deg 1deg, transparent 1deg 14deg); }
+/* Sternenstaub */
+.po__staub { position: absolute; left: 50%; top: 44%; width: 0; height: 0; z-index: 2; pointer-events: none; }
+.po__staub i {
+  position: absolute; left: 0; top: 0; width: var(--g); height: var(--g); margin: calc(var(--g) / -2) 0 0 calc(var(--g) / -2); border-radius: 50%;
+  background: radial-gradient(circle, #fffbe8 0%, #f0c862 45%, rgba(240, 200, 98, 0) 72%);
+  box-shadow: 0 0 10px 2px rgba(240, 200, 98, .55);
+  opacity: 0; transform: translate(var(--dx), var(--dy));
+}
+.po[data-kp="stille"] .po__staub i { animation: po-staub-sammeln 1.45s cubic-bezier(.5, 0, .2, 1) var(--d) both; }
+.po[data-kp="kamera"] .po__staub i, .po[data-kp="hinweis"] .po__staub i, .po[data-kp="dreh"] .po__staub i { opacity: 0; }
+.po[data-kp="auf"] .po__staub i { animation: po-staub-weg 1.6s cubic-bezier(.15, .7, .25, 1) calc(var(--d) * .4) both; }
+@keyframes po-staub-sammeln {
+  0% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(.4); }
+  25% { opacity: 1; }
+  100% { opacity: .9; transform: translate(0, 0) scale(1.2); }
+}
+@keyframes po-staub-weg {
+  0% { opacity: 1; transform: translate(0, 0) scale(1.3); }
+  100% { opacity: 0; transform: translate(calc(var(--dx) * 1.5), calc(var(--dy) * 1.5)) scale(.5); }
+}
+.po__raunen {
+  position: absolute; left: 0; right: 0; top: 64%; z-index: 3; text-align: center;
+  font-family: var(--f-display); font-size: clamp(1.1rem, 4.6vw, 1.5rem); letter-spacing: .14em; text-transform: uppercase;
+  color: #f0c862; animation: po-raunen 1.5s var(--ease) both;
+}
+@keyframes po-raunen { 0% { opacity: 0; transform: translateY(8px); letter-spacing: .3em; } 30% { opacity: 1; } 100% { opacity: .85; transform: none; letter-spacing: .14em; } }
+/* Shiny-Karte schwebt langsamer heran (statt zu fliegen) */
+.po__karte--shiny.is-kamera { animation: po-schwebe-rein 1.25s cubic-bezier(.16, .84, .3, 1) both; }
+@keyframes po-schwebe-rein { 0% { transform: translateY(10%) scale(.55); opacity: 0; } 60% { opacity: 1; } 100% { transform: none; opacity: 1; } }
+.po__karte--shiny.is-kamera .po__flip { animation: none; }
+.po__karte--shiny .po__glow { background: radial-gradient(closest-side, rgba(255, 236, 170, .7), rgba(240, 200, 98, .25) 45%, rgba(240, 200, 98, 0) 75%); }
+.po__karte--shiny.is-auf .po__glow { opacity: .8; animation: po-puls 2.6s ease-in-out infinite; }
+.po__karte--geheim .po__glow { background: radial-gradient(closest-side, rgba(232, 193, 90, .4), rgba(214, 217, 222, .14) 50%, transparent 76%); }
+/* Prägestempel „SHINY“ */
+.po__stempel {
+  position: absolute; left: 50%; top: -7%; z-index: 4; transform: translateX(-50%);
+  padding: 6px 16px 5px; border-radius: 3px;
+  font-family: var(--f-display); font-size: clamp(1.2rem, 5vw, 1.6rem); letter-spacing: .3em; text-transform: uppercase; color: #1a1206;
+  background: linear-gradient(140deg, #fff6d6, #e0b24a 55%, #a87a22);
+  box-shadow: 0 0 0 1px rgba(255, 246, 214, .6), 0 10px 30px rgba(240, 200, 98, .45);
+  animation: po-stempel .6s cubic-bezier(.2, 1.4, .4, 1) .2s both;
+}
+@keyframes po-stempel { 0% { opacity: 0; transform: translateX(-50%) scale(1.8) rotate(-6deg); } 100% { opacity: 1; transform: translateX(-50%) scale(1) rotate(-2deg); } }
+.po__erstfund { max-width: 340px; font-size: var(--t-small); line-height: 1.45; color: #f6d77c; text-align: center; animation: po-einblenden .5s var(--ease) .25s both; }
+.po__erstfund--geheim { color: var(--c-text-2); }
+.po__punkte i[data-selt="shiny"] { background: linear-gradient(90deg, #a87a22, #fff6d6, #a87a22); }
+.po__punkte i[data-selt="geheim"] { background: #d6d9de; }
+.po__liste li.is-shiny .sk { filter: drop-shadow(0 0 12px rgba(240, 200, 98, .35)); }
+.po-tuete[data-selt="shiny"] .po-tuete__spalt { --tc: 240, 200, 98; background: linear-gradient(90deg, #a87a22, #fff6d6, #a87a22); }
+.po-tuete[data-selt="geheim"] .po-tuete__spalt { --tc: 214, 217, 222; }
+.po--ruhig .po__staub, .po--ruhig .po__raunen { display: none; }
+
+/* v22-A: WebKit (Safari/iOS) ignoriert backface-visibility, sobald Ebenen mit Blend/Maske im 3D-Kontext liegen —
+   dann lag der (gespiegelte) Kartenrücken nach dem Aufdecken über der Vorderseite. Rücken deshalb in der
+   Mitte der Drehung per Deckkraft weg- und die Vorderseite einblenden; nach dem Aufdecken ist der Rücken aus. */
+.po__karte.is-dreh .po__seite--hinten { animation: po-halb-weg .75s step-end both; }
+.po__karte.is-dreh .po__seite--vorne { animation: po-halb-da .75s step-end both; }
+.po__karte.is-auf .po__seite--hinten { opacity: 0; visibility: hidden; }
+.po__karte.is-rein .po__seite--vorne, .po__karte.is-dunkel .po__seite--vorne, .po__karte.is-stille .po__seite--vorne, .po__karte.is-hinweis .po__seite--vorne { opacity: 0; }
+.po__karte--shiny.is-kamera .po__seite--vorne { opacity: 0; }
+@keyframes po-halb-weg { 0% { opacity: 1; } 50%, 100% { opacity: 0; } }
+@keyframes po-halb-da { 0% { opacity: 0; } 50%, 100% { opacity: 1; } }

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Presentation, Play, Flag, Trash2, Copy, ExternalLink, Radio, Loader2, Map as MapIcon, Trophy } from 'lucide-react'
+import { Presentation, Play, Flag, Trash2, Copy, ExternalLink, Radio, Loader2, Map as MapIcon, Trophy, BookOpen } from 'lucide-react'
 import { Card, CardContent } from './ui/card'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
@@ -173,6 +173,12 @@ export function VorfuehrungKarte({ className }: { className?: string }) {
               <Button asChild size="sm" variant="outline" className="h-10" data-testid="vf-tippliga">
                 <a href="/tippen?vorfuehrung=1" target="_blank" rel="noreferrer">
                   <Trophy className="h-4 w-4" /> Tipp-Liga-Vorführung öffnen
+                </a>
+              </Button>
+              {/* v22-A: Album als Simulation (Demo-Fan, Test-Packs, Kartenlabor, nichts wird gespeichert) */}
+              <Button asChild size="sm" variant="outline" className="h-10" data-testid="vf-album">
+                <a href="/album?vorfuehrung=1" target="_blank" rel="noreferrer">
+                  <BookOpen className="h-4 w-4" /> Album-Vorführung öffnen
                 </a>
               </Button>
             </div>

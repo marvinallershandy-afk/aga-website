@@ -1,0 +1,55 @@
+/* v22-A · „So funktioniert’s“ + „So kommst du an Karten“ (Designsystem: Linien statt Kästen, Rot als Akzent) */
+.ef {
+  position: fixed; inset: 0; z-index: 110; display: flex; align-items: flex-end; justify-content: center;
+  padding: var(--s-4); padding-bottom: calc(var(--s-4) + env(safe-area-inset-bottom));
+  background: rgba(7, 6, 7, .72); animation: ef-ein .3s var(--ease) both;
+}
+@media (min-width: 640px) { .ef { align-items: center; } }
+@keyframes ef-ein { from { opacity: 0; } to { opacity: 1; } }
+.ef__blatt {
+  position: relative; width: min(460px, 100%); padding: var(--s-6) var(--s-5) var(--s-4); border-radius: var(--r-l);
+  background: radial-gradient(110% 60% at 50% -10%, rgba(233, 29, 41, .14), rgba(233, 29, 41, 0) 60%), var(--c-ink);
+  border: var(--border); box-shadow: 0 30px 80px rgba(0, 0, 0, .55); outline: none;
+  animation: ef-hoch .45s var(--ease) both;
+}
+@keyframes ef-hoch { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+.ef__x { position: absolute; right: 8px; top: 8px; display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 50%; background: none; color: var(--c-text-2); cursor: pointer; }
+.ef__x:hover { color: var(--c-white); background: rgba(244, 242, 239, .06); }
+.ef__inhalt { min-height: 260px; animation: ef-schritt .4s var(--ease) both; }
+@keyframes ef-schritt { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } }
+.ef__icon { display: grid; place-items: center; width: 60px; height: 60px; border-radius: 50%; border: 1px solid var(--c-line-strong); color: var(--c-red); }
+.ef__kicker { margin-top: var(--s-4); font-size: var(--t-label); font-weight: 700; letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--c-red); }
+.ef__titel { margin-top: var(--s-2); font-family: var(--f-display); font-weight: 400; font-size: clamp(1.7rem, 7vw, 2.2rem); line-height: 1; text-transform: uppercase; }
+.ef__text { margin-top: var(--s-3); font-size: var(--t-body, 1rem); line-height: 1.55; color: var(--c-text-2); }
+.ef__text b { color: var(--c-white); font-weight: 700; }
+.ef__chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: var(--s-4); }
+.ef__chips span { padding: 4px 10px; border-radius: 999px; border: 1px solid var(--c-line-strong); font-size: var(--t-micro); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--c-white); }
+.ef__fuss { display: flex; align-items: center; gap: var(--s-2); margin-top: var(--s-5); padding-top: var(--s-4); border-top: var(--border); }
+.ef__punkte { display: flex; gap: 6px; margin-right: auto; }
+.ef__punkte i { width: 16px; height: 3px; border-radius: 2px; background: rgba(244, 242, 239, .18); transition: background-color .3s var(--ease), width .3s var(--ease); }
+.ef__punkte i.is-da { background: rgba(233, 29, 41, .55); }
+.ef__punkte i.is-jetzt { width: 26px; background: var(--c-red); }
+.ef__tipp { display: flex; align-items: center; gap: 6px; margin-top: var(--s-3); font-size: var(--t-micro); color: var(--c-text-3); }
+
+/* So kommst du an Karten (Start-Seite) */
+.kq { margin-top: var(--s-6); }
+.kq__liste { list-style: none; margin-top: var(--s-3); }
+.kq__liste li { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; align-items: center; gap: var(--s-3); min-height: 48px; border-top: var(--border); }
+.kq__liste li:last-child { border-bottom: var(--border); }
+.kq__icon { color: var(--c-red); display: grid; place-items: center; }
+.kq__was { font-size: var(--t-small); color: var(--c-text-2); }
+.kq__wieviel { font-size: var(--t-small); font-weight: 700; color: var(--c-white); text-align: right; }
+.kq__mehr { margin-top: var(--s-3); font-size: var(--t-small); }
+
+/* Taktiles Feedback (Mikro-Interaktion) */
+.al-btn:active, .hf-tuetchen:active, .al-tuete-badge:active, .al-fach:active { transform: translateY(1px) scale(.985); }
+.al-btn, .hf-tuetchen, .al-tuete-badge, .al-fach { transition-property: background-color, border-color, color, transform; transition-duration: .18s; }
+.hf-platz__btn:active .sk, .gs-platz__btn:active .sk { transform: scale(.97); transition: transform .12s var(--ease); }
+.al-hilfe { display: grid; place-items: center; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ef, .ef__blatt, .ef__inhalt { animation: none; }
+  .al-btn:active, .hf-tuetchen:active, .al-tuete-badge:active, .al-fach:active { transform: none; }
+}
+/* Kopf am Handy: Hilfe steckt dort im Link „Wie funktioniert das Album?“ (Start-Seite) */
+@media (max-width: 440px) { .al-hilfe { display: none !important; } }
