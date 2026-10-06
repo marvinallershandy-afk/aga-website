@@ -86,29 +86,30 @@ const KURVE: [string, Karte['seltenheit'], string, number, string][] = [
   ['Das Urknall-Banner', 'silber', 'urknall-banner', 12, 'AGA Urknall, est. 2024: das Banner der Kurve. Hängt am Zaun, am Tor, auf jeder Feier — und ist bei jedem Heimspiel dabei.'],
 ]
 
-/** Die 4 Geheimkarten (gleiche Texte wie die Migration v22). */
-export const GEHEIM: { schluessel: string; teil: string; raetsel: string; karte: Karte }[] = [
+/** Die 4 Geheimkarten (gleiche Texte wie die Migration v22). Wie in der DB steht
+ *  hier nur SHA-256(Token) — kein Auslöser im Klartext. */
+export const GEHEIM: { schluessel: string; tokenHash: string; raetsel: string; karte: Karte }[] = [
   {
     schluessel: 'wappen',
-    teil: 'wappen|7',
+    tokenHash: '146478ad2416ed32c083437b75738edd38becbae58b6e9d4cfc5abaaa8d7b7c6',
     raetsel: 'Sieben Mal klopft, wer den Platzwart sprechen will.',
     karte: { id: 'vf-geheim-wappen', typ: 'moment', titel: 'Der Platzwart', untertitel: 'Hüter des Waldsportplatzes', bildUrl: '/album/karten/geheim-platzwart.webp', bildFokus: '50% 46%', seltenheit: 'spezial', limitiert: true, geheim: true, serie: 'Geheimkarte', rueckseite: 'Wenn das Flutlicht ausgeht, dreht er noch eine Runde: Netze, Fahnen, Kreidelinien. Ohne ihn gibt es keinen Anstoß.' },
   },
   {
     schluessel: 'ball',
-    teil: 'ball|rundgang',
+    tokenHash: '9cf35bf61b3132a7af2cab63f14494021547790b23e3ea7f62cb1d04e02902fb',
     raetsel: 'Einer ging nie ins Tor. Er wartet darauf, dass ihn jemand findet.',
     karte: { id: 'vf-geheim-ball', typ: 'fan', titel: 'Der verlorene Ball', untertitel: 'Irgendwo am Waldsportplatz', seltenheit: 'spezial', limitiert: true, geheim: true, serie: 'Geheimkarte', rueckseite: 'Über den Zaun, in den Wald, nie wieder gesehen. Bis du ihn gefunden hast. Jeder Verein hat so einen — das hier ist unserer.' },
   },
   {
     schluessel: 'geburtstag',
-    teil: 'geburtstag|kerzen',
+    tokenHash: '5c792bb3629598cfc595acaac5a2eecfa5c6b445f6746e681b021826d5d551f1',
     raetsel: 'Nur an einem Tag im Jahr brennen die Kerzen.',
     karte: { id: 'vf-geheim-geburtstag', typ: 'fan', titel: 'Seit 1949', untertitel: 'Der Geburtstag des SVA', seltenheit: 'spezial', limitiert: true, geheim: true, serie: 'Geheimkarte', rueckseite: 'Gegründet 1949 — seitdem rollt der Ball in Agathenburg und Dollern. Diese Karte gibt es nur an einem einzigen Tag im Jahr.' },
   },
   {
     schluessel: 'geste',
-    teil: 'geste|OOUULRLR',
+    tokenHash: 'd50d5dfa8d2f4ce3798a0f2d0601ff203b0683f67d2696f409dd093f0f9c15bf',
     raetsel: 'Hoch, hoch, runter, runter … wer die Alten kennt, kennt den Rest.',
     karte: { id: 'vf-geheim-geste', typ: 'fan', titel: 'Die Geheimtaktik', untertitel: 'Nur für Eingeweihte', seltenheit: 'spezial', limitiert: true, geheim: true, serie: 'Geheimkarte', rueckseite: 'Kein Trainer verrät sie, keine Taktiktafel zeigt sie. Wer sie kennt, gehört dazu.' },
   },

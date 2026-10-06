@@ -1,6 +1,11 @@
-// Monte-Carlo-Simulation der Sammelkarten-Ökonomie v20 (ohne Datenbank).
+// Monte-Carlo-Simulation der Sammelkarten-Ökonomie v20 + v22 (ohne Datenbank).
 //
 // MUSS ZUR MIGRATION PASSEN: supabase/migrations/20261012110000_sva_karten.sql
+// und (v22, Shiny) supabase/migrations/20261014100000_sva_album_v22.sql:
+//   · jede gezogene Spieler-/Trainer-Karte (nicht limitiert) ist mit
+//     1 : shiny_chance zusätzlich Shiny (sva_album_pack_shiny) — ändert an der
+//     Ziehung NICHTS (gleiche Karte, gleicher Platz), zählt nicht fürs Album.
+//   · Geheimkarten werden nie gezogen (nur Easter Eggs) → hier nicht simuliert.
 //   · Ziehung = sva_album_pack_ziehen_v20 / sva_album_karte_waehlen
 //     (Seltenheit nach Gewicht nur aus Stufen mit ziehbaren Karten, Smart-Pack
 //     auf der ersten Karte, Doppelten-Bremse, Mindest-Seltenheit)
@@ -12,6 +17,7 @@
 // Aufruf:  node scripts/karten-simulation.mjs            (10 000 Läufe je Persona)
 //          node scripts/karten-simulation.mjs 2000 8     (Läufe, Anzahl Partner)
 //          node scripts/karten-simulation.mjs 2000 6 1 50 (+ smart_pack_belohnung 0/1, doppelte_bremse)
+//          node scripts/karten-simulation.mjs 10000 6 0 25 100   (+ shiny_chance, z. B. 1 : 100)
 // Ergebnis steht in docs/KARTEN.md (Abschnitt „Ökonomie & Ziehung").
 
 // ── Einstellungen (= Defaults der Migration) ──────────────────────────────────
@@ -26,6 +32,7 @@ export const EINSTELLUNGEN = {
   tausch_min_tage: 7, tausch_pro_woche: 5, wunsch_kosten: 3,
   schwelle_1: 3, schwelle_2: 6, schwelle_3: 8,
   lose_checkin: 1, lose_komplett: 5,
+  shiny_chance: 250,         // v22: 1 : N je Spieler-/Trainer-Karte, 0 = aus
 }
 export const PARTNER_SELTENHEIT = 'bronze' // album_admin_katalog_standard: Partnerkarten
 
@@ -35,6 +42,7 @@ const LAEUFE = Number(process.argv[2] || 10000)
 const PARTNER = Number(process.argv[3] || 6) // aktive Sponsoren (Annahme)
 if (process.argv[4]) EINSTELLUNGEN.smart_pack_belohnung = process.argv[4] === '1' // Vergleichslauf
 if (process.argv[5]) EINSTELLUNGEN.doppelte_bremse = Number(process.argv[5])      // Vergleichslauf
+if (process.argv[6]) EINSTELLUNGEN.shiny_chance = Number(process.argv[6])         // Vergleichslauf
 
 // ── Zufall (seedbar → reproduzierbare Tabelle) ────────────────────────────────
 let s0 = 0x9e3779b9
@@ -151,9 +159,16 @@ function lauf(persona) {
   const alleP = new Set(album.map((k) => k.platz))
   const kapitelP = {}
   for (const k of album) (kapitelP[k.kapitel] ??= new Set()).add(k.platz)
-  const fan = { besitz: new Map(), plaetze: new Set(), karten: 0, lose: 0, komplettT: null, ziele: new Set(), tauschT: -99, wochenTausche: [] }
-  const zuschreiben = (pack, t) => {
-    for (const k of pack) { fan.besitz.set(k.id, (fan.besitz.get(k.id) || 0) + 1); if (k.album) fan.plaetze.add(k.platz); fan.karten++ }
+  const fan = { besitz: new Map(), plaetze: new Set(), karten: 0, lose: 0, komplettT: null, ziele: new Set(), tauschT: -99, wochenTausche: [], personKarten: 0, shiny: 0, shinyPersonen: new Set() }
+  // gezogen = aus einem Pack (nur dort entscheidet der Shiny-Trigger); Tausch zählt nicht
+  const zuschreiben = (pack, t, gezogen = true) => {
+    for (const k of pack) {
+      fan.besitz.set(k.id, (fan.besitz.get(k.id) || 0) + 1); if (k.album) fan.plaetze.add(k.platz); fan.karten++
+      if (gezogen && (k.typ === 'spieler' || k.typ === 'trainer') && !k.limitiert) {
+        fan.personKarten++
+        if (E.shiny_chance > 0 && rnd() * E.shiny_chance < 1) { fan.shiny++; fan.shinyPersonen.add(k.platz) }
+      }
+    }
     pruefeSammelziele(t)
   }
   const pack = (t, opt) => zuschreiben(packZiehen(fan, K, t, opt), t)
@@ -187,7 +202,7 @@ function lauf(persona) {
     if (!d.length || !f.length) return
     const [gibId] = pick(d)
     fan.besitz.set(gibId, fan.besitz.get(gibId) - 1)
-    zuschreiben([pick(f)], t)
+    zuschreiben([pick(f)], t, false)
     fan.wochenTausche.push(t)
     ziel('erster_tausch', t, { n: 1 })
   }
@@ -249,13 +264,14 @@ function lauf(persona) {
     }
   }
   const dop = [...fan.besitz.values()].reduce((a, n) => a + n - 1, 0)
-  return { karten: fan.karten, pct: (100 * fan.plaetze.size) / alleP.size, komplettT: fan.komplettT, dop, lose: fan.lose, plaetze: alleP.size }
+  return { karten: fan.karten, pct: (100 * fan.plaetze.size) / alleP.size, komplettT: fan.komplettT, dop, lose: fan.lose, plaetze: alleP.size, personKarten: fan.personKarten, shiny: fan.shiny }
 }
 
 // ── Auswertung ────────────────────────────────────────────────────────────────
 const q = (a, p) => a[Math.min(a.length - 1, Math.floor(p * a.length))]
 const t0 = Date.now()
 const zeilen = []
+const shinyJeFan = []
 let plaetze = 0
 for (const p of PERSONAS) {
   const r = Array.from({ length: LAEUFE }, () => lauf(p))
@@ -274,9 +290,16 @@ for (const p of PERSONAS) {
     'Ø fertig': mittelT === null ? '–' : monat(Math.round(mittelT)),
     'Ø Doppelte': (r.reduce((a, x) => a + x.dop, 0) / LAEUFE).toFixed(1),
     'Ø Lose': (r.reduce((a, x) => a + x.lose, 0) / LAEUFE).toFixed(1),
+    'Ø Personenkarten': (r.reduce((a, x) => a + x.personKarten, 0) / LAEUFE).toFixed(1),
+    'Shiny ≥1 %': ((100 * r.filter((x) => x.shiny > 0).length) / LAEUFE).toFixed(1),
+    'Ø Shinys': (r.reduce((a, x) => a + x.shiny, 0) / LAEUFE).toFixed(3),
   })
+  shinyJeFan.push(r.reduce((a, x) => a + x.shiny, 0) / LAEUFE)
 }
-console.log(`Sammelkarten-Simulation v20 · ${LAEUFE} Läufe je Persona · ${plaetze} Album-Plätze (${PARTNER} Partner) · Restsaison 17 Spieltage / 8 Heimspiele\n`)
+console.log(`Sammelkarten-Simulation v20/v22 · ${LAEUFE} Läufe je Persona · ${plaetze} Album-Plätze (${PARTNER} Partner) · Restsaison 17 Spieltage / 8 Heimspiele\n`)
 console.table(zeilen)
 console.log('Standardwerte:', JSON.stringify({ ...EINSTELLUNGEN, partner_seltenheit: PARTNER_SELTENHEIT }))
+// Gemeinschaft: 100 aktive Fans (Annahme 50 % Gelegenheit, 35 % typisch, 15 % Stammfans)
+const mix = 50 * shinyJeFan[0] + 35 * shinyJeFan[1] + 15 * shinyJeFan[2]
+console.log(`Shiny (1 : ${E.shiny_chance}): je 100 aktive Fans (50/35/15 %) rund ${mix.toFixed(1)} Shinys pro Saison — bei 27 Personen ist fast jeder Fund ein Erstfund.`)
 console.log(`Laufzeit ${((Date.now() - t0) / 1000).toFixed(1)} s`)

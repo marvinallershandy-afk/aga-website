@@ -337,6 +337,8 @@
 .sk--geheim .sk__gross b { font-size: 17cqw; color: #f4f2ef; }
 .sk--geheim .sk__gross b:nth-child(2n) { color: #e8c15a; }
 .sk--geheim .sk__name i { background: linear-gradient(90deg, transparent, #e8c15a, transparent); }
+.sk--geheim .sk__folie { opacity: calc(.18 + var(--licht) * .25); }
+.sk--geheim .sk__funken { opacity: calc(.18 + var(--licht) * .3); }
 .sk__tag.is-geheim { background: #0b0b0d; color: #e8c15a; box-shadow: inset 0 0 0 .3cqw rgba(232, 193, 90, .7); }
 .sk--geheim .sk__rueck-art { color: #e8c15a; }
 

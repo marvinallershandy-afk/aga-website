@@ -86,6 +86,10 @@ export interface EinstellungenRow {
   lose_checkin?: number
   lose_komplett?: number
   teilnahme_text?: string
+  /** v22: Shiny-Chance 1 : N je Spieler-/Trainer-Karte (0 = aus) */
+  shiny_chance?: number
+  /** v22: Gründungstag (YYYY-MM-DD; Tag + Monat zählen) */
+  vereins_geburtstag?: string | null
 }
 export type EinstellungenInput = Partial<Omit<EinstellungenRow, 'id' | 'updated_at' | 'updated_by'>>
 
@@ -331,5 +335,91 @@ export function useGutscheinEinloesen() {
       void qc.invalidateQueries({ queryKey: albumKeys.gutscheine })
       void qc.invalidateQueries({ queryKey: albumKeys.statistik })
     },
+  })
+}
+
+// ── v22: Shiny-Funde + Geheimkarten ─────────────────────────
+export interface ShinyFundRow {
+  karteId: string
+  gezogen?: string
+  person: string
+  fan: string
+  at: string
+  anzahl: number
+  erstfund: boolean
+}
+export interface ShinyUebersicht {
+  saison: string
+  chance: number
+  gesamt: number
+  personen: number
+  fans: number
+  funde: ShinyFundRow[]
+  erstfunde: { person: string; name: string; at: string; karteId: string }[]
+}
+export interface GeheimEi {
+  schluessel: string
+  aktiv: boolean
+  raetsel: string
+  sortierung: number
+  karte?: { id: string; titel: string; untertitel?: string; typ: KartenTyp; seltenheit: Seltenheit; bildUrl?: string; serie?: string; rueckseite?: string; bildFokus?: string; limitiert?: boolean; geheim?: boolean }
+  kartenAktiv?: boolean
+  gefunden: number
+}
+export const v22Keys = { shiny: ['album', 'v22', 'shiny'] as const, geheim: ['album', 'v22', 'geheim'] as const, katalog: ['album', 'v22', 'katalog'] as const }
+export function useShinyUebersicht() {
+  return useQuery({
+    queryKey: v22Keys.shiny,
+    queryFn: async (): Promise<ShinyUebersicht> => {
+      const { data, error } = await db.rpc('album_admin_shiny')
+      if (error) throw error
+      return data as ShinyUebersicht
+    },
+    retry: false,
+  })
+}
+export function useGeheimEier() {
+  return useQuery({
+    queryKey: v22Keys.geheim,
+    queryFn: async (): Promise<{ vereinsGeburtstag: string | null; eier: GeheimEi[] }> => {
+      const { data, error } = await db.rpc('album_admin_geheim')
+      if (error) throw error
+      return data as { vereinsGeburtstag: string | null; eier: GeheimEi[] }
+    },
+    retry: false,
+  })
+}
+export function useGeheimSetzen() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ schluessel, ...p }: { schluessel: string; aktiv?: boolean; raetsel?: string }) => {
+      const { error } = await db.from('sva_album_geheim').update(p).eq('schluessel', schluessel)
+      if (error) throw error
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: v22Keys.geheim }),
+  })
+}
+export function useGeheimStandard() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async () => {
+      const { data, error } = await db.rpc('album_admin_geheim_standard')
+      if (error) throw error
+      return data as { karten: number; eier: number }
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: v22Keys.geheim }),
+  })
+}
+/** Öffentlicher Katalog (nur lesen) — Kartenlabor + Story-Grafiken. */
+export function useOeffentlicherKatalog(an = true) {
+  return useQuery({
+    queryKey: v22Keys.katalog,
+    enabled: an,
+    queryFn: async () => {
+      const { data, error } = await db.rpc('album_katalog')
+      if (error) throw error
+      return data as import('../../album/api').Katalog
+    },
+    retry: false,
   })
 }

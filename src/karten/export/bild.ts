@@ -2,10 +2,11 @@
 // v20-K: Instagram-Bilder aus Karten (1080 × 1920 PNG):
 //   storyNeueKarte(d)        „Neue Karte im Album" (Admin-Knopf je Karte)
 //   pullBild(karten, name)   „Zeig deinen Pull" (Fan nach dem Pack)
+//   storyShiny(d, finder)    v22: „SHINY gezogen!" (Admin → Album → Shiny & Geheim)
 // Gleicher Renderer wie die Karte selbst (zeichnen.ts). Teilen per
 // navigator.share({ files }) mit Rückfall Download.
 // ─────────────────────────────────────────────────────────────
-import { ladeKartenAssets, zeichneKarte, F_DISPLAY, F_TEXT } from '../zeichnen'
+import { ladeKartenAssets, zeichneKarte, F_DISPLAY, F_TEXT, type KartenAssets, type ZeichenOpts } from '../zeichnen'
 import { SELTEN_NAME, SELTEN_RANG, type KartenDaten, type Seltenheit } from '../typen'
 
 export const STORY_W = 1080
@@ -61,6 +62,78 @@ export function zeichneBuehne(ctx: CanvasRenderingContext2D, s: Seltenheit, zeit
   }
 }
 
+// ── v22: Shiny im Canvas — Karte zeichnen, dann per Gradient-Map in Schwarz-Gold
+// tonen (läuft in jedem Browser, auch ohne ctx.filter), Sternenstaub + Prägung.
+const GOLD: [number, number, number][] = [
+  [4, 3, 2],
+  [42, 29, 10],
+  [150, 108, 34],
+  [240, 200, 98],
+  [255, 246, 214],
+]
+function goldTon(v: number): [number, number, number] {
+  const t = Math.max(0, Math.min(0.9999, v)) * (GOLD.length - 1)
+  const i = Math.floor(t)
+  const f = t - i
+  const a = GOLD[i]
+  const b = GOLD[i + 1]
+  return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f]
+}
+export function zeichneShinyKarte(ctx: CanvasRenderingContext2D, d: KartenDaten, a: KartenAssets, x: number, y: number, W: number, o: ZeichenOpts = {}) {
+  const rand = Math.round(W * 0.12)
+  const c = document.createElement('canvas')
+  c.width = Math.round(W + rand * 2)
+  c.height = Math.round(W * 1.4 + rand * 2)
+  const k = c.getContext('2d', { willReadFrequently: true })!
+  zeichneKarte(k, { ...d, shiny: false }, a, rand, rand, W, o)
+  const img = k.getImageData(0, 0, c.width, c.height)
+  const p = img.data
+  for (let i = 0; i < p.length; i += 4) {
+    if (!p[i + 3]) continue
+    const l = (0.2126 * p[i] + 0.7152 * p[i + 1] + 0.0722 * p[i + 2]) / 255
+    const [r, g, b] = goldTon(Math.pow(l, 0.85) * 1.08)
+    p[i] = r
+    p[i + 1] = g
+    p[i + 2] = b
+  }
+  k.putImageData(img, 0, 0)
+  // Sternenstaub (deterministisch)
+  let seed = 7
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647
+  k.save()
+  k.globalCompositeOperation = 'lighter'
+  for (let i = 0; i < 70; i++) {
+    const sx = rand + rnd() * W
+    const sy = rand + rnd() * W * 1.4
+    const sr = W * (0.002 + rnd() * 0.006)
+    k.fillStyle = `rgba(255,236,170,${(0.3 + rnd() * 0.6).toFixed(2)})`
+    k.beginPath()
+    k.moveTo(sx, sy - sr * 3)
+    k.lineTo(sx + sr * 0.6, sy)
+    k.lineTo(sx, sy + sr * 3)
+    k.lineTo(sx - sr * 0.6, sy)
+    k.closePath()
+    k.moveTo(sx - sr * 3, sy)
+    k.lineTo(sx, sy + sr * 0.6)
+    k.lineTo(sx + sr * 3, sy)
+    k.lineTo(sx, sy - sr * 0.6)
+    k.closePath()
+    k.fill()
+  }
+  k.restore()
+  // „SHINY“-Prägung senkrecht rechts
+  k.save()
+  k.translate(rand + W * 0.92, rand + W * 0.22)
+  k.rotate(Math.PI / 2)
+  k.font = `${Math.round(W * 0.076)}px ${F_DISPLAY}`
+  abstand(k, W * 0.026)
+  k.strokeStyle = 'rgba(246,215,124,0.7)'
+  k.lineWidth = Math.max(1, W * 0.003)
+  k.strokeText('SHINY', 0, 0)
+  k.restore()
+  ctx.drawImage(c, x - rand, y - rand)
+}
+
 function kopf(ctx: CanvasRenderingContext2D, kicker: string, wappen: HTMLImageElement | null) {
   const W = ctx.canvas.width
   ctx.save()
@@ -96,6 +169,8 @@ function fuss(ctx: CanvasRenderingContext2D, zeile: string) {
 }
 
 function seltenZeile(d: KartenDaten): string {
+  if (d.shiny) return 'SHINY  ·  ZÄHLT NICHT FÜRS ALBUM'
+  if (d.geheim) return 'GEHEIMKARTE'
   const t = [SELTEN_NAME[d.seltenheit] + (d.variante ? '-Glanz' : ''), d.limitiert ? 'Limitiert' : null, d.serie ?? null].filter(Boolean)
   return t.join('  ·  ').toUpperCase()
 }
@@ -129,7 +204,8 @@ export async function storyNeueKarte(d: KartenDaten): Promise<HTMLCanvasElement>
 
 /** „Zeig deinen Pull": beste Karte groß, weitere gefächert dahinter. */
 export async function pullBild(karten: KartenDaten[], name?: string): Promise<HTMLCanvasElement> {
-  const sortiert = [...karten].sort((x, y) => SELTEN_RANG[y.seltenheit] - SELTEN_RANG[x.seltenheit])
+  const rang = (k: KartenDaten) => (k.shiny ? 9 : k.geheim ? 8 : SELTEN_RANG[k.seltenheit])
+  const sortiert = [...karten].sort((x, y) => rang(y) - rang(x))
   const top = sortiert[0]
   const c = document.createElement('canvas')
   c.width = STORY_W
@@ -148,10 +224,10 @@ export async function pullBild(karten: KartenDaten[], name?: string): Promise<HT
     ctx.translate(STORY_W / 2 + s * 250, cy + cw * 0.78)
     ctx.rotate((s * 11 * Math.PI) / 180)
     ctx.globalAlpha = 0.92
-    zeichneKarte(ctx, k, assets[i + 1], -cw * 0.36, -cw * 0.7 * 0.72, cw * 0.72, { zeit: 2 })
+    ;(k.shiny ? zeichneShinyKarte : zeichneKarte)(ctx, k, assets[i + 1], -cw * 0.36, -cw * 0.7 * 0.72, cw * 0.72, { zeit: 2 })
     ctx.restore()
   })
-  zeichneKarte(ctx, top, assets[0], (STORY_W - cw) / 2, cy, cw, { schatten: true, licht: 0.55, mx: 0.3, my: 0.2, zeit: 3 })
+  ;(top.shiny ? zeichneShinyKarte : zeichneKarte)(ctx, top, assets[0], (STORY_W - cw) / 2, cy, cw, { schatten: true, licht: 0.55, mx: 0.3, my: 0.2, zeit: 3 })
   ctx.save()
   ctx.textAlign = 'center'
   ctx.font = `800 28px ${F_TEXT}`
@@ -160,6 +236,43 @@ export async function pullBild(karten: KartenDaten[], name?: string): Promise<HT
   ctx.fillText(seltenZeile(top), STORY_W / 2 + 3, cy + cw * 1.4 + 96)
   ctx.restore()
   fuss(ctx, 'Sammel mit')
+  return c
+}
+
+/** v22: „SHINY gezogen!“ — Story 1080×1920 zum Posten (Erstfund wird genannt). */
+export async function storyShiny(d: KartenDaten, finder?: string, datum?: string, chance = 250): Promise<HTMLCanvasElement> {
+  const c = document.createElement('canvas')
+  c.width = STORY_W
+  c.height = STORY_H
+  const ctx = c.getContext('2d')!
+  const [a, w] = await Promise.all([ladeKartenAssets(d), wappen()])
+  zeichneBuehne(ctx, 'gold', 1, 1.15)
+  kopf(ctx, 'EXTREM SELTEN', w)
+  ctx.save()
+  ctx.textAlign = 'center'
+  const g = ctx.createLinearGradient(0, 330, 0, 440)
+  g.addColorStop(0, '#fff6d6')
+  g.addColorStop(0.55, '#f0c862')
+  g.addColorStop(1, '#a87a22')
+  ctx.fillStyle = g
+  ctx.font = `118px ${F_DISPLAY}`
+  ctx.fillText('SHINY GEZOGEN!', STORY_W / 2, 430)
+  ctx.restore()
+  const cw = 620
+  const y = 500
+  zeichneShinyKarte(ctx, d, a, (STORY_W - cw) / 2, y, cw, { schatten: true, licht: 0.6, mx: 0.32, my: 0.22, zeit: 3 })
+  ctx.save()
+  ctx.textAlign = 'center'
+  ctx.font = `800 30px ${F_TEXT}`
+  abstand(ctx, 5)
+  ctx.fillStyle = '#f6d77c'
+  const unten = y + cw * 1.4 + 80
+  if (finder) ctx.fillText(`ERSTFUND: ${finder.toUpperCase()}${datum ? `  ·  ${datum}` : ''}`, STORY_W / 2 + 2, unten)
+  ctx.font = `700 24px ${F_TEXT}`
+  ctx.fillStyle = 'rgba(244,242,239,0.7)'
+  ctx.fillText(`CHANCE 1 : ${chance} JE KARTE  ·  ZÄHLT NICHT FÜRS ALBUM`, STORY_W / 2 + 2, unten + 48)
+  ctx.restore()
+  fuss(ctx, 'Wer findet die nächste?')
   return c
 }
 

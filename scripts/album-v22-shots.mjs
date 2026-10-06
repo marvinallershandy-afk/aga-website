@@ -155,7 +155,7 @@ for (const motor of MOTOREN) {
     const { b, ctx, page } = await kontext(motor, { video: true })
     await page.goto(`${BASE}/?vorfuehrung=1`, { waitUntil: 'load' })
     await warte(page, 3500)
-    for (let i = 0; i < 7; i++) { await page.locator('.kmap__brand').click(); await warte(page, 200) }
+    for (let i = 0; i < 7; i++) { await page.locator('.kmap__brand img').click({ force: true }) }
     await warte(page, 1200)
     await page.screenshot({ path: `${OUT}/${k}-50-wappen-fund.png` })
     await page.locator('.gh__los').click()

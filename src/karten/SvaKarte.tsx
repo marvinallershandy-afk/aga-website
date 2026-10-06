@@ -308,8 +308,11 @@ function Vorderseite({ d, id, stufe, lebend, eager, streif }: { d: KartenDaten; 
 
         {titelGross ? (
           <div className="sk__gross">
-            {d.titel.split(/\s+/).map((w, i) => (
-              <b key={i}>{w}</b>
+            {d.titel.split(/\s+/).map((w, i, alle) => (
+              // v22: lange Wörter (Geheimkarten) passen sich der Kartenbreite an
+              <b key={i} style={d.geheim ? { fontSize: `${Math.min(17, 128 / Math.max(...alle.map((x) => x.length))).toFixed(2)}cqw` } : undefined}>
+                {w}
+              </b>
             ))}
           </div>
         ) : null}
@@ -358,6 +361,7 @@ function infoZeile(d: KartenDaten): string {
   }
   if (d.art === 'trainer') return 'SV AGATHENBURG-DOLLERN'
   if (d.art === 'partner') return d.partnerSeit ? `PARTNER SEIT ${d.partnerSeit}` : 'PARTNER DES SVA'
+  if (d.geheim) return 'GEHEIMKARTE · SVA'
   if (d.praesentiertVon) return `PRÄSENTIERT VON ${d.praesentiertVon.name.toUpperCase()}`
   return d.art === 'fan' ? 'DIE KURVE · SVA' : 'SV AGATHENBURG-DOLLERN'
 }

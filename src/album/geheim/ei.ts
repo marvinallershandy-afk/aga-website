@@ -66,12 +66,12 @@ export async function fundMelden(teil: string, text = 'Du hast etwas entdeckt.')
   return f
 }
 
-// ── (a) Wappen: 7× tippen (Abstand < 900 ms) ────────────────
+// ── (a) Wappen: 7× tippen (Abstand < 1,5 s) ────────────────
 let tipps: number[] = []
 export function wappenTipp(): boolean {
   const t = Date.now()
-  tipps = [...tipps.filter((x) => t - x < 900 * 7), t].slice(-7)
-  const schnell = tipps.length === 7 && tipps.every((x, i) => i === 0 || x - tipps[i - 1] < 900)
+  tipps = [...tipps.filter((x) => t - x < 1500 * 7), t].slice(-7)
+  const schnell = tipps.length === 7 && tipps.every((x, i) => i === 0 || x - tipps[i - 1] < 1500)
   if (schnell) {
     tipps = []
     void fundMelden('wappen|7', 'Der Platzwart hat dich gehört.')

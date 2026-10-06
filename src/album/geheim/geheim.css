@@ -1,8 +1,8 @@
 /* v22-A · Hinweis nach einem Easter-Egg-Fund + versteckter Ball (klein, ohne Abhängigkeiten) */
 .gh {
   position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom)); z-index: 300;
-  display: flex; align-items: center; gap: 12px; width: min(440px, calc(100vw - 32px));
-  padding: 12px 12px 12px 16px; border-radius: 12px;
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px 12px; width: min(440px, calc(100vw - 32px));
+  padding: 12px 8px 12px 16px; border-radius: 12px;
   background: #0b0a08; color: #f4f2ef; border: 1px solid rgba(240, 200, 98, .45);
   box-shadow: 0 18px 50px rgba(0, 0, 0, .6), 0 0 0 1px rgba(0, 0, 0, .4), 0 0 40px rgba(240, 200, 98, .18);
   font-family: var(--f-body, "Archivo Variable", system-ui, sans-serif);
@@ -11,15 +11,15 @@
 @keyframes gh-rein { from { opacity: 0; transform: translate(-50%, 24px) scale(.97); } to { opacity: 1; transform: translate(-50%, 0); } }
 .gh__stern { font-size: 22px; color: #f0c862; animation: gh-funkeln 1.8s ease-in-out infinite; }
 @keyframes gh-funkeln { 0%, 100% { opacity: .55; transform: scale(.9) rotate(0); } 50% { opacity: 1; transform: scale(1.12) rotate(18deg); } }
-.gh__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.gh__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .gh__text b { font-size: 14px; font-weight: 700; }
 .gh__text small { font-size: 12px; color: rgba(244, 242, 239, .66); }
 .gh__los {
-  flex: none; display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 8px;
+  grid-column: 1 / -1; grid-row: 2; display: flex; align-items: center; justify-content: center; min-height: 44px; margin-right: 8px; padding: 0 14px; border-radius: 8px;
   background: linear-gradient(140deg, #fff6d6, #e0b24a 55%, #a87a22); color: #1a1206;
   font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; text-decoration: none;
 }
-.gh__x { flex: none; width: 32px; height: 44px; border: 0; background: none; color: rgba(244, 242, 239, .5); font-size: 22px; cursor: pointer; }
+.gh__x { grid-column: 3; grid-row: 1; width: 32px; height: 44px; border: 0; background: none; color: rgba(244, 242, 239, .5); font-size: 22px; cursor: pointer; }
 .gh-ball {
   position: absolute; width: 26px; height: 26px; padding: 0; border: 0; background: none; cursor: pointer; pointer-events: auto;
   opacity: .78; filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .55)); transition: opacity .3s, transform .4s cubic-bezier(.22, 1, .36, 1);

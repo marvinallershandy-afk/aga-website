@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { FlaskConical, Gift, RotateCcw, Sparkles, Star, Trophy, Wand2, X, Layers } from 'lucide-react'
 import { VF_PACK_EREIGNIS, vfPackAnlegen, vfZuruecksetzen, type TestPack } from './backend'
-import { fundMelden, gesteRichtung } from '../geheim/ei'
+import { gesteRichtung, fundMelden, wappenTipp } from '../geheim/ei'
 import './vorfuehrung.css'
 
 // ─────────────────────────────────────────────────────────────
@@ -25,7 +25,7 @@ export default function Steuerleiste({ onNeu, onLabor, versteckt }: { onNeu: () 
     setAuf(false)
     onNeu()
   }
-  // Geheimkarte finden: 1. Wisch-Geste (echt über den Gesten-Erkenner), 2. Ball, 3. Geburtstag
+  // Geheimkarte finden: 1. Wisch-Geste (echt über den Gesten-Erkenner), 2. Ball, 3. 7× Wappen
   const finden = () => {
     setAuf(false)
     const n = eiNr % 3
@@ -39,7 +39,7 @@ export default function Steuerleiste({ onNeu, onLabor, versteckt }: { onNeu: () 
         }, 350 + i * 330),
       )
     } else if (n === 1) void fundMelden('ball|rundgang', 'Der verlorene Ball ist wieder da.')
-    else void fundMelden('geburtstag|kerzen', 'Alles Gute, SVA! Die Kerzen brennen.')
+    else for (let i = 0; i < 7; i++) window.setTimeout(() => wappenTipp(), 200 + i * 160)
   }
 
   if (versteckt) return null
@@ -76,7 +76,7 @@ export default function Steuerleiste({ onNeu, onLabor, versteckt }: { onNeu: () 
               <Layers size={16} aria-hidden="true" /> Test-Pack: alle Karten <small>9 Arten</small>
             </button>
             <button type="button" role="menuitem" onClick={finden}>
-              <Wand2 size={16} aria-hidden="true" /> Geheimkarte finden <small>{['Geste', 'Ball', 'Geburtstag'][eiNr % 3]}</small>
+              <Wand2 size={16} aria-hidden="true" /> Geheimkarte finden <small>{['Geste', 'Ball', '7× Wappen'][eiNr % 3]}</small>
             </button>
             <button
               type="button"

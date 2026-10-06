@@ -10,7 +10,11 @@
 // ─────────────────────────────────────────────────────────────
 import type { Karte, Mein, PackArt, PackInhalt, Seltenheit, Ziel } from '../api'
 import { GEHEIM, MOTM_ID, SAISON, basisId, glanzId, vorfuehrKatalog } from './katalog'
-import { geheimToken } from '../geheim/ei'
+
+async function sha256hex(text: string): Promise<string> {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text))
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('')
+}
 
 export const FAN = { vorname: 'Lena', initial: 'B', anzeigename: 'Lena B.' }
 export const VF_PACK_EREIGNIS = 'album-vf-pack'
@@ -61,8 +65,8 @@ function start(): Zustand {
   // ein paar Glanz-Varianten + die MOTM-Karte
   kat.filter((k) => k.variante).slice(0, 3).forEach((k) => besitz.set(k.id, 1))
   besitz.set(MOTM_ID, 1)
-  // 1 von 4 Geheimkarten schon entdeckt
-  besitz.set(GEHEIM[0].karte.id, 1)
+  // 1 von 4 Geheimkarten schon entdeckt (Geburtstag) — die übrigen drei lassen sich vorführen
+  besitz.set(GEHEIM[2].karte.id, 1)
   const spieler = kat.filter((k) => k.typ === 'spieler' && !k.variante && !k.limitiert)
   const erste = spieler[0]
   besitz.set(erste.id, Math.max(1, besitz.get(erste.id) ?? 1))
@@ -299,8 +303,9 @@ export async function simRpc(fn: string, a: Record<string, unknown>): Promise<un
     case 'album_code_einloesen': {
       await kurz()
       const code = String(a.p_code ?? '').trim().toUpperCase()
+      const hash = /^G-[0-9A-F]{32}$/.test(code) ? await sha256hex(code) : ''
       for (const g of GEHEIM) {
-        if ((await geheimToken(g.teil)) !== code) continue
+        if (g.tokenHash !== hash) continue
         if (s.codes.has(code) || (s.besitz.get(g.karte.id) ?? 0) > 0) return { ok: false, grund: 'schon', geheim: true }
         s.codes.add(code)
         const id = `vf-pack-${++s.n}`
