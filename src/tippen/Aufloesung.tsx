@@ -12,6 +12,11 @@ import { SpielerGesicht } from './SpielerKarte'
 // Reduzierte Bewegung: sofort der Endstand.
 // ─────────────────────────────────────────────────────────────
 
+// v21-UX (Befund 9): Punkte zählen pro Spiel nur EINMAL pro Sitzung hoch —
+// beim 2. Besuch (Abpfiff → Montag → Abpfiff, auch in der Vorführung) steht der
+// Endstand sofort. Merker im Speicher, zurückgesetzt bei Neuladen der Seite.
+const animiertDieseSitzung = new Set<string>()
+
 function Zaehler({ ziel, start, dauer = 0.7, vorzeichen = false }: { ziel: number; start: boolean; dauer?: number; vorzeichen?: boolean }) {
   const ref = useRef<HTMLSpanElement>(null)
   const vorher = useRef(0)
@@ -54,8 +59,15 @@ interface Zeile {
 export function Aufloesung({ spiel, kader, platz, kompakt }: { spiel: TippSpiel; kader: Map<string, KaderSpieler>; platz?: { platz: number; von: number }; kompakt?: boolean }) {
   const p = spiel.meinePunkte
   const ruhig = useReducedMotion()
-  // Vorführung: jedes Mal animiert (Phase „Abpfiff“ erneut wählen = nochmal ansehen)
-  const [lauf, setLauf] = useState(() => (kompakt || ruhig || (!IST_VORFUEHRUNG && aufloesungGesehen(spiel.id)) ? -1 : 0))
+  // v21-UX (Befund 9): einmal pro Sitzung animieren, dann sofort Endstand —
+  // auch in der Vorführung bei wiederholtem Phasenwechsel.
+  const [lauf, setLauf] = useState(() => {
+    if (kompakt || ruhig) return -1
+    if (!IST_VORFUEHRUNG && aufloesungGesehen(spiel.id)) return -1
+    if (animiertDieseSitzung.has(spiel.id)) return -1
+    animiertDieseSitzung.add(spiel.id)
+    return 0
+  })
   const [offen, setOffen] = useState(!kompakt)
   // erst hochzählen, wenn die Auflösung wirklich im Bild ist
   const sektion = useRef<HTMLElement>(null)

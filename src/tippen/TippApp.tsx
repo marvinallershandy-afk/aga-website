@@ -4,6 +4,7 @@ import { animate, motion, MotionConfig } from 'framer-motion'
 import { CalendarClock, ListOrdered, UserRound, Users } from 'lucide-react'
 import { aktuelleSitzung, IST_VORFUEHRUNG, ladeLage, supabase, TippFehler, type KaderSpieler, type Lage } from './api'
 import { einfuehrungGesehen, einfuehrungMerken, entwurfLesen, haptik, reduzierteBewegung } from './model'
+import { tippStandSchreiben } from './tippStand'
 import { SpieltagTab } from './SpieltagTab'
 import { RanglisteTab } from './RanglisteTab'
 import { LigenTab } from './LigenTab'
@@ -150,6 +151,17 @@ export function TippApp() {
     setLage(l)
     setNow(Date.now() + versatz.current)
     setFehler('')
+    // v21-UX (Befund 1): kompakten Stand für die Startseiten-Kachel ablegen
+    // (die Karte liest ihn ohne Supabase-Bundle). Nicht in der Vorführung.
+    if (!IST_VORFUEHRUNG) {
+      tippStandSchreiben({
+        offenAnstoss: l.offen?.anstoss,
+        getippt: !!l.offen?.meinTipp,
+        letztePunkte: l.gewertet?.meinePunkte?.gesamt,
+        letzteAnstoss: l.gewertet?.anstoss,
+        at: Date.now(),
+      })
+    }
   }, [])
 
   const neuLaden = useCallback(async () => {

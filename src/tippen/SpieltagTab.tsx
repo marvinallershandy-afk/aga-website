@@ -21,6 +21,12 @@ import type { Tab } from './TippApp'
 // neue Abzeichen). Winterpause mit Saisonstand.
 // ─────────────────────────────────────────────────────────────
 
+/** v21-UX (Befund 10): Gibt es in der Spitze punktgleiche Tipper (unterschiedlicher Platz)? */
+function gleichstandOben(eintraege: { punkte: number }[]): boolean {
+  const top = eintraege.slice(0, 6)
+  return top.some((e, i) => i > 0 && e.punkte === top[i - 1].punkte)
+}
+
 export function SpieltagTab({
   lage,
   kader,
@@ -336,6 +342,8 @@ function AufloesungBlock({
               </li>
             ))}
           </ol>
+          {/* v21-UX (Befund 10): Tiebreak am Ort des Geschehens erklären */}
+          {gleichstandOben(rl.eintraege) && <p className="tp-fussnote">Bei Punktgleichheit liegt vorne, wer mehr Ergebnisse exakt getippt hat.</p>}
           <div className="tp-zeile-knoepfe">
             <button type="button" className="tp-btn tp-btn--line tp-btn--sm" onClick={() => onTab('rangliste')}>
               Ganze Rangliste <ArrowRight size={16} strokeWidth={1.5} aria-hidden="true" />

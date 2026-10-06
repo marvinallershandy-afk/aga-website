@@ -95,6 +95,24 @@ export function Login({ katalog, checkinWartet }: Props) {
         </p>
       )}
 
+      {/* v21-UX (Befund 15): Belohnungslogik schon vor dem Login sichtbar */}
+      {!checkinWartet && (
+        <ul className="al-wie" aria-label="So funktioniert’s">
+          <li>
+            <b>Check-in-Treppe</b>
+            <small>Jeder {belohnung?.checkins ?? 3}., 6. und 8. Heimspiel-Check-in schaltet eine Belohnung frei.</small>
+          </li>
+          <li>
+            <b>Tütchen &amp; Sets</b>
+            <small>Karten sammeln, Sets vervollständigen, Ziele erfüllen — jeder Tipp bringt extra Karten.</small>
+          </li>
+          <li>
+            <b>Lose &amp; Verlosung</b>
+            <small>Volle Sets und erreichte Ziele bringen Lose für die Verlosungen.</small>
+          </li>
+        </ul>
+      )}
+
       {schritt === 'email' ? (
         <form className="al-form" onSubmit={senden} noValidate>
           <label className="al-feld">

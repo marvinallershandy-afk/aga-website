@@ -463,12 +463,23 @@ html.is-map body {
     bottom: 0;
     z-index: 22;
     display: grid;
-    grid-template-columns: 1fr 1fr 1.3fr;
-    gap: var(--s-2);
-    padding: var(--s-2) var(--s-3) max(var(--s-2), env(safe-area-inset-bottom));
+    /* v21-UX (Befund 1): vier Einstiege (Karte · Live · Tippen · Mitspielen) */
+    grid-template-columns: 1fr 1fr 1fr 1.25fr;
+    gap: var(--s-1);
+    padding: var(--s-2) var(--s-2) max(var(--s-2), env(safe-area-inset-bottom));
     background: rgba(11, 10, 11, .94);
     border-top: var(--border);
     transition: transform var(--d-3) var(--ease), opacity var(--d-2) var(--ease);
+  }
+  /* bei vier Einträgen: Icon über Label, damit auch „Mitspielen“ passt */
+  .kdock__btn {
+    flex-direction: column;
+    gap: 3px;
+    min-height: 50px;
+    padding: 0 var(--s-1);
+    font-size: .625rem;
+    letter-spacing: .06em;
+    text-decoration: none;
   }
   .kmap[data-open] .kdock,
   .kmap[data-intro] .kdock { transform: translateY(110%); opacity: 0; pointer-events: none; }
@@ -897,8 +908,43 @@ html.is-map body {
     bottom: calc(68px + env(safe-area-inset-bottom) + var(--s-3) + 60px);
   }
   /* Mobil ist unten nur Platz für EINE Karte — der Heimspiel-Hinweis hat im
-     72-h-Fenster Vorrang, der Album-Teaser weicht. */
-  .kmap[data-heimspiel] .alb-t--karte { display: none; }
+     72-h-Fenster Vorrang, der Teaser-Stapel weicht. */
+  .kmap[data-heimspiel] .kmap__ecke { display: none; }
+}
+
+/* ── v21-UX (Befund 1): Teaser-Stapel unten links (Tipp-Liga + Album) ──
+   Ein fixierter Rahmen, die Kacheln selbst sind darin statisch gestapelt —
+   so überlappen sie nie und behalten den Album-Stil (.alb-t). */
+.kmap__ecke {
+  position: fixed; left: var(--gutter); bottom: calc(var(--s-5) + 28px); z-index: 21;
+  display: flex; flex-direction: column; align-items: stretch; gap: var(--s-2);
+  max-width: 340px;
+  transition: opacity var(--d-2) var(--ease);
+}
+.kmap__ecke .alb-t--karte { position: static; left: auto; bottom: auto; max-width: none; }
+.kmap[data-open] .kmap__ecke,
+.kmap[data-intro] .kmap__ecke { opacity: 0; pointer-events: none; }
+@media (max-width: 759px), (max-aspect-ratio: 1/1) {
+  .kmap__ecke {
+    left: var(--gutter); right: var(--gutter); max-width: none;
+    /* über die 2-zeilige Fußzeile gehoben (wie zuvor der Album-Teaser) */
+    bottom: calc(68px + env(safe-area-inset-bottom) + var(--s-3) + 60px);
+  }
+}
+
+/* Tipp-Liga-Kachel: gleiche Form wie der Album-Teaser, Icon-Kachel statt Foto */
+.tip-t__icon {
+  flex: none; display: grid; place-items: center; width: 64px; height: 50px;
+  border-radius: var(--r-s); border: 1px solid var(--c-line-strong); color: var(--c-white);
+}
+.tip-t--rot .tip-t__icon { background: var(--c-red); border-color: var(--c-red); color: var(--c-white); }
+.tip-t--gruen .tip-t__icon { color: #3ddc84; border-color: rgba(61, 220, 132, .5); }
+.tip-t--gold .tip-t__icon { color: var(--c-accent); border-color: rgba(232, 193, 90, .5); }
+.tip-t .alb-t__kicker { color: var(--c-red); }
+.tip-t--gruen .alb-t__kicker { color: #3ddc84; }
+.tip-t--gold .alb-t__kicker { color: var(--c-accent); }
+@media (max-width: 759px), (max-aspect-ratio: 1/1) {
+  .tip-t__icon { width: 48px; height: 42px; }
 }
 
 /* ── v19-K (Audit B §2.2): „Was dich am Platz erwartet" + Mini-Spielplan ──

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { Check, Crown, Share2, Sparkles } from 'lucide-react'
 import { elfSpeichern, tippAbgeben, TippFehler, type BonusKey, type KaderSpieler, type Lage, type TippSpiel } from './api'
-import { elfEinordnen, entwurfLesen, entwurfSchreiben, haptik, verfuegbar, type Entwurf } from './model'
+import { datumKurz, elfEinordnen, entwurfLesen, entwurfSchreiben, haptik, kuerzel, uhrzeit, verfuegbar, type Entwurf } from './model'
 import { Kapitel } from './teile'
 import { ErgebnisStepper } from './Stepper'
 import { SpielerLeiste } from './SpielerLeiste'
@@ -67,6 +67,14 @@ function gleich(a: unknown, b: unknown) {
   return JSON.stringify(a) === JSON.stringify(b)
 }
 
+// v21-UX (Befund 2/3): Ist das Ergebnis schon „bewusst gewählt“? Ja, wenn ein
+// gespeicherter Tipp vorliegt oder der Entwurf dieses Spiels es vermerkt hat.
+function startBeruehrt(spiel: TippSpiel): boolean {
+  if (spiel.meinTipp) return true
+  const e = entwurfLesen()
+  return !!(e && e.spielId === spiel.id && e.ergBeruehrt)
+}
+
 export function TippFormular({
   spiel,
   lage,
@@ -90,6 +98,9 @@ export function TippFormular({
   const [fehler, setFehler] = useState('')
   const [belohnung, setBelohnung] = useState<null | { karte: boolean; abzeichen: string[] }>(null)
   const [teilt, setTeilt] = useState(false)
+  // v21-UX (Befund 3): Ergebnis erst nach bewusster Wahl gültig; unberührtes 0:0 → Rückfrage.
+  const [beruehrt, setBeruehrt] = useState(() => startBeruehrt(spiel))
+  const [frage00, setFrage00] = useState(false)
   const autoGesendet = useRef(false)
 
   const kaderListe = useMemo(() => [...kader.values()], [kader])
@@ -113,10 +124,11 @@ export function TippFormular({
       kapitaen: s.elf.kapitaen,
       frei: s.elf.frei,
       formation: 'v21',
+      ergBeruehrt: beruehrt,
       absenden: entwurfLesen()?.absenden && entwurfLesen()?.spielId === spiel.id,
     }
     entwurfSchreiben(e)
-  }, [s, spiel.id, spiel.meinTipp, teilnehmer, geaendert])
+  }, [s, spiel.id, spiel.meinTipp, teilnehmer, geaendert, beruehrt])
 
   const abgeben = useCallback(
     async (stand: Stand) => {
@@ -209,7 +221,19 @@ export function TippFormular({
     <div className="tp-formular" id="tp-tippschein">
       <section className="tp-abschnitt" aria-labelledby="tp-h-ergebnis">
         <Kapitel id="tp-h-ergebnis" titel="Dein Ergebnis" meta="Exakt 4 · Differenz 3 · Tendenz 2" />
-        <ErgebnisStepper heim={spiel.heim} gegner={spiel.gegner} toreSva={s.toreSva} toreGegner={s.toreGegner} onChange={(a, b) => setS((x) => ({ ...x, toreSva: a, toreGegner: b }))} />
+        <ErgebnisStepper
+          heim={spiel.heim}
+          gegner={spiel.gegner}
+          toreSva={s.toreSva}
+          toreGegner={s.toreGegner}
+          beruehrt={beruehrt}
+          onChange={(a, b) => {
+            setBeruehrt(true)
+            setFrage00(false)
+            setS((x) => ({ ...x, toreSva: a, toreGegner: b }))
+          }}
+        />
+        {!beruehrt && <p className="tp-hilfe">Tippe das Ergebnis mit den + und – Knöpfen — vorher ist der Tipp noch nicht gültig.</p>}
       </section>
 
       <section className="tp-abschnitt" aria-labelledby="tp-h-bonus">
@@ -227,7 +251,7 @@ export function TippFormular({
             </>
           }
         />
-        <DeineElf kader={kader} stand={s.elf} freiErlaubt={lage.einstellungen.elfFrei} onChange={(elf) => setS((x) => ({ ...x, elf }))} />
+        <DeineElf kader={kader} stand={s.elf} freiErlaubt={lage.einstellungen.elfFrei} vorschlag={lage.vorschlagElf} onChange={(elf) => setS((x) => ({ ...x, elf }))} />
         {!elfVoll && <p className="tp-hilfe">Ohne volle Elf mit Kapitän zählt nur dein Ergebnis-Tipp.</p>}
         <details className="tp-regeln">
           <summary>So punktet deine Elf</summary>
@@ -277,9 +301,12 @@ export function TippFormular({
       </section>
 
       <div className="tp-abgabe" role="region" aria-label="Tipp abgeben">
+        <p className="tp-abgabe__fuer">
+          Tipp für {datumKurz(spiel.anstoss)} {uhrzeit(spiel.anstoss)} · {spiel.heim ? 'gegen' : 'bei'} {kuerzel(spiel.gegner)}
+        </p>
         <ol className="tp-abgabe__status" aria-live="polite">
-          <li className="is-ok">
-            <Check size={12} strokeWidth={2.5} aria-hidden="true" /> {spiel.heim ? `${s.toreSva}:${s.toreGegner}` : `${s.toreGegner}:${s.toreSva}`}
+          <li className={beruehrt ? 'is-ok' : ''}>
+            {beruehrt ? <Check size={12} strokeWidth={2.5} aria-hidden="true" /> : null} {beruehrt ? (spiel.heim ? `${s.toreSva}:${s.toreGegner}` : `${s.toreGegner}:${s.toreSva}`) : '– : –'}
           </li>
           <li className={bonusZahl === spiel.fragen.length ? 'is-ok' : ''}>
             {bonusZahl === spiel.fragen.length && <Check size={12} strokeWidth={2.5} aria-hidden="true" />} Bonus {bonusZahl}/{spiel.fragen.length}
@@ -297,22 +324,66 @@ export function TippFormular({
             {fehler}
           </p>
         )}
-        <div className="tp-abgabe__knoepfe">
-          {gespeichert && !geaendert ? (
-            <>
-              <span className="tp-abgabe__ok">
-                <Check size={18} strokeWidth={2} aria-hidden="true" /> Gespeichert · änderbar bis Anpfiff
-              </span>
-              <button type="button" className="tp-btn tp-btn--line tp-btn--sm" onClick={() => void teilenTipp()} disabled={teilt}>
-                <Share2 size={16} strokeWidth={1.5} aria-hidden="true" /> Teilen
+        {frage00 ? (
+          <div className="tp-abgabe__frage" role="group" aria-label="Ergebnis bestätigen">
+            <p>
+              Du hast das Ergebnis noch nicht getippt. Wirklich <b>0:0</b> abgeben?
+            </p>
+            <div className="tp-abgabe__knoepfe">
+              <button
+                type="button"
+                className="tp-btn tp-btn--line tp-btn--sm"
+                onClick={() => {
+                  setFrage00(false)
+                  document.getElementById('tp-h-ergebnis')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                }}
+              >
+                Ergebnis wählen
               </button>
-            </>
-          ) : (
-            <button type="button" className="tp-btn tp-btn--gross" onClick={() => void abgeben(s)} disabled={laeuft}>
-              {laeuft ? 'Wird gespeichert …' : gespeichert ? 'Änderungen speichern' : angemeldet && teilnehmer ? 'Tipp abgeben' : 'Tipp abgeben'}
-            </button>
-          )}
-        </div>
+              <button
+                type="button"
+                className="tp-btn tp-btn--sm"
+                onClick={() => {
+                  setBeruehrt(true)
+                  setFrage00(false)
+                  void abgeben({ ...s, toreSva: 0, toreGegner: 0 })
+                }}
+                disabled={laeuft}
+              >
+                Ja, 0:0 tippen
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="tp-abgabe__knoepfe">
+            {gespeichert && !geaendert ? (
+              <>
+                <span className="tp-abgabe__ok">
+                  <Check size={18} strokeWidth={2} aria-hidden="true" /> Gespeichert · änderbar bis Anpfiff
+                </span>
+                <button type="button" className="tp-btn tp-btn--line tp-btn--sm" onClick={() => void teilenTipp()} disabled={teilt}>
+                  <Share2 size={16} strokeWidth={1.5} aria-hidden="true" /> Teilen
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                className="tp-btn tp-btn--gross"
+                onClick={() => {
+                  if (!beruehrt) {
+                    setFrage00(true)
+                    haptik(10)
+                    return
+                  }
+                  void abgeben(s)
+                }}
+                disabled={laeuft}
+              >
+                {laeuft ? 'Wird gespeichert …' : gespeichert ? 'Änderungen speichern' : 'Tipp abgeben'}
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       <AnimatePresence>

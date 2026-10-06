@@ -1010,3 +1010,73 @@ img { display: block; max-width: 100%; }
 
 /* Druckzustände für die übrigen Bedienelemente */
 .tp-link:active, .tp-mini-seg button:active, .tp-segment button:active, .tp-abz__teilen:active, .tp-fuss__hilfe:active { transform: scale(.96); }
+
+/* ═══════════════ v21-UX (UX_PRUEFUNG_V21) ═══════════════ */
+
+/* Befund 5: keine blaue Tap-Selektion / kein Tap-Highlight auf Bedienflächen */
+.tp-bonusliste button, .tp-bonusliste__frage, .tp-chip, .tp-abgabe__status li,
+.tp-rund, .tp-tabs a, .tp-slot__leer, .tp-slot__pos, .tp-binde-knopf,
+.tp-steuer__phasen button, .tp-segment button, .tp-mini-seg button, .tp-option,
+.tp-stepper__label, .tp-stepper__dp, .tp-stepper__zahl {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Befund 2/3: neutraler Ergebnis-Zustand „– : –“ */
+.tp-stepper__zahl.is-neutral b { position: static; color: var(--c-text-3); font-size: 96px; }
+
+/* Befund 8: welches Spiel wird getippt (Kontext im Sticky-Panel) */
+.tp-abgabe__fuer { margin: 0 0 var(--s-2); font: 800 .625rem/1.2 var(--f-body); font-stretch: 112%; letter-spacing: .1em; text-transform: uppercase; color: var(--c-text-3); }
+
+/* Befund 3: Rückfrage „Wirklich 0:0 tippen?“ */
+.tp-abgabe__frage p { margin: 0 0 var(--s-2); font-size: var(--t-small); color: var(--c-text-2); }
+.tp-abgabe__frage b { color: var(--c-white); }
+
+/* Befund 10/11: Fußnoten am Ort des Geschehens */
+.tp-fussnote { margin-top: var(--s-3); font-size: var(--t-micro); letter-spacing: .02em; color: var(--c-text-3); }
+
+/* Befund 7: Legende der „?“-Live-Punkte */
+.tp-bonuslive__legende { margin-top: var(--s-2); font-size: var(--t-micro); color: var(--c-text-3); }
+
+/* Vorschlag-Elf übernehmen (Requirement 7) */
+.tp-elf__vorschlag { display: grid; gap: 6px; }
+.tp-elf__vorschlag small { font-size: var(--t-micro); line-height: 1.4; color: var(--c-text-3); }
+
+/* Requirement 7: Vorschau des eigenen Ranglisten-Eintrags (Opt-in greifbar machen) */
+.tp-vorschau { margin-top: var(--s-2); padding: var(--s-3); border: 1px dashed var(--c-line-strong); border-radius: var(--r-l); }
+.tp-vorschau.is-an { border-style: solid; }
+.tp-vorschau__label { display: block; font-size: var(--t-micro); color: var(--c-text-3); margin-bottom: 6px; }
+.tp-vorschau__zeile { display: flex; align-items: center; gap: var(--s-2); }
+.tp-vorschau__zeile b { font-weight: 800; font-size: var(--t-small); }
+.tp-vorschau__zeile small { margin-left: auto; font-size: var(--t-micro); color: var(--c-text-3); }
+.tp-vorschau__platz { font-family: var(--f-display); color: var(--c-text-3); min-width: 1.6ch; }
+.tp-vorschau:not(.is-an) .tp-vorschau__zeile { opacity: .6; }
+
+/* Befund 12: Teilen-Rückmeldung (Download-Fallback, Desktop) */
+.tp-toast {
+  position: fixed; left: 50%; bottom: calc(80px + env(safe-area-inset-bottom)); transform: translate(-50%, 12px); z-index: 90;
+  max-width: min(92vw, 420px); padding: var(--s-3) var(--s-4); border-radius: var(--r-l);
+  background: var(--c-ink-2); border: 1px solid var(--c-line-strong); color: var(--c-white);
+  font-size: var(--t-small); box-shadow: var(--shadow-float); opacity: 0; pointer-events: none;
+  transition: opacity var(--d-2) var(--ease), transform var(--d-2) var(--ease);
+}
+.tp-toast.is-da { opacity: 1; transform: translate(-50%, 0); }
+@media (min-width: 1024px) { .tp-toast { bottom: var(--s-6); } }
+
+/* Befund 6: Steuerleiste der Vorführung klappt beim Scrollen ein (mobil) */
+@media (max-width: 1023px) {
+  .tp-steuer.is-kompakt .tp-steuer__kopf { display: none; }
+  .tp-steuer.is-kompakt { padding-top: var(--s-2); padding-bottom: var(--s-2); }
+}
+
+/* Befund 4: Fußstapel (Status + Abgabe) mobil kompakter, nichts wird verdeckt */
+@media (max-width: 1023px) {
+  .tp-abgabe { padding-top: var(--s-2); padding-bottom: var(--s-2); }
+  .tp-abgabe__status { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-bottom: var(--s-1); }
+  .tp-abgabe__status::-webkit-scrollbar { display: none; }
+  .tp-abgabe__fuer { margin-bottom: 4px; }
+  /* Inhalt lässt sich über den Sticky-Stapel hinaus scrollen; Sprünge landen darüber */
+  .tp-offen, .tp-gesperrt { padding-bottom: var(--s-6); }
+  .tp-abschnitt { scroll-margin-bottom: 300px; }
+}

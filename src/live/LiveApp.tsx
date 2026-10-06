@@ -107,6 +107,8 @@ export function LiveApp() {
           </span>
         </a>
         <span className="lv-top__tag">Spieltag</span>
+        {/* v21-UX (Befund 14): sichtbarer Rückweg in die Produktfamilie */}
+        <a className="lv-top__pill" href="/tippen">Tipp-Liga</a>
         <button type="button" className="lv-iconbtn" onClick={() => void teilen()} aria-label="Live-Ticker teilen">
           <Icon name="teilen" />
         </button>

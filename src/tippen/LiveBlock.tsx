@@ -148,23 +148,28 @@ export function LiveBlock({ spiel, kader }: { spiel: TippSpiel; kader: Map<strin
 
 function BonusLive({ spiel, ereignisse, minute, ende }: { spiel: TippSpiel; ereignisse: LiveEreignis[]; minute: number; ende: boolean }) {
   const b = bonusStand(ereignisse, minute, ende)
+  const offen = !ende && spiel.fragen.some((f) => !b[f.key]?.fest)
   return (
-    <ul className="tp-bonuslive">
-      {spiel.fragen.map((f) => {
-        const s = b[f.key]
-        const mein = spiel.meinTipp?.bonus?.[f.key]
-        const richtig = !!s && mein === s.wert
-        return (
-          <li key={f.key} className={`${richtig ? 'is-richtig' : 'is-falsch'}${s?.fest ? ' is-fest' : ''}`}>
-            <span>{BONUS[f.key].kurz}</span>
-            <small>
-              Du: {bonusLabel(f.key, mein)} · jetzt: {s ? bonusLabel(f.key, s.wert) : '–'}
-            </small>
-            <i>{s?.fest ? (richtig ? '+1' : '0') : richtig ? '+1?' : '0?'}</i>
-          </li>
-        )
-      })}
-    </ul>
+    <>
+      <ul className="tp-bonuslive">
+        {spiel.fragen.map((f) => {
+          const s = b[f.key]
+          const mein = spiel.meinTipp?.bonus?.[f.key]
+          const richtig = !!s && mein === s.wert
+          return (
+            <li key={f.key} className={`${richtig ? 'is-richtig' : 'is-falsch'}${s?.fest ? ' is-fest' : ''}`}>
+              <span>{BONUS[f.key].kurz}</span>
+              <small>
+                Du: {bonusLabel(f.key, mein)} · jetzt: {s ? bonusLabel(f.key, s.wert) : '–'}
+              </small>
+              <i>{s?.fest ? (richtig ? '+1' : '0') : richtig ? '+1?' : '0?'}</i>
+            </li>
+          )
+        })}
+      </ul>
+      {/* v21-UX (Befund 7): Mikro-Legende für die „?“-Punkte */}
+      {offen && <p className="tp-bonuslive__legende">? = läuft noch, zählt erst bei Abpfiff</p>}
+    </>
   )
 }
 

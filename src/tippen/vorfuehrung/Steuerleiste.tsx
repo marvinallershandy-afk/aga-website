@@ -1,9 +1,26 @@
-import { useSyncExternalStore } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
 import { motion } from 'framer-motion'
 import { FastForward, Pause, Play, SkipForward } from 'lucide-react'
 import { ENDE_MINUTE, PHASEN, naechstesEreignis, phaseSetzen, simAbo, simLesen, simSetzen } from './store'
 import { EREIGNIS_MINUTEN } from './sim'
 import { haptik } from '../model'
+
+// v21-UX (Befund 6): beim Runterscrollen klappt der Kopf ein (mehr Sichtfenster
+// fürs Spiel). Nur am Handy — Desktop hat Platz genug.
+function useKompakt(): boolean {
+  const [k, setK] = useState(false)
+  useEffect(() => {
+    const f = () => setK(window.scrollY > 120 && window.innerWidth < 1024)
+    f()
+    window.addEventListener('scroll', f, { passive: true })
+    window.addEventListener('resize', f)
+    return () => {
+      window.removeEventListener('scroll', f)
+      window.removeEventListener('resize', f)
+    }
+  }, [])
+  return k
+}
 
 // ─────────────────────────────────────────────────────────────
 // v21-T: Steuerleiste der Vorführung — deutlich als „Vorführung“
@@ -13,10 +30,11 @@ import { haptik } from '../model'
 
 export default function Steuerleiste() {
   const z = useSyncExternalStore(simAbo, simLesen)
+  const kompakt = useKompakt()
   const minute = Math.min(90, Math.floor(z.minute))
   const nachspiel = z.minute > 90 ? Math.ceil(z.minute - 90) : 0
   return (
-    <section className="tp-steuer" aria-label="Vorführung steuern">
+    <section className={`tp-steuer${kompakt ? ' is-kompakt' : ''}`} aria-label="Vorführung steuern">
       <div className="tp-steuer__kopf">
         <span className="tp-steuer__marke">
           <i aria-hidden="true" /> Vorführung

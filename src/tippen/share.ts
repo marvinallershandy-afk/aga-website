@@ -581,11 +581,32 @@ export async function teilen(canvas: HTMLCanvasElement, datei: string, titel: st
       return 'geteilt'
     }
     herunterladen(blob, datei)
+    // v21-UX (Befund 12): Desktop-Fallback (kein Web-Share) gibt sichtbare Rückmeldung
+    zeigeToast('Bild gespeichert — poste es in deiner Story 📲')
     return 'gespeichert'
   } catch (e) {
     if (e instanceof DOMException && e.name === 'AbortError') return 'geteilt'
     console.error('[tippen/teilen]', e)
     return 'fehler'
+  }
+}
+
+/** v21-UX: kurzer, dezenter Hinweis unten (ohne Abhängigkeiten, selbst aufräumend). */
+export function zeigeToast(text: string) {
+  try {
+    const el = document.createElement('div')
+    el.className = 'tp-toast'
+    el.setAttribute('role', 'status')
+    el.textContent = text
+    document.body.appendChild(el)
+    // Einblenden im nächsten Frame (CSS-Transition)
+    requestAnimationFrame(() => el.classList.add('is-da'))
+    window.setTimeout(() => {
+      el.classList.remove('is-da')
+      window.setTimeout(() => el.remove(), 400)
+    }, 3600)
+  } catch {
+    /* egal */
   }
 }
 

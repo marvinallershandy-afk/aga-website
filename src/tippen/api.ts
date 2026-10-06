@@ -159,6 +159,13 @@ export interface Ich {
   ligen: number
 }
 
+/** v21-UX (Vorschlag): zuletzt aufgestellte Startelf des Vereins — als „Vorschlag
+ *  übernehmen“ für neue Tipper ohne eigene letzte Elf (nie automatisch abgegeben). */
+export interface VorschlagElf extends MeineElf {
+  /** Woher der Vorschlag kommt (z. B. „Aufstellung Horneburg“) — für den Hinweis. */
+  quelle?: string
+}
+
 export interface Lage {
   version: number
   serverNow: string
@@ -175,6 +182,8 @@ export interface Lage {
   gewertet?: TippSpiel
   kader: KaderSpieler[]
   ich?: Ich
+  /** v21-UX: Vorschlags-Elf (letzte Vereins-Startelf) für neue Tipper. */
+  vorschlagElf?: VorschlagElf
 }
 
 export interface RangEintrag {

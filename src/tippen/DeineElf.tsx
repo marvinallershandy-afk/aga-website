@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Ban, Crown, Plus, Repeat2, UserMinus, Wand2 } from 'lucide-react'
-import type { KaderSpieler } from './api'
-import { PLAETZE, POS_LANG, haptik, nachname, passt, verfuegbar } from './model'
+import { Ban, Crown, Plus, Repeat2, Sparkles, UserMinus, Wand2 } from 'lucide-react'
+import type { KaderSpieler, VorschlagElf } from './api'
+import { elfEinordnen, PLAETZE, POS_LANG, haptik, nachname, passt, verfuegbar } from './model'
 import { SpielerGesicht, SpielerKarte } from './SpielerKarte'
 import { Sheet } from '../alltag/Sheet'
 
@@ -28,12 +28,15 @@ export function DeineElf({
   stand,
   freiErlaubt,
   gesperrt,
+  vorschlag,
   onChange,
 }: {
   kader: Map<string, KaderSpieler>
   stand: ElfStand
   freiErlaubt: boolean
   gesperrt?: boolean
+  /** v21-UX: Vorschlags-Elf (letzte Vereins-Startelf) für neue Tipper. */
+  vorschlag?: VorschlagElf
   onChange: (s: ElfStand) => void
 }) {
   const [wahl, setWahl] = useState<number | null>(null) // Platz für die Auswahl-Liste
@@ -76,6 +79,20 @@ export function DeineElf({
     })
     onChange({ ...stand, elf })
     haptik([6, 30, 6, 30, 6])
+  }
+
+  // v21-UX (Vorschlag): letzte Vereins-Startelf übernehmen — Spieler setzen,
+  // Kapitän bleibt DEINE bewusste Wahl. Nie automatisch abgegeben.
+  const vorschlagUebernehmen = () => {
+    if (!vorschlag) return
+    const frei = !!vorschlag.frei && freiErlaubt
+    const ids = elfEinordnen(
+      vorschlag.spieler.map((x) => (x && kader.has(x) ? x : undefined)),
+      kader,
+      frei,
+    )
+    onChange({ elf: ids, kapitaen: undefined, frei })
+    haptik([8, 36, 10])
   }
 
   const freiUmschalten = () => {
@@ -186,10 +203,21 @@ export function DeineElf({
                 ? 'Jetzt deinen Kapitän wählen: Binde „C“ antippen — er zählt doppelt.'
                 : `Kapitän: ${nachname(kader.get(stand.kapitaen)?.name ?? '')} · Binde woanders antippen zum Wechseln.`}
           </p>
-          {voll < 5 && (
-            <button type="button" className="tp-btn tp-btn--line tp-btn--sm" onClick={auffuellen}>
-              <Wand2 size={16} strokeWidth={1.5} aria-hidden="true" /> Freie Plätze füllen
-            </button>
+          {voll === 0 && vorschlag && vorschlag.spieler.some((x) => x && kader.has(x)) ? (
+            <div className="tp-elf__vorschlag">
+              <button type="button" className="tp-btn tp-btn--sm" onClick={vorschlagUebernehmen}>
+                <Sparkles size={16} strokeWidth={1.5} aria-hidden="true" /> Vorschlag übernehmen
+              </button>
+              <small>
+                {vorschlag.quelle ? `${vorschlag.quelle} — ` : 'Letzte Startelf — '}Spieler austauschen und Kapitän wählen kannst du danach.
+              </small>
+            </div>
+          ) : (
+            voll < 5 && (
+              <button type="button" className="tp-btn tp-btn--line tp-btn--sm" onClick={auffuellen}>
+                <Wand2 size={16} strokeWidth={1.5} aria-hidden="true" /> Freie Plätze füllen
+              </button>
+            )
           )}
           {freiErlaubt && (
             <label className="tp-umschalter">

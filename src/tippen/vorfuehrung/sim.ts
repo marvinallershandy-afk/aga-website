@@ -374,9 +374,13 @@ export function lage(phase: Phase): Lage {
       ],
       statistik: { punkte: saison, spieltage: i.historie.filter((x) => x != null).length + (gewertet ? 1 : 0), exakt: 3, beste: Math.max(41, gewertet ? meinePunkte(i, phase === 'montag' ? MOTM : undefined).gesamt : 0) },
       tippsGesamt: 9,
-      letzteElf: ICH_ELF_STANDARD,
+      // v21-UX (Befund 2): Vorführung startet mit LEERER Elf, damit die
+      // Kernmechanik (Spieler wählen, Zweitposition, nicht verfügbar, Kapitän)
+      // erlebbar ist. Statt Auto-Füllung gibt es den „Vorschlag übernehmen“.
+      letzteElf: undefined,
       ligen: 2 + simLesen().ligen.length,
     },
+    vorschlagElf: { ...ICH_ELF_STANDARD, kapitaen: '', quelle: 'Letzte Startelf gegen Horneburg' },
   }
 }
 

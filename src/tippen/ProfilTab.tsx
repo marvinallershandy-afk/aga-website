@@ -15,6 +15,23 @@ import type { Tab } from './TippApp'
 // freigeschaltete drehen sich einmal auf, mit Lichtstreif), Album-Stand.
 // ─────────────────────────────────────────────────────────────
 
+// v21-UX (Requirement 7): Vorschau, wie der eigene Eintrag in einer öffentlichen
+// Rangliste aussähe — macht die Opt-in-Entscheidung greifbar.
+export function RanglistenVorschau({ sichtbar, vorname, initial }: { sichtbar: boolean; vorname: string; initial: string }) {
+  const anzeige = `${vorname.trim() || 'Vorname'} ${initial.trim() ? `${initial.trim().toUpperCase()}.` : 'I.'}`
+  return (
+    <div className={`tp-vorschau${sichtbar ? ' is-an' : ''}`} aria-hidden="true">
+      <span className="tp-vorschau__label">{sichtbar ? 'So sieht dich jeder in der Rangliste:' : 'Nur du siehst dich (privat):'}</span>
+      <span className="tp-vorschau__zeile">
+        <span className="tp-vorschau__platz">7.</span>
+        <Avatar name={anzeige} groesse={30} ich />
+        <b>{sichtbar ? anzeige : 'Du'}</b>
+        {!sichtbar && <small>privat</small>}
+      </span>
+    </div>
+  )
+}
+
 export function ProfilTab({
   lage,
   session,
@@ -190,9 +207,10 @@ export function ProfilTab({
               <input type="checkbox" checked={sichtbar} onChange={(e) => setSichtbar(e.target.checked)} />
               <span>
                 <b>In öffentlichen Ranglisten zeigen</b>
-                <small>Als „{vorname || 'Vorname'} {initial ? `${initial.toUpperCase()}.` : 'I.'}“ — sonst siehst nur du dich. In deinen Ligen sehen dich die Mitglieder immer.</small>
+                <small>Feier deine Siege sichtbar mit — oder bleib privat. Jederzeit änderbar; in deinen Ligen sehen dich die Mitglieder ohnehin.</small>
               </span>
             </label>
+            <RanglistenVorschau sichtbar={sichtbar} vorname={vorname} initial={initial} />
             {fehler && <p className="tp-hinweis tp-hinweis--fehler">{fehler}</p>}
             {meldung && <p className="tp-hinweis tp-hinweis--ok">{meldung}</p>}
             <button type="submit" className="tp-btn tp-btn--line">

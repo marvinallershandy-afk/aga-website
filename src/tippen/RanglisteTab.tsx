@@ -120,6 +120,8 @@ export function RanglisteTab({ lage, angemeldet, onAnmelden }: { lage: Lage; ang
             )}
           </ol>
         )}
+        {/* v21-UX (Befund 11): „K“-Plakette am Ort erklären */}
+        {r?.eintraege.some((e) => e.kabine) && <p className="tp-fussnote">K = Kabine (Spieler-Konto) · von Preisen ausgeschlossen</p>}
         {!angemeldet && (
           <p className="tp-hilfe">
             Du willst hier stehen?{' '}
