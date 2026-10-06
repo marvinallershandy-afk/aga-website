@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { UserRound } from 'lucide-react'
+import { Book } from 'lucide-react'
 import type { Session } from '@supabase/supabase-js'
 import {
   AlbumFehler,
@@ -38,6 +38,9 @@ import { PackOpening } from './PackOpening'
 import { ProfilForm } from './Profil'
 import { MEILENSTEINE, besitzMap, fortschritt, karteById, plaetze, reduzierteBewegung, treue, type Platz } from './model'
 import { InstagramZeile } from '../ui/InstagramZeile'
+import { standAus, standSchreiben, standVergessen } from './fanStand'
+import { useKippen } from './medaille-logik'
+import './tiefe.css'
 
 // ─────────────────────────────────────────────────────────────
 // v17-A: Seite /album — „Das offizielle Stickerheft“ des SVA mit
@@ -133,6 +136,7 @@ function urlParam(name: string, re: RegExp): string | null {
 
 export function AlbumApp() {
   const ruhig = useMemo(() => reduzierteBewegung(), [])
+  const coverKippen = useKippen<HTMLElement>()
   const [katalog, setKatalog] = useState<Katalog | null>(null)
   const [katalogFehlt, setKatalogFehlt] = useState(false)
   const [session, setSession] = useState<Session | null | undefined>(undefined)
@@ -203,6 +207,25 @@ export function AlbumApp() {
     if (uid) queueMicrotask(() => void neuLaden())
   }, [uid, neuLaden])
 
+  // v21-A: Tab-Rückkehr (z. B. nach dem Tippen in /tippen) → Stand frisch holen.
+  // Die Sitzung selbst erneuert supabase-js (autoRefreshToken + visibilitychange).
+  const zuletzt = useRef(0)
+  useEffect(() => {
+    if (!uid) return
+    zuletzt.current = Date.now()
+    const f = () => {
+      if (document.visibilityState !== 'visible' || Date.now() - zuletzt.current < 20_000) return
+      zuletzt.current = Date.now()
+      void neuLaden()
+    }
+    document.addEventListener('visibilitychange', f)
+    window.addEventListener('pageshow', f)
+    return () => {
+      document.removeEventListener('visibilitychange', f)
+      window.removeEventListener('pageshow', f)
+    }
+  }, [uid, neuLaden])
+
   const einchecken = useCallback(
     async (t: string) => {
       setCi({ status: 'laeuft' })
@@ -249,6 +272,11 @@ export function AlbumApp() {
   const tr = useMemo(() => treue(katalog, mein?.checkins ?? 0), [katalog, mein?.checkins])
   const kartenMap = useMemo(() => karteById(katalog), [katalog])
   const nummern = useMemo(() => new Map(ps.flatMap((p) => [...p.versionen, ...p.glanz].map((v) => [v.id, p.nr] as const))), [ps])
+
+  // v21-A: Stand für die Startseiten-Kachel merken („3/42 · 1 Tütchen wartet“)
+  useEffect(() => {
+    if (uid && katalog && mein?.profil) standSchreiben(standAus(uid, katalog, mein))
+  }, [uid, katalog, mein])
 
   // v20-K: Starter-Pack direkt nach der Anmeldung (einmalig, serverseitig idempotent)
   const starterGeholt = useRef(false)
@@ -361,6 +389,14 @@ export function AlbumApp() {
     timers.current.push(t1)
   }, [kleben, flug, offen, katalog, mein, packs.length, ps, kartenMap, ruhig, landen])
 
+  // v21-A: Kapitel-Zeile auf der Start-Seite → zu dieser Seite blättern
+  const kapitelAufschlagen = useCallback(
+    (g: string) => {
+      const p = ps.find((x) => x.gruppe === g)
+      if (p) zuPlatzBlaettern(p.key, !ruhig)
+    },
+    [ps, ruhig],
+  )
   const wartende = (mein?.packs ?? []).filter((p) => !packs.some((q) => q.id === p.id))
   const packsOeffnen = () => setPacks((p) => [...p, ...wartende.map((w) => ({ id: w.id, art: w.art, gegner: w.gegner, titel: w.titel }))])
 
@@ -432,15 +468,35 @@ export function AlbumApp() {
           <img src="/brand/aga-logo.png" alt="" width="28" height="33" />
           <span className="al-brand__wort">SV Agathenburg-Dollern</span>
         </a>
-        <span className="al-top__tag">Sammelalbum</span>
+        {/* v21-A: Umschalter Album | Tipp-Liga (gleiches Konto) */}
+        <nav className="al-wechsel" aria-label="Bereich">
+          <a className="al-wechsel__b is-aktiv" href="/album" aria-current="page" onClick={(e) => { e.preventDefault(); if (zeigeHeft) window.scrollTo({ top: 0, behavior: 'smooth' }) }}>
+            Album
+          </a>
+          <a className="al-wechsel__b" href="/tippen">
+            Tipp-Liga
+          </a>
+        </nav>
+        <span className="al-top__luft" />
+        {bereit && wartende.length > 0 && !packs.length && (
+          <button type="button" className="al-tuete-badge" onClick={packsOeffnen} aria-label={wartende.length === 1 ? '1 Tütchen wartet — jetzt öffnen' : `${wartende.length} Tütchen warten — jetzt öffnen`}>
+            <span className="al-tuete-badge__bild" aria-hidden="true" />
+            <b>{wartende.length}</b>
+            <span className="al-tuete-badge__wort">{wartende.length === 1 ? 'Tütchen wartet' : 'Tütchen warten'}</span>
+            <i className="al-tuete-badge__puls" aria-hidden="true" />
+          </button>
+        )}
         {zeigeHeft && (
-          <button type="button" className="al-btn al-btn--sm al-btn--ghost" onClick={heftZu}>
-            Zuklappen
+          <button type="button" className="al-iconbtn al-zu" onClick={heftZu} aria-label="Album zuklappen" title="Album zuklappen">
+            <Book size={18} strokeWidth={1.5} aria-hidden="true" />
           </button>
         )}
         {mein?.profil && (
-          <button type="button" className="al-iconbtn" onClick={() => setKonto(true)} aria-label="Konto">
-            <UserRound size={20} strokeWidth={1.5} aria-hidden="true" />
+          <button type="button" className="al-ich" onClick={() => setKonto(true)} aria-label={`Konto — angemeldet als ${mein.profil.vorname}`}>
+            <span className="al-ich__kreis" aria-hidden="true">
+              {mein.profil.vorname.slice(0, 1).toUpperCase()}
+            </span>
+            <span className="al-ich__name">{mein.profil.vorname}</span>
           </button>
         )}
       </header>
@@ -480,7 +536,7 @@ export function AlbumApp() {
               onKonto={() => setKonto(true)}
               start={
                 <div className="hb-startseite">
-                  <Gesamtstand fs={fs} name={mein.profil?.anzeigename} />
+                  <Gesamtstand fs={fs} name={mein.profil?.anzeigename} onKapitel={kapitelAufschlagen} />
                   {mein.advent ? (
                     <Advent tage={mein.advent} onPack={packNeu} onNeu={() => void neuLaden()} />
                   ) : (
@@ -506,9 +562,10 @@ export function AlbumApp() {
             )}
           </>
         ) : (
-          <section className="al-start" aria-label="Das offizielle Sammelalbum">
+          <section className="al-start" aria-label="Das offizielle Sammelalbum" ref={coverKippen}>
             <button
               type="button"
+              data-kipp=""
               className={`al-cover${aufschlagen ? ' is-auf' : ''}`}
               onClick={() => (bereit && katalog ? heftAuf() : document.getElementById('login')?.scrollIntoView({ behavior: 'smooth' }))}
               aria-label={bereit ? 'Album aufschlagen' : 'Das offizielle Sammelalbum — SV Agathenburg-Dollern'}
@@ -567,12 +624,14 @@ export function AlbumApp() {
           onSchliessen={() => setKonto(false)}
           onGespeichert={() => void neuLaden()}
           onAbgemeldet={() => {
+            standVergessen()
             setKonto(false)
             setMein(null)
             setSession(null)
             heftZu()
           }}
           onGeloescht={() => {
+            standVergessen()
             setKonto(false)
             setAbschied(true)
             setMein(null)

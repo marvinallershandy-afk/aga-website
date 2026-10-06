@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Check, Copy, Gift, Lock, Share2, Ticket, Trophy, Users } from 'lucide-react'
+import { Check, Copy, Gift, Share2, Users } from 'lucide-react'
 import {
   AlbumFehler,
   codeEinloesen,
@@ -11,12 +11,12 @@ import {
   type Katalog,
   type Mein,
   type PackArt,
-  type Ziel,
 } from './api'
 import { SvaKarte } from '../karten/SvaKarte'
 import { kartenDaten } from './kartenDaten'
 import { doppelteListe, name, type Platz } from './model'
-import { Balken } from './Zaehler'
+import { Zaehler } from './Zaehler'
+import { ZieleVitrine } from './Ziele'
 
 // ─────────────────────────────────────────────────────────────
 // v20-K: Sammel-Seite des Albums: Code einlösen (Story/Partner/Advent),
@@ -97,57 +97,8 @@ export function CodeEinloesen({ onPack, onNeu, vorbelegt }: { onPack: Props['onP
   )
 }
 
-/** „Nächstes Ziel"-Leiste oben im Album. */
-export function NaechstesZiel({ ziel }: { ziel?: Ziel | null }) {
-  if (!ziel) return null
-  const rest = Math.max(0, ziel.benoetigt - ziel.fortschritt)
-  const b = ziel.belohnung
-  const lohn = [b.karten ? (b.karten === 1 ? 'Gratis-Karte' : `Gratis-Pack (${b.karten})`) : null, b.lose ? `${b.lose} ${b.lose === 1 ? 'Los' : 'Lose'}` : null].filter(Boolean).join(' + ')
-  return (
-    <div className="sa-ziel-leiste" role="status">
-      <Trophy size={18} strokeWidth={1.5} aria-hidden="true" />
-      <span>
-        Noch <b>{rest}</b> bis „{ziel.titel}“{lohn ? <> → {lohn}</> : null}
-      </span>
-      <Balken prozent={(100 * ziel.fortschritt) / Math.max(1, ziel.benoetigt)} />
-    </div>
-  )
-}
-
-function ZieleListe({ ziele }: { ziele: Ziel[] }) {
-  const offen = ziele.filter((z) => !z.erreicht)
-  const erreicht = ziele.filter((z) => z.erreicht)
-  return (
-    <div className="sa-block">
-      <h3 className="hf-zwischen">
-        Sammelziele <span>{erreicht.length}/{ziele.length}</span>
-      </h3>
-      <ul className="sa-ziele">
-        {[...offen, ...erreicht].map((z) => (
-          <li key={z.id} className={z.erreicht ? 'is-erreicht' : undefined}>
-            <div>
-              <b>{z.titel}</b>
-              {z.beschreibung && <small>{z.beschreibung}</small>}
-              <Balken prozent={(100 * Math.min(z.fortschritt, z.benoetigt)) / Math.max(1, z.benoetigt)} />
-            </div>
-            <em>
-              {z.erreicht ? 'Geschafft' : `${Math.min(z.fortschritt, z.benoetigt)}/${z.benoetigt}`}
-              <span>
-                {z.belohnung.karten ? `${z.belohnung.karten} ${z.belohnung.karten === 1 ? 'Karte' : 'Karten'}` : ''}
-                {z.belohnung.minSeltenheit && z.belohnung.minSeltenheit !== 'bronze' ? ` · mind. ${z.belohnung.minSeltenheit}` : ''}
-                {z.belohnung.lose ? ` · ${z.belohnung.lose} Lose` : ''}
-              </span>
-            </em>
-          </li>
-        ))}
-        <li className="sa-ziel-geheim">
-          <Lock size={16} strokeWidth={1.5} aria-hidden="true" />
-          <span>Geheime Missionen werden sichtbar, sobald du sie erreichst.</span>
-        </li>
-      </ul>
-    </div>
-  )
-}
+// v21-A: Ziele als Medaillen-Vitrine (Ziele.tsx); Leiste oben mit Mini-Medaille
+export { NaechstesZiel } from './Ziele'
 
 function Freunde({ mein, onNeu }: { mein: Mein; onNeu: () => void }) {
   const [code, setCode] = useState('')
@@ -384,11 +335,25 @@ function LoseVerlosungen({ katalog, mein }: { katalog: Katalog; mein: Mein }) {
       <h3 className="hf-zwischen">
         Deine Lose <span>Saison {mein.saison}</span>
       </h3>
-      <p className="sa-lose">
-        <Ticket size={22} strokeWidth={1.5} aria-hidden="true" />
-        <b>{mein.lose ?? 0}</b>
-        <span>{(mein.lose ?? 0) === 1 ? 'Los' : 'Lose'} · aus Check-ins, Meilensteinen und Sammelzielen</span>
-      </p>
+      <div className="ls">
+        <div className="ls-stapel" aria-hidden="true">
+          {(mein.lose ?? 0) > 2 && <span className="ls-ticket ls-ticket--h2" />}
+          {(mein.lose ?? 0) > 1 && <span className="ls-ticket ls-ticket--h1" />}
+          <span className="ls-ticket ls-ticket--oben">
+            <b>
+              <Zaehler wert={mein.lose ?? 0} />
+            </b>
+            <i />
+            <span>Los</span>
+          </span>
+        </div>
+        <p className="ls-text">
+          <b>
+            {mein.lose ?? 0} {(mein.lose ?? 0) === 1 ? 'Los' : 'Lose'}
+          </b>
+          <span>aus Check-ins, Meilensteinen und Sammelzielen — je mehr Lose, desto größer die Chance bei der Verlosung.</span>
+        </p>
+      </div>
       {v.map((x) => (
         <div key={x.id} className={`sa-verlosung${x.gewonnen ? ' is-gewonnen' : ''}`}>
           {x.bildUrl && <img src={x.bildUrl} alt="" loading="lazy" />}
@@ -400,7 +365,7 @@ function LoseVerlosungen({ katalog, mein }: { katalog: Katalog; mein: Mein }) {
             {x.status === 'gezogen' ? (
               <em>{x.gewonnen ? 'Du hast gewonnen! Wir melden uns bei dir.' : `Gewonnen hat ${x.gewinnerName ?? '—'}`}</em>
             ) : (
-              <em>{x.teilnahme ? 'Du bist dabei.' : 'Sammel Lose, um dabei zu sein.'}</em>
+              <em className={x.teilnahme ? 'sa-verlosung__dabei' : undefined}>{x.teilnahme ? 'Du bist dabei' : 'Sammel Lose, um dabei zu sein.'}</em>
             )}
           </div>
         </div>
@@ -446,7 +411,7 @@ export function SammelSeite(props: Props) {
           <CodeEinloesen onPack={onPack} onNeu={onNeu} />
         </div>
       )}
-      {(mein.ziele?.length ?? 0) > 0 && <ZieleListe ziele={mein.ziele!} />}
+      {(mein.ziele?.length ?? 0) > 0 && <ZieleVitrine ziele={mein.ziele!} />}
       <Tauschen {...props} />
       <Wunsch {...props} />
       <Freunde mein={mein} onNeu={onNeu} />

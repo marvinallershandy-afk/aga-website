@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { ChevronLeft, ChevronRight, Lock } from 'lucide-react'
+import { BookOpen, ChevronLeft, ChevronRight, Lock } from 'lucide-react'
 import type { Gutschein, Katalog, Mein, RanglistenEintrag } from './api'
 import { SvaKarte } from '../karten/SvaKarte'
 import { kartenDaten } from './kartenDaten'
@@ -7,6 +7,8 @@ import { BLAETTERN_EREIGNIS, BLAETTERN_MS } from './blaettern'
 import { GRUPPEN, KAPITEL_NAME, MEILENSTEINE, name, type Fortschritt, type Gruppe, type Platz, type Treue } from './model'
 import { Balken, Zaehler } from './Zaehler'
 import { ruhigeBewegung, vibriere } from '../karten/medien'
+import { Medaille } from './Medaille'
+import { useKippen } from './medaille-logik'
 import './heft.css'
 
 // ─────────────────────────────────────────────────────────────
@@ -339,7 +341,10 @@ function SeitenInhalt({
           <Balken prozent={(100 * kap.belegt) / Math.max(1, kap.gesamt)} />
           {kap.komplett || abzeichen.includes(kap.id) ? (
             <span className="hb-abzeichen" title="Kapitel komplett">
-              <Abzeichen /> Kapitel komplett
+              <Medaille metall="gold" erreicht groesse="s">
+                <BookOpen size={14} strokeWidth={1.5} />
+              </Medaille>
+              Kapitel komplett · Abzeichen
             </span>
           ) : (
             <span className="hb-kapitel__rest">
@@ -358,27 +363,24 @@ function SeitenInhalt({
           {fans}
         </>
       )}
-      {s.gruppe && (
-        <ul className={`hf-plaetze hf-plaetze--${s.gruppe}`}>
-          {plaetze.map((p) => (
-            <PlatzView key={p.key} p={p} gesamt={gesamt} saison={saison} frisch={!blatt && frisch.has(p.key)} onPlatz={blatt ? undefined : onPlatz} />
-          ))}
-        </ul>
-      )}
+      {s.gruppe && <PlatzListe gruppe={s.gruppe} plaetze={plaetze} gesamt={gesamt} saison={saison} frisch={frisch} blatt={blatt} onPlatz={onPlatz} />}
     </div>
   )
 }
 
-function Abzeichen() {
+/** v21-A: Platz-Raster mit Zeiger-Neigung + Licht (Desktop), ein Listener je Seite. */
+function PlatzListe({ gruppe, plaetze, gesamt, saison, frisch, blatt, onPlatz }: { gruppe: Gruppe; plaetze: Platz[]; gesamt: number; saison: string; frisch: Set<string>; blatt: boolean; onPlatz: (p: Platz) => void }) {
+  const ref = useKippen<HTMLUListElement>()
   return (
-    <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true">
-      <path d="M10 1.5l7 3v5.2c0 4.1-2.9 7.6-7 8.8-4.1-1.2-7-4.7-7-8.8V4.5z" fill="currentColor" opacity=".18" stroke="currentColor" strokeWidth="1.3" />
-      <path d="M6.6 10.2l2.3 2.3 4.6-4.8" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
+    <ul className={`hf-plaetze hf-plaetze--${gruppe}`} ref={blatt ? undefined : ref}>
+      {plaetze.map((p, i) => (
+        <PlatzView key={p.key} p={p} i={i} gesamt={gesamt} saison={saison} frisch={!blatt && frisch.has(p.key)} onPlatz={blatt ? undefined : onPlatz} />
+      ))}
+    </ul>
   )
 }
 
-function PlatzView({ p, gesamt, saison, frisch, onPlatz }: { p: Platz; gesamt: number; saison: string; frisch: boolean; onPlatz?: (p: Platz) => void }) {
+function PlatzView({ p, i, gesamt, saison, frisch, onPlatz }: { p: Platz; i: number; gesamt: number; saison: string; frisch: boolean; onPlatz?: (p: Platz) => void }) {
   const k = p.beste ?? p.versionen[0]
   const doppelt = p.anzahl - (p.beste ? 1 : 0) - (p.besterGlanz ? 1 : 0)
   const daten = useMemo(() => (p.beste ? kartenDaten(p.beste, p.nr || undefined, p.nr ? gesamt : undefined, saison) : null), [p.beste, p.nr, gesamt, saison])
@@ -387,9 +389,10 @@ function PlatzView({ p, gesamt, saison, frisch, onPlatz }: { p: Platz; gesamt: n
     if (frisch) vibriere(10)
   }, [frisch])
   return (
-    <li ref={ref} className={`hf-platz${frisch ? ' is-frisch' : ''}${doppelt > 0 ? ' is-doppelt' : ''}${p.besterGlanz ? ' is-glanz' : ''}`}>
+    <li ref={ref} className={`hf-platz${frisch ? ' is-frisch' : ''}${doppelt > 0 ? ' is-doppelt' : ''}${p.besterGlanz ? ' is-glanz' : ''}${p.beste ? ' is-belegt' : ' is-leer'}`} style={{ ['--i' as string]: i }}>
       <button
         type="button"
+        data-kipp=""
         className="hf-platz__btn"
         data-platz={p.key}
         onClick={onPlatz ? () => onPlatz(p) : undefined}
@@ -397,7 +400,10 @@ function PlatzView({ p, gesamt, saison, frisch, onPlatz }: { p: Platz; gesamt: n
         aria-label={`${p.nr ? `Nr. ${p.nr}: ` : ''}${name(k)}${p.beste ? '' : ', fehlt noch'}${doppelt > 0 ? `, ${doppelt} doppelt` : ''}`}
       >
         {daten ? (
-          <SvaKarte daten={daten} stufe="klein" aufdecken={frisch} />
+          <>
+            <SvaKarte daten={daten} stufe="klein" aufdecken={frisch} />
+            <span className="hf-platz__licht" aria-hidden="true" />
+          </>
         ) : (
           <span className="hb-leer" aria-hidden="true">
             <span className="hb-leer__nr">{p.nr ? String(p.nr).padStart(2, '0') : <Lock size={18} strokeWidth={1.5} />}</span>
@@ -536,7 +542,7 @@ function FansSeite({ katalog, liste, mitmachen, onKonto }: { katalog: Katalog; l
 }
 
 /** Start-Seite: Gesamtfortschritt mit Meilensteinen + Kapitel-Balken. */
-export function Gesamtstand({ fs, name: wer }: { fs: Fortschritt; name?: string }) {
+export function Gesamtstand({ fs, name: wer, onKapitel }: { fs: Fortschritt; name?: string; onKapitel?: (id: Gruppe) => void }) {
   const naechster = MEILENSTEINE.find((m) => fs.prozent < m)
   return (
     <div className="hb-stand">
@@ -567,11 +573,13 @@ export function Gesamtstand({ fs, name: wer }: { fs: Fortschritt; name?: string 
       <ul className="hb-kapitelliste">
         {fs.kapitel.map((k) => (
           <li key={k.id} className={k.komplett ? 'is-komplett' : undefined}>
-            <span>{KAPITEL_NAME[k.id] ?? k.titel}</span>
-            <Balken prozent={(100 * k.belegt) / Math.max(1, k.gesamt)} />
-            <em>
-              {k.belegt}/{k.gesamt}
-            </em>
+            <button type="button" className="hb-kapitelliste__b" onClick={onKapitel ? () => onKapitel(k.id) : undefined} disabled={!onKapitel} aria-label={`${KAPITEL_NAME[k.id] ?? k.titel}: ${k.belegt} von ${k.gesamt} — aufschlagen`}>
+              <span>{KAPITEL_NAME[k.id] ?? k.titel}</span>
+              <Balken prozent={(100 * k.belegt) / Math.max(1, k.gesamt)} />
+              <em>
+                {k.belegt}/{k.gesamt}
+              </em>
+            </button>
           </li>
         ))}
       </ul>
