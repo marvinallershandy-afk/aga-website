@@ -415,13 +415,15 @@ begin
   for z in select * from jsonb_array_elements(coalesce(p_ops->'einfuegen', '[]'::jsonb)) loop
     insert into public.sva_ticker (
       spiel_id, quelle, fupa_event_id, typ, minute, nachspielzeit,
-      roster_id, roster_id_2, text, text_quelle, fupa_name, fupa_name_2, team, platzhalter, zeitpunkt)
+      roster_id, roster_id_2, text, text_quelle, fupa_name, fupa_name_2, team, platzhalter,
+      versteckt, duplikat_von, zeitpunkt)
     values (
       p_spiel, 'fupa', nullif(z->>'fupa_event_id', '')::bigint, z->>'typ',
       nullif(z->>'minute', '')::int, nullif(z->>'nachspielzeit', '')::int,
       nullif(z->>'roster_id', '')::uuid, nullif(z->>'roster_id_2', '')::uuid,
       nullif(z->>'text', ''), z->>'text_quelle', nullif(z->>'fupa_name', ''),
       nullif(z->>'fupa_name_2', ''), nullif(z->>'team', ''), coalesce((z->>'platzhalter')::boolean, false),
+      coalesce((z->>'versteckt')::boolean, false), nullif(z->>'duplikat_von', '')::uuid,
       coalesce(nullif(z->>'zeitpunkt', '')::timestamptz, now()))
     on conflict (fupa_event_id) where fupa_event_id is not null do nothing;
     v_neu := v_neu + 1;
