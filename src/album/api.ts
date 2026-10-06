@@ -10,7 +10,7 @@
 // (shouldCreateUser: true, user_metadata.app = 'sva-album').
 // Alle Daten kommen aus RPCs; die Ziehung passiert in der Datenbank.
 // ─────────────────────────────────────────────────────────────
-import { createClient, type Session } from '@supabase/supabase-js'
+import { createClient, isAuthRetryableFetchError, type Session } from '@supabase/supabase-js'
 
 const URL_BASE = import.meta.env.VITE_SUPABASE_URL as string | undefined
 const KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
@@ -26,6 +26,57 @@ export const supabase = createClient(URL_BASE || 'https://album.invalid', KEY ||
     detectSessionInUrl: true,
   },
 })
+
+// ── v21-A: Sitzungs-Anker (netlify/functions/album-sitzung.mts) ─────────────
+// Safari/iOS löscht localStorage nach 7 Tagen ohne Besuch (ITP). Der aktuelle
+// Refresh-Token liegt deshalb zusätzlich als HttpOnly-Cookie der eigenen
+// Domain; ist localStorage leer, stellt aktuelleSitzung() die Sitzung daraus
+// wieder her. Lokal (Vite) gibt es den Endpunkt nicht → still ignoriert.
+const ANKER = '/api/album-sitzung'
+const ANKER_KOPF = { 'X-SVA-Album': '1' }
+let ankerGesendet: string | null = null
+function ankerSetzen(rt: string) {
+  if (rt === ankerGesendet || typeof fetch === 'undefined') return
+  ankerGesendet = rt
+  fetch(ANKER, { method: 'POST', credentials: 'same-origin', keepalive: true, headers: { ...ANKER_KOPF, 'Content-Type': 'application/json' }, body: JSON.stringify({ rt }) })
+    .then((r) => {
+      if (!r.ok) ankerGesendet = null
+    })
+    .catch(() => {
+      ankerGesendet = null
+    })
+}
+function ankerLoeschen() {
+  ankerGesendet = null
+  fetch(ANKER, { method: 'DELETE', credentials: 'same-origin', keepalive: true, headers: ANKER_KOPF }).catch(() => {})
+}
+async function ankerHolen(): Promise<string | null> {
+  try {
+    const r = await fetch(ANKER, { credentials: 'same-origin', headers: ANKER_KOPF, cache: 'no-store' })
+    if (!r.ok || !(r.headers.get('content-type') ?? '').includes('json')) return null
+    const j = (await r.json()) as { rt?: string | null }
+    return typeof j.rt === 'string' && j.rt.length >= 8 ? j.rt : null
+  } catch {
+    return null
+  }
+}
+if (albumKonfiguriert && typeof window !== 'undefined') {
+  supabase.auth.onAuthStateChange((ev, s) => {
+    // Kein await auf supabase.* hier (Callback läuft im Auth-Ablauf)
+    if (s?.refresh_token && (ev === 'SIGNED_IN' || ev === 'TOKEN_REFRESHED' || ev === 'INITIAL_SESSION')) ankerSetzen(s.refresh_token)
+    if (ev === 'SIGNED_OUT') ankerLoeschen()
+  })
+}
+
+/** v21-A: Wohin ein Login-Link zurückführt (für die Startseiten-Weiche in main.tsx). */
+export const LOGIN_ZIEL_KEY = 'sva-login-ziel'
+function loginZielMerken(pfad: string) {
+  try {
+    localStorage.setItem(LOGIN_ZIEL_KEY, JSON.stringify({ pfad, t: Date.now() }))
+  } catch {
+    /* privat-Modus */
+  }
+}
 
 // ── Typen (Spiegel der RPC-Antworten) ───────────────────────
 export type Seltenheit = 'bronze' | 'silber' | 'gold' | 'spezial'
@@ -374,20 +425,44 @@ export const wunschkarte = (karte: string, gegen: string[]) => rpc<{ packId: str
 export const kontoLoeschen = () => rpc<{ ok: true; loginGeloescht: boolean }>('album_konto_loeschen')
 
 // ── Login ───────────────────────────────────────────────────
+let wiederhergestellt: Promise<Session | null> | null = null
+/** Sitzung aus localStorage; ist sie weg (Safari-ITP, Speicher geleert), einmal
+ *  pro Seitenaufruf aus dem Sitzungs-Anker wiederherstellen. */
 export async function aktuelleSitzung(): Promise<Session | null> {
   if (!albumKonfiguriert) return null
   try {
     const { data } = await supabase.auth.getSession()
-    return data.session
+    if (data.session) return data.session
   } catch {
     return null
   }
+  // Login-Rückkehr mit Tokens in der Adresse: das übernimmt supabase-js selbst
+  if (typeof window !== 'undefined' && /(^|[#&])(access_token|error_description)=/.test(window.location.hash)) return null
+  wiederhergestellt ??= (async () => {
+    const rt = await ankerHolen()
+    if (!rt) return null
+    try {
+      const { data, error } = await supabase.auth.refreshSession({ refresh_token: rt })
+      if (error) {
+        // abgelaufen/widerrufen → Anker weg; Netzfehler → beim nächsten Aufruf wieder versuchen
+        if (isAuthRetryableFetchError(error)) wiederhergestellt = null
+        else ankerLoeschen()
+        return null
+      }
+      return data.session
+    } catch {
+      wiederhergestellt = null
+      return null
+    }
+  })()
+  return wiederhergestellt
 }
 
 /** Login-Link (+ 6-stelliger Code) per E-Mail. `token` = offener Check-in-Code. */
 export async function loginLinkSenden(email: string, token: string | null): Promise<void> {
   if (!albumKonfiguriert) throw new AlbumFehler('nicht-verfuegbar', fehlerText('nicht-verfuegbar'))
   const ziel = `${window.location.origin}/album${token ? `?c=${encodeURIComponent(token)}` : ''}`
+  loginZielMerken('/album')
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: { shouldCreateUser: true, emailRedirectTo: ziel, data: { app: 'sva-album' } },

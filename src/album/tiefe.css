@@ -1,0 +1,62 @@
+/* ═══ v21-A · Tiefe: Plätze, Kapitel-Medaille, Kapitel-Sprung, Cover ═══
+   Zeiger-Neigung über --kx/--ky (useKippen, ein Listener je Raster, rAF),
+   Licht auf der Karte per Blend — nur transform/opacity. Touch: ruhig. ═══ */
+@media (hover: hover) {
+  .hf-platz__btn,
+  .hf-platz__btn:hover {
+    transform: perspective(800px) rotateX(calc((var(--ky, .5) - .5) * -14deg)) rotateY(calc((var(--kx, .5) - .5) * 16deg)) translateY(var(--hub, 0px));
+  }
+  .hf-platz__btn { transition: transform .6s cubic-bezier(.22, 1, .36, 1); }
+  .hf-platz__btn.is-kipp { --hub: -5px; transition-duration: .16s; }
+}
+.hf-platz__licht {
+  position: absolute; left: 0; right: 0; top: 0; aspect-ratio: 100 / 140; z-index: 2; pointer-events: none; opacity: 0;
+  clip-path: polygon(6% 0, 94% 0, 100% 4.3%, 100% 93.6%, 50% 100%, 0 93.6%, 0 4.3%);
+  background:
+    radial-gradient(70% 50% at calc(var(--kx, .5) * 100%) calc(var(--ky, .3) * 100%), rgba(255, 255, 255, .42), rgba(255, 255, 255, 0) 70%),
+    linear-gradient(calc(100deg + (var(--kx, .5) - .5) * 60deg), transparent 35%, rgba(255, 255, 255, .16) 48%, transparent 60%);
+  mix-blend-mode: soft-light; transition: opacity .35s cubic-bezier(.22, 1, .36, 1);
+}
+.hf-platz__btn.is-kipp .hf-platz__licht { opacity: 1; }
+/* Leerer Platz: Umriss wird beim Zeigen heller, Nummer hebt sich */
+.hb-leer__form, .hb-leer__nr { transition: stroke .3s cubic-bezier(.22, 1, .36, 1), color .3s cubic-bezier(.22, 1, .36, 1), transform .5s cubic-bezier(.22, 1, .36, 1); }
+.hf-platz__btn.is-kipp .hb-leer__form { stroke: rgba(244, 242, 239, .42); }
+.hf-platz__btn.is-kipp .hb-leer__nr { color: rgba(244, 242, 239, .5); transform: translateY(-3px); }
+.hf-platz__btn:focus-visible .hb-leer__form { stroke: var(--c-white); }
+
+/* Kapitel komplett: Medaille statt Häkchen */
+.hb-abzeichen { gap: var(--s-2); }
+
+/* Start-Seite: Kapitel-Zeilen springen ins Kapitel */
+.hb-kapitelliste li { display: block; }
+.hb-kapitelliste__b {
+  display: grid; grid-template-columns: 96px 1fr 40px; align-items: center; gap: var(--s-3); width: calc(100% + 2 * var(--s-2));
+  padding: 3px var(--s-2); margin: 0 calc(-1 * var(--s-2)); border: 0; border-radius: var(--r-s); background: none; color: inherit; text-align: left; font-size: var(--t-small);
+  transition: background-color .3s cubic-bezier(.22, 1, .36, 1);
+}
+.hb-kapitelliste__b span { font-weight: 700; transition: transform .4s cubic-bezier(.22, 1, .36, 1); }
+.hb-kapitelliste__b em { text-align: right; font-style: normal; font-variant-numeric: tabular-nums; color: var(--c-text-3); }
+.hb-kapitelliste li.is-komplett em { color: var(--c-accent); }
+@media (hover: hover) {
+  .hb-kapitelliste__b:hover:not(:disabled) { background: rgba(244, 242, 239, .05); }
+  .hb-kapitelliste__b:hover:not(:disabled) span { transform: translateX(3px); }
+}
+
+/* Cover folgt dem Zeiger (Desktop) + Lichtkante */
+@media (hover: hover) {
+  .al-cover[data-kipp].is-kipp:not(.is-auf) .al-cover__bild {
+    transform: rotateY(calc((var(--kx, .5) - .5) * 14deg)) rotateX(calc((var(--ky, .5) - .5) * -10deg));
+    transition-duration: .16s;
+  }
+}
+.al-cover__bild::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; border-radius: inherit;
+  background: radial-gradient(60% 45% at calc(var(--kx, .5) * 100%) calc(var(--ky, .3) * 100%), rgba(255, 255, 255, .22), rgba(255, 255, 255, 0) 70%);
+  transition: opacity .4s cubic-bezier(.22, 1, .36, 1);
+}
+.al-cover.is-kipp .al-cover__bild::after { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hf-platz__btn, .hf-platz__licht, .hb-leer__form, .hb-leer__nr, .al-cover__bild::after { transition: none !important; }
+  .hf-platz__btn { transform: none !important; }
+}
