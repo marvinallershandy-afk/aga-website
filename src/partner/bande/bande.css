@@ -144,7 +144,7 @@
   border-radius: var(--r-l);
   padding: var(--s-4);
 }
-.bk-pitch--rundgang .bk-leiste__tafeln { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.bk-pitch--rundgang .bk-leiste__tafeln { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
 /* mobil: Foto direkt nach den Eingaben (der Aha-Moment), Tafel danach */
 @media (max-width: 959px) {
@@ -154,4 +154,4 @@
   .bk-steuer > .bk-flach { order: 3; }
 }
 .bk-pitch--rundgang .bk-direkt { display: none; }
-.bk-pitch--rundgang .bk-leiste__tafeln li:nth-child(n + 4) { display: none; }
+.bk-pitch--rundgang .bk-leiste__tafeln li:nth-child(n + 5) { display: none; }
