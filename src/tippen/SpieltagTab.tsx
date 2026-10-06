@@ -291,7 +291,7 @@ function Winterpause({ bis, onTab }: { bis: string; onTab: (t: Tab) => void }) {
       <Snowflake size={28} strokeWidth={1.5} aria-hidden="true" />
       <p className="tp-kicker">Winterpause</p>
       <h1 className="tp-h1" id="tp-h-winter">
-        Weiter am {datum}.
+        Weiter am {datum}
       </h1>
       <p className="tp-lead">Die Rückrunde kommt. Bis dahin: Saisonstand checken, Liga gründen, Kumpels einladen.</p>
       <button type="button" className="tp-btn" onClick={() => onTab('rangliste')}>

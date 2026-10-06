@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { animate, motion, useReducedMotion } from 'framer-motion'
+import { animate, motion, useInView, useReducedMotion } from 'framer-motion'
 import { Check, Minus, RotateCcw, Sparkles, X } from 'lucide-react'
 import type { KaderSpieler, TippSpiel } from './api'
 import { BONUS, POSTEN_LABEL, aufloesungGesehen, aufloesungMerken, bonusLabel, nachname } from './model'
@@ -55,6 +55,9 @@ export function Aufloesung({ spiel, kader, platz }: { spiel: TippSpiel; kader: M
   const p = spiel.meinePunkte
   const ruhig = useReducedMotion()
   const [lauf, setLauf] = useState(() => (aufloesungGesehen(spiel.id) || ruhig ? -1 : 0))
+  // erst hochzählen, wenn die Auflösung wirklich im Bild ist
+  const sektion = useRef<HTMLElement>(null)
+  const imBild = useInView(sektion, { once: true, amount: 0.25 })
 
   const d = p?.details
   const t = spiel.meinTipp
@@ -106,21 +109,21 @@ export function Aufloesung({ spiel, kader, platz }: { spiel: TippSpiel; kader: M
 
   // Zeile für Zeile aufdecken
   useEffect(() => {
-    if (lauf < 0) return
+    if (lauf < 0 || !imBild) return
     if (lauf >= anzahl) {
       aufloesungMerken(spiel.id)
       return
     }
     const t = window.setTimeout(() => setLauf((n) => n + 1), lauf === 0 ? 450 : 380)
     return () => window.clearTimeout(t)
-  }, [lauf, anzahl, spiel.id])
+  }, [lauf, anzahl, spiel.id, imBild])
 
   if (!p) return null
   const fertig = lauf < 0 || lauf >= zeilen.length
   const bisher = fertig ? p.gesamt : zeilen.slice(0, lauf).reduce((a, z) => a + z.punkte, 0)
 
   return (
-    <section className="tp-aufl" aria-labelledby="tp-h-aufl">
+    <section className="tp-aufl" aria-labelledby="tp-h-aufl" ref={sektion}>
       <div className="tp-aufl__summe">
         <p className="tp-kicker" id="tp-h-aufl">
           Deine Punkte

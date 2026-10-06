@@ -151,7 +151,7 @@ for (const v of ['m', 'd']) {
     check(await page.locator('.tp-bonusliste').isVisible(), `[${v}] nach 3 Antworten: Übersicht der Bonusfragen`)
     // Spieler-Auswahl (Platz tauschen)
     await page.locator('.tp-slot .holo').nth(2).click()
-    await page.waitForTimeout(500)
+    await page.waitForTimeout(1500)
     await shot(page, `05-elf-aktion-${v}`, false)
     await page.getByRole('button', { name: 'Austauschen' }).click()
     await page.waitForTimeout(500)

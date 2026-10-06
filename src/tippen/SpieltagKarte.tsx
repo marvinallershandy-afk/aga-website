@@ -45,7 +45,8 @@ export function SpieltagKarte({ spiel, now, children, kicker }: { spiel: TippSpi
   const hatStand = spiel.toreSva != null && spiel.toreGegner != null && spiel.status !== 'geplant'
   const toreHeim = spiel.heim ? spiel.toreSva : spiel.toreGegner
   const toreGast = spiel.heim ? spiel.toreGegner : spiel.toreSva
-  const kopf = [kicker, spiel.wertung === 'winter' ? 'Winterwertung' : spiel.wettbewerb, spiel.spieltag ? `${spiel.spieltag}. Spieltag` : null]
+  // mit eigenem Kicker kurz halten (eine Zeile am Handy)
+  const kopf = [kicker, spiel.wertung === 'winter' ? 'Winterwertung' : kicker ? null : spiel.wettbewerb, spiel.spieltag ? `${spiel.spieltag}. Spieltag` : null]
     .filter(Boolean)
     .join(' · ')
   return (
