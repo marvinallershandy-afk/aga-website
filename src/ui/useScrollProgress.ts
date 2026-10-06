@@ -78,7 +78,14 @@ export function useScrollProgress(enabled: boolean) {
         // da". Ein kleines Halte-Band (±0.16 vh) hält den Text rund um den Halt
         // voll deckend; die Nachbarstationen bleiben getrennt (Lücke ≫ Band+Fade).
         const hold = id === 'sponsoren' || id === 'fanblock' ? vh * 0.16 : 0
-        const w0 = id === 'verein' ? 0 : SNAP_START_IDS.has(id) ? el.offsetTop : center - hold
+        // v19-F (Punkt 3): Snap-Start-Sektionen (Tabelle, Finale) bekommen einen
+        // kleinen Vorlauf (w0 etwas VOR dem offsetTop). Vorher begann die volle
+        // Präsenz hart am Snap-Punkt → ruhte die Kamera 50 px davor (Rest-
+        // Schwung), stand das Finale bei ~0 Opazität und die 3D-Karte schien
+        // durch Headline + Karten („Geister-Text"). Der Vorlauf ist klein genug,
+        // dass der Text erst bei Ankunft (nicht während des Aufstiegs) erscheint.
+        const lead = SNAP_START_IDS.has(id) ? vh * 0.12 : 0
+        const w0 = id === 'verein' ? 0 : SNAP_START_IDS.has(id) ? el.offsetTop - lead : center - hold
         const w1 = SNAP_START_IDS.has(id) ? el.offsetTop + Math.max(0, el.offsetHeight - vh) : center + hold
         return [{ el, w0, w1 }]
       })
