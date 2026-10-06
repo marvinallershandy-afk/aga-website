@@ -31,7 +31,7 @@ function dauer(ms: number): string {
 function schrittFuer(lage: Lage, now: number, angemeldet: boolean): Schritt | null {
   const { offen, gesperrt, gewertet } = lage
   // 1. frische Auflösung, noch nicht angesehen
-  if (gewertet?.meinePunkte && now - new Date(gewertet.anstoss).getTime() < 4 * 86400_000 && !aufloesungGesehen(gewertet.id) && !gesperrt) {
+  if (gewertet?.meinePunkte && now - new Date(gewertet.anstoss).getTime() < 4 * 86400_000 && !aufloesungGesehen(`${gewertet.id}:${gewertet.meinePunkte.gesamt}`) && !gesperrt) {
     return { key: `aufl-${gewertet.id}-${gewertet.motm ?? ''}`, ton: 'gold', icon: Sparkles, stark: `Neue Punkte! +${gewertet.meinePunkte.gesamt}`, text: 'sieh dir die Auflösung an', ziel: 'aufloesung', knopf: 'Ansehen' }
   }
   // 2. Spiel läuft

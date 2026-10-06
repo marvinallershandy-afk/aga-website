@@ -12,10 +12,12 @@ import { SpielerGesicht } from './SpielerKarte'
 // Reduzierte Bewegung: sofort der Endstand.
 // ─────────────────────────────────────────────────────────────
 
-// v21-UX (Befund 9): Punkte zählen pro Spiel nur EINMAL pro Sitzung hoch —
-// beim 2. Besuch (Abpfiff → Montag → Abpfiff, auch in der Vorführung) steht der
-// Endstand sofort. Merker im Speicher, zurückgesetzt bei Neuladen der Seite.
+// v21-UX (Befund 9) / v22-T: Punkte zählen nur bei ECHTER Änderung hoch —
+// Merker je Spiel UND Punktestand (`id:gesamt`): beim 2. Besuch steht der
+// Endstand sofort; kommen Punkte dazu (Montag: Spieler des Spiels), zählt es
+// genau einmal neu. Echtbetrieb: Gerät (localStorage), Vorführung: Speicher.
 const animiertDieseSitzung = new Set<string>()
+const aufloesungSchluessel = (s: Pick<TippSpiel, 'id' | 'meinePunkte'>) => `${s.id}:${s.meinePunkte?.gesamt ?? ''}`
 
 function Zaehler({ ziel, start, dauer = 0.7, vorzeichen = false }: { ziel: number; start: boolean; dauer?: number; vorzeichen?: boolean }) {
   const ref = useRef<HTMLSpanElement>(null)
@@ -61,11 +63,12 @@ export function Aufloesung({ spiel, kader, platz, kompakt }: { spiel: TippSpiel;
   const ruhig = useReducedMotion()
   // v21-UX (Befund 9): einmal pro Sitzung animieren, dann sofort Endstand —
   // auch in der Vorführung bei wiederholtem Phasenwechsel.
+  const merk = aufloesungSchluessel(spiel)
   const [lauf, setLauf] = useState(() => {
     if (kompakt || ruhig) return -1
-    if (!IST_VORFUEHRUNG && aufloesungGesehen(spiel.id)) return -1
-    if (animiertDieseSitzung.has(spiel.id)) return -1
-    animiertDieseSitzung.add(spiel.id)
+    if (!IST_VORFUEHRUNG && aufloesungGesehen(merk)) return -1
+    if (animiertDieseSitzung.has(merk)) return -1
+    animiertDieseSitzung.add(merk)
     return 0
   })
   const [offen, setOffen] = useState(!kompakt)
@@ -125,7 +128,10 @@ export function Aufloesung({ spiel, kader, platz, kompakt }: { spiel: TippSpiel;
   useEffect(() => {
     if (lauf < 0 || !imBild) return
     if (lauf >= anzahl) {
-      if (!IST_VORFUEHRUNG) aufloesungMerken(spiel.id)
+      if (!IST_VORFUEHRUNG) {
+        aufloesungMerken(merk)
+        aufloesungMerken(spiel.id)
+      }
       haptik([14, 50, 24])
       return
     }
@@ -134,7 +140,7 @@ export function Aufloesung({ spiel, kader, platz, kompakt }: { spiel: TippSpiel;
       haptik(6)
     }, lauf === 0 ? 650 : 420)
     return () => window.clearTimeout(t)
-  }, [lauf, anzahl, spiel.id, imBild])
+  }, [lauf, anzahl, spiel.id, merk, imBild])
 
   if (!p) return null
   const fertig = lauf < 0 || lauf >= zeilen.length
