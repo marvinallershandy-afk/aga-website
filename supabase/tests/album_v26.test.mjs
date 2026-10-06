@@ -284,5 +284,50 @@ ok((await erreicht(Fk.id, 'pejas_kollektion')) === 1, 'pejas_kollektion: 4/4 Kul
 const wunschKandidaten = await count(`select count(*)::int n from sva_album_karten where kult and aktiv and not limitiert`, [])
 ok(wunschKandidaten === 0, 'Kult ist immer limitiert → Wunschkarte/Zufall können es nie liefern')
 
+// ── V26-B: Fan-Barometer ────────────────────────────────────────────────────
+await db.exec(`update sva_album_einstellungen set barometer_min_anzeige = 2, kult_chance_prozent = 0 where id = 1`)
+const baroSpiel = async (gegner) => {
+  const id = (await one(`insert into sm_spiele (gegner, heim, anstoss, spieltag_nr) values ($1, true, now() - interval '5 min', 20) returning id`, [gegner])).id
+  return { id, token: (await val(admin, `select album_admin_code($1)`, [id])).token }
+}
+const SB = await baroSpiel('Barometer SV')
+const adminBaro = await val(admin, `select album_admin_barometer($1, 3)`, [SB.id])
+ok(adminBaro.ziel === 3 && typeof adminBaro.vorschlag === 'number' && adminBaro.vorschlag >= 10, 'album_admin_barometer: Ziel gesetzt + Vorschlag (Schnitt×1,15, mind. 10) ' + JSON.stringify(adminBaro))
+await expectErr(as((await neuerFan('Nina', 'N')).id, 'nina@fan.example', `select album_admin_barometer($1, 5)`, [SB.id]), 'Fan setzt kein Barometer', /album_kein_admin/)
+
+let baro = await val(asAnon, `select album_barometer($1)`, [SB.id])
+ok(baro.ziel === 3 && baro.stand == null && baro.text === 'Es geht los …' && !/name|email|fan_user_id|user_id/.test(JSON.stringify(baro)),
+  'album_barometer (anon): unter Schwelle stand=null + Text, keine PII')
+const eventPacks = (fanId) => count(`select count(*)::int n from sva_album_packs where fan_user_id = $1 and art = 'event' and quelle = $2`, [fanId, 'barometer:' + SB.id])
+const B1 = await neuerFan('Bea', 'B'), B2 = await neuerFan('Bodo', 'O'), B3 = await neuerFan('Britt', 'I'), B4 = await neuerFan('Bernd', 'R')
+await val(B1.f, `select album_checkin($1)`, [SB.token])
+await val(B2.f, `select album_checkin($1)`, [SB.token])
+baro = await val(asAnon, `select album_barometer($1)`, [SB.id])
+ok(baro.stand === 2 && !baro.erreicht, 'Barometer: 2/3 — Stand sichtbar (ab Schwelle), noch nicht erreicht')
+const ci3 = await val(B3.f, `select album_checkin($1)`, [SB.token])
+ok(ci3.barometer?.erreicht === true, '3. Check-in erreicht das Ziel (Check-in-Antwort meldet barometer.erreicht)')
+ok((await eventPacks(B1.id)) === 1 && (await eventPacks(B2.id)) === 1 && (await eventPacks(B3.id)) === 1,
+  'Bei Erreichen bekommen ALLE drei genau 1 Event-Pack (barometer:Spiel)')
+ok((await erreicht(B1.id, 'barometer_held')) === 1 && (await erreicht(B3.id, 'barometer_held')) === 1, 'Ziel „Gemeinsam voll" (barometer_held) für alle Anwesenden')
+// Fan 4 checkt später ein → bekommt das Event-Pack direkt
+const ci4 = await val(B4.f, `select album_checkin($1)`, [SB.token])
+ok(ci4.barometer?.erreicht === true && (await eventPacks(B4.id)) === 1, 'Später eincheckender Fan bekommt das Event-Pack direkt')
+// idempotent: erneute Verteilung gibt keine zweiten Packs
+await db.query(`select sva_album_barometer_verteilen($1)`, [SB.id])
+ok((await eventPacks(B1.id)) === 1 && (await eventPacks(B4.id)) === 1, 'Verteilung idempotent — keine zweiten Event-Packs')
+baro = await val(asAnon, `select album_barometer($1)`, [SB.id])
+ok(baro.erreicht === true && baro.stand === 4, 'album_barometer: erreicht=true, Stand 4')
+
+// barometer_held je Spiel einmal, mehrere Spiele → mehrfach
+const SB2 = await baroSpiel('Barometer Zwei')
+await val(admin, `select album_admin_barometer($1, 1)`, [SB2.id])
+await val(B1.f, `select album_checkin($1)`, [SB2.token])
+ok((await count(`select count(*)::int n from sva_album_ziel_erreicht e join sva_album_ziele z on z.id = e.ziel_id where e.fan_user_id = $1 and z.schluessel = 'barometer_held'`, [B1.id])) === 2,
+  'barometer_held wiederholbar: zweites Spiel → zweite Vergabe')
+
+// Ziel nicht gesetzt → album_barometer liefert null
+const SB3 = await baroSpiel('Ohne Barometer')
+ok((await val(asAnon, `select album_barometer($1)`, [SB3.id])) === null, 'Ohne gesetztes Ziel → album_barometer liefert null (UI blendet aus)')
+
 console.log(fails ? `\n${fails} FEHLER` : '\nALLES GRÜN')
 process.exit(fails ? 1 : 0)
