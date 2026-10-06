@@ -74,6 +74,9 @@ export interface KartenDaten {
   erstfund?: { name: string; at: string } | null
   /** v22: Geheimkarte (nur durch Entdecken, Geheimseite) */
   geheim?: boolean
+  /** v26: Kabinen-Kult-Karte (eigener Rahmen „Kabine statt Tresor") */
+  kult?: boolean
+  kollektion?: string
   /** Kartennummer in der Serie, z. B. 17 von 42 */
   kartenNr?: number
   kartenGesamt?: number

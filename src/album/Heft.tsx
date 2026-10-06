@@ -379,6 +379,7 @@ function SeitenInhalt({
         </div>
       )}
       {s.gruppe === 'bonus' && <p className="hb-hinweis">Limitierte Karten — nur kurz ziehbar, zählen nicht fürs volle Album.</p>}
+      {s.gruppe === 'kult' && <p className="hb-hinweis">Kabinen-Kult — Insider-Karten aus der Kabine. Gibt's nur am Spieltag, zählen nicht fürs volle Album.</p>}
 
       {s.id === 'start' && start}
       {s.id === 'ziele' && ziele}

@@ -63,6 +63,24 @@ for (const motor of MOTOREN) {
     }
     await b.close()
   }
+  if (soll('kult')) {
+    const { b, page } = await kontext(motor)
+    await heftAuf(page)
+    await reiter(page, 'Kult')
+    await warte(page, 1000)
+    await page.screenshot({ path: `${OUT}/${k}-04-kult-seite.png`, fullPage: true }).catch(() => page.screenshot({ path: `${OUT}/${k}-04-kult-seite.png` }))
+    // Kartenlabor → Filter „Kult"
+    await page.locator('.vf-leiste__knopf').click().catch(() => {})
+    await page.locator('.vf-leiste__panel button').filter({ hasText: 'Kartenlabor' }).click().catch(() => {})
+    await warte(page, 1200)
+    await page.locator('.kl__f').filter({ hasText: 'Kult' }).first().click().catch(() => {})
+    await warte(page, 800)
+    await page.screenshot({ path: `${OUT}/${k}-05-labor-kult.png` }).catch(() => {})
+    await page.locator('.kl__karte').first().click().catch(() => {})
+    await warte(page, 1200)
+    await page.screenshot({ path: `${OUT}/${k}-06-kult-gross.png` }).catch(() => {})
+    await b.close()
+  }
   if (soll('teaser')) {
     const { b, page } = await kontext(motor)
     await heftAuf(page)

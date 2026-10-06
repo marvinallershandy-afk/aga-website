@@ -118,6 +118,9 @@ export interface Karte {
   limitiert?: boolean
   /** v22: Geheimkarte (nur durch Entdecken; nie im öffentlichen Katalog) */
   geheim?: boolean
+  /** v26: Kabinen-Kult-Karte (eigene Insider-Serie, zählt nie fürs Album) */
+  kult?: boolean
+  kollektion?: string
   ziehbarVon?: string
   ziehbarBis?: string
   /** v20-K: Derby-Karte (nur beim Check-in an einem bestimmten Spiel) */

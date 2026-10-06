@@ -14,7 +14,7 @@ export const SELTEN_RANG: Record<Seltenheit, number> = { bronze: 1, silber: 2, g
 export const SELTEN_LABEL: Record<Seltenheit, string> = { bronze: 'Kader', silber: 'Silber', gold: 'Gold', spezial: 'Spezial' }
 export const SELTEN_KURZ = SELTEN_LABEL
 
-export type Gruppe = 'TW' | 'ABW' | 'MIT' | 'ANG' | 'stab' | 'moment' | 'fan' | 'partner' | 'bonus'
+export type Gruppe = 'TW' | 'ABW' | 'MIT' | 'ANG' | 'stab' | 'moment' | 'fan' | 'partner' | 'kult' | 'bonus'
 /** Kapitel in Heft-Reihenfolge (Server-Kapitel-IDs identisch) */
 export const GRUPPEN: { id: Gruppe; titel: string; kurz: string }[] = [
   { id: 'TW', titel: 'Tor', kurz: 'Tor' },
@@ -25,6 +25,7 @@ export const GRUPPEN: { id: Gruppe; titel: string; kurz: string }[] = [
   { id: 'moment', titel: 'Momente', kurz: 'Momente' },
   { id: 'fan', titel: 'Kurve', kurz: 'Kurve' },
   { id: 'partner', titel: 'Partner', kurz: 'Partner' },
+  { id: 'kult', titel: 'Kabinen-Kult', kurz: 'Kult' },
 ]
 export const KAPITEL_NAME: Record<string, string> = Object.fromEntries(GRUPPEN.map((g) => [g.id, g.titel]))
 export const SPIELER_GRUPPEN: Gruppe[] = ['TW', 'ABW', 'MIT', 'ANG']
@@ -51,6 +52,7 @@ export function besitzMap(mein: Mein | null): Map<string, number> {
 }
 
 export function gruppeVon(k: Karte): Gruppe {
+  if (k.kult) return 'kult'
   if (k.limitiert) return 'bonus'
   if (k.typ === 'spieler') return k.spieler?.position ?? 'MIT'
   if (k.typ === 'trainer') return 'stab'
@@ -81,7 +83,7 @@ export function plaetze(katalog: Katalog | null, besitz: Map<string, number>, oh
   const reihe = [...GRUPPEN.map((g) => g.id), 'bonus' as const].flatMap((g) => alle.filter((p) => p.gruppe === g))
   let nr = 0
   for (const p of reihe) {
-    if (p.gruppe !== 'bonus') p.nr = ++nr
+    if (p.gruppe !== 'bonus' && p.gruppe !== 'kult') p.nr = ++nr
     p.versionen.sort((a, b) => SELTEN_RANG[a.seltenheit] - SELTEN_RANG[b.seltenheit])
     p.glanz.sort((a, b) => SELTEN_RANG[a.seltenheit] - SELTEN_RANG[b.seltenheit])
     const zaehl = (v: Karte) => {
@@ -120,7 +122,7 @@ export interface Fortschritt {
 export const MEILENSTEINE = [10, 25, 50, 75, 100]
 
 export function fortschritt(ps: Platz[]): Fortschritt {
-  const album = ps.filter((p) => p.gruppe !== 'bonus')
+  const album = ps.filter((p) => p.gruppe !== 'bonus' && p.gruppe !== 'kult')
   const spieler = album.filter((p) => SPIELER_GRUPPEN.includes(p.gruppe))
   const spielerBelegt = spieler.filter((p) => p.beste).length
   const belegt = album.filter((p) => p.beste).length

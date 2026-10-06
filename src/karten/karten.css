@@ -74,6 +74,21 @@
 /* Spezial: Tiefrot-Schwarz, darüber das lebende Licht */
 .sk--spezial .sk__grund { background: radial-gradient(120% 70% at 50% 25%, #3a0a10 0%, #14070a 60%, #070405 100%); }
 .sk--spezial .sk__muster { background-size: 4cqw 4cqw; opacity: .05; }
+/* v26-K: Kabinen-Kult — „Kabine statt Tresor": mattes Spind-Grau/Beton, warmes
+   Kabinenlicht von oben, gebürstetes Metall statt Guilloche, Gaffer-Tape-Sticker. */
+.sk--kult .sk__grund {
+  background:
+    radial-gradient(85% 48% at 50% 8%, rgba(255, 214, 150, .22), rgba(255, 214, 150, 0) 60%),
+    linear-gradient(160deg, #3a3736 0%, #2a2726 42%, #1a1817 78%, #121011 100%);
+}
+.sk--kult .sk__muster { opacity: .5; mix-blend-mode: overlay; background-size: 100% 100%; }
+.sk--kult .sk__serie.is-kult {
+  background: #e8c15a; color: #211a0a; font-weight: 900; letter-spacing: .08em;
+  transform: rotate(-2deg); box-shadow: 0 .6cqw 1.6cqw rgba(0, 0, 0, .5);
+}
+.sk__tag.is-kult { background: #e8c15a; color: #211a0a; font-weight: 900; transform: rotate(3deg); }
+/* Foto als „Polaroid" im Schild-Fenster: weißer Rand + leichte Neigung */
+.sk--kult .sk__foto { border: 1.4cqw solid #f4f2ef; box-shadow: 0 1cqw 2.4cqw rgba(0, 0, 0, .55); transform: rotate(-1.2deg); }
 .sk__aurora { overflow: hidden; }
 .sk__aurora i, .sk__aurora b { position: absolute; left: 50%; top: 42%; width: 240cqw; height: 240cqw; margin: -120cqw 0 0 -120cqw; border-radius: 50%; will-change: transform; }
 .sk__aurora i {

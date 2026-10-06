@@ -122,6 +122,13 @@ export const MOTM_ID = 'vf-motm-1'
 export const MOTM_WOCHE_ID = 'vf-motm-2'
 
 let cache: Katalog | null = null
+// v26-K: Kabinen-Kult-Demokarten (eigener Rahmen, zählen nicht fürs Album)
+const KULT_KARTEN: Karte[] = [
+  { id: 'vf-kult-bromance', typ: 'moment', titel: 'Bromance', seltenheit: 'bronze', limitiert: true, kult: true, kollektion: 'Kabinen-Kult', bildUrl: '/album/karten/kult/kult-bromance.webp', bildFokus: '50% 38%', credit: 'picture by Nele', rueckseite: 'Zwei Mann, ein Pokal, ein Kuss — Bromance seit 2024.', sortierung: 910 },
+  { id: 'vf-kult-salto', typ: 'moment', titel: 'Der Salto', seltenheit: 'bronze', limitiert: true, kult: true, kollektion: 'Kabinen-Kult', bildUrl: '/album/karten/kult/kult-der-salto.webp', bildFokus: '50% 38%', credit: 'picture by Nele', rueckseite: 'Ungeplant, aber mit Haltungsnote.', sortierung: 915 },
+  { id: 'vf-kult-krampf', typ: 'moment', titel: 'Der Krampf', seltenheit: 'bronze', limitiert: true, kult: true, kollektion: 'Kabinen-Kult', bildUrl: '/album/karten/kult/kult-der-krampf.webp', bildFokus: '50% 38%', credit: 'picture by Nele', rueckseite: 'Liegen bleiben ist auch eine Taktik.', sortierung: 914 },
+]
+
 export function vorfuehrKatalog(): Katalog {
   if (cache) return cache
   const personen = spielerKarten()
@@ -174,7 +181,7 @@ export function vorfuehrKatalog(): Katalog {
         { stufe: 'komplett', titel: 'Los für die Saison-Verlosung' },
       ],
     },
-    karten: [...personen, ...momente, ...partner, ...kurve, motm, motmWoche],
+    karten: [...personen, ...momente, ...partner, ...kurve, motm, motmWoche, ...KULT_KARTEN],
   }
   return cache
 }

@@ -75,6 +75,8 @@ function start(): Zustand {
   besitz.set(MOTM_ID, 1)
   // 1 von 4 Geheimkarten schon entdeckt (Geburtstag) — die übrigen drei lassen sich vorführen
   besitz.set(GEHEIM[2].karte.id, 1)
+  // v26-K: eine Kabinen-Kult-Karte schon gesammelt (die Kult-Seite zeigt 1 von 3)
+  besitz.set('vf-kult-bromance', 1)
   const spieler = kat.filter((k) => k.typ === 'spieler' && !k.variante && !k.limitiert)
   const erste = spieler[0]
   besitz.set(erste.id, Math.max(1, besitz.get(erste.id) ?? 1))
