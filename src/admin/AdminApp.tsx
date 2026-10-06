@@ -41,6 +41,8 @@ const Matchday = lazy(() => import('./pages/Matchday').then((m) => ({ default: m
 const SponsorenCrm = lazy(() => import('./pages/SponsorenCrm').then((m) => ({ default: m.SponsorenCrm })))
 const Insights = lazy(() => import('./pages/Insights').then((m) => ({ default: m.Insights })))
 const Automationen = lazy(() => import('./pages/Automationen').then((m) => ({ default: m.Automationen })))
+// v25-D: Check-in-Anzeige (Vollbild fürs iPad, OHNE Admin-Layout)
+const CheckinAnzeige = lazy(() => import('./pages/CheckinAnzeige'))
 
 function LadeSeite() {
   return <div className="p-6 text-sm text-muted-foreground">Lädt …</div>
@@ -94,6 +96,15 @@ export function AdminApp() {
                   <Route path="insights" element={<NurAdmin><Insights /></NurAdmin>} />
                   <Route path="automationen" element={<NurAdmin><Automationen /></NurAdmin>} />
                 </Route>
+                {/* v25-D: Vollbild-Bühne OHNE Admin-Layout (iPad am Eingang) */}
+                <Route
+                  path="/checkin-anzeige"
+                  element={
+                    <ProtectedRoute>
+                      <CheckinAnzeige />
+                    </ProtectedRoute>
+                  }
+                />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
               </Suspense>
