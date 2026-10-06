@@ -10,8 +10,6 @@
 // Die Seite nutzt diesen Endpunkt fürs öffentliche Polling und fällt bei einem
 // Fehler auf den direkten RPC zurück (fetchLive). Die Vorführung (web_live_demo)
 // bleibt unverändert und geht NICHT über diese Function.
-import type { Config } from '@netlify/functions'
-
 export default async (_req: Request) => {
   const url = (process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? '').replace(/\/+$/, '')
   const key = process.env.SUPABASE_READ_KEY ?? process.env.VITE_SUPABASE_ANON_KEY
@@ -53,4 +51,5 @@ export default async (_req: Request) => {
   })
 }
 
-export const config: Config = { path: '/api/live' }
+// Kein config.path: erreichbar über /.netlify/functions/live, /api/live per Rewrite
+// in netlify.toml (vor dem 404-Catch-all) — mit config.path wäre der Rewrite tot.
