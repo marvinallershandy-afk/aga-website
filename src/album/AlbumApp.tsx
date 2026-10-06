@@ -22,6 +22,7 @@ import {
   type Mein,
   type PackArt,
   type PackInhalt,
+  type PackTyp,
   type PartnerInfo,
   type RanglistenEintrag,
   starterHolen,
@@ -45,6 +46,7 @@ import { KontoDialog } from './Konto'
 import { Login } from './Login'
 import { PackOpening } from './PackOpening'
 import { ProfilForm } from './Profil'
+import { packTypInfo, packZeile } from './packTypen'
 import { MEILENSTEINE, besitzMap, fortschritt, karteById, plaetze, reduzierteBewegung, treue, type Platz } from './model'
 import { InstagramZeile } from '../ui/InstagramZeile'
 import { standAus, standSchreiben, standVergessen } from './fanStand'
@@ -176,9 +178,26 @@ type CheckinStatus =
 interface PackAuftrag {
   id: string
   art: PackArt
+  typ?: PackTyp
   gegner?: string
   titel?: string
   partner?: PartnerInfo
+}
+
+/** v24-P: Deep-Link ins Pack: /album?oeffnen=<packId> (z. B. aus der Tipp-Liga) bzw.
+ *  /album#tuetchen (alle wartenden Tütchen). Einmal lesen, dann aus der Adresse nehmen. */
+function packLinkAusUrl(): { id: string | null; alle: boolean } {
+  try {
+    const url = new URL(window.location.href)
+    const id = url.searchParams.get('oeffnen')
+    const alle = url.hash === '#tuetchen'
+    if (!url.searchParams.has('oeffnen') && !alle) return { id: null, alle: false }
+    url.searchParams.delete('oeffnen')
+    window.history.replaceState(null, '', url.pathname + (url.search || '') + (alle ? '' : url.hash))
+    return { id: id && /^[A-Za-z0-9-]{4,64}$/.test(id) ? id : null, alle: alle || !id }
+  } catch {
+    return { id: null, alle: false }
+  }
 }
 
 /** v20-K: einmalige URL-Parameter (Tausch-Link, Freundes-Code, Story-Code). */
@@ -246,6 +265,8 @@ export function AlbumApp() {
   const [labor, setLabor] = useState(false)
   const [einf, setEinf] = useState(false)
   const [geheimUrl] = useState<string | null>(() => geheimAusUrl())
+  const [packLink, setPackLink] = useState(() => packLinkAusUrl())
+  const packLinkVersuch = useRef(0)
 
   useEffect(() => {
     ladeKatalog()
@@ -423,7 +444,7 @@ export function AlbumApp() {
       })
       .catch((e) => setMeldung({ text: e instanceof AlbumFehler ? e.message : 'Der Freundes-Code hat nicht geklappt.', n: Date.now() }))
   }, [freundCode, mein, neuLaden])
-  const packNeu = useCallback((p: PackNeu) => setPacks((q) => [...q, { id: p.id, art: p.art, titel: p.titel }]), [])
+  const packNeu = useCallback((p: PackNeu) => setPacks((q) => [...q, { id: p.id, art: p.art, titel: p.titel, typ: p.typ }]), [])
 
   // ── v22-A: Geheimkarten (Easter Eggs) einlösen ─────────────
   // Quellen: ?g= aus dem Hinweis, gemerkte Funde (localStorage), Funde hier im Album
@@ -504,7 +525,7 @@ export function AlbumApp() {
     if (!ALBUM_VORFUEHRUNG) return
     const f = (e: Event) => {
       const p = (e as CustomEvent<PackNeu>).detail
-      setPacks((q) => [...q, { id: p.id, art: p.art, titel: p.titel }])
+      setPacks((q) => [...q, { id: p.id, art: p.art, titel: p.titel, typ: p.typ }])
     }
     window.addEventListener(VF_PACK_EREIGNIS, f)
     return () => window.removeEventListener(VF_PACK_EREIGNIS, f)
@@ -619,7 +640,37 @@ export function AlbumApp() {
     [ps, ruhig],
   )
   const wartende = (mein?.packs ?? []).filter((p) => !packs.some((q) => q.id === p.id))
-  const packsOeffnen = () => setPacks((p) => [...p, ...wartende.map((w) => ({ id: w.id, art: w.art, gegner: w.gegner, titel: w.titel }))])
+  const packsOeffnen = () => setPacks((p) => [...p, ...wartende.map((w) => ({ id: w.id, art: w.art, typ: w.typ, gegner: w.gegner, titel: w.titel }))])
+
+  // v24-P: Deep-Link → genau dieses Pack sofort öffnen (bzw. alle wartenden).
+  // Erst wenn Profil UND Katalog da sind (sonst fehlen die Karten im Pack-Öffnen).
+  useEffect(() => {
+    if (!packLink.id && !packLink.alle) return
+    if (!mein?.profil || !katalog) return
+    const offen = mein.packs ?? []
+    const ziel = packLink.id ? offen.find((p) => p.id === packLink.id) : null
+    if (packLink.id && !ziel) {
+      // frisch gutgeschrieben, aber der Stand ist noch alt → einmal nachladen
+      if (packLinkVersuch.current < 2) {
+        packLinkVersuch.current++
+        const t = window.setTimeout(() => void neuLaden(), 600 * packLinkVersuch.current)
+        return () => window.clearTimeout(t)
+      }
+      queueMicrotask(() => {
+        setPackLink({ id: null, alle: false })
+        setMeldung({ text: 'Dieses Pack ist schon geöffnet — seine Karten kleben im Album.', n: Date.now() })
+      })
+      return
+    }
+    // nur genau dieses Pack — weitere Tütchen bleiben im Fach (Badge oben)
+    const liste = ziel ? [ziel] : offen
+    queueMicrotask(() => {
+      setPackLink({ id: null, alle: false })
+      if (!liste.length) return
+      heftAuf(true)
+      setPacks((q) => [...liste.filter((p) => !q.some((x) => x.id === p.id)).map((w) => ({ id: w.id, art: w.art, typ: w.typ, gegner: w.gegner, titel: w.titel })), ...q])
+    })
+  }, [packLink, mein, katalog, neuLaden, heftAuf])
 
   // ── Ansichten ──────────────────────────────────────────────
   const laedt = session === undefined || (!!session && !mein && !meinFehler)
@@ -670,7 +721,7 @@ export function AlbumApp() {
         {/* v20-T: gemeinsames Konto — jeder Tipp in der Tipp-Liga bringt eine Karte */}
         <a className="al-tipp" href="/tippen">
           <b>Tipp-Liga</b>
-          <span>Jeder Tipp = 1 Karte fürs Heft · gleiches Konto</span>
+          <span>Jeder Tipp = {packZeile(packTypInfo('tipp', katalog?.regeln.packTypen)!)} · gleiches Konto</span>
         </a>
         {wartende.length > 0 && (
           <button type="button" className="hf-tuetchen hf-tuetchen--dunkel" onClick={packsOeffnen}>
@@ -847,6 +898,8 @@ export function AlbumApp() {
           key={packs[0].id}
           packId={packs[0].id}
           art={packs[0].art}
+          typ={packs[0].typ}
+          packTypen={katalog?.regeln.packTypen}
           gegner={packs[0].gegner}
           titel={packs[0].titel}
           partner={packs[0].partner}

@@ -11,6 +11,7 @@ import { ruhigeBewegung, vibriere } from '../karten/medien'
 import { Medaille } from './Medaille'
 import { useKippen } from './medaille-logik'
 import './heft.css'
+import { garantieText, packTypInfo, packZeile } from './packTypen'
 
 // ─────────────────────────────────────────────────────────────
 // v20-K: Das Album als Buch. Kapitel (Tor, Abwehr, Mittelfeld, Sturm,
@@ -615,14 +616,14 @@ function FansSeite({ katalog, liste, mitmachen, onKonto }: { katalog: Katalog; l
       <h3 className="hf-zwischen">So funktioniert’s</h3>
       <ol className="hf-regeln">
         <li>
-          <b>Anmelden:</b> Starter-Pack mit {r.kartenStarter ?? 5} Karten.
+          <b>Anmelden:</b> {packZeile(packTypInfo('starter', r.packTypen)!)}.
         </li>
         <li>
-          <b>Am Platz:</b> Bei jedem Heimspiel QR-Code scannen — {r.kartenProPack} Karten
-          {r.bonusHeimsieg && `, bei einem Heimsieg +${r.kartenHeimsieg ?? 1}`}. Checkt ein Freund beim selben Spiel ein, gibt es für beide eine Extra-Karte.
+          <b>Am Platz:</b> Bei jedem Heimspiel QR-Code scannen — {packZeile(packTypInfo('spieltag', r.packTypen)!)} ({garantieText(packTypInfo('spieltag', r.packTypen))})
+          {r.bonusHeimsieg && `, bei einem Heimsieg ein ${packZeile(packTypInfo('sieg', r.packTypen)!)} (${garantieText(packTypInfo('sieg', r.packTypen))}) — auch für alle, die getippt haben`}. Checkt ein Freund beim selben Spiel ein, gibt es für beide eine Extra-Karte.
         </li>
         <li>
-          <b>Unter der Woche:</b> Tipp abgeben (1 Karte je Tipp), Story-Codes auf Instagram, Partner-Codes im Laden.
+          <b>Unter der Woche:</b> Tipp abgeben ({packZeile(packTypInfo('tipp', r.packTypen)!)}), Story-Codes auf Instagram, Event-Codes (Derby, MOTM-Woche), Partner-Codes im Laden.
         </li>
         <li>
           <b>Belohnungen:</b>{' '}

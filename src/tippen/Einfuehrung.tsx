@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowRight, Crown, Plus, Trophy, Users } from 'lucide-react'
 import type { Preis } from './api'
-import { BELOHNUNGEN, haptik, reduzierteBewegung } from './model'
+import { belohnungen, haptik, reduzierteBewegung } from './model'
 import { EASE, T_LANG } from './bewegung'
 import './einfuehrung.css'
 
@@ -22,7 +22,7 @@ import './einfuehrung.css'
 const SZENE_MS = 3600
 const SZENEN = [
   { key: 'tipp', kicker: 'Vor dem Anpfiff', titel: 'Tipp das Ergebnis', text: 'Ergebnis, drei Bonusfragen, deine Elf mit Kapitän — in 20 Sekunden.' },
-  { key: 'album', kicker: 'Sofort', titel: 'Jeder Tipp füllt dein Album', text: '+1 Karte fürs Sammelalbum — gleiches Konto, ein Login.' },
+  { key: 'album', kicker: 'Sofort', titel: 'Jeder Tipp füllt dein Album', text: 'Ein Tipp-Pack mit 2 Karten fürs Sammelalbum — gleiches Konto, ein Login.' },
   { key: 'punkte', kicker: 'Während des Spiels', titel: 'Deine Punkte zählen live mit', text: 'Tor, Karte, Kapitän: die Hochrechnung läuft mit. Nach dem Spielbericht steht die Auflösung.' },
   { key: 'rang', kicker: 'Nach der Auflösung', titel: 'Du kletterst in der Rangliste', text: 'Spieltag, Monat, Saison — und in deiner eigenen Liga mit Freunden.' },
   { key: 'preis', kicker: 'Am Ende', titel: 'Oben warten Preise', text: 'Für die Besten der Saison und des Monats — kostenlos mitspielen.' },
@@ -136,7 +136,7 @@ export function Einfuehrung({ offen, onZu, preise, figur }: { offen: boolean; on
                   Das bekommst du
                 </h2>
                 <ul className="tp-belohnungen">
-                  {BELOHNUNGEN.map((b) => (
+                  {belohnungen().map((b) => (
                     <li key={b.wann} className={`is-${b.art}`}>
                       <span>{b.wann}</span>
                       <b>{b.was}</b>
@@ -234,9 +234,9 @@ function SzeneBild({ szene, preis, figur }: { szene: Szene; preis?: Preis; figur
           </div>
           <div className="ti-album__karte">
             {figur ? <img src={figur} alt="" /> : <img src="/brand/aga-logo.png" alt="" className="is-logo" />}
-            <span>+1</span>
+            <span>×2</span>
           </div>
-          <span className="ti-album__plus">+1 Karte fürs Album</span>
+          <span className="ti-album__plus">Tipp-Pack · 2 Karten fürs Album</span>
         </div>
       )
     case 'punkte':

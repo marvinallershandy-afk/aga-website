@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { packOeffnen, type Karte, type PackArt, type PackInhalt, type PartnerInfo, AlbumFehler } from './api'
+import { packOeffnen, type Karte, type PackArt, type PackInhalt, type PackTyp, type PackTypInfo, type PartnerInfo, AlbumFehler } from './api'
+import { garantieText, kartenWort, packTypInfo, typVonArt } from './packTypen'
 import { SvaKarte } from '../karten/SvaKarte'
 import { KartenRuecken } from '../karten/Ruecken'
 import { ruhigeBewegung, vibriere } from '../karten/medien'
@@ -29,6 +30,9 @@ import './pack.css'
 interface Props {
   packId: string
   art: PackArt
+  /** v24-P: Pack-Typ (Optik + Reveal-Intensität); sonst aus dem Server-Inhalt bzw. der Art */
+  typ?: PackTyp
+  packTypen?: PackTypInfo[]
   gegner?: string
   titel?: string
   partner?: PartnerInfo
@@ -57,11 +61,12 @@ const STAUB = Array.from({ length: 26 }, (_, n) => {
 })
 
 const ART_TEXT: Record<PackArt, string> = {
-  checkin: 'Check-in-Pack',
-  heimsieg: 'Heimsieg-Bonus',
+  checkin: 'Spieltags-Pack',
+  heimsieg: 'Sieg-Pack',
   geschenk: 'Geschenk-Pack',
   starter: 'Starter-Pack',
-  tipp: 'Tipp-Karte',
+  tipp: 'Tipp-Pack',
+  event: 'Event-Pack',
   story: 'Story-Code',
   partner: 'Partner-Pack',
   advent: 'Adventskalender',
@@ -91,7 +96,7 @@ function hinweise(d: KartenDaten): string[] {
   return [d.serie ?? (d.art === 'fan' ? 'Die Kurve' : 'Moment'), d.limitiert ? 'Limitiert' : SELTEN_NAME[d.seltenheit]]
 }
 
-export function PackOpening({ packId, art, gegner, titel, partner, karten, nummern, gesamt, saison, fanName, shinyChance, onFertig }: Props) {
+export function PackOpening({ packId, art, typ, packTypen, gegner, titel, partner, karten, nummern, gesamt, saison, fanName, shinyChance, onFertig }: Props) {
   const ruhig = useMemo(() => ruhigeBewegung(), [])
   const [phase, setPhase] = useState<Phase>('laden')
   const [inhalt, setInhalt] = useState<PackInhalt | null>(null)
@@ -152,6 +157,12 @@ export function PackOpening({ packId, art, gegner, titel, partner, karten, numme
     [inhalt, karten, nummern, gesamt, saison],
   )
   const beste: Stufe = reihe.length ? reihe[reihe.length - 1].stufe : 'bronze'
+  // v24-P: Pack-Typ → Tütchen-Optik und Reveal-Intensität (1 ruhig · 2 normal · 3 groß)
+  const info = packTypInfo(inhalt?.typ ?? typ ?? typVonArt(inhalt?.art ?? art), packTypen)
+  const reveal = info?.reveal ?? 2
+  const tempo = reveal === 1 ? 0.72 : reveal === 3 ? 1.12 : 1
+  const kopf = titel ?? inhalt?.titel ?? info?.titel ?? ART_TEXT[art]
+  const garantie = garantieText(info)
   const aktuell = reihe[i]
   const neue = reihe.filter((k) => k.neu)
 
@@ -169,11 +180,11 @@ export function PackOpening({ packId, art, gegner, titel, partner, karten, numme
       }
       setKp('rein')
       if (!istGross(k.stufe)) {
-        later(() => setKp('dreh'), 650)
+        later(() => setKp('dreh'), 650 * tempo)
         later(() => {
           setKp('auf')
           vibriere(HAPTIK[k.stufe])
-        }, k.seltenheit === 'silber' ? 1350 : 1150)
+        }, (k.seltenheit === 'silber' ? 1350 : 1150) * tempo)
         return
       }
       if (k.stufe === 'shiny') {
@@ -204,7 +215,7 @@ export function PackOpening({ packId, art, gegner, titel, partner, karten, numme
         }, 5550)
         return
       }
-      const lang = k.stufe === 'spezial' || k.stufe === 'geheim' ? 1.15 : 1
+      const lang = (k.stufe === 'spezial' || k.stufe === 'geheim' ? 1.15 : 1) * (reveal === 3 ? 1.08 : reveal === 1 ? 0.9 : 1)
       later(() => setKp('dunkel'), 450)
       later(() => {
         setKp('kamera')
@@ -225,7 +236,7 @@ export function PackOpening({ packId, art, gegner, titel, partner, karten, numme
         vibriere(HAPTIK[k.stufe])
       }, 3850 * lang)
     },
-    [reihe, ruhig],
+    [reihe, ruhig, tempo, reveal],
   )
   useEffect(() => {
     if (kp === 'auf') weiterRef.current?.focus({ preventScroll: true })
@@ -259,7 +270,7 @@ export function PackOpening({ packId, art, gegner, titel, partner, karten, numme
     later(() => {
       setPhase('karte')
       zeigeKarte(0)
-    }, 1150)
+    }, reveal === 1 ? 850 : reveal === 3 ? 1500 : 1150)
   }
   const onDown = (e: React.PointerEvent) => {
     if (phase !== 'tuete' || ruhig) return
@@ -326,6 +337,9 @@ export function PackOpening({ packId, art, gegner, titel, partner, karten, numme
       className={`po${ruhig ? ' po--ruhig' : ''}${walkout ? ' is-walkout' : ''} po--${phase}`}
       data-selt={selt}
       data-kp={phase === 'karte' ? kp : undefined}
+      data-typ={info?.typ}
+      data-optik={info?.optik ?? 'standard'}
+      data-reveal={reveal}
       role="dialog"
       aria-modal="true"
       aria-label="Pack öffnen"
@@ -351,13 +365,14 @@ export function PackOpening({ packId, art, gegner, titel, partner, karten, numme
       {(phase === 'laden' || phase === 'tuete' || phase === 'reissen') && (
         <div className="po__buehne">
           <p className="po__kicker">
-            {titel ?? ART_TEXT[art]}
+            {kopf}
             {gegner ? ` · ${gegner}` : ''}
           </p>
           <div
             ref={tueteRef}
             className={`po-tuete${phase === 'reissen' ? ' is-auf' : ''}${phase === 'laden' ? ' is-laden' : ''}`}
             data-selt={beste}
+            data-optik={info?.optik ?? 'standard'}
             onPointerDown={onDown}
             onPointerMove={onMove}
             onPointerUp={onUp}
@@ -371,10 +386,14 @@ export function PackOpening({ packId, art, gegner, titel, partner, karten, numme
             </div>
             <div className="po-tuete__koerper">
               <span className="po-tuete__folie" />
+              {info && <span className="po-tuete__marke">{info.titel.replace(/-?Pack$/, '') || info.titel}</span>}
               <img src="/brand/aga-logo.png" alt="" draggable={false} />
-              <b>Sammelkarten</b>
+              <b>{info ? info.titel : 'Sammelkarten'}</b>
               <em>Saison {saison ?? '2026/27'}</em>
-              <small>{inhalt ? `${inhalt.karten.length} ${inhalt.karten.length === 1 ? 'Karte' : 'Karten'}` : '…'}</small>
+              <small>{inhalt ? kartenWort(inhalt.karten.length) : '…'}</small>
+              {inhalt && (garantie || (info?.limitiertChance && info.typ === 'event')) && (
+                <span className="po-tuete__band">{garantie || 'Chance auf die limitierte Karte'}</span>
+              )}
               {partner && (
                 <span className="po-tuete__partner">
                   präsentiert von
@@ -492,7 +511,7 @@ export function PackOpening({ packId, art, gegner, titel, partner, karten, numme
 
       {phase === 'ende' && (
         <div className="po__buehne po__buehne--ende">
-          <p className="po__kicker">{titel ?? ART_TEXT[art]}</p>
+          <p className="po__kicker">{kopf}</p>
           <h2 className="al-h2">
             {reihe.some((k) => k.stufe === 'shiny')
               ? 'Ein Shiny! Glückwunsch.'

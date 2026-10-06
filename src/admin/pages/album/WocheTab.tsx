@@ -8,6 +8,7 @@ import { useRoster, useSpiele, useSponsoren } from '../../lib/queries'
 import { useAlbumStatistik, useKarten } from '../../lib/album'
 import { adminKartenDaten, useCodeMutations, useKartenCodes, useMotm } from '../../lib/albumV20'
 import { reelHerunterladen, storyHerunterladen } from './exportHelfer'
+import { PackKontrolleKarte } from './PackTypen'
 
 // ─────────────────────────────────────────────────────────────
 // v20-K: Wochen-Checkliste (der wöchentliche Ablauf in 2 Minuten):
@@ -161,6 +162,8 @@ export function WocheTab() {
 
   return (
     <div className="space-y-4">
+      {/* v24-P: bekommt jeder genau die Packs, die ihm zustehen? */}
+      <PackKontrolleKarte />
       <p className="text-sm text-muted-foreground">
         Woche vom {mo.toLocaleDateString('de-DE', { day: 'numeric', month: 'long' })} — der Ablauf in 2 Minuten. Haken setzen sich von selbst, sobald es erledigt ist.
       </p>

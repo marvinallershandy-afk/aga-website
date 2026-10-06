@@ -5,6 +5,7 @@
 // in sva_album_v22_nachziehen(). Gleiche Regeln/Chancen wie die Standardwerte.
 // Nur geladen mit ?vorfuehrung=1 (eigener Chunk).
 // ─────────────────────────────────────────────────────────────
+import { PACK_TYPEN_STANDARD } from '../packTypen'
 import { PLAYERS, STAFF } from '../../data/players'
 import { PARTNER_SPONSOREN } from '../../data/partner'
 import type { Karte, Katalog, Position } from '../api'
@@ -115,8 +116,10 @@ export const GEHEIM: { schluessel: string; tokenHash: string; raetsel: string; k
   },
 ]
 
-/** MOTM der Woche (limitiert, Bonus-Seite) */
+/** MOTM der Vorwoche (limitiert, Bonus-Seite — die Demo-Fanin hat sie schon) */
 export const MOTM_ID = 'vf-motm-1'
+/** v24-P: MOTM der laufenden Woche — kommt nur über den Wochen-Slot der Packs */
+export const MOTM_WOCHE_ID = 'vf-motm-2'
 
 let cache: Katalog | null = null
 export function vorfuehrKatalog(): Katalog {
@@ -143,6 +146,13 @@ export function vorfuehrKatalog(): Katalog {
     serie: 'Spieler des Spiels', bildUrl: kapitaen.photoUrl ?? undefined,
     spieler: { slug: kapitaen.id, name: kapitaen.name, nummer: kapitaen.number ?? undefined, position: kapitaen.position, fotoUrl: kapitaen.photoUrl ?? undefined, cutoutUrl: kapitaen.cutoutUrl ?? undefined, kapitaen: true },
   }
+  const woche = PLAYERS.find((p) => p.id === 'p-warkehr-a') ?? PLAYERS[PLAYERS.length - 1]
+  const motmWoche: Karte = {
+    id: MOTM_WOCHE_ID, typ: 'spieler', titel: woche.name, untertitel: 'MOTM · 8. Spieltag · TuS Fischbek', seltenheit: 'spezial', limitiert: true,
+    serie: 'Spieler des Spiels', bildUrl: woche.photoUrl ?? undefined,
+    ziehbarVon: new Date(Date.now() - 2 * 864e5).toISOString(), ziehbarBis: new Date(Date.now() + 5 * 864e5).toISOString(),
+    spieler: { slug: woche.id, name: woche.name, nummer: woche.number ?? undefined, position: woche.position, fotoUrl: woche.photoUrl ?? undefined, cutoutUrl: woche.cutoutUrl ?? undefined },
+  }
   cache = {
     saison: SAISON,
     aktiv: true,
@@ -150,7 +160,9 @@ export function vorfuehrKatalog(): Katalog {
       chancen: { bronze: 70, silber: 22, gold: 7, spezial: 1 },
       kartenProPack: 3, kartenStarter: 5, kartenHeimsieg: 1, kartenTipp: 1, kartenStory: 1, kartenFreund: 1, kartenKapitel: 1,
       fensterVorMin: 60, fensterNachMin: 135, bonusHeimsieg: true, smartPack: true,
-      tauschMinTage: 7, tauschProWoche: 5, wunschKosten: 3, loseCheckin: 1, loseKomplett: 5,
+      tauschMinTage: 7, tauschProWoche: 5, wunschKosten: 5, loseCheckin: 1, loseKomplett: 5,
+      // v24-P: Pack-Typen wie die Standardwerte der Datenbank
+      packTypen: PACK_TYPEN_STANDARD,
       shinyChance: 250, geheimAnzahl: GEHEIM.length,
       // In der Vorführung ist „heute“ Vereins-Geburtstag → die Kerzen sind zu sehen
       vereinsGeburtstag: heuteMMTT(),
@@ -162,7 +174,7 @@ export function vorfuehrKatalog(): Katalog {
         { stufe: 'komplett', titel: 'Los für die Saison-Verlosung' },
       ],
     },
-    karten: [...personen, ...momente, ...partner, ...kurve, motm],
+    karten: [...personen, ...momente, ...partner, ...kurve, motm, motmWoche],
   }
   return cache
 }

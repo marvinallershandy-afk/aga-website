@@ -33,6 +33,7 @@ import { CodesTab } from './album/CodesTab'
 import { VerlosungenTab } from './album/VerlosungenTab'
 import { WocheTab } from './album/WocheTab'
 import { ShinyGeheimTab, LaborTab } from './album/ShinyGeheimTab'
+import { PackKontrolleKarte, PackTypenEditor } from './album/PackTypen'
 
 // ─────────────────────────────────────────────────────────────
 // v17-A: Admin „Album“ (Sammelalbum / Stickerheft auf /album).
@@ -553,21 +554,18 @@ function EinstellungenTab() {
           {zahl('gewicht_spezial', `Spezial · ${pct(f.gewicht_spezial)}`, 0, 1000)}
         </div>
         <div className="grid gap-3 sm:grid-cols-4">
-          {zahl('karten_pro_pack', 'Karten je Check-in-Pack', 1, 5, 'Standard 3')}
-          {zahl('doppelte_bremse', 'Doppelten-Bremse %', 0, 100, 'bevorzugt fehlende Karten (Standard 25)')}
+          {zahl('karten_pro_pack', 'Karten je Geschenk-Pack', 1, 5, 'sonstige Packs ohne Pack-Typ, Standard 3')}
+          {zahl('doppelte_bremse', 'Doppelten-Bremse %', 0, 100, 'bevorzugt fehlende Karten (v24: Standard 5)')}
           {zahl('fenster_vor_min', 'Fenster vor Anstoß (min)', 0, 240)}
           {zahl('fenster_nach_min', 'Fenster nach Anstoß (min)', 15, 360, '135 ≈ Abpfiff + 30 min')}
         </div>
         <div className="grid gap-3 sm:grid-cols-4">
-          {zahl('karten_starter', 'Starter-Pack', 1, 10, 'bei Anmeldung, Standard 5')}
-          {zahl('karten_heimsieg', 'Heimsieg-Bonus', 0, 5, 'Karten, Standard 1')}
-          {zahl('karten_tipp', 'Je Tipp', 0, 5, 'Tipp-Liga, Standard 1')}
-          {zahl('karten_story', 'Story-Code', 0, 5, 'Standard 1')}
+          {zahl('karten_story', 'Story-Code', 0, 5, 'Einzelkarte, Standard 1')}
           {zahl('karten_freund', 'Freund-Bonus', 0, 5, 'beide eingecheckt, Standard 1')}
-          {zahl('karten_kapitel', 'Kapitel komplett', 0, 5, 'Bonus-Karten, Standard 1')}
+          {zahl('smart_ab_karten', 'Smart-Pack ab … Karten', 1, 10, 'v24: 2 — Einzelkarten (Story/Advent/Freund) sind reiner Zufall')}
         </div>
+        <p className="text-xs text-muted-foreground">Tipp-, Spieltags-, Sieg-, Starter-, Ziel- und Event-Pack stellst du unten unter „Pack-Typen“ ein.</p>
         <div className="grid gap-2 sm:grid-cols-2">
-          <Switch checked={!!f.starter_min_silber} onChange={(v) => set({ starter_min_silber: v })} label="Starter mit mind. 1 Silber" />
           <Switch checked={!!f.smart_pack} onChange={(v) => set({ smart_pack: v })} label="Smart-Pack" hint="Erste Karte jedes Packs ist eine fehlende" />
           <Switch checked={!!f.smart_pack_belohnung} onChange={(v) => set({ smart_pack_belohnung: v })} label="Smart-Pack auch bei Belohnungen" hint="Aus empfohlen (sonst zu schnell komplett)" />
           <Switch checked={!!f.bonus_heimsieg} onChange={(v) => set({ bonus_heimsieg: v })} label="Bonus-Pack bei Heimsieg" hint="Wird automatisch verteilt, sobald das Ergebnis feststeht." />
@@ -580,7 +578,7 @@ function EinstellungenTab() {
         <div className="grid gap-3 sm:grid-cols-4">
           {zahl('tausch_min_tage', 'Tausch ab Kontoalter (Tage)', 0, 60, 'Standard 7')}
           {zahl('tausch_pro_woche', 'Tausche pro Woche', 0, 50, 'Standard 5')}
-          {zahl('wunsch_kosten', 'Doppelte je Wunschkarte', 2, 10, 'Standard 3')}
+          {zahl('wunsch_kosten', 'Doppelte je Wunschkarte', 2, 10, 'v24: Standard 5')}
           {zahl('code_fehler_limit', 'Code-Fehlversuche/Std.', 3, 100, 'danach gesperrt')}
           {zahl('lose_checkin', 'Lose je Check-in', 0, 10, 'Standard 1')}
           {zahl('lose_komplett', 'Lose für volles Album', 0, 100, 'Standard 5')}
@@ -614,6 +612,12 @@ function EinstellungenTab() {
           Speichern
         </Button>
       </div>
+
+      <section className="space-y-4 rounded-lg border border-border p-4">
+        <h2 className="font-display text-xl">Pack-Typen</h2>
+        <PackTypenEditor />
+      </section>
+      <PackKontrolleKarte />
 
       <section className="space-y-2 rounded-lg border border-border p-4">
         <h2 className="font-display text-xl">Kennzahlen</h2>

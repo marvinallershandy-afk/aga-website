@@ -304,11 +304,14 @@ ok(mk.dow === 1 && mk.t === '00:00:00' && mk.tage === 7 && mk.ziehbar_von <= new
 const motm2 = await val(admin, `select album_admin_motm($1, $2)`, [P_MOTM, SP])
 ok(motm2.id === motm.id && motm2.neu === false, 'MOTM idempotent je (Spieler, Spiel)')
 await db.exec(`update sva_album_einstellungen set gewicht_bronze = 0, gewicht_silber = 0, gewicht_gold = 0, gewicht_spezial = 1, smart_pack = false`)
-const zieh = async () => { let n = 0; for (let i = 0; i < 12; i++) { const u = await user(`m${Math.random()}@x.example`); const p = (await one(`select sva_album_pack_ziehen($1, null, 'geschenk') id`, [u])).id; if ((await one(`select $1 = any (karten) b from sva_album_packs where id = $2`, [motm.id, p])).b) n++ } return n }
+// v24-P: MOTM kommt nur über den Wochen-Slot typisierter Packs → Spieltags-Pack mit Slot 100 %
+await db.exec(`update sva_album_pack_typen set limitiert_chance = 100 where typ = 'spieltag'`)
+const zieh = async () => { let n = 0; for (let i = 0; i < 12; i++) { const u = await user(`m${Math.random()}@x.example`); const p = (await one(`select sva_album_pack_ziehen($1, null, 'checkin') id`, [u])).id; if ((await one(`select $1 = any (karten) b from sva_album_packs where id = $2`, [motm.id, p])).b) n++ } return n }
 await db.exec(`update sva_album_karten set ziehbar_von = now() + interval '1 hour', ziehbar_bis = now() + interval '7 days' where id = '${motm.id}'`)
 ok((await zieh()) === 0, 'Verfügbarkeit: vor dem Fenster nie gezogen')
 await db.exec(`update sva_album_karten set ziehbar_von = now() - interval '1 hour', ziehbar_bis = now() + interval '7 days' where id = '${motm.id}'`)
 ok((await zieh()) > 0, 'Verfügbarkeit: im Fenster gezogen')
+await db.exec(`update sva_album_pack_typen set limitiert_chance = 30 where typ = 'spieltag'`)
 await db.exec(`update sva_album_karten set ziehbar_von = now() - interval '8 days', ziehbar_bis = now() - interval '1 second' where id = '${motm.id}'`)
 ok((await zieh()) === 0, 'Verfügbarkeit: nach dem Fenster nie gezogen')
 await db.exec(`update sva_album_einstellungen set gewicht_bronze = 70, gewicht_silber = 22, gewicht_gold = 7, gewicht_spezial = 1, smart_pack = true`)

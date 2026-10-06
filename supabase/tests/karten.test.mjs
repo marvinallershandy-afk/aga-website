@@ -69,13 +69,15 @@ const [marvin, lena, ole, tom, ohne] = ['marvin', 'lena', 'ole', 'tom', 'ohne'].
 // ── Einstellungen ──────────────────────────────────────────────────────────
 ok((await count(`select count(*)::int n from sva_album_einstellungen`)) === 1, 'Einstellungen: genau 1 Zeile (nach 2 Läufen)')
 const e0 = await one(`select * from sva_album_einstellungen`)
+// v24-P: Packgrößen von Tipp/Check-in/Heimsieg/Starter/Kapitel stehen jetzt in sva_album_pack_typen
+// (supabase/tests/packs_v24.test.mjs); die alten Spalten bleiben, Bremse 25 → 5 %.
 ok(e0.karten_starter === 5 && e0.starter_min_silber && e0.karten_heimsieg === 1 && e0.karten_tipp === 1 && e0.karten_story === 1
-  && e0.karten_freund === 1 && e0.karten_kapitel === 1 && e0.smart_pack && !e0.smart_pack_belohnung && e0.doppelte_bremse === 25,
-  'Standard: Starter 5 (mind. Silber), je 1 Karte für Heimsieg/Tipp/Story/Freund/Kapitel, Smart-Pack an, Bremse 25 %')
+  && e0.karten_freund === 1 && e0.karten_kapitel === 1 && e0.smart_pack && !e0.smart_pack_belohnung && e0.doppelte_bremse === 5,
+  'Standard: Starter 5 (mind. Silber), je 1 Karte für Heimsieg/Tipp/Story/Freund/Kapitel (Alt-Spalten), Smart-Pack an, Bremse 5 % (v24)')
 ok(e0.schwelle_1 === 3 && e0.schwelle_2 === 6 && e0.schwelle_3 === 8 && e0.belohnung_1 === 'Getränk nach Wahl'
   && e0.belohnung_3.startsWith('Los für die Saison-Verlosung') && e0.tausch_min_tage === 7 && e0.tausch_pro_woche === 5
-  && e0.wunsch_kosten === 3 && e0.code_fehler_limit === 10 && e0.lose_checkin === 1 && e0.lose_komplett === 5,
-  'Standard: Belohnungen 3/6/8, Tausch 7 Tage/5 pro Woche, Wunsch 3, Code-Sperre 10, Lose 1/5')
+  && e0.wunsch_kosten === 5 && e0.code_fehler_limit === 10 && e0.lose_checkin === 1 && e0.lose_komplett === 5,
+  'Standard: Belohnungen 3/6/8, Tausch 7 Tage/5 pro Woche, Wunsch 5 (v24), Code-Sperre 10, Lose 1/5')
 await expectErr(db.query(`update sva_album_einstellungen set schwelle_3 = 6`), 'Schwelle 3 muss über Schwelle 2 liegen')
 await expectErr(db.query(`update sva_album_einstellungen set wunsch_kosten = 1`), 'Wunsch-Kosten mind. 2')
 await expectErr(db.query(`update sva_album_einstellungen set karten_starter = 11`), 'Starter höchstens 10 Karten')
@@ -121,7 +123,7 @@ const kDoener = kat.karten.find((k) => k.typ === 'partner' && k.partner?.name ==
 ok(kDoener?.partner.seit === 2024 && kDoener.seltenheit === 'bronze' && !kat.karten.some((k) => k.titel === 'Alter Partner'), 'Partnerkarte (Bronze) mit „seit 2024“, inaktiver Sponsor ohne Karte')
 ok(kat.karten.every((k) => typeof k.variante === 'boolean' && typeof k.limitiert === 'boolean' && typeof k.derby === 'boolean'), 'Katalog: variante/limitiert/derby je Karte')
 ok(kat.regeln.kartenStarter === 5 && kat.regeln.kartenHeimsieg === 1 && kat.regeln.kartenTipp === 1 && kat.regeln.kartenStory === 1 && kat.regeln.kartenFreund === 1
-  && kat.regeln.kartenKapitel === 1 && kat.regeln.tauschMinTage === 7 && kat.regeln.tauschProWoche === 5 && kat.regeln.wunschKosten === 3 && kat.regeln.smartPack === true,
+  && kat.regeln.kartenKapitel === 1 && kat.regeln.tauschMinTage === 7 && kat.regeln.tauschProWoche === 5 && kat.regeln.wunschKosten === 5 && kat.regeln.smartPack === true,
   'Katalog-Regeln: Packgrößen, Tausch, Wunschkarte, Smart-Pack')
 ok(kat.regeln.belohnungen.length === 4 && kat.regeln.belohnungen[2].stufe === 'schwelle_3' && kat.regeln.belohnungen[2].checkins === 8 && kat.regeln.belohnungen[0].titel === 'Getränk nach Wahl', 'Katalog-Regeln: Belohnungen 3/6/8 + komplett')
 const katJson = JSON.stringify(kat)
@@ -154,7 +156,7 @@ ok((await count(`select count(*)::int n from sva_album_packs p join sva_album_ka
   where p.art = 'starter' and (k.variante or k.limitiert)`)) === 0, 'Starter: erste Karte immer eine Album-Karte (Smart-Pack)')
 
 // ── Smart-Pack: erste Karte immer neu, bis das Album voll ist ──────────────
-await db.exec(`update sva_album_einstellungen set karten_kapitel = 0`)
+await db.exec(`update sva_album_einstellungen set karten_kapitel = 0; update sva_album_pack_typen set karten = 0 where typ = 'ziel'`) // v24: Kapitel-Bonus = Pack-Typ „ziel“
 const SMART = { id: await user('smart@fan.example'), mail: 'smart@fan.example' }
 const smartFan = (sql, p) => as(SMART.id, SMART.mail, sql, p)
 await smartFan(`select album_profil_speichern('Smart', 'S', false, false, true)`)
@@ -215,14 +217,16 @@ const heimspiel = async (gegner, minAbAnstoss = 10, extra = {}) => {
 const G1 = await heimspiel('TuS Fischbek')
 let ci = await val(marvin, `select album_checkin($1)`, [G1.token])
 ok(ci.ok && ci.packId && !ci.freundPackId && Array.isArray(ci.freunde) && ci.freunde.length === 0, 'Check-in ohne Freunde: kein Freund-Pack')
-ok((await one(`select cardinality(karten) n from sva_album_packs where id = $1`, [ci.packId])).n === 3, 'Check-in-Pack: 3 Karten')
+const SPIELTAG_N = (await one(`select karten from sva_album_pack_typen where typ = 'spieltag'`)).karten
+ok((await one(`select cardinality(karten) n from sva_album_packs where id = $1`, [ci.packId])).n === SPIELTAG_N, `Check-in-Pack: ${SPIELTAG_N} Karten (v24: Spieltags-Pack)`)
 await db.exec(`update sm_spiele set tore_sva = 2, tore_gegner = 0 where id = '${G1.id}'`)
 const hs = await one(`select * from sva_album_packs where spiel_id = $1 and art = 'heimsieg' and fan_user_id = $2`, [G1.id, F.marvin.id])
-ok(hs && hs.karten.length === 1 && hs.titel === 'Heimsieg-Bonus', 'Heimsieg → Bonus-Pack mit 1 Karte (karten_heimsieg)')
-await db.exec(`update sva_album_einstellungen set karten_heimsieg = 0`)
+const SIEG_N = (await one(`select karten from sva_album_pack_typen where typ = 'sieg'`)).karten
+ok(hs && hs.karten.length === SIEG_N && hs.titel === 'Sieg-Pack' && hs.typ === 'sieg', `Heimsieg → Sieg-Pack mit ${SIEG_N} Karten (v24: Pack-Typ „sieg“)`)
+await db.exec(`update sva_album_pack_typen set karten = 0 where typ = 'sieg'`)
 ci = await val(ole, `select album_checkin($1)`, [G1.token])
-ok(ci.ok && !ci.bonusPackId, 'karten_heimsieg = 0 → kein Heimsieg-Pack')
-await db.exec(`update sva_album_einstellungen set karten_heimsieg = 1`)
+ok(ci.ok && !ci.bonusPackId, 'Sieg-Pack-Karten = 0 → kein Heimsieg-Pack')
+await db.exec(`update sva_album_pack_typen set karten = ${SIEG_N} where typ = 'sieg'`)
 
 // ── Derby-Karte nur im passenden Spiel ─────────────────────────────────────
 const DERBY = await heimspiel('VfL Derby', 5)
@@ -251,7 +255,10 @@ const MK = motm.id
 const mk = await one(`select * from sva_album_karten where id = $1`, [MK])
 ok(mk.limitiert && mk.seltenheit === 'spezial' && mk.serie === 'Spieler des Spiels' && mk.typ === 'spieler', 'MOTM-Karte: typ spieler, spezial, limitiert, Serie')
 const WK = (await one(`insert into sva_album_karten (typ, titel, seltenheit, limitiert, saison) values ('moment', 'Weihnachtskarte', 'spezial', true, '2026/27') returning id`)).id
-const zieheSpezial = async (n) => { const ids = []; for (let i = 0; i < n; i++) { const u = await user(`lim${Math.random()}@x.example`); ids.push((await one(`select sva_album_pack_ziehen($1, null, 'geschenk') id`, [u])).id) } return ids }
+// v24-P: limitierte Wochenkarten kommen nur noch über den Wochen-Slot typisierter Packs
+// → hier Spieltags-Packs mit Slot 100 % (danach zurück auf den Standard)
+await db.exec(`update sva_album_pack_typen set limitiert_chance = 100 where typ = 'spieltag'`)
+const zieheSpezial = async (n) => { const ids = []; for (let i = 0; i < n; i++) { const u = await user(`lim${Math.random()}@x.example`); ids.push((await one(`select sva_album_pack_ziehen($1, null, 'checkin') id`, [u])).id) } return ids }
 await db.exec(`update sva_album_karten set ziehbar_von = now() - interval '10 days', ziehbar_bis = now() - interval '3 days' where id = '${MK}'`)
 let ids = await zieheSpezial(10)
 ok((await count(`select count(*)::int n from sva_album_packs where id = any ($1) and $2 = any (karten)`, [ids, MK])) === 0, 'Limitierte Karte NACH dem Fenster: nie gezogen (30 Spezial-Ziehungen)')
@@ -261,6 +268,7 @@ ok((await count(`select count(*)::int n from sva_album_packs where id = any ($1)
 await db.exec(`update sva_album_karten set ziehbar_von = now() - interval '1 day', ziehbar_bis = now() + interval '6 days' where id = '${MK}'`)
 ids = await zieheSpezial(10)
 ok((await count(`select count(*)::int n from sva_album_packs where id = any ($1) and $2 = any (karten)`, [ids, MK])) > 0, 'Limitierte Karte IM Fenster: wird gezogen')
+await db.exec(`update sva_album_pack_typen set limitiert_chance = 30 where typ = 'spieltag'`)
 ok((await count(`select count(*)::int n from sva_album_packs where $1 = any (karten)`, [WK])) === 0, 'Weihnachtskarte (limitiert, ohne Fenster) wird nie zufällig gezogen')
 await db.exec(`update sva_album_einstellungen set gewicht_bronze = 70, gewicht_silber = 22, gewicht_gold = 7, gewicht_spezial = 1, smart_pack = true`)
 ok((await count(`select count(*)::int n from sva_album_plaetze($1)`, [F.marvin.id])) === 40, 'Limitierte Karten (MOTM, Derby, Weihnachten) zählen nicht als Album-Platz')
@@ -386,6 +394,8 @@ const fehlend = (await one(`select id from sva_album_karten k where typ = 'spiel
 const spezialAlbum = (await one(`select id from sva_album_karten where titel = 'Der Pokal'`)).id
 const variante = (await one(`select id from sva_album_karten where variante limit 1`)).id
 await setze(F.tom.id, KX, 2); await setze(F.tom.id, KY, 2); await setze(F.tom.id, KZ, 4)
+// v24: Standard ist 5 Doppelte — die Mechanik wird hier mit 3 geprüft
+await db.exec(`update sva_album_einstellungen set wunsch_kosten = 3`)
 await expectErr(tom(`select album_wunschkarte($1, $2)`, [spezialAlbum, [KX, KY, KZ]]), 'Wunschkarte nie Spezial', /album_wunsch_karte/)
 await expectErr(tom(`select album_wunschkarte($1, $2)`, [variante, [KX, KY, KZ]]), 'Wunschkarte nie Variante', /album_wunsch_karte/)
 await expectErr(tom(`select album_wunschkarte($1, $2)`, [MK, [KX, KY, KZ]]), 'Wunschkarte nie limitiert', /album_wunsch_karte/)
@@ -401,7 +411,7 @@ r = await val(tom, `select album_wunschkarte($1, $2)`, [silberBasis, [KX, KY, KY
 ok(!!r.packId && (await anz(F.tom.id, KX)) === 1 && (await anz(F.tom.id, KY)) === 1, 'Silber-Basis-Karte als Wunsch möglich (Kurve)')
 
 // ── Kapitel komplett → Abzeichen + Bonus-Pack (einmalig) ───────────────────
-await db.exec(`update sva_album_einstellungen set karten_kapitel = 1`)
+await db.exec(`update sva_album_einstellungen set karten_kapitel = 1; update sva_album_pack_typen set karten = 1 where typ = 'ziel'`)
 const kurve = (await db.query(`select id from sva_album_karten where typ = 'fan' order by titel`)).rows.map((x) => x.id)
 const KF = await user('kapitel@fan.example')
 const kf = (sql, p) => as(KF, 'kapitel@fan.example', sql, p)
@@ -456,7 +466,8 @@ await expectErr(marvin(`select album_karte_gutschreiben('tipp', $1)`, [TIPP]), '
 await expectErr(asAnon(`select album_karte_gutschreiben('tipp', $1)`, [TIPP]), 'anon ruft album_karte_gutschreiben → verweigert', /permission denied/)
 const tp = await val(marvin, `select tipp_abgeben_test($1)`, [TIPP])
 const tpp = await one(`select * from sva_album_packs where id = $1`, [tp])
-ok(!!tp && tpp.art === 'tipp' && tpp.karten.length === 1 && tpp.quelle === 'tipp:' + TIPP && tpp.fan_user_id === F.marvin.id, 'Über SECURITY-DEFINER-Tipp-RPC: Tipp-Pack (1 Karte, Fan = auth.uid())')
+const TIPP_N = (await one(`select karten from sva_album_pack_typen where typ = 'tipp'`)).karten
+ok(!!tp && tpp.art === 'tipp' && tpp.typ === 'tipp' && tpp.karten.length === TIPP_N && tpp.quelle === 'tipp:' + TIPP && tpp.fan_user_id === F.marvin.id, `Über SECURITY-DEFINER-Tipp-RPC: Tipp-Pack (${TIPP_N} Karten, Fan = auth.uid())`)
 ok((await val(marvin, `select tipp_abgeben_test($1)`, [TIPP])) === null, 'Gleicher Tipp nochmal → null (idempotent)')
 ok((await val(ohne, `select tipp_abgeben_test($1)`, [TIPP])) === null, 'Ohne Album-Profil → null')
 await expectErr(marvin(`select tipp_falsch_test($1)`, [TIPP]), 'Unbekannte Quelle → album_quelle_unbekannt', /album_quelle_unbekannt/)

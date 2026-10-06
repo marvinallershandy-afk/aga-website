@@ -585,23 +585,32 @@ img { display: block; max-width: 100%; }
 .tp-abgabe__ok { display: inline-flex; align-items: center; gap: var(--s-2); font-size: var(--t-small); font-weight: 700; color: var(--tp-gruen); }
 .tp-abgabe .tp-hinweis { margin: 0 0 var(--s-2); }
 
-/* ── Belohnung (+1 Karte) ───────────────────────────────── */
+/* ── Belohnung (Tipp-Pack, v24-P) ───────────────────────────────── */
 .tp-belohnung {
   position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: var(--s-5);
   background: rgba(11, 10, 11, .97); overflow-y: auto;
 }
 .tp-belohnung__inner { width: min(100%, 26rem); text-align: center; }
-.tp-belohnung__karte {
-  position: relative; overflow: hidden; margin: 0 auto var(--s-5);
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--s-2);
-  width: 168px; aspect-ratio: 1 / 1.4; border-radius: 10px;
-  background: linear-gradient(150deg, #3a0a0f 0%, #8e0f17 45%, #2a070a 100%);
-  border: 2px solid #ff5560; box-shadow: var(--shadow-float);
-  transform-style: preserve-3d; backface-visibility: hidden;
+/* v24-P: kleines Tipp-Tütchen (wie im Album: Optik „klein“), Kartenrücken ragen heraus */
+.tp-belohnung__pack { position: relative; width: 150px; margin: 18px auto var(--s-5); aspect-ratio: 150 / 210; transform-style: preserve-3d; }
+.tp-belohnung__ruecken { position: absolute; left: 14%; right: 14%; top: -12%; height: 60%; }
+.tp-belohnung__ruecken i {
+  position: absolute; inset: 0; border-radius: 6px; border: 2px solid #f4f2ef;
+  background: repeating-linear-gradient(135deg, #b0131c 0 6px, #8e0f17 6px 12px);
+  transform: translateX(calc((var(--i) - (var(--n) - 1) / 2) * 16%)) rotate(calc((var(--i) - (var(--n) - 1) / 2) * 7deg));
+  box-shadow: 0 4px 10px rgba(0, 0, 0, .4);
 }
-.tp-belohnung__karte img { width: 56px; height: auto; }
-.tp-belohnung__karte b { font-family: var(--f-display); font-size: 3.5rem; line-height: .9; }
-.tp-belohnung__karte small { font: 800 .75rem/1 var(--f-body); font-stretch: 125%; letter-spacing: .2em; text-transform: uppercase; }
+.tp-belohnung__tuete {
+  position: absolute; inset: 22% 0 0; overflow: hidden; border-radius: 3px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  background: linear-gradient(170deg, #ec2633 0%, #b0131c 38%, #4a080d 78%, #1c0507 100%);
+  box-shadow: var(--shadow-float), inset 0 0 0 1px rgba(255, 255, 255, .16);
+  backface-visibility: hidden;
+}
+.tp-belohnung__tuete::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 8px; background: repeating-linear-gradient(90deg, rgba(0, 0, 0, .32) 0 3px, rgba(255, 255, 255, .1) 3px 6px); }
+.tp-belohnung__tuete img { width: 40px; height: auto; }
+.tp-belohnung__tuete b { font-family: var(--f-display); font-weight: 400; font-size: 1.5rem; line-height: .95; text-transform: uppercase; }
+.tp-belohnung__tuete small { font: 800 .6875rem/1 var(--f-body); font-stretch: 125%; letter-spacing: .2em; text-transform: uppercase; }
 .tp-belohnung__glanz { position: absolute; inset: -40%; background: linear-gradient(115deg, rgba(255, 255, 255, 0) 40%, rgba(255, 255, 255, .28) 50%, rgba(255, 255, 255, 0) 60%); animation: tp-glanz 1.6s var(--ease) .7s 1 both; }
 @keyframes tp-glanz { from { transform: translateX(-60%); } to { transform: translateX(60%); } }
 .tp-belohnung__haken { display: grid; place-items: center; width: 88px; height: 88px; margin: 0 auto var(--s-5); border-radius: 50%; border: 1px solid var(--tp-gruen); color: var(--tp-gruen); }
@@ -1090,7 +1099,34 @@ img { display: block; max-width: 100%; }
 @media (max-width: 1023px) {
   .tp-steuer.is-kompakt .tp-steuer__kopf { display: none; }
   .tp-steuer.is-kompakt { padding-top: var(--s-2); padding-bottom: var(--s-2); }
+  .tp-steuer.is-kompakt .tp-steuer__packs { display: none; }
 }
+
+/* v24-P: Pack-Typen in der Steuerleiste (öffnet das Pack in der Album-Vorführung) */
+/* als Overlay unter der Leiste — verschiebt den Inhalt nicht */
+.tp-steuer__packs-knopf {
+  flex: none; min-height: 28px; padding: 0 12px; border-radius: 999px; border: 1px solid rgba(233, 29, 41, .7);
+  font: 800 .625rem/1 var(--f-body); letter-spacing: .14em; text-transform: uppercase; color: var(--c-white); background: rgba(233, 29, 41, .18);
+}
+.tp-steuer__packs-knopf.is-an { background: var(--c-red); }
+.tp-steuer__packs {
+  position: absolute; left: var(--s-4); right: var(--s-4); top: calc(100% + 6px); z-index: 3;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 10px;
+  border-radius: var(--r-s); background: #160c0e; border: 1px solid rgba(233, 29, 41, .55); box-shadow: 0 18px 40px rgba(0, 0, 0, .55);
+}
+.tp-steuer__packs-label { flex: 1 0 100%; font: 800 .625rem/1 var(--f-body); letter-spacing: .14em; text-transform: uppercase; color: var(--c-text-3); }
+.tp-steuer__pack {
+  flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 10px; border-radius: 999px;
+  border: 1px solid var(--c-line-strong); background: rgba(11, 10, 11, .7); color: var(--c-text);
+  font: 800 .6875rem/1 var(--f-body); letter-spacing: .04em;
+}
+.tp-steuer__pack i { width: 10px; height: 14px; border-radius: 2px; background: linear-gradient(170deg, #ec2633, #4a080d); }
+.tp-steuer__pack--gross i { background: linear-gradient(180deg, #e01f2b 0 25%, #f2f2f2 25% 32%, #262628 32%); }
+.tp-steuer__pack--gold i { background: linear-gradient(160deg, #fff1b8, #e5b84a 40%, #a3711c 75%, #4a300a); }
+.tp-steuer__pack--starter i { background: linear-gradient(150deg, #f4f2ef 0 42%, #e11d2a 42%); }
+.tp-steuer__pack--ziel i { background: linear-gradient(90deg, transparent 0 38%, #d9a93c 38% 62%, transparent 62%), #1b1b1d; }
+.tp-steuer__pack--event i { background: radial-gradient(circle at 30% 25%, #8fdcff, transparent 65%), radial-gradient(circle at 75% 80%, #ff7aa8, transparent 65%), #241a33; }
+.tp-steuer__pack--neu { color: var(--c-text-2); }
 
 /* Befund 4 (v22-T): Fußstapel mobil ≤ 20 % der Höhe — eine Chip-Zeile +
    Abgabe-Knopf (Kontext steht IM Knopf). 844 px: Abgabe ~92 + Tabs ~65 px. */

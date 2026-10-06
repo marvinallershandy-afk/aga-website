@@ -4,6 +4,7 @@ import { IgIcon } from '../ui/Icons'
 import type { Katalog } from './api'
 import { einfuehrungMerken as merken } from './einfuehrung-logik'
 import './einfuehrung.css'
+import { garantieText, kartenWort, packTypInfo, packZeile } from './packTypen'
 
 // ─────────────────────────────────────────────────────────────
 // v22-A: „So funktioniert’s“ — Einführung für neue Fans (einmal nach dem
@@ -13,11 +14,19 @@ import './einfuehrung.css'
 // Zahlen kommen aus den Regeln (Admin), nicht hart verdrahtet.
 // ─────────────────────────────────────────────────────────────
 
+// v24-P: Packgrößen aus den Pack-Typen (Admin) — Spieltags-, Sieg-, Tipp-, Starter-Pack
+function packs(katalog: Katalog) {
+  const t = (typ: 'tipp' | 'spieltag' | 'sieg' | 'starter') => packTypInfo(typ, katalog.regeln.packTypen)!
+  return { tipp: t('tipp'), spieltag: t('spieltag'), sieg: t('sieg'), starter: t('starter') }
+}
+
 export function KartenQuellen({ katalog, onMehr }: { katalog: Katalog; onMehr: () => void }) {
   const r = katalog.regeln
+  const p = packs(katalog)
   const zeilen: [React.ReactNode, string, string][] = [
-    [<QrCode key="q" size={18} strokeWidth={1.5} />, 'Heimspiel: QR-Code am Eingang', `${r.kartenProPack} Karten${r.bonusHeimsieg ? ` · Heimsieg +${r.kartenHeimsieg ?? 1}` : ''}`],
-    [<Trophy key="t" size={18} strokeWidth={1.5} />, 'Tipp in der Tipp-Liga', `${r.kartenTipp ?? 1} Karte je Tipp`],
+    [<QrCode key="q" size={18} strokeWidth={1.5} />, 'Heimspiel: QR-Code am Eingang', `${packZeile(p.spieltag)}${garantieText(p.spieltag) ? ` · ${garantieText(p.spieltag)}` : ''}`],
+    [<Trophy key="t" size={18} strokeWidth={1.5} />, 'Tipp in der Tipp-Liga', packZeile(p.tipp)],
+    ...(r.bonusHeimsieg && p.sieg.karten > 0 ? [[<Trophy key="s" size={18} strokeWidth={1.5} />, 'Heimsieg (getippt oder am Platz)', `${packZeile(p.sieg)} · ${garantieText(p.sieg)}`] as [React.ReactNode, string, string]] : []),
     [<IgIcon key="i" size={17} />, 'Code aus unserer Story', `${r.kartenStory ?? 1} Karte`],
     [<Medal key="m" size={18} strokeWidth={1.5} />, 'Ziel oder Kapitel geschafft', 'Bonus-Karte + Medaille'],
   ]
@@ -44,6 +53,7 @@ export function KartenQuellen({ katalog, onMehr }: { katalog: Katalog; onMehr: (
 
 export function Einfuehrung({ katalog, onZu }: { katalog: Katalog; onZu: () => void }) {
   const r = katalog.regeln
+  const p = packs(katalog)
   const [n, setN] = useState(0)
   const ref = useRef<HTMLDivElement>(null)
   const schritte: { icon: React.ReactNode; kicker: string; titel: string; text: React.ReactNode; chips?: string[] }[] = [
@@ -51,7 +61,7 @@ export function Einfuehrung({ katalog, onZu }: { katalog: Katalog; onZu: () => v
       icon: <BookOpen size={30} strokeWidth={1.5} />,
       kicker: 'Willkommen im Album',
       titel: 'Sammel deinen SVA',
-      text: <>Jeder Platz im Album ist ein Spieler, ein Trainer, ein Moment, die Kurve oder ein Partner. Zum Start bekommst du {r.kartenStarter ?? 5} Karten geschenkt.</>,
+      text: <>Jeder Platz im Album ist ein Spieler, ein Trainer, ein Moment, die Kurve oder ein Partner. Zum Start bekommst du ein Starter-Pack mit {kartenWort(p.starter.karten)} geschenkt.</>,
       chips: ['Kostenlos', 'Nichts zu kaufen', 'Nur Dabeisein zählt'],
     },
     {
@@ -60,11 +70,11 @@ export function Einfuehrung({ katalog, onZu }: { katalog: Katalog; onZu: () => v
       titel: 'Karten kommen in Tütchen',
       text: (
         <>
-          Bei jedem Heimspiel scannst du am Eingang den QR-Code: {r.kartenProPack} Karten{r.bonusHeimsieg ? `, bei einem Heimsieg +${r.kartenHeimsieg ?? 1}` : ''}. Dazu {r.kartenTipp ?? 1} Karte je Tipp in der Tipp-Liga und
-          Codes aus unserer Instagram-Story. Die erste Karte jedes Tütchens fehlt dir garantiert noch.
+          Bei jedem Heimspiel scannst du am Eingang den QR-Code: ein {packZeile(p.spieltag)} ({garantieText(p.spieltag)}). Jeder Tipp in der Tipp-Liga bringt ein {packZeile(p.tipp)}
+          {r.bonusHeimsieg ? `, ein Heimsieg ein ${packZeile(p.sieg)} mit ${garantieText(p.sieg)} — für alle, die getippt oder eingecheckt haben` : ''}. Dazu Codes aus unserer Instagram-Story und Event-Packs mit Chance auf den Spieler des Spiels. Die erste Karte jedes Packs fehlt dir garantiert noch.
         </>
       ),
-      chips: [`Heimspiel ${r.kartenProPack}`, `Tipp ${r.kartenTipp ?? 1}`, `Story ${r.kartenStory ?? 1}`],
+      chips: [`Spieltag ${p.spieltag.karten}`, `Tipp ${p.tipp.karten}`, `Sieg ${p.sieg.karten}`, `Story ${r.kartenStory ?? 1}`],
     },
     {
       icon: <Hand size={30} strokeWidth={1.5} />,

@@ -1,7 +1,9 @@
 import { useEffect, useState, useSyncExternalStore } from 'react'
 import { motion } from 'framer-motion'
-import { ClipboardCheck, FastForward, Pause, Play, SkipForward } from 'lucide-react'
-import { ENDE_MINUTE, PHASEN, naechstesEreignis, phaseSetzen, simAbo, simLesen, simSetzen, wertungAusloesen } from './store'
+import { ClipboardCheck, FastForward, Pause, Play, RotateCcw, SkipForward } from 'lucide-react'
+import { ENDE_MINUTE, PHASEN, naechstesEreignis, phaseSetzen, simAbo, simLesen, simSetzen, simVergessen, wertungAusloesen } from './store'
+import { PACK_TYPEN_STANDARD, kartenWort, type PackTyp } from '../../album/packTypen'
+import { uebergeben, uebergabeLeeren } from '../../album/vorfuehrung/uebergabe'
 import { EREIGNIS_MINUTEN } from './sim'
 import { haptik } from '../model'
 
@@ -28,11 +30,22 @@ function useKompakt(): boolean {
 // Tempo. Alles nur im Browser.
 // ─────────────────────────────────────────────────────────────
 
+// v24-P: jeden Pack-Typ vorführen — Pack wird an die Album-Vorführung übergeben
+// und dort sofort geöffnet (gleicher Weg wie das Tipp-Pack nach dem Tippen).
+const ART: Record<PackTyp, string> = { tipp: 'tipp', spieltag: 'checkin', sieg: 'heimsieg', starter: 'starter', ziel: 'ziel', event: 'event' }
+let packNr = 0
+function packVorfuehren(typ: PackTyp) {
+  const t = PACK_TYPEN_STANDARD.find((x) => x.typ === typ)!
+  const p = uebergeben({ id: `vf-typ-${typ}-${Date.now().toString(36)}-${++packNr}`, art: ART[typ], typ, titel: typ === 'event' ? 'Event-Pack · MOTM-Woche' : t.titel, karten: t.karten, gegner: typ === 'spieltag' || typ === 'sieg' ? 'TuS Fischbek' : undefined })
+  window.location.assign(`/album?vorfuehrung=1&oeffnen=${encodeURIComponent(p.id)}`)
+}
+
 export default function Steuerleiste() {
   const z = useSyncExternalStore(simAbo, simLesen)
   const kompakt = useKompakt()
   const minute = Math.min(90, Math.floor(z.minute))
   const nachspiel = z.minute > 90 ? Math.ceil(z.minute - 90) : 0
+  const [packsAuf, setPacksAuf] = useState(false)
   return (
     <section className={`tp-steuer${kompakt ? ' is-kompakt' : ''}`} aria-label="Vorführung steuern">
       <div className="tp-steuer__kopf">
@@ -40,6 +53,9 @@ export default function Steuerleiste() {
           <i aria-hidden="true" /> Vorführung
         </span>
         <span className="tp-steuer__info">Simulierte Daten · nichts wird gespeichert</span>
+        <button type="button" className={`tp-steuer__packs-knopf${packsAuf ? ' is-an' : ''}`} onClick={() => setPacksAuf((x) => !x)} aria-expanded={packsAuf} aria-controls="tp-steuer-packs">
+          Packs
+        </button>
       </div>
       <div className="tp-steuer__phasen" role="tablist" aria-label="Phase">
         {PHASEN.map((p) => (
@@ -58,6 +74,29 @@ export default function Steuerleiste() {
           </button>
         ))}
       </div>
+      {packsAuf && (
+        <div className="tp-steuer__packs" id="tp-steuer-packs" role="group" aria-label="Pack-Typen vorführen">
+          <span className="tp-steuer__packs-label">Pack-Typ im Album öffnen</span>
+          {PACK_TYPEN_STANDARD.map((t) => (
+            <button key={t.typ} type="button" className={`tp-steuer__pack tp-steuer__pack--${t.optik}`} onClick={() => packVorfuehren(t.typ)} title={`${t.titel} · ${kartenWort(t.karten)} — im Album öffnen`}>
+              <i aria-hidden="true" />
+              {t.titel.replace(/-?Pack$/, '')}
+            </button>
+          ))}
+          <button
+            type="button"
+            className="tp-steuer__pack tp-steuer__pack--neu"
+            onClick={() => {
+              simVergessen()
+              uebergabeLeeren()
+              window.location.assign('/tippen?vorfuehrung=1')
+            }}
+            title="Vorführung von vorn (Tipp, Ligen, Packs)"
+          >
+            <RotateCcw size={13} strokeWidth={2} aria-hidden="true" /> Neu
+          </button>
+        </div>
+      )}
       {z.phase === 'live' && (
         <div className="tp-steuer__live">
           <button type="button" className="tp-steuer__knopf" onClick={() => simSetzen({ laeuft: !z.laeuft })} aria-label={z.laeuft ? 'Anhalten' : 'Weiterlaufen lassen'} disabled={z.minute >= ENDE_MINUTE}>

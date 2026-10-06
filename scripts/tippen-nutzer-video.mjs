@@ -161,12 +161,12 @@ await page.getByRole('textbox', { name: 'Initial' }).fill('S', { timeout: 1500 }
 for (const c of await page.locator('.al-sheet .tp-check input').all()) if (!(await c.isChecked())) await c.check()
 await page.getByRole('button', { name: 'Mitmachen' }).click()
 await pause(2600)
-const bel = await page.getByText('+1 Karte fürs Album').isVisible().catch(() => false)
-notiz(bel ? 'Belohnung „+1 Karte fürs Album“ nach Login automatisch' : 'HAKT: keine Belohnung nach dem Login sichtbar')
+const bel = await page.locator('.tp-belohnung').getByText(/Tipp-Pack · 2 Karten/).first().isVisible().catch(() => false)
+notiz(bel ? 'Belohnung „Tipp-Pack · 2 Karten“ nach Login automatisch' : 'HAKT: keine Belohnung nach dem Login sichtbar')
 await pause(1500)
 
 // 4) Ins Album und zurück
-await page.getByRole('link', { name: /Ins Album/ }).click().catch(() => notiz('HAKT: „Ins Album“ fehlt'))
+await page.getByRole('button', { name: /Tipp-Pack öffnen/ }).click().catch(() => notiz('HAKT: „Tipp-Pack öffnen“ fehlt'))
 await page.waitForURL(/\/album/).catch(() => {})
 await pause(3000)
 notiz(`Album geladen: ${await page.title()}`)

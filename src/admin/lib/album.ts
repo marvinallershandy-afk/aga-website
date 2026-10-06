@@ -90,6 +90,8 @@ export interface EinstellungenRow {
   shiny_chance?: number
   /** v22: Gründungstag (YYYY-MM-DD; Tag + Monat zählen) */
   vereins_geburtstag?: string | null
+  /** v24-P: Smart-Pack erst ab so vielen Karten je Pack (Einzelkarten = reiner Zufall) */
+  smart_ab_karten?: number
   /** v25-D: Fern-Check-in verhindern — Code rotiert (Standard an) */
   checkin_rotation?: boolean
   /** v25-D: Rotationsintervall in Minuten (1–10, Standard 3) */
@@ -449,5 +451,86 @@ export function useOeffentlicherKatalog(an = true) {
       return data as import('../../album/api').Katalog
     },
     retry: false,
+  })
+}
+
+// ── v24-P: Pack-Typen + Pack-Kontrolle ──────────────────────
+export type PackTypSchluessel = 'tipp' | 'spieltag' | 'sieg' | 'starter' | 'ziel' | 'event'
+export interface PackTypRow {
+  typ: PackTypSchluessel
+  titel: string
+  karten: number
+  min_seltenheit: 'silber' | 'gold' | 'spezial' | null
+  optik: 'klein' | 'gross' | 'gold' | 'starter' | 'ziel' | 'event'
+  reveal: 1 | 2 | 3
+  limitiert_chance: number
+  smart: boolean
+  beschreibung: string | null
+  sortierung: number
+  updated_at: string
+}
+export type PackTypInput = Partial<Omit<PackTypRow, 'typ' | 'updated_at'>>
+export const packKeys = { typen: ['sva_album_pack_typen'] as const, kontrolle: ['sva_admin_pack_kontrolle'] as const }
+export function usePackTypen() {
+  return useQuery({
+    queryKey: packKeys.typen,
+    queryFn: async (): Promise<PackTypRow[]> => {
+      const { data, error } = await db.from('sva_album_pack_typen').select('*').order('sortierung')
+      if (error) throw error
+      return (data ?? []) as PackTypRow[]
+    },
+    retry: false,
+  })
+}
+export function useSavePackTyp() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ typ, ...p }: PackTypInput & { typ: PackTypSchluessel }) => {
+      const { error } = await db.from('sva_album_pack_typen').update({ ...p, updated_at: new Date().toISOString() }).eq('typ', typ)
+      if (error) throw error
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: packKeys.typen }),
+  })
+}
+export interface PackAnlass {
+  anlass: string
+  art: string
+  titel: string
+  soll: number
+  ist: number
+  fehlend: number
+  doppelt: number
+  fans: string[]
+}
+export interface PackKontrolle {
+  saison: string
+  ok: boolean
+  soll: number
+  ist: number
+  fehlend: number
+  doppelt: number
+  anlaesse: PackAnlass[]
+}
+export function usePackKontrolle() {
+  return useQuery({
+    queryKey: packKeys.kontrolle,
+    queryFn: async (): Promise<PackKontrolle | null> => {
+      const { data, error } = await db.rpc('sva_admin_pack_kontrolle')
+      if (error) throw error
+      return data as PackKontrolle | null
+    },
+    retry: false,
+    refetchInterval: 60_000,
+  })
+}
+export function usePackNachliefern() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (anlass: string) => {
+      const { data, error } = await db.rpc('album_admin_pack_nachliefern', { p_anlass: anlass })
+      if (error) throw error
+      return data as { nachgeliefert: number; offen: number }
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: packKeys.kontrolle }),
   })
 }

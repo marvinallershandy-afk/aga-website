@@ -1,4 +1,11 @@
-// Monte-Carlo-Simulation der Sammelkarten-Ökonomie v20 + v22 (ohne Datenbank).
+// Monte-Carlo-Simulation der Sammelkarten-Ökonomie v20 + v22 + v24 (ohne Datenbank).
+//
+// v24-P (supabase/migrations/20261017100000_sva_album_packs_v24.sql): PACK-TYPEN
+//   (sva_album_pack_typen: Karten, Garantie, Wochen-Slot-Chance je Typ),
+//   Sieg-Pack für alle, die getippt ODER eingecheckt haben, Derby-Check-in =
+//   Event-Pack, Event-Codes. WOCHEN-SLOT: jedes Pack würfelt EINMAL mit der
+//   Chance seines Typs auf die gerade ziehbare limitierte Wochenkarte (MOTM,
+//   Derby) und ersetzt dann die letzte Karte (nur, wenn der Fan sie noch nicht hat).
 //
 // MUSS ZUR MIGRATION PASSEN: supabase/migrations/20261012110000_sva_karten.sql
 // und (v22, Shiny) supabase/migrations/20261014110000_sva_album_v22.sql:
@@ -18,6 +25,7 @@
 //          node scripts/karten-simulation.mjs 2000 8     (Läufe, Anzahl Partner)
 //          node scripts/karten-simulation.mjs 2000 6 1 50 (+ smart_pack_belohnung 0/1, doppelte_bremse)
 //          node scripts/karten-simulation.mjs 10000 6 0 25 100   (+ shiny_chance, z. B. 1 : 100)
+//          ALT=1 node scripts/karten-simulation.mjs          (Vergleich: v20-Ökonomie, je 1 Karte, Bremse 25, Wunsch 3)
 // Ergebnis steht in docs/KARTEN.md (Abschnitt „Ökonomie & Ziehung").
 
 // ── Einstellungen (= Defaults der Migration) ──────────────────────────────────
@@ -26,15 +34,36 @@ export const EINSTELLUNGEN = {
   karten_pro_pack: 3,        // Check-in-Pack
   karten_starter: 5, starter_min_silber: true,
   karten_heimsieg: 1, karten_tipp: 1, karten_story: 1, karten_freund: 1, karten_kapitel: 1,
-  doppelte_bremse: 25,       // % (vorher 50; per Simulation gesenkt, Smart-Pack übernimmt)
+  doppelte_bremse: 5,        // % (v20: 25; v24 gesenkt — größere Packs liefern genug Neue)
   smart_pack: true,
+  smart_ab_karten: 2,        // v24: Smart-Pack nur in Packs ab 2 Karten (Story/Advent/Freund = reine Zufallskarte)
   smart_pack_belohnung: false, // Smart-Pack auch in Belohnungs-Packs (Ziele/Kapitel)?
-  tausch_min_tage: 7, tausch_pro_woche: 5, wunsch_kosten: 3,
+  tausch_min_tage: 7, tausch_pro_woche: 5, wunsch_kosten: 5, // v24: Wunsch 3 → 5 (mehr Doppelte im Umlauf)
   schwelle_1: 3, schwelle_2: 6, schwelle_3: 8,
   lose_checkin: 1, lose_komplett: 5,
   shiny_chance: 250,         // v22: 1 : N je Spieler-/Trainer-Karte, 0 = aus
 }
 export const PARTNER_SELTENHEIT = 'bronze' // album_admin_katalog_standard: Partnerkarten
+// v24: Pack-Typen (= Startwerte von sva_album_pack_typen). chance = Wochen-Slot in %.
+export const PACK_TYPEN = {
+  tipp:     { karten: 2, min: null,     chance: 8 },
+  spieltag: { karten: 4, min: 'silber', chance: 30 },
+  sieg:     { karten: 2, min: 'gold',   chance: 30 },
+  starter:  { karten: 5, min: 'silber', chance: 0 },
+  ziel:     { karten: 1, min: null,     chance: 0 },  // Kapitel-Bonus; Ziele haben eigene Kartenzahl
+  event:    { karten: 3, min: null,     chance: 60 },
+}
+// Event-Codes je Saison (Derby-Woche, 2× MOTM-Woche, Winter-Aktion) — Einlösequote wie Story
+const EVENT_CODES = ['2026-10-21', '2026-11-11', '2027-03-17', '2027-04-07']
+// v20-Vergleich: ALT=1 → alte Ökonomie (je 1 Karte, Check-in 3, kein Wochen-Slot, Sieg nur Check-in)
+const ALT = process.env.ALT === '1'
+// Vergleichsläufe: PT='{"tipp":{"chance":10}}'  E='{"doppelte_bremse":0}'  KURZ=1 (eine Zeile)
+if (process.env.PT) for (const [k, v] of Object.entries(JSON.parse(process.env.PT))) PACK_TYPEN[k] = { ...PACK_TYPEN[k], ...v }
+if (process.env.E) Object.assign(EINSTELLUNGEN, JSON.parse(process.env.E))
+if (ALT) {
+  Object.assign(EINSTELLUNGEN, { doppelte_bremse: 25, wunsch_kosten: 3, smart_ab_karten: 1 })
+  Object.assign(PACK_TYPEN, { tipp: { karten: 1, min: null, chance: 0 }, spieltag: { karten: 3, min: null, chance: 0 }, sieg: { karten: 1, min: null, chance: 0 }, event: { karten: 0, min: null, chance: 0 } })
+}
 
 const STUFEN = ['bronze', 'silber', 'gold', 'spezial']
 const RANG = { bronze: 1, silber: 2, gold: 3, spezial: 4 }
@@ -90,9 +119,9 @@ const monat = (t) => new Date(Date.parse('2026-10-06') + t * 864e5).toISOString(
 // heim = Anteil besuchter Heimspiele, tipp = Anteil getippter Spieltage, story/advent
 // = Anteil eingelöster Codes, freund = Anteil Heimspiele mit eingechecktem Freund.
 const PERSONAS = [
-  { name: 'Gelegenheits-Follower', ziel: '~30 Karten → 55–60 %', heim: 0.15, tipp: 0.25, story: 0.2, advent: 0.2, freund: 0, tausch: 0, wunsch: false },
-  { name: 'Typischer Follower', ziel: '~40 Karten → ~70 %', heim: 0.25, tipp: 0.3, story: 0.2, advent: 0.2, freund: 0.2, tausch: 0, wunsch: false },
-  { name: 'Stammfan', ziel: '~70 Karten + Tausch → komplett ~Mai', heim: 0.75, tipp: 0.4, story: 0.15, advent: 0.15, freund: 0.3, tausch: 0.35, wunsch: true },
+  { name: 'Gelegenheits-Follower', ziel: '55–60 % (v24: ~41 Karten)', heim: 0.15, tipp: 0.25, story: 0.2, advent: 0.2, freund: 0, tausch: 0, wunsch: false },
+  { name: 'Typischer Follower', ziel: '~70 % (v24: ~50 Karten)', heim: 0.25, tipp: 0.3, story: 0.2, advent: 0.2, freund: 0.2, tausch: 0, wunsch: false },
+  { name: 'Stammfan', ziel: 'komplett ~April/Mai (Tausch)', heim: 0.75, tipp: 0.4, story: 0.15, advent: 0.15, freund: 0.3, tausch: 0.35, wunsch: true },
 ]
 const P_HEIMSIEG = 0.6
 const P_TIPP_EXAKT = 0.1      // Ziel „tipp_exakt" (extern, 1 Karte mind. Silber)
@@ -130,12 +159,20 @@ function karteWaehlen(fan, ziehbar, erlaubt, smart, pack, packPlaetze) {
   const c = ziehbar.filter((k) => (s === null || k.selt === s) && erlaubt.includes(k.selt))
   return c.length ? pick(c) : null
 }
-function packZiehen(fan, kat, t, { n, spiel = null, minSelt = null, fest = null, ziel = false }) {
+function packZiehen(fan, kat, t, { n, spiel = null, minSelt = null, fest = null, ziel = false, typ = null }) {
+  // v24: Größe/Garantie aus dem Pack-Typ, wenn nicht übergeben
+  const T = typ ? PACK_TYPEN[typ] : null
+  n = n ?? T?.karten ?? E.karten_pro_pack
+  minSelt = minSelt ?? T?.min ?? null
   if (n <= 0) return []
   // Smart-Pack: erste Karte jedes Zufalls-Packs; Belohnungs-Packs (Ziele, Kapitel) nur mit smart_pack_belohnung
-  const smart = E.smart_pack && !fest && (!ziel || E.smart_pack_belohnung)
-  const ziehbar = kat.filter((k) => (k.von === null || k.von <= t) && (k.bis === null || k.bis > t) && (k.nurSpiel === null || k.nurSpiel === spiel)
+  // v24: Smart je Pack-Typ abschaltbar (T.smart === false, z. B. Sieg-Pack als Bonus)
+  const smart = E.smart_pack && !fest && (!ziel || E.smart_pack_belohnung) && T?.smart !== false && n >= (E.smart_ab_karten ?? 1)
+  const alleZiehbar = kat.filter((k) => (k.von === null || k.von <= t) && (k.bis === null || k.bis > t) && (k.nurSpiel === null || k.nurSpiel === spiel)
     && (!k.limitiert || k.von !== null || k.bis !== null || k.nurSpiel !== null))
+  // v24: limitierte Wochenkarten nur über den Wochen-Slot (ALT=1: wie v20 in der normalen Ziehung)
+  const ziehbar = ALT ? alleZiehbar : alleZiehbar.filter((k) => !k.limitiert)
+  const wochenKarten = alleZiehbar.filter((k) => k.limitiert)
   const pack = []
   const pp = new Set()
   for (let i = 0; i < n; i++) {
@@ -148,6 +185,18 @@ function packZiehen(fan, kat, t, { n, spiel = null, minSelt = null, fest = null,
     const pp2 = new Set(pack.filter((k) => k.album).map((k) => k.platz))
     const k = karteWaehlen(fan, ziehbar, STUFEN.filter((s) => RANG[s] >= RANG[minSelt]), smart && pack.length === 0, pack, pp2)
     pack.push(k || alt)
+  }
+  // v24 Wochen-Slot (sva_album_pack_ziehen_v24): EIN Wurf je Pack
+  if (T?.chance > 0 && !fest && pack.length && rnd() * 100 < T.chance) {
+    const kand = wochenKarten.filter((k) => !fan.besitz.has(k.id) && !pack.includes(k))
+    if (kand.length) {
+      const ev = pick(kand)
+      if (pack.length === 1) pack.push(ev)
+      else for (let j = pack.length - 1; j >= 1; j--) {
+        const ok = !minSelt || RANG[ev.selt] >= RANG[minSelt] || pack.some((k, i) => i !== j && RANG[k.selt] >= RANG[minSelt])
+        if (ok) { pack[j] = ev; break }
+      }
+    }
   }
   return pack
 }
@@ -187,7 +236,7 @@ function lauf(persona) {
   const setN = { familie: 3 }
   function pruefeSammelziele(t) {
     for (const [key, ps] of Object.entries(sets)) if (ps.size && [...ps].every((p) => fan.plaetze.has(p))) ziel(key, t, { n: setN[key] || 1, min: setMin[key] })
-    for (const [kap, ps] of Object.entries(kapitelP)) if ([...ps].every((p) => fan.plaetze.has(p))) ziel('kapitel_' + kap, t, { n: E.karten_kapitel })
+    for (const [kap, ps] of Object.entries(kapitelP)) if ([...ps].every((p) => fan.plaetze.has(p))) ziel('kapitel_' + kap, t, { n: PACK_TYPEN.ziel.karten })
     const pct = (100 * fan.plaetze.size) / alleP.size
     for (const [m, lose] of [[10, 1], [25, 1], [50, 2], [75, 3], [100, 5]]) if (pct >= m) ziel('meilenstein_' + m, t, { n: 1, lose })
     if (fan.plaetze.size === alleP.size && fan.komplettT === null) { fan.komplettT = t; fan.lose += E.lose_komplett }
@@ -222,49 +271,71 @@ function lauf(persona) {
   let serie = 0
   const tippWochen = new Set()
   // ── Ablauf ──
-  pack(0, { n: E.karten_starter, minSelt: E.starter_min_silber ? 'silber' : null })
+  pack(0, { typ: 'starter' })
   const ereignisse = []
   for (const s of SPIELTAGE) ereignisse.push({ t: s.t, art: 'spieltag', s })
   for (const t of STORIES) ereignisse.push({ t, art: 'story' })
+  for (const d of EVENT_CODES) ereignisse.push({ t: tag(d), art: 'event' })
   for (let t = DEZ[0]; t <= DEZ[1]; t++) ereignisse.push({ t, art: 'advent', tag: t - DEZ[0] + 1 })
   for (let t = 7; t <= ENDE; t += 7) ereignisse.push({ t, art: 'woche' })
   ereignisse.sort((a, b) => a.t - b.t)
+  // v24: MOTM-Wochenkarten (Fenster + ob der Fan in diesem Fenster getippt / eingecheckt hat)
+  const motm = []
   for (const e of ereignisse) {
     const t = e.t
     if (e.art === 'spieltag') {
       const s = e.s
-      // Tipp vor dem Spiel (1 Karte je Tipp) + Tipp-Serie (4 Wochen in Folge)
+      const imFenster = motm.filter((m) => m.k.von <= t && t < m.k.bis)
+      imFenster.forEach((m) => (m.heim = s.heim))
+      let getippt = false
+      // Tipp vor dem Spiel (Tipp-Pack) + Tipp-Serie (4 Wochen in Folge)
       if (rnd() < persona.tipp) {
-        pack(t, { n: E.karten_tipp })
+        getippt = true
+        imFenster.forEach((m) => (m.tipp = true))
+        pack(t, { typ: 'tipp' })
         const w = Math.floor((t + 1) / 7); tippWochen.add(w)
         let n = 0; while (tippWochen.has(w - n)) n++
         if (n >= 4) ziel('tipp_serie', t, { n: 1 })
-        if (rnd() < P_TIPP_EXAKT) pack(t, { n: 1, minSelt: 'silber' })
-        if (rnd() < P_KAPITAEN_TRIFFT) pack(t, { n: 1 })
+        if (rnd() < P_TIPP_EXAKT) pack(t, { n: 1, minSelt: 'silber', ziel: true, typ: 'ziel' })
+        if (rnd() < P_KAPITAEN_TRIFFT) pack(t, { n: 1, ziel: true, typ: 'ziel' })
       }
       if (s.derby) add({ typ: 'moment', selt: 'spezial', limitiert: true, nurSpiel: s.t, kapitel: 'moment' })
       if (s.heim) {
+        const sieg = rnd() < P_HEIMSIEG
+        let drin = false
         if (rnd() < persona.heim) {
+          drin = true
+          imFenster.forEach((m) => (m.checkin = true))
           serie++
           fan.lose += E.lose_checkin
-          pack(t, { n: E.karten_pro_pack, spiel: s.t })
-          if (rnd() < P_HEIMSIEG) pack(t, { n: E.karten_heimsieg, spiel: s.t })
+          // Derby: Check-in-Pack ist ein Event-Pack (Größe/Garantie wie Spieltag, Wochen-Slot des Events)
+          if (s.derby && PACK_TYPEN.event.karten > 0) pack(t, { typ: 'event', n: Math.max(PACK_TYPEN.spieltag.karten, PACK_TYPEN.event.karten), minSelt: PACK_TYPEN.spieltag.min, spiel: s.t })
+          else pack(t, { typ: 'spieltag', spiel: s.t })
           if (rnd() < persona.freund) { pack(t, { n: E.karten_freund, spiel: s.t }); ziel('freund_geworben', t, { n: 1 }) }
           if (serie >= 3) ziel('dauerkarte', t, { n: 1, min: 'gold' })
         } else serie = 0
+        // v24: Sieg-Pack für alle, die eingecheckt ODER getippt haben (v20: nur Check-in)
+        if (sieg && (drin || (getippt && !ALT))) {
+          imFenster.forEach((m) => (m.sieg = true))
+          pack(t, { typ: 'sieg', spiel: s.t })
+        }
       }
       // „Spieler des Spiels": limitierte Spezialkarte, ziehbar Mo–So der Folgewoche
-      add({ typ: 'spieler', selt: 'spezial', limitiert: true, von: t + 1, bis: t + 8, kapitel: 'MIT' })
+      const k = add({ typ: 'spieler', selt: 'spezial', limitiert: true, von: t + 1, bis: t + 8, kapitel: 'MIT' })
+      motm.push({ k, tipp: false, checkin: false, heim: false, sieg: false })
     } else if (e.art === 'story') {
       if (rnd() < persona.story) pack(t, { n: E.karten_story })
+    } else if (e.art === 'event') {
+      if (PACK_TYPEN.event.karten > 0 && rnd() < persona.story) pack(t, { typ: 'event' })
     } else if (e.art === 'advent') {
       if (rnd() < persona.advent) pack(t, e.tag === 24 ? { n: 1, fest: weihnacht } : { n: 1 })
     } else if (e.art === 'woche') {
       tauschen(t); wuenschen(t)
     }
   }
+  const motmStat = motm.map((m) => ({ tipp: m.tipp, checkin: m.checkin, heim: m.heim, sieg: m.sieg, hat: fan.besitz.has(m.k.id) }))
   const dop = [...fan.besitz.values()].reduce((a, n) => a + n - 1, 0)
-  return { karten: fan.karten, pct: (100 * fan.plaetze.size) / alleP.size, komplettT: fan.komplettT, dop, lose: fan.lose, plaetze: alleP.size, personKarten: fan.personKarten, shiny: fan.shiny }
+  return { karten: fan.karten, pct: (100 * fan.plaetze.size) / alleP.size, komplettT: fan.komplettT, dop, lose: fan.lose, plaetze: alleP.size, personKarten: fan.personKarten, shiny: fan.shiny, motmStat }
 }
 
 // ── Auswertung ────────────────────────────────────────────────────────────────
@@ -272,6 +343,7 @@ const q = (a, p) => a[Math.min(a.length - 1, Math.floor(p * a.length))]
 const t0 = Date.now()
 const zeilen = []
 const shinyJeFan = []
+const motmAlle = []
 let plaetze = 0
 for (const p of PERSONAS) {
   const r = Array.from({ length: LAEUFE }, () => lauf(p))
@@ -295,10 +367,64 @@ for (const p of PERSONAS) {
     'Ø Shinys': (r.reduce((a, x) => a + x.shiny, 0) / LAEUFE).toFixed(3),
   })
   shinyJeFan.push(r.reduce((a, x) => a + x.shiny, 0) / LAEUFE)
+  for (const x of r) motmAlle.push(...x.motmStat)
 }
-console.log(`Sammelkarten-Simulation v20/v22 · ${LAEUFE} Läufe je Persona · ${plaetze} Album-Plätze (${PARTNER} Partner) · Restsaison 17 Spieltage / 8 Heimspiele\n`)
+if (process.env.KURZ) {
+  const m = (f) => { const l = motmAlle.filter(f); return l.length ? Math.round((100 * l.filter((x) => x.hat).length) / l.length) : '-' }
+  console.log(zeilen.map((z) => `${z.Persona.split(' ')[0]} ${z['Ø Karten']}K ${z['Ø Album %']}% kompl ${z['komplett %']}% ${z['Ø fertig']} dop ${z['Ø Doppelte']}`).join(' | '),
+    `| MOTM aktiv ${m((x) => x.tipp && x.checkin)}% nurTipp ${m((x) => x.tipp && !x.checkin)}%`)
+  process.exit(0)
+}
+console.log(`Sammelkarten-Simulation v24${ALT ? ' (ALT=1: v20-Ökonomie zum Vergleich)' : ''} · ${LAEUFE} Läufe je Persona · ${plaetze} Album-Plätze (${PARTNER} Partner) · Restsaison 17 Spieltage / 8 Heimspiele\n`)
 console.table(zeilen)
 console.log('Standardwerte:', JSON.stringify({ ...EINSTELLUNGEN, partner_seltenheit: PARTNER_SELTENHEIT }))
+console.log('Pack-Typen:', JSON.stringify(PACK_TYPEN))
+
+// ── v24: MOTM-Karte der Woche — wer bekommt sie? (je Fan und MOTM-Woche) ──────
+const gruppe = (f) => motmAlle.filter(f)
+const quote = (l) => (l.length ? ((100 * l.filter((m) => m.hat).length) / l.length).toFixed(1) + ' %' : '–')
+console.log('\nMOTM-Karte der Woche (Ziehfenster Mo–So, Wochen-Slot je Pack):')
+console.table([
+  { Woche: 'tippt + checkt ein (Heimspiel-Woche)', Quote: quote(gruppe((m) => m.tipp && m.checkin)), Anteil: gruppe((m) => m.tipp && m.checkin).length },
+  { Woche: '… davon mit Heimsieg (Sieg-Pack)', Quote: quote(gruppe((m) => m.tipp && m.checkin && m.sieg)), Anteil: gruppe((m) => m.tipp && m.checkin && m.sieg).length },
+  { Woche: 'nur Tipp (ohne Sieg-Pack)', Quote: quote(gruppe((m) => m.tipp && !m.checkin && !m.sieg)), Anteil: gruppe((m) => m.tipp && !m.checkin && !m.sieg).length },
+  { Woche: 'nur Tipp, alle Wochen', Quote: quote(gruppe((m) => m.tipp && !m.checkin)), Anteil: gruppe((m) => m.tipp && !m.checkin).length },
+  { Woche: 'nur Check-in', Quote: quote(gruppe((m) => !m.tipp && m.checkin)), Anteil: gruppe((m) => !m.tipp && m.checkin).length },
+  { Woche: 'nicht aktiv (nur Codes/Ziele)', Quote: quote(gruppe((m) => !m.tipp && !m.checkin)), Anteil: gruppe((m) => !m.tipp && !m.checkin).length },
+])
+
+// ── v24: Ziehwahrscheinlichkeiten je Pack-Typ (Fan mit halbem Album, MOTM-Woche) ──
+function packStatistik(N = 20000) {
+  const zeilen = []
+  for (const typ of Object.keys(PACK_TYPEN)) {
+    const T = PACK_TYPEN[typ]
+    if (!T.karten) continue
+    const st = { karten: 0, neu1: 0, silber: 0, gold: 0, spezial: 0, motm: 0, shiny: 0, goldKarte: 0 }
+    for (let i = 0; i < N; i++) {
+      const { K, add } = katalog()
+      const album = K.filter((k) => k.album)
+      const fan = { besitz: new Map(), plaetze: new Set() }
+      for (const k of album) if (rnd() < 0.5) { fan.besitz.set(k.id, 1); fan.plaetze.add(k.platz) }
+      const m = add({ typ: 'spieler', selt: 'spezial', limitiert: true, von: 0, bis: 7, kapitel: 'MIT' })
+      const p = packZiehen(fan, K, 3, { typ, ziel: typ === 'ziel', n: typ === 'ziel' ? 1 : undefined })
+      st.karten += p.length
+      if (p[0] && p[0].album && !fan.plaetze.has(p[0].platz)) st.neu1++
+      if (p.some((k) => RANG[k.selt] >= 2)) st.silber++
+      if (p.some((k) => RANG[k.selt] >= 3)) st.gold++
+      st.goldKarte += p.filter((k) => RANG[k.selt] >= 3).length
+      if (p.some((k) => k.selt === 'spezial')) st.spezial++
+      if (p.includes(m)) st.motm++
+      const personen = p.filter((k) => (k.typ === 'spieler' || k.typ === 'trainer') && !k.limitiert).length
+      if (E.shiny_chance > 0 && Array.from({ length: personen }).some(() => rnd() * E.shiny_chance < 1)) st.shiny++
+    }
+    const pc = (x) => ((100 * x) / N).toFixed(1) + ' %'
+    zeilen.push({ Typ: typ, Karten: (st.karten / N).toFixed(2), 'Karte 1 neu': pc(st.neu1), '≥1 Silber+': pc(st.silber), '≥1 Gold+': pc(st.gold),
+      'Gold+ je Karte': ((100 * st.goldKarte) / st.karten).toFixed(1) + ' %', '≥1 Spezial': pc(st.spezial), 'MOTM der Woche': pc(st.motm), '≥1 Shiny': pc(st.shiny) })
+  }
+  return zeilen
+}
+console.log('\nZiehwahrscheinlichkeiten je Pack (Fan mit halbem Album, MOTM-Karte der Woche ziehbar, fehlt noch):')
+console.table(packStatistik(Math.max(2000, Math.round(LAEUFE * 2))))
 // Gemeinschaft: 100 aktive Fans (Annahme 50 % Gelegenheit, 35 % typisch, 15 % Stammfans)
 const mix = 50 * shinyJeFan[0] + 35 * shinyJeFan[1] + 15 * shinyJeFan[2]
 console.log(`Shiny (1 : ${E.shiny_chance}): je 100 aktive Fans (50/35/15 %) rund ${mix.toFixed(1)} Shinys pro Saison — bei 27 Personen ist fast jeder Fund ein Erstfund.`)

@@ -91,7 +91,7 @@ export function useMotm() {
 export interface KartenCodeRow {
   id: string
   code: string
-  art: 'story' | 'partner' | 'advent'
+  art: 'story' | 'partner' | 'advent' | 'event'
   titel: string
   karte_id: string | null
   karten: number

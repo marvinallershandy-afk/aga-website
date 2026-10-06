@@ -3,7 +3,7 @@ import type { Session } from '@supabase/supabase-js'
 import { motion } from 'framer-motion'
 import { ArrowRight, BookOpen, HelpCircle, LogOut, Share2, Users } from 'lucide-react'
 import { abmelden, IST_VORFUEHRUNG, ladeAlbumStand, profilSpeichern, TippFehler, type AlbumStand, type Lage, ALBUM_HREF } from './api'
-import { ABZEICHEN, haptik } from './model'
+import { ABZEICHEN, haptik, tippPackText } from './model'
 import { bildAbzeichen, teilen } from './share'
 import { zaehleEreignis } from '../statistik/zaehlen'
 import { Avatar, Kapitel, Medaille, Zaehler } from './teile'
@@ -176,7 +176,7 @@ export function ProfilTab({
             </span>
             <span className="tp-albumkarte__text">
               <small>Dein Sammelalbum · gleiches Konto</small>
-              <b>{album ? `${album.belegt} von ${album.gesamt} Karten` : 'Jeder Tipp bringt eine Karte'}</b>
+              <b>{album ? `${album.belegt} von ${album.gesamt} Karten` : `Jeder Tipp bringt ein ${tippPackText(lage)}`}</b>
               {album && (
                 <span className="tp-albumkarte__balken" aria-hidden="true">
                   <i style={{ transform: `scaleX(${album.gesamt ? album.belegt / album.gesamt : 0})` }} />

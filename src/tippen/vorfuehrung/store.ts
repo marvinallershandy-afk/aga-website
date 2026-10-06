@@ -62,6 +62,42 @@ function startMinute(): number {
   return 0
 }
 
+// v24-P: Tipp/Elf/Ligen/Phase überleben den Wechsel ins Album und zurück
+// (sessionStorage dieses Tabs — vorher nur im Speicher → Tipp nach dem
+// Seitenwechsel weg). Ein ?phase= in der Adresse hat Vorrang.
+const SPEICHER_KEY = 'sva-tipp-vf'
+type Gemerkt = Pick<SimZustand, 'meinTipp' | 'meineElf' | 'naechsterTipp' | 'naechsteElf' | 'ligen' | 'phase' | 'gewertet' | 'minute'>
+function gemerkt(): Partial<Gemerkt> {
+  try {
+    const g = JSON.parse(sessionStorage.getItem(SPEICHER_KEY) ?? 'null') as Partial<Gemerkt> | null
+    if (!g || typeof g !== 'object') return {}
+    if (new URLSearchParams(window.location.search).has('phase')) {
+      delete g.phase
+      delete g.minute
+      delete g.gewertet
+    }
+    return g
+  } catch {
+    return {}
+  }
+}
+function merken(s: SimZustand) {
+  try {
+    const g: Gemerkt = { meinTipp: s.meinTipp, meineElf: s.meineElf, naechsterTipp: s.naechsterTipp, naechsteElf: s.naechsteElf, ligen: s.ligen, phase: s.phase, gewertet: s.gewertet, minute: s.minute }
+    sessionStorage.setItem(SPEICHER_KEY, JSON.stringify(g))
+  } catch {
+    /* privat-Modus: Vorführung läuft trotzdem */
+  }
+}
+/** Vorführung von vorn (Steuerleiste). */
+export function simVergessen() {
+  try {
+    sessionStorage.removeItem(SPEICHER_KEY)
+  } catch {
+    /* egal */
+  }
+}
+
 let z: SimZustand = {
   phase: startPhase(),
   minute: startMinute(),
@@ -78,6 +114,7 @@ let z: SimZustand = {
       return true
     }
   })(),
+  ...gemerkt(),
 }
 if (z.phase === 'live') z.laeuft = z.minute < ENDE_MINUTE && !new URLSearchParams(window.location.search).has('minute')
 
@@ -95,6 +132,7 @@ function melden() {
 
 export function simSetzen(teil: Partial<SimZustand>) {
   z = { ...z, ...teil }
+  merken(z)
   melden()
 }
 

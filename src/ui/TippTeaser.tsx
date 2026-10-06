@@ -52,7 +52,7 @@ function darstellung(stand: TippStand | null, now: number): Darstellung {
   return {
     kicker: 'Tipp-Liga · kostenlos',
     titel: 'Jetzt tippen',
-    zeile: rest ? `${rest} · +1 Karte` : 'Kostenlos · +1 Karte',
+    zeile: rest ? `${rest} · Tipp-Pack` : 'Kostenlos · Tipp-Pack',
     ton: 'rot',
     icon: Target,
   }

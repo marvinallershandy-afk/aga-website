@@ -164,7 +164,9 @@ ok((await count(`select count(*)::int n from sva_album_checkins where fan_user_i
 ci = await rpc(fan1, `select album_checkin($1)`, [T_LANG])
 ok(ci.ok, 'Spiel lief länger: Abpfiff vor 10 min → Fenster bis Abpfiff + 30 min offen')
 const pack1 = await one(`select * from sva_album_packs where id = $1`, [(await rpc(fan1, `select album_mein()`)).packs[0].id])
-ok(pack1.karten.length === 3 && pack1.seltenheiten.length === 3 && pack1.geoeffnet_at === null, 'Pack: 3 Karten serverseitig gezogen, noch zu')
+// v24-P: Größe des Check-in-Packs = Pack-Typ „spieltag“ (sva_album_pack_typen), sonst karten_pro_pack
+const CI_N = (await one(`select coalesce((select karten from sva_album_pack_typen where typ = 'spieltag'), 3) n`)).n
+ok(pack1.karten.length === CI_N && pack1.seltenheiten.length === CI_N && pack1.geoeffnet_at === null, `Pack: ${CI_N} Karten serverseitig gezogen, noch zu`)
 ok((await count(`select count(*)::int n from sva_album_besitz where fan_user_id = $1`, [FAN1])) === 0, 'Vor dem Öffnen nichts im Album (Gutschrift beim Öffnen)')
 
 // ── Pack öffnen ────────────────────────────────────────────────────────────
@@ -172,13 +174,15 @@ mein = await rpc(fan1, `select album_mein()`)
 ok(mein.packs.length === 2 && mein.checkins === 2, 'album_mein: 2 ungeöffnete Packs, 2 Check-ins')
 await expectErr(fan2(`select album_pack_oeffnen($1)`, [mein.packs[0].id]), 'Fremdes Pack öffnen → unbekannt', /album_pack_unbekannt/)
 let op = await rpc(fan1, `select album_pack_oeffnen($1)`, [mein.packs[0].id])
-ok(op.karten.length === 3 && op.karten.every((k) => typeof k.neu === 'boolean' && k.anzahl >= 1), 'Pack geöffnet: 3 Karten mit neu/anzahl')
+ok(op.karten.length === CI_N && op.karten.every((k) => typeof k.neu === 'boolean' && k.anzahl >= 1), `Pack geöffnet: ${CI_N} Karten mit neu/anzahl`)
 const summe = await count(`select coalesce(sum(anzahl), 0)::int n from sva_album_besitz where fan_user_id = $1`, [FAN1])
-ok(summe === 3, 'Gutschrift: 3 Karten im Besitz')
+ok(summe === CI_N, `Gutschrift: ${CI_N} Karten im Besitz`)
 const op2 = await rpc(fan1, `select album_pack_oeffnen($1)`, [mein.packs[0].id])
-ok(JSON.stringify(op2.karten.map((k) => k.karteId)) === JSON.stringify(op.karten.map((k) => k.karteId)) && (await count(`select coalesce(sum(anzahl), 0)::int n from sva_album_besitz where fan_user_id = $1`, [FAN1])) === 3, 'Zweimal öffnen: gleicher Inhalt, keine Doppel-Gutschrift')
+ok(JSON.stringify(op2.karten.map((k) => k.karteId)) === JSON.stringify(op.karten.map((k) => k.karteId)) && (await count(`select coalesce(sum(anzahl), 0)::int n from sva_album_besitz where fan_user_id = $1`, [FAN1])) === CI_N, 'Zweimal öffnen: gleicher Inhalt, keine Doppel-Gutschrift')
 await rpc(fan1, `select album_pack_oeffnen($1)`, [mein.packs[1].id])
-ok((await rpc(fan1, `select album_mein()`)).packs.length === 0, 'Alle Packs offen')
+const rest = (await rpc(fan1, `select album_mein()`)).packs
+console.log('   (offen danach:', JSON.stringify(rest.map((p) => p.art)), ')')
+ok(rest.filter((p) => p.art !== 'kapitel').length === 0, 'Alle Packs offen (v24: höchstens ein neuer Kapitel-Bonus, weil 4er-Packs Kapitel schneller füllen)')
 
 // ── Ziehung: Gewichte + Doppelten-Bremse (direkt, als Superuser) ───────────
 await db.exec(`update sva_album_karten set aktiv = true; update sva_album_einstellungen set karten_pro_pack = 5, doppelte_bremse = 0`)

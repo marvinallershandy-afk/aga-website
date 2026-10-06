@@ -11,6 +11,7 @@ import {
   type Katalog,
   type Mein,
   type PackArt,
+  type PackTyp,
 } from './api'
 import { SvaKarte } from '../karten/SvaKarte'
 import { kartenDaten } from './kartenDaten'
@@ -38,6 +39,8 @@ export interface PackNeu {
   id: string
   art: PackArt
   titel?: string
+  /** v24-P */
+  typ?: PackTyp
 }
 
 interface Props {
@@ -72,7 +75,7 @@ export function CodeEinloesen({ onPack, onNeu, vorbelegt }: { onPack: Props['onP
       const r = await codeEinloesen(c)
       if (r.ok) {
         setCode('')
-        onPack({ id: r.packId, art: r.art, titel: r.titel })
+        onPack({ id: r.packId, art: r.art, titel: r.titel, typ: r.typ })
         onNeu()
       } else setText(CODE_TEXT[r.grund] ?? CODE_TEXT.ungueltig)
     } catch (err) {
