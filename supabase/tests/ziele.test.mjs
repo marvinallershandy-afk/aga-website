@@ -78,10 +78,10 @@ const SAISON = '2026/27'
 // ── Standard-Ziele ─────────────────────────────────────────────────────────
 await expectErr(as((await neuerFan('Fremd', 'F')).id, 'fremd@fan.example', `select album_admin_ziele_standard()`), 'Fan legt keine Ziele an', /album_kein_admin/)
 let r = await val(admin, `select album_admin_ziele_standard()`)
-ok(r.angelegt === 30 && r.gesamt === 30, 'Standard-Ziele: 30 angelegt (v21: + Rote Familie) ' + JSON.stringify(r))
+ok(r.angelegt === 68 && r.gesamt === 68, 'Standard-Ziele: 68 angelegt (v26-Katalog; pejas_kollektion folgt in V26-K → 69) ' + JSON.stringify(r))
 await db.exec(`update sva_album_ziele set titel = 'Die Pejas-Zwillinge' where schluessel = 'zwillinge'`)
 r = await val(admin, `select album_admin_ziele_standard()`)
-ok(r.angelegt === 0 && r.gesamt === 30 && (await one(`select titel from sva_album_ziele where schluessel = 'zwillinge'`)).titel === 'Die Pejas-Zwillinge', 'Zweimal → keine Doppelten, Admin-Titel bleibt')
+ok(r.angelegt === 0 && r.gesamt === 68 && (await one(`select titel from sva_album_ziele where schluessel = 'zwillinge'`)).titel === 'Die Pejas-Zwillinge', 'Zweimal → keine Doppelten, Admin-Titel bleibt')
 const Z = Object.fromEntries((await db.query(`select schluessel, id, typ, vorlage, cardinality(coalesce(karten, '{}')) nk, cardinality(coalesce(roster_ids, '{}')) nr, belohnung_karten bk, belohnung_min_seltenheit bm, belohnung_lose bl, geheim, wiederholbar from sva_album_ziele`)).rows.map((z) => [z.schluessel, z]))
 ok(Z.zwillinge.nr === 2 && Z.warkehr.nr === 2 && Z.vater_sohn.nr === 2 && Z.familie_sva.nr === 6 && Z.familie_sva.bk === 3 && Z.familie_sva.bm === 'gold'
   && ['zwillinge', 'warkehr', 'vater_sohn', 'familie_sva'].every((k) => Z[k].vorlage === 'familie'), 'Familien-Sets: Zwillinge, Warkehr-Brüder, Vater & Sohn (je 2), Familie SVA (6, 3 Karten mind. Gold), Vorlage „familie“')
@@ -99,7 +99,7 @@ await expectErr(db.query(`insert into sva_album_ziele (schluessel, typ, titel, v
 const A = await neuerFan('Anna', 'A')
 let mein = await val(A.f, `select album_mein()`)
 ok(mein.ziele.length > 20 && !mein.ziele.some((z) => z.schluessel === 'nachteule') && mein.ziele.every((z) => 'fortschritt' in z && 'belohnung' in z && typeof z.geheim === 'boolean'), 'album_mein.ziele: Liste ohne geheime Mission, mit Fortschritt/Belohnung')
-const offen = mein.ziele.filter((z) => z.typ !== 'extern' && !z.erreicht)
+const offen = mein.ziele.filter((z) => !['extern', 'woche', 'monat'].includes(z.typ) && !z.erreicht)
 ok(offen.every((z, i) => i === 0 || (z.benoetigt - z.fortschritt) >= (offen[i - 1].benoetigt - offen[i - 1].fortschritt)) && mein.naechstesZiel?.schluessel === offen[0].schluessel,
   'Sortierung: nächstes erreichbares Ziel vorne, naechstesZiel = kleinster Rest (' + mein.naechstesZiel?.titel + ')')
 ok(mein.ziele.findIndex((z) => z.typ === 'extern') > mein.ziele.findIndex((z) => z.schluessel === offen[offen.length - 1].schluessel), 'Externe (Tipp-)Ziele hinter den Sammelzielen')
@@ -170,7 +170,9 @@ ok(dkp.seltenheiten.some((s) => s === 'gold' || s === 'spezial'), 'Dauerkarte-Pa
 ci = await val(G.f, `select album_checkin($1)`, [S3.token])
 ok(!ci.ziele?.some((z) => z.schluessel === 'dauerkarte'), 'Lücke (Spiel 2 verpasst) → keine Dauerkarte')
 ok((await val(G.f, `select album_mein()`)).ziele.find((z) => z.schluessel === 'dauerkarte')?.fortschritt === 1, 'Fortschritt Serie nach Lücke = 1')
-ok((await val(E.f, `select album_mein()`)).lose === 1, 'Check-in → 1 Los (lose_checkin)')
+ok((await count(`select coalesce(sum(anzahl), 0)::int n from sva_album_lose where fan_user_id = $1 and quelle = 'checkin'`, [E.id])) === 1, 'Check-in → 1 Los (lose_checkin)')
+// v26: der 3. Check-in schließt zusätzlich das Bestand-Ziel „Stammplatz“ (checkin_3) ab → +1 Ziel-Los
+ok((await val(E.f, `select album_mein()`)).lose === 2 && (await val(E.f, `select album_mein()`)).ziele.find((z) => z.schluessel === 'checkin_3')?.erreicht === true, 'v26: 3. Check-in löst „Stammplatz“ aus (Check-in-Los + Ziel-Los = 2)')
 
 // ── Tipp-Serie (4 ISO-Wochen), externe Ziele über die Tipp-Liga ────────────
 await db.exec(`create function public.tipp_test(p uuid) returns uuid language plpgsql security definer set search_path to 'public' as $$ begin return public.album_karte_gutschreiben('tipp', p); end $$;
@@ -229,7 +231,7 @@ r = await val(admin, `select album_admin_ziel_status($1)`, [Z.zwillinge.id])
 ok(r.ziele.length === 1 && r.ziele[0].erreicht === 2 && JSON.stringify(r.erreicht.map((x) => x.name).sort()) === '["Anna A.","Dana D."]' && r.erreicht.every((x) => !!x.at),
   'Ziel-Status: wer hat „Zwillinge“ wann erreicht (Anna, Dana) ' + JSON.stringify(r.erreicht.map((x) => x.name)))
 r = await val(admin, `select album_admin_ziel_status()`)
-ok(r.ziele.length === 30 && r.erreicht.length > 5, 'Ziel-Status gesamt: alle Ziele mit Zählungen + letzte Erfolge')
+ok(r.ziele.length === 68 && r.erreicht.length > 5, 'Ziel-Status gesamt: alle Ziele mit Zählungen + letzte Erfolge')
 
 // ── Katalog-Regeln: Lose + Teilnahmebedingungen ────────────────────────────
 const kat = await val(asAnon, `select album_katalog()`)
