@@ -719,6 +719,9 @@ img { display: block; max-width: 100%; }
 .tp-aufl__text b { display: block; font-weight: 700; }
 .tp-aufl__text small { display: block; font-size: var(--t-small); color: var(--c-text-3); }
 .tp-aufl__p { font-family: var(--f-display); font-size: 1.75rem; line-height: 1; min-width: 3ch; text-align: right; font-variant-numeric: tabular-nums; }
+/* v25 Befund 11: Kapitän-Verdopplung „+13 ×2 = +26“ */
+.tp-aufl__kapmath { display: inline-flex; align-items: baseline; gap: 4px; white-space: nowrap; }
+.tp-aufl__kapmath small { font-family: var(--f-text, inherit); font-size: .72rem; font-weight: 700; color: var(--tp-gold); letter-spacing: .01em; }
 .tp-aufl__zeile.is-ja .tp-aufl__p { color: var(--c-white); }
 .tp-aufl__zeile.is-nein .tp-aufl__p, .tp-aufl__zeile.is-offen .tp-aufl__p { color: var(--c-text-3); }
 .tp-aufl__zeile.is-kapitaen .tp-gesicht { box-shadow: 0 0 0 2px var(--tp-gold); }

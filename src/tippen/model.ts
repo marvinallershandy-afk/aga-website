@@ -213,6 +213,15 @@ export function paarung(s: Pick<TippSpiel, 'heim' | 'gegner'>): { heim: string; 
   return s.heim ? { heim: 'SV Agathenburg-Dollern', gast: s.gegner } : { heim: s.gegner, gast: 'SV Agathenburg-Dollern' }
 }
 
+// v25 Befund 12: lesbarer Kurzname fürs Abgabe-Knopf-Label statt 3-Buchstaben-Code
+// („bei SG Lühe“, „gegen Fischbek“ — nicht „BEI LÜH“/„GEGEN FIS“).
+export function kurzname(name: string): string {
+  const roh = name.replace(/\s+/g, ' ').trim()
+  if (roh.length <= 14) return roh // schon kurz genug (SG Lühe, Deinster SV)
+  const m = roh.match(/^(SV|TSV|FC|VfL|TuS|SG|SSV|JSG|MTV|VfR|SC|FSV|TSG|VfB|TV)\s+(.+)$/i)
+  return m && m[2].length >= 3 ? m[2] : roh // TuS Fischbek → Fischbek
+}
+
 export function kuerzel(name: string): string {
   const woerter = name
     .replace(/\(.*?\)/g, '')

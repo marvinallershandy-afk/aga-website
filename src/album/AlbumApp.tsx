@@ -579,7 +579,10 @@ export function AlbumApp() {
   } else {
     unterCover = (
       <div className="al-start__info">
-        <p className="al-start__hint">Tippen zum Aufschlagen</p>
+        {/* v25 Befund 16: Hinweis selbst tippbar — gleicher onClick wie das Cover */}
+        <button type="button" className="al-start__hint al-start__hint--knopf" onClick={() => (bereit && katalog ? heftAuf() : undefined)}>
+          Tippen zum Aufschlagen
+        </button>
         {/* v20-T: gemeinsames Konto — jeder Tipp in der Tipp-Liga bringt eine Karte */}
         <a className="al-tipp" href="/tippen">
           <b>Tipp-Liga</b>

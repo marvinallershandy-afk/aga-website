@@ -111,6 +111,9 @@ export function Einfuehrung({ katalog, onZu }: { katalog: Katalog; onZu: () => v
   ]
   const s = schritte[n]
   const letzte = n === schritte.length - 1
+  const touch = useRef<{ x: number; y: number } | null>(null)
+  // v25 Befund 8: Wischen blättert die Schritte (wie /tippen)
+  const geh = (d: number) => setN((x) => Math.max(0, Math.min(schritte.length - 1, x + d)))
   const zu = () => {
     merken()
     onZu()
@@ -128,7 +131,21 @@ export function Einfuehrung({ katalog, onZu }: { katalog: Katalog; onZu: () => v
   }, [])
   return (
     <div className="ef" role="dialog" aria-modal="true" aria-label="So funktioniert das Album" onClick={zu}>
-      <div className="ef__blatt" ref={ref} tabIndex={-1} onClick={(e) => e.stopPropagation()}>
+      <div
+        className="ef__blatt"
+        ref={ref}
+        tabIndex={-1}
+        onClick={(e) => e.stopPropagation()}
+        onTouchStart={(e) => (touch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY })}
+        onTouchEnd={(e) => {
+          const t = touch.current
+          touch.current = null
+          if (!t) return
+          const dx = e.changedTouches[0].clientX - t.x
+          const dy = e.changedTouches[0].clientY - t.y
+          if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) geh(dx < 0 ? 1 : -1)
+        }}
+      >
         <button type="button" className="ef__x" onClick={zu} aria-label="Einführung schließen">
           <X size={18} strokeWidth={1.5} aria-hidden="true" />
         </button>
