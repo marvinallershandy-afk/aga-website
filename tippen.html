@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/brand/wappen.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0B0A0B" />
+    <meta name="color-scheme" content="dark" />
+
+    <title>SVA Tipp-Liga · Tippen & Deine Elf · SV Agathenburg-Dollern</title>
+    <meta name="description" content="Die Tipp-Liga des SV Agathenburg-Dollern: Ergebnis tippen, Bonusfragen, deine Elf aufstellen — in 20 Sekunden. Ranglisten, Stammtisch-Ligen, Fans vs. Kabine. Kostenlos." />
+    <link rel="canonical" href="https://sva-agathenburg-dollern.netlify.app/tippen" />
+
+    <!-- OG: absolute URLs (siehe index.html/live.html, Domain-Tausch an derselben Stelle) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="de_DE" />
+    <meta property="og:site_name" content="SV Agathenburg-Dollern" />
+    <meta property="og:url" content="https://sva-agathenburg-dollern.netlify.app/tippen" />
+    <meta property="og:title" content="SVA Tipp-Liga — tippst du besser als die Kabine?" />
+    <meta property="og:description" content="Ergebnis, drei Bonusfragen, deine Elf: in 20 Sekunden getippt. Eigene Liga mit Freunden gründen. Kostenlos." />
+    <meta property="og:image" content="https://sva-agathenburg-dollern.netlify.app/og/tippen.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://sva-agathenburg-dollern.netlify.app/og/tippen.jpg" />
+    <link rel="preload" href="/brand/aga-logo.png" as="image" />
+    <!-- Designsystem-Tokens zuerst -->
+    <link rel="stylesheet" href="/src/theme/design.css" />
+    <style>
+      /* Erst-Frame ohne JS: dunkel statt weiß, statischer Inhalt lesbar */
+      html, body { background: #0B0A0B; color: #F4F2EF; margin: 0; }
+      .tp-statisch { max-width: 680px; margin: 0 auto; padding: 32px 16px; font-family: system-ui, sans-serif; line-height: 1.55; }
+      .tp-statisch h1 { font-family: Anton, Impact, sans-serif; font-weight: 400; text-transform: uppercase; font-size: 2.6rem; line-height: 1; margin: 8px 0 16px; }
+      .tp-statisch p, .tp-statisch li { color: rgba(244, 242, 239, .72); }
+      .tp-statisch a { color: #F4F2EF; }
+      .tp-statisch .k { color: #E91D29; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; font-size: .75rem; }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <!-- Vorgerendert (Crawler, Vorschau, ohne JavaScript). React ersetzt diesen Inhalt. -->
+      <main class="tp-statisch">
+        <p class="k">SV Agathenburg-Dollern · 1. Herren · Kreisliga Stade</p>
+        <h1>SVA Tipp-Liga</h1>
+        <p>Tipp jedes Pflichtspiel des SVA — kostenlos, in 20 Sekunden:</p>
+        <ul>
+          <li><b>Ergebnis-Tipp:</b> exakt 4 Punkte, Tordifferenz 3, Tendenz 2 · erster SVA-Torschütze +3 · Spieler des Spiels +2 · Joker 1× im Monat ×2</li>
+          <li><b>3 Bonusfragen</b> pro Spieltag: Karten, Tore, Elfmeter, Zuschauer — je +1</li>
+          <li><b>Deine Elf:</b> 5 SVA-Spieler + Kapitän (×2) — Punkte für Einsatz, Tore, Vorlagen, Zu-null, Sieg</li>
+          <li><b>Ranglisten</b> für Spieltag, Monat und Saison · <b>Stammtisch-Ligen</b> mit Freunden · <b>Fans vs. Kabine</b></li>
+        </ul>
+        <p>Ein Konto für Tipp-Liga und Sammelalbum — jeder Tipp bringt eine Karte fürs Album.</p>
+        <p><a href="/">Zur Vereinsseite</a> · <a href="/live">Live-Ticker</a> · <a href="/album">Sammelalbum</a> · <a href="/teilnahmebedingungen">Teilnahmebedingungen</a> · <a href="/datenschutz#tippliga">Datenschutz</a> · <a href="/impressum">Impressum</a></p>
+        <noscript><p>Zum Tippen brauchst du JavaScript.</p></noscript>
+      </main>
+    </div>
+    <script type="module" src="/src/tippen/entry.tsx"></script>
+  </body>
+</html>

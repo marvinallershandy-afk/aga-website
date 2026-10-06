@@ -28,6 +28,11 @@ export type Ereignis =
   | 'partner-anfrage'
   | 'album-checkin'
   | 'instagram'
+  | 'tipp-abgegeben'
+  | 'elf-gespeichert'
+  | 'liga-gegruendet'
+  | 'liga-beigetreten'
+  | 'tipp-teilen'
 
 // Startzustand beim Laden des Moduls festhalten — bevor das Karten-Routing
 // die Adresse normalisiert (utm_* gingen sonst verloren).

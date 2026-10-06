@@ -66,6 +66,8 @@ export const SEITE_LABEL: Record<string, string> = {
   '/galerie': 'Galerie /galerie',
   '/impressum': 'Impressum',
   '/datenschutz': 'Datenschutz',
+  '/tippen': 'Tipp-Liga /tippen',
+  '/teilnahmebedingungen': 'Tipp-Liga: Teilnahmebedingungen',
   '/#rundgang': 'Rundgang',
   '/#spieltag': 'Karte → Spieltag & Live',
   '/#training': 'Karte → Mitspielen',
@@ -86,6 +88,8 @@ export const ZIELE: { ziel: string; text: string; ereignisse: { name: string; la
       { name: 'kalender-termin', label: 'Einzelnes Spiel eingetragen' },
       { name: 'kalender-link', label: 'Kalender-Adresse kopiert' },
       { name: 'album-checkin', label: 'Album-Check-in am Platz gestartet' },
+      { name: 'tipp-abgegeben', label: 'Tipp-Liga: Tipp abgegeben' },
+      { name: 'elf-gespeichert', label: 'Tipp-Liga: Elf aufgestellt' },
     ],
   },
   {
@@ -104,6 +108,11 @@ export const ZIELE: { ziel: string; text: string; ereignisse: { name: string; la
   {
     ziel: 'Instagram',
     text: 'Klicks von der Website zu Instagram.',
-    ereignisse: [{ name: 'instagram', label: 'Instagram-Link getippt' }],
+    ereignisse: [
+      { name: 'instagram', label: 'Instagram-Link getippt' },
+      { name: 'tipp-teilen', label: 'Tipp-Liga: Story-Bild geteilt' },
+      { name: 'liga-gegruendet', label: 'Tipp-Liga: Stammtisch-Liga gegründet' },
+      { name: 'liga-beigetreten', label: 'Tipp-Liga: Liga per Einladung beigetreten' },
+    ],
   },
 ]

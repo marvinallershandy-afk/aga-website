@@ -1,10 +1,12 @@
 // ─────────────────────────────────────────────────────────────
 // v18-A: reine Hilfen der Zählung (Node-Test: quelle.test.mjs).
-// Feste Listen = supabase/migrations/20261009100000_sva_statistik.sql.
+// Feste Listen = supabase/migrations/20261009100000_sva_statistik.sql
+// (v20-T erweitert in 20261012100000_sva_tippliga.sql).
 // ─────────────────────────────────────────────────────────────
 
 export const ORTE = ['rundgang', 'spieltag', 'training', 'mannschaft', 'fans', 'musik', 'partner', 'anfahrt']
-export const SEITEN = ['live', 'partner', 'album', 'galerie', 'impressum', 'datenschutz']
+// v20-T: + tippen, teilnahmebedingungen (Liste: 20261012100000_sva_tippliga.sql)
+export const SEITEN = ['live', 'partner', 'album', 'galerie', 'impressum', 'datenschutz', 'tippen', 'teilnahmebedingungen']
 export const QUELLEN = ['instagram', 'facebook', 'google', 'whatsapp', 'qr', 'direkt', 'intern', 'sonstige']
 export const MEDIEN = ['bio', 'story', 'post', 'reel', 'platz', 'plakat', 'flyer', 'status', 'gruppe']
 
