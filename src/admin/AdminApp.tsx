@@ -26,6 +26,8 @@ import { Live } from './pages/Live'
 import { TeamZugaenge } from './pages/TeamZugaenge'
 // v17-A Sammelalbum (Stickerheft, QR-Check-in)
 import { Album } from './pages/Album'
+// v20-T Tipp-Liga (Spielbericht am Handy nach Abpfiff — eager wie Live)
+import { TippLiga } from './pages/TippLiga'
 
 // v19-S (Audit C): Archiv/Social-Media-Seiten per lazy() aus dem mountAdmin-
 // Bundle lösen — am Platz-Handy wird nur geladen, was gebraucht wird
@@ -68,6 +70,11 @@ export function AdminApp() {
                   <Route path="aufstellung" element={<Aufstellung />} />
                   <Route path="spiele" element={<Spiele />} />
                   <Route path="live" element={<Live />} />
+                  {/* v20-T: Spielbericht/Bonusfragen für Team + Admin; Story/Kabine prüft die Seite selbst (DB: is_sm_admin) */}
+                  <Route path="tippliga" element={<TippLiga />} />
+                  <Route path="tippliga/:tab" element={<TippLiga />} />
+                  <Route path="spielbericht" element={<TippLiga />} />
+                  <Route path="spielbericht/:spielId" element={<TippLiga />} />
                   <Route path="kader" element={<NurAdmin><Kader /></NurAdmin>} />
                   <Route path="tabelle" element={<NurAdmin><Tabelle /></NurAdmin>} />
                   <Route path="sponsoren" element={<NurAdmin><Sponsoren /></NurAdmin>} />

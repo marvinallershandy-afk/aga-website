@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
   Undo2,
   CloudOff,
@@ -714,6 +714,15 @@ function NachDemSpiel({ spiel, tore, kandidaten, events, byId, istAdmin, onMotm 
         >
           {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Share2 className="h-5 w-5" />} Story-Grafik erstellen
         </Button>
+        {/* v20-T: direkt weiter zum Spielbericht der Tipp-Liga (Vorlagen, Bonusfragen, Werten) */}
+        {!istVorfuehrSpiel(spiel) && (
+          <Link
+            to={`/spielbericht/${spiel.id}`}
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-md bg-primary text-base font-semibold text-primary-foreground hover:bg-primary/90"
+          >
+            Tipp-Liga: Spielbericht & Werten
+          </Link>
+        )}
         {istAdmin && (
           <div className="rounded-lg border border-border p-3">
             <p className="mb-2 text-sm text-muted-foreground">Das Ergebnis ist gespeichert. Damit es auch im Onepager steht:</p>
