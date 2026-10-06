@@ -37,7 +37,11 @@
 .kmap[data-intro] .alb-t--karte { opacity: 0; pointer-events: none; }
 @media (max-width: 759px), (max-aspect-ratio: 1/1) {
   .alb-t--karte {
-    bottom: calc(68px + env(safe-area-inset-bottom) + var(--s-3) + 22px);
+    /* v19-F (Punkt 4): sauber ÜBER die (mobil 2-zeilige) Fußzeile gehoben —
+       vorher lag der Teaser nur 22 px über dem Fuß und überdeckte die
+       „@svagathenburg folgen …"-Zeile. Stapel von unten: Dock → Fuß (IG +
+       Impressum) → Album-Teaser. */
+    bottom: calc(68px + env(safe-area-inset-bottom) + var(--s-3) + 60px);
     right: var(--gutter); max-width: none; padding: var(--s-1) var(--s-3) var(--s-1) var(--s-1);
   }
   .alb-t--karte img { width: 48px; }

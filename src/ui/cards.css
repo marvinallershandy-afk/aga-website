@@ -1748,7 +1748,11 @@
 .contact-grid dd { text-shadow: none; }
 .wanted-card {
   border-radius: var(--r-l);
-  background: rgba(11, 10, 11, .72);
+  /* v19-F (Punkt 3): fast deckend — die gekippte 3D-Anfahrts-Karte lag hinter
+     den drei Karten durch und wirkte unruhig. Jetzt sitzen sie auf ruhiger
+     Fläche, die Karte bleibt rechts/oben frei sichtbar (kein backdrop-filter,
+     DESIGN.md §3). */
+  background: rgba(11, 10, 11, .93);
   border: var(--border);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;

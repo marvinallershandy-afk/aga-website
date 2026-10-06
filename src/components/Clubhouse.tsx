@@ -528,7 +528,10 @@ export function Clubhouse() {
           <planeGeometry args={[0.26, ANNEX_LEN - 0.02]} />
           <meshStandardMaterial color="#8a8070" emissive="#3a2a18" emissiveIntensity={0.5} roughness={1} />
         </mesh>
-        {[-2.35, -1.35, -0.3, 0.75, 1.5, 2.25].map((z) => (
+        {/* v19-F (Punkt 2): den Vordach-Pfosten direkt an der Tür (annex-lokal
+            z≈−1.5) ausgelassen — er lief dem Tür-Halt sonst durch das Bild.
+            Die Tür-Öffnung bleibt frei, die übrigen Pfosten tragen das Vordach. */}
+        {[-2.6, -0.3, 0.75, 1.5, 2.25].map((z) => (
           <mesh key={z} position={[-0.29, (ANNEX_H + 0.03) / 2, z]}>
             <cylinderGeometry args={[0.012, 0.012, ANNEX_H + 0.03, 6]} />
             <meshStandardMaterial color="#4a4d52" metalness={0.5} roughness={0.5} />
@@ -673,9 +676,13 @@ export function Clubhouse() {
       <LightPool position={[-DEPTH / 2 - ANNEX_D - 0.35, -0.009, -1.65]} scale={[0.9, 0.6]} color="#ffb26a" opacity={0.55} />
       <AOBlob position={[-0.05, -0.012, 0]} scale={[DEPTH + 1.4, LEN + 1]} opacity={0.6} />
 
-      {/* Fahnenmasten (SVA rot-schwarz + gedimmte zweite) — v9-E3 flankieren
-          jetzt die Eingangs-Ecke (Tür bei clubhouse-rel z≈−1.65) */}
-      {[{ z: -1.35, flag: COLORS.red }, { z: -2.05, flag: '#2c2c30' }].map(({ z, flag }, i) => (
+      {/* Fahnenmasten (SVA rot-schwarz + gedimmte zweite) — v19-F (Punkt 2):
+          von der Eingangs-Ecke (z≈−1.5) an die SÜD-Terrasse zur Vereins-
+          Giebeltafel (z≈+1.7) versetzt. Vorher liefen die beiden hellen
+          Chrom-Masten dem Tür-Halt mitten durchs Bild („Stützen im
+          Vordergrund"); am Giebel-Schild flankieren sie jetzt natürlich die
+          Terrasse und sind aus der Tür-Sichtlinie (z≈−2.5) heraus. */}
+      {[{ z: 1.25, flag: COLORS.red }, { z: 2.15, flag: '#2c2c30' }].map(({ z, flag }, i) => (
         <group key={i} position={[-DEPTH / 2 - 0.5, 0, z]}>
           <mesh position={[0, 0.42, 0]}>
             <cylinderGeometry args={[0.012, 0.016, 0.84, 6]} />

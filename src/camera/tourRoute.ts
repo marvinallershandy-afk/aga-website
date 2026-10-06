@@ -56,10 +56,12 @@ const FIXED: Record<string, Pose> = {
   // Totale hinter dem eigenen Tor: ganze Elf + Unterstand (wie v14-M)
   'team-totale': { pos: P(-10.4, 6.2, 0.5), look: P(0.4, -0.5, 1.1) },
   // Banden-Zoom auf die Süd-Bande, erste freie Tafel (Karussell verschiebt x).
-  // v19-3D (§2.2.3): frontaler + etwas tiefer/näher — die Tafel steht parallel
-  // zur Bildkante statt in starker Diagonale, der Baumstamm/Boden-Anschnitt
-  // wandert aus dem Bild (Blickpunkt auf Tafelhöhe).
-  sponsoren: { pos: P(-2.16, 0.52, 3.32), look: P(-2.16, 0.26, 3.9) },
+  // v19-F (Punkt 1): höher + stärker nach unten geneigt und etwas weiter weg —
+  // vorher saß die Bande als tiefer Diagonal-Streifen mit viel leerem Wald
+  // darüber. Jetzt füllt die Tafel die Bildmitte (Nachbartafeln angeschnitten),
+  // der Wald bleibt nur als schmaler dunkler Rand oben, die Textspalte links
+  // sitzt auf ruhiger Rasenfläche (zusätzlich Bild-nach-rechts in CameraRig).
+  sponsoren: { pos: P(-2.16, 0.8, 2.82), look: P(-2.16, 0.14, 3.9) },
   // Südost-Kurve: Fans + Meister-Banner
   fanblock: { pos: P(2.9, 1.55, 2.3), look: P(3.7, 0.55, 4.0) },
   // Anzeigetafel am Vereinsheim (x 6.13 | z −0.35), Blick nach Nordost
