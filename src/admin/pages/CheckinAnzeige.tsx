@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { qrMatrix, zeichneQr } from '../lib/qr'
-import { useCheckinCode, useAlbumEinstellungen, useAlbumStatistik } from '../lib/album'
+import { useCheckinCode, useAlbumEinstellungen, useAlbumStatistik, useCodeErzeugen } from '../lib/album'
 import { useRoster, useSpiele } from '../lib/queries'
 import type { SpielRow } from '../lib/db'
 import { playerMedia } from '../../data/playerMedia'
@@ -62,6 +62,16 @@ export default function CheckinAnzeige() {
   const einstQ = useAlbumEinstellungen()
   const spiel = useMemo(() => waehleSpiel(spieleQ.data), [spieleQ.data])
   const codeQ = useCheckinCode(spiel?.id ?? null)
+  // Fehlt für das Heimspiel noch ein Spiel-Code, legt die Anzeige ihn selbst an
+  // (nur Admins dürfen das; beim Team-Zugang bleibt der Hinweis stehen).
+  const erzeugen = useCodeErzeugen()
+  const versucht = useRef<string | null>(null)
+  useEffect(() => {
+    if (!spiel || codeQ.data || !codeQ.error || versucht.current === spiel.id) return
+    if (!String((codeQ.error as { message?: string }).message ?? '').includes('album_kein_spielcode')) return
+    versucht.current = spiel.id
+    erzeugen.mutate({ spielId: spiel.id, partnerId: null, neu: false }, { onSuccess: () => void codeQ.refetch() })
+  }, [spiel, codeQ, erzeugen])
   const statQ = useAlbumStatistik(true)
 
   const [now, setNow] = useState(() => Date.now())
@@ -334,7 +344,7 @@ export default function CheckinAnzeige() {
                 {url ? (
                   <canvas ref={canvasRef} width={720} height={720} className="ca-karte__bild" aria-label="QR-Code zum Einchecken" />
                 ) : (
-                  <div className="ca-karte__leer">{spiel ? 'Erst einen QR-Code für dieses Spiel erzeugen (Album → Spieltage).' : 'Kein Heimspiel.'}</div>
+                  <div className="ca-karte__leer">{spiel ? (erzeugen.isPending ? 'QR-Code wird angelegt …' : 'Erst einen QR-Code für dieses Spiel erzeugen (Album → Spieltage).') : 'Kein Heimspiel.'}</div>
                 )}
               </div>
               <div className="ca-karte__fuss">Scannen · Pack holen · mitmachen</div>

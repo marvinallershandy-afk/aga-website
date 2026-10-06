@@ -20,6 +20,7 @@ import {
   Camera,
   BarChart3,
   Trophy,
+  MonitorPlay,
 } from 'lucide-react'
 import { useAuth } from './auth/AuthProvider'
 import { cn } from './lib/utils'
@@ -56,6 +57,8 @@ const NAV: NavItem[] = [
   { to: '/spiele', label: 'Spiele', icon: CalendarDays, team: true },
   // v20-T: Tipp-Liga (Spielbericht nach Abpfiff, Bonusfragen, Story-Grafiken)
   { to: '/tippliga', label: 'Tipp-Liga', icon: Trophy, team: true },
+  // v25-D: Vollbild-QR fürs iPad am Eingang (rotierender Check-in-Code)
+  { to: '/checkin-anzeige', label: 'Check-in (iPad)', icon: MonitorPlay, team: true },
   { to: '/kader', label: 'Kader', icon: Users },
   { to: '/tabelle', label: 'Tabelle', icon: ListOrdered },
   // v16-S: Bereich „Partner“ (Sponsoren, Pakete, Zahlen, Anfragen) — Pfad bleibt
