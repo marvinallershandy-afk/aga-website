@@ -41,3 +41,5 @@
 .kl-gross__karte { width: min(78vw, 360px, calc((100dvh - 170px) / 1.4)); }
 .kl-gross__label { font-size: 13px; font-weight: 700; color: rgba(244, 242, 239, .8); text-align: center; }
 .kl-gross__knoepfe { display: flex; gap: 8px; }
+/* Perf: Karten außerhalb des Bildschirms gar nicht erst zeichnen (95+ Karten) */
+.kl__raster li { content-visibility: auto; contain-intrinsic-size: auto 260px; }

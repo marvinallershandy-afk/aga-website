@@ -31,7 +31,14 @@
 .sk.is-hinten .sk__dreh { transform: rotateY(calc(180deg + var(--ry))) rotateX(var(--rx)); }
 .sk__seite { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
 .sk__hinten { transform: rotateY(180deg); }
+/* v22-A: WebKit zeichnet die abgewandte Seite trotz backface-visibility, sobald Blend-/Masken-Ebenen
+   im 3D-Kontext liegen (gespiegelte Rückseite über der Vorderseite). Darum die jeweils abgewandte
+   Seite zur Mitte der Drehung (0,9 s) ausblenden. */
+.sk__seite { transition: visibility 0s .45s; }
+.sk:not(.is-hinten) .sk__hinten { visibility: hidden; }
+.sk.is-hinten .sk__vorne { visibility: hidden; }
 .sk--klein .sk__dreh { transform: none; transition: none; }
+.sk--klein.is-hinten .sk__dreh { transform: rotateY(180deg); }
 
 /* Bodenschatten (statisch, ohne Filter) */
 .sk__schatten {
@@ -280,7 +287,7 @@
     radial-gradient(130% 90% at 50% 40%, #16110a 0%, #070604 60%, #000 100%) !important;
 }
 .sk--shiny .sk__aurora { display: none; }
-.sk--shiny .sk__muster { opacity: .42 !important; background-size: 100% 100% !important; mix-blend-mode: normal !important; }
+.sk--shiny .sk__vorne .sk__muster { opacity: .42 !important; background-size: 100% 100% !important; mix-blend-mode: normal !important; }
 .sk--shiny .sk__praegung { background: linear-gradient(150deg, rgba(255, 236, 170, .55), rgba(255, 236, 170, .04) 45%, rgba(0, 0, 0, .5) 82%) !important; opacity: .55; mix-blend-mode: normal; }
 .sk--shiny .sk__platte { background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, .86) 34%, rgba(0, 0, 0, .97) 62%); }
 .sk--shiny .sk__wasser { -webkit-text-stroke-color: rgba(255, 226, 150, .34); }
@@ -330,7 +337,7 @@
 /* ═══ v22 · GEHEIMKARTE — typografisch, Graphit + Goldfaden ════════════ */
 .sk--geheim .sk__grund { background: radial-gradient(110% 70% at 50% 30%, #1d1f24 0%, #0d0e11 58%, #050506 100%) !important; }
 .sk--geheim .sk__aurora { opacity: .28; filter: grayscale(.6); }
-.sk--geheim .sk__muster { background-size: 100% 100% !important; opacity: .16 !important; mix-blend-mode: normal !important; }
+.sk--geheim .sk__vorne .sk__muster { background-size: 100% 100% !important; opacity: .16 !important; mix-blend-mode: normal !important; }
 .sk--geheim .sk__praegung { opacity: .5 !important; background: linear-gradient(150deg, rgba(232, 193, 90, .42), rgba(232, 193, 90, .03) 46%, rgba(0, 0, 0, .45) 84%) !important; }
 .sk--geheim .sk__serie { color: #e8c15a; background: rgba(5, 5, 6, .8); box-shadow: inset 0 0 0 .25cqw rgba(232, 193, 90, .45); }
 .sk--geheim .sk__gross { top: 32cqw; }

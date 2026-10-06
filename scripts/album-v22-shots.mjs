@@ -155,14 +155,24 @@ for (const motor of MOTOREN) {
     await steuer(page, 'Kartenlabor')
     await warte(page, 1500)
     await page.screenshot({ path: `${OUT}/${k}-40-labor.png` })
+    await page.locator('.kl__schalter input').check()
+    await warte(page, 900)
+    await page.screenshot({ path: `${OUT}/${k}-40b-labor-rueckseiten.png` })
+    await page.locator('.kl__schalter input').uncheck()
+    await warte(page, 900)
     for (const f of ['Shiny', 'Geheim', 'Limitiert']) {
       await page.locator('.kl__f').filter({ hasText: f }).first().click()
       await warte(page, 900)
       await page.screenshot({ path: `${OUT}/${k}-41-labor-${f.toLowerCase()}.png`, fullPage: false })
     }
+    await page.locator('.kl__f').filter({ hasText: 'Shiny' }).first().click()
+    await warte(page, 600)
     await page.locator('.kl__karte').first().click()
     await warte(page, 1200)
     await page.screenshot({ path: `${OUT}/${k}-42-labor-gross.png` })
+    await page.locator('.kl-gross__knoepfe .kl__f').first().click()
+    await warte(page, 1300)
+    await page.screenshot({ path: `${OUT}/${k}-43-labor-rueckseite.png` })
     await b.close()
   }
   if (soll('wappen')) {
