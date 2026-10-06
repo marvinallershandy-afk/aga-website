@@ -164,7 +164,7 @@ export async function rahmen(o: RahmenOpts): Promise<{ canvas: HTMLCanvasElement
     ctx.drawImage(wappen, RAND, 88, w, h)
   }
   text(ctx, 'SVA TIPP-LIGA', RAND + 112, 160, { size: 58, align: 'left', spacing: 3 })
-  label(ctx, 'SV Agathenburg-Dollern', RAND + 114, 192, { size: 20, spacing: 4 })
+  label(ctx, 'SV Agathenburg-Dollern', RAND + 114, 192, { size: 20, spacing: 4, align: 'left' })
   ctx.fillStyle = ROT
   ctx.fillRect(RAND, 244, 10, 46)
   text(ctx, o.kicker.toUpperCase(), RAND + 30, 280, { size: 30, font: FONT_BODY, weight: '800', color: WEISS, spacing: 4, align: 'left', max: W - RAND * 2 - 30, breite: 'expanded' })
@@ -424,8 +424,20 @@ export interface OffenDaten {
 export async function bildJetztTippen(s: OffenDaten, partner?: PartnerInfo | null, preise?: string | null, stars?: KaderSpieler[]): Promise<HTMLCanvasElement> {
   const { canvas, ctx } = await rahmen({ kicker: `${datumKurz(s.anstoss)} · ${uhrzeit(s.anstoss)} Uhr · ${s.heim ? 'Heimspiel' : 'Auswärts'}`, partner })
   if (stars?.length) {
-    await freisteller(ctx, stars[0], W / 2 + 230, 330, 980)
-    if (stars[1]) await freisteller(ctx, stars[1], W / 2 - 250, 400, 900, true)
+    // zwei Spieler rechts gestaffelt (Tiefe), links abgedunkelt → Headline bleibt lesbar
+    if (stars[1]) {
+      ctx.save()
+      ctx.globalAlpha = 0.7
+      await freisteller(ctx, stars[1], W - 520, 380, 860, true)
+      ctx.restore()
+    }
+    await freisteller(ctx, stars[0], W - 240, 320, 1000)
+    const g = ctx.createLinearGradient(0, 0, W * 0.75, 0)
+    g.addColorStop(0, 'rgba(11,10,11,0.88)')
+    g.addColorStop(0.55, 'rgba(11,10,11,0.45)')
+    g.addColorStop(1, 'rgba(11,10,11,0)')
+    ctx.fillStyle = g
+    ctx.fillRect(0, 700, W, 520)
   }
   text(ctx, 'JETZT', RAND, 900, { size: 250, align: 'left' })
   text(ctx, 'TIPPEN.', RAND, 1130, { size: 250, align: 'left', color: ROT })

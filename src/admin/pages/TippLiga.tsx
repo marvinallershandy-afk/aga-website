@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { CalendarClock, ClipboardCheck, Crown, Download, Image as ImageIcon, Loader2, Minus, Plus, Settings2, Share2, Trophy, Users } from 'lucide-react'
+import { CalendarClock, ClipboardCheck, Crown, Download, ExternalLink, Image as ImageIcon, Loader2, Minus, MonitorPlay, Plus, Settings2, Share2, Shirt, Trophy, Users } from 'lucide-react'
 import { PageHeader } from './Placeholder'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
@@ -25,7 +25,10 @@ import {
   useTippEinstellungen,
   useTippEinstellungenSpeichern,
   useTippSpieltage,
+  useTippKader,
+  useTippSpielerSpeichern,
   type AdminSpieltag,
+  type TippKaderZeile,
   type BerichtZeile,
   type StoryDaten,
 } from '../lib/tippliga'
@@ -46,7 +49,10 @@ import type { BonusKey } from '../../tippen/api'
 // /admin/tippliga/spieltage, /admin/tippliga/story, /admin/tippliga/kabine.
 // ─────────────────────────────────────────────────────────────
 
-type Tab = 'bericht' | 'spieltage' | 'story' | 'kabine'
+type Tab = 'bericht' | 'spieltage' | 'kader' | 'story' | 'kabine'
+
+/** v21: Tipp-Liga als Vorführung (rein im Browser, simulierte Daten, nichts wird gespeichert). */
+export const TIPP_VORFUEHRUNG_PFAD = '/tippen?vorfuehrung=1'
 
 const datum = (iso: string) =>
   new Date(iso).toLocaleString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Berlin' })
@@ -66,7 +72,7 @@ export function TippLiga() {
   const navigate = useNavigate()
   const { rolle } = useAuth()
   const istAdmin = rolle !== 'team'
-  const tab: Tab = spielId ? 'bericht' : (['bericht', 'spieltage', 'story', 'kabine'].includes(tabParam ?? '') ? (tabParam as Tab) : 'bericht')
+  const tab: Tab = spielId ? 'bericht' : (['bericht', 'spieltage', 'kader', 'story', 'kabine'].includes(tabParam ?? '') ? (tabParam as Tab) : 'bericht')
   const tage = useTippSpieltage()
   const fehlt = tage.error && isMissingSchema(tage.error)
 
@@ -74,6 +80,7 @@ export function TippLiga() {
     [
       ['bericht', 'Spielbericht', ClipboardCheck, true],
       ['spieltage', 'Spieltage', CalendarClock, true],
+      ['kader', 'Kader', Shirt, true],
       ['story', 'Story', ImageIcon, istAdmin],
       ['kabine', 'Kabine & Regeln', Users, istAdmin],
     ] as const
@@ -81,8 +88,18 @@ export function TippLiga() {
 
   return (
     <>
-      <PageHeader title="Tipp-Liga" subtitle="Spielbericht nach dem Abpfiff, Bonusfragen je Spieltag, Story-Grafiken für Instagram." />
-      <div role="tablist" aria-label="Tipp-Liga-Bereiche" className={cn('mb-5 grid gap-1 rounded-lg bg-secondary p-1 sm:inline-grid', tabs.length === 4 ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-2')}>
+      <PageHeader
+        title="Tipp-Liga"
+        subtitle="Spielbericht nach dem Abpfiff, Bonusfragen je Spieltag, Kader, Story-Grafiken für Instagram."
+        actions={
+          <Button asChild variant="outline" className="h-11" data-testid="tipp-vorfuehrung">
+            <a href={TIPP_VORFUEHRUNG_PFAD} target="_blank" rel="noreferrer" title="Simulierte Tipp-Liga mit 15 Tippern — Phasen vor Anpfiff, Live, Abpfiff, Montag. Nichts wird gespeichert.">
+              <MonitorPlay className="h-4 w-4" /> Tipp-Liga-Vorführung öffnen <ExternalLink className="h-3.5 w-3.5 opacity-60" />
+            </a>
+          </Button>
+        }
+      />
+      <div role="tablist" aria-label="Tipp-Liga-Bereiche" className={cn('mb-5 grid gap-1 rounded-lg bg-secondary p-1 sm:inline-grid', tabs.length === 5 ? 'grid-cols-2 sm:grid-cols-5' : 'grid-cols-3')}>
         {tabs.map(([value, label, Icon]) => (
           <button
             key={value}
@@ -106,6 +123,7 @@ export function TippLiga() {
         <>
           {tab === 'bericht' && <BerichtTab spielId={spielId ?? null} tage={tage.data ?? []} laedt={tage.isLoading} />}
           {tab === 'spieltage' && <SpieltageTab tage={tage.data ?? []} laedt={tage.isLoading} />}
+          {tab === 'kader' && <KaderTab />}
           {tab === 'story' && istAdmin && <StoryTab />}
           {tab === 'kabine' && istAdmin && <KabineTab />}
         </>
@@ -565,7 +583,23 @@ function StoryTab() {
 
   const grafiken: Grafik[] = useMemo(
     () => [
-      { key: 'fr-jetzt-tippen', tag: 'Freitag', titel: '„Jetzt tippen“', erzeugen: (x) => (x.offen ? import('../../tippen/share').then((m) => m.bildJetztTippen(x.offen!, x.partner, x.preise)) : null) },
+      {
+        key: 'fr-jetzt-tippen',
+        tag: 'Freitag',
+        titel: '„Jetzt tippen“',
+        // v21: mit den zwei treffsichersten verfügbaren Spielern als Freisteller
+        erzeugen: (x) =>
+          x.offen
+            ? Promise.all([import('../../tippen/share'), import('../../tippen/api')]).then(async ([m, api]) => {
+                const kader = await api.ladeLage().then((l) => l.kader).catch(() => [])
+                const stars = kader
+                  .filter((k) => !k.nichtVerfuegbar && (k.cutoutUrl || k.fotoUrl) && k.position !== 'TW')
+                  .sort((a, b) => b.tore - a.tore || (a.position === 'ANG' ? -1 : 1))
+                  .slice(0, 2)
+                return m.bildJetztTippen(x.offen!, x.partner, x.preise, stars)
+              })
+            : null,
+      },
       { key: 'sa-noch-nicht-getippt', tag: 'Samstag', titel: '„Noch nicht getippt?“', erzeugen: (x) => (x.offen ? import('../../tippen/share').then((m) => m.bildNochNichtGetippt(x.offen!, x.storyCode, x.partner)) : null) },
       {
         key: 'mo-tipp-sieger',
@@ -802,5 +836,121 @@ function Regeln() {
         </div>
       </div>
     </section>
+  )
+}
+
+// ── v21: Kader für „Deine Elf“ ──────────────────────────────
+// Zweitposition (z. B. offensive Mittelfeldspieler auch im Angriff) und
+// „nicht verfügbar“ (verletzt/abwesend, mit kurzem Hinweis). Team + Admin.
+const POS_NAME: Record<string, string> = { TW: 'Torwart', ABW: 'Abwehr', MIT: 'Mittelfeld', ANG: 'Angriff' }
+
+function KaderTab() {
+  const kader = useTippKader()
+  const fehlt = kader.error && isMissingSchema(kader.error)
+  if (fehlt || (kader.error && /tipp_admin_kader/.test(String((kader.error as { message?: string }).message)))) {
+    return (
+      <EmptyState
+        icon={Shirt}
+        title="Kader-Pflege braucht die neue Migration"
+        description="Die Migration 20261013100000_sva_tippliga_v21.sql fehlt noch. Danach lassen sich hier Zweitpositionen und „nicht verfügbar“ setzen."
+      />
+    )
+  }
+  return (
+    <div className="grid gap-5 lg:grid-cols-[1fr_340px]">
+      <section className="rounded-lg border border-border bg-card">
+        <div className="space-y-1 border-b border-border p-4">
+          <h2 className="font-display text-xl">Kader · Deine Elf</h2>
+          <p className="text-sm text-muted-foreground">
+            Formation: 1 Torwart · 1 Abwehr · 2 Mittelfeld · 1 Angriff. Mit einer <b>Zweitposition</b> darf ein Spieler zusätzlich auf diese Position (z. B. Pejas, Brünjes auch vorne).{' '}
+            <b>Nicht verfügbar</b> = in der Auswahl ausgegraut, mit Hinweis.
+          </p>
+        </div>
+        {kader.isLoading ? (
+          <SkeletonRows rows={6} />
+        ) : (
+          <ul className="divide-y divide-border">
+            {(kader.data ?? []).map((k) => (
+              <KaderZeile key={k.id} k={k} />
+            ))}
+          </ul>
+        )}
+      </section>
+      <aside className="space-y-3 rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground">
+        <h3 className="font-display text-lg text-foreground">So wirkt es</h3>
+        <p>Die Auswahl für einen Platz zeigt alle Spieler mit passender Haupt- oder Zweitposition. Punkte ändern sich dadurch nicht (Zu-null zählt weiter nur für Torwart/Abwehr).</p>
+        <p>„Nicht verfügbar“ greift sofort für neue Elfen. Wer den Spieler schon aufgestellt hat, sieht einen Hinweis zum Austauschen; gespeicherte Elfen bleiben gültig.</p>
+        <Button asChild variant="outline" className="w-full">
+          <a href={TIPP_VORFUEHRUNG_PFAD} target="_blank" rel="noreferrer">
+            <MonitorPlay className="h-4 w-4" /> In der Vorführung ansehen
+          </a>
+        </Button>
+      </aside>
+    </div>
+  )
+}
+
+function KaderZeile({ k }: { k: TippKaderZeile }) {
+  const speichern = useTippSpielerSpeichern()
+  const toast = useToast()
+  const [hinweis, setHinweis] = useState(k.hinweis ?? '')
+  const sichern = async (teil: Partial<{ zweitposition: string | null; nichtVerfuegbar: boolean; hinweis: string | null }>) => {
+    try {
+      await speichern.mutateAsync({
+        spieler: k.id,
+        zweitposition: teil.zweitposition !== undefined ? teil.zweitposition : (k.zweitposition ?? null),
+        nichtVerfuegbar: teil.nichtVerfuegbar ?? k.nichtVerfuegbar,
+        hinweis: teil.hinweis !== undefined ? teil.hinweis : hinweis || null,
+      })
+      toast.success(`${k.name} gespeichert.`)
+    } catch (e) {
+      toast.error(friendlyError(e))
+    }
+  }
+  return (
+    <li className={cn('grid gap-3 px-4 py-3 sm:grid-cols-[1fr_170px_auto] sm:items-center', k.nichtVerfuegbar && 'bg-destructive/5')}>
+      <div className="flex min-w-0 items-center gap-3">
+        <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-secondary font-display">
+          {k.cutoutUrl || k.fotoUrl ? <img src={k.cutoutUrl ?? k.fotoUrl} alt="" className="h-full w-full object-cover object-top" /> : k.nummer ?? '–'}
+        </span>
+        <div className="min-w-0">
+          <p className={cn('truncate font-medium', k.nichtVerfuegbar && 'text-muted-foreground line-through')}>
+            {k.name} {k.nummer != null && <span className="text-xs text-muted-foreground">#{k.nummer}</span>}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {POS_NAME[k.position]}
+            {k.zweitposition ? ` · auch ${POS_NAME[k.zweitposition]}` : ''}
+          </p>
+        </div>
+      </div>
+      <Label className="sr-only" htmlFor={`zw-${k.id}`}>
+        Zweitposition {k.name}
+      </Label>
+      <Select id={`zw-${k.id}`} value={k.zweitposition ?? ''} onChange={(e) => void sichern({ zweitposition: e.target.value || null })} disabled={speichern.isPending}>
+        <option value="">Keine Zweitposition</option>
+        {(['TW', 'ABW', 'MIT', 'ANG'] as const)
+          .filter((p) => p !== k.position)
+          .map((p) => (
+            <option key={p} value={p}>
+              auch {POS_NAME[p]}
+            </option>
+          ))}
+      </Select>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button size="sm" variant={k.nichtVerfuegbar ? 'default' : 'outline'} onClick={() => void sichern({ nichtVerfuegbar: !k.nichtVerfuegbar })} disabled={speichern.isPending}>
+          {k.nichtVerfuegbar ? 'Nicht verfügbar ✓' : 'Verfügbar'}
+        </Button>
+        {k.nichtVerfuegbar && (
+          <Input
+            className="h-9 w-48"
+            placeholder="Hinweis, z. B. Bänderriss"
+            maxLength={60}
+            value={hinweis}
+            onChange={(e) => setHinweis(e.target.value)}
+            onBlur={() => hinweis !== (k.hinweis ?? '') && void sichern({ hinweis: hinweis || null })}
+          />
+        )}
+      </div>
+    </li>
   )
 }
