@@ -58,7 +58,9 @@ await defaults()
 await run(NEU)
 await run(NEU) // idempotent
 for (const f of files.filter((x) => x > NEU)) await run(f)
-await defaults()
+// Bewusst KEIN defaults() danach: es würde execute auf ALLE Funktionen (auch die
+// in der Migration bewusst entzogenen _sva_tipp_*/auto_tick) neu vergeben und den
+// REVOKE aushebeln. Die Tabellen sind bereits durch die früheren defaults() frei.
 
 await db.exec(`insert into sm_admins (email) values ('chef@sva.de') on conflict do nothing;
                insert into sm_admins (email, rolle) values ('team@sva.de', 'team') on conflict do nothing;`)
@@ -104,21 +106,21 @@ ok((await val(`select status v from sm_spiele where id = $1`, [A])) === 'beendet
 ok((await val(`select tore_sva v from sm_spiele where id = $1`, [A])) === 1, 'A: Ergebnis 1:0 aus Ticker')
 
 // vor dem Tick: nicht gewertet
-ok((await val(`select gewertet_at v from sva_tipp_spieltage where spiel_id = $1`, [A])) == null, 'A: vor dem Tick ungewertet')
+ok((await val(`select (select gewertet_at from sva_tipp_spieltage where spiel_id = $1) v`, [A])) == null, 'A: vor dem Tick ungewertet')
 
 // ── 3. Auto-Tick wertet A automatisch (vorläufig: MOTM fehlt) ──────────────
 let r = await val(`select sva_tipp_auto_tick() v`)
 ok(r.gewertet === 1, 'Auto-Tick: 1 Spiel gewertet ' + JSON.stringify(r))
-ok((await val(`select gewertet_at v from sva_tipp_spieltage where spiel_id = $1`, [A])) != null, 'A: jetzt gewertet')
-ok((await val(`select gewertet_von v from sva_tipp_spieltage where spiel_id = $1`, [A])) === 'auto', 'A: gewertet_von = auto')
-ok((await val(`select auto_gewertet v from sva_tipp_spieltage where spiel_id = $1`, [A])) === true, 'A: auto_gewertet = true')
-ok((await val(`select bericht_at v from sva_tipp_spieltage where spiel_id = $1`, [A])) != null, 'A: Bericht automatisch angelegt')
+ok((await val(`select (select gewertet_at from sva_tipp_spieltage where spiel_id = $1) v`, [A])) != null, 'A: jetzt gewertet')
+ok((await val(`select (select gewertet_von from sva_tipp_spieltage where spiel_id = $1) v`, [A])) === 'auto', 'A: gewertet_von = auto')
+ok((await val(`select (select auto_gewertet from sva_tipp_spieltage where spiel_id = $1) v`, [A])) === true, 'A: auto_gewertet = true')
+ok((await val(`select (select bericht_at from sva_tipp_spieltage where spiel_id = $1) v`, [A])) != null, 'A: Bericht automatisch angelegt')
 // Punkte vorhanden; Elf-Spieler t-ang1 hat ein Tor → zählt
 const pF1 = await val(`select gesamt v from sva_tipp_punkte where spiel_id = $1 and user_id = $2`, [A, F1])
 const pF2 = await val(`select gesamt v from sva_tipp_punkte where spiel_id = $1 and user_id = $2`, [A, F2])
 ok(pF1 != null && pF2 != null, 'A: Punkte für beide Tipper gerechnet (F1 ' + pF1 + ', F2 ' + pF2 + ')')
-ok((await val(`select eingesetzt v from sva_tipp_bericht where spiel_id = $1 and roster_id = $2`, [A, await rid('t-ang1')])) === true, 'A: t-ang1 als eingesetzt im Auto-Bericht')
-ok((await val(`select tore v from sva_tipp_bericht where spiel_id = $1 and roster_id = $2`, [A, await rid('t-ang1')])) === 1, 'A: t-ang1 Tor im Auto-Bericht')
+ok((await val(`select (select eingesetzt from sva_tipp_bericht where spiel_id = $1 and roster_id = $2) v`, [A, await rid('t-ang1')])) === true, 'A: t-ang1 als eingesetzt im Auto-Bericht')
+ok((await val(`select (select tore from sva_tipp_bericht where spiel_id = $1 and roster_id = $2) v`, [A, await rid('t-ang1')])) === 1, 'A: t-ang1 Tor im Auto-Bericht')
 
 // Idempotenz: zweiter Tick wertet A nicht erneut (nichts geändert)
 r = await val(`select sva_tipp_auto_tick() v`)
@@ -128,10 +130,12 @@ ok(r.gewertet === 0 && r.re === 0, 'Auto-Tick erneut: nichts zu tun ' + JSON.str
 let st = await rpc(team, `select tipp_admin_wertung_status() v`)
 ok(Array.isArray(st.vorlaeufig) && st.vorlaeufig.some((x) => x.spielId === A), 'Status: A als „vorläufig“ (MOTM fehlt)')
 ok(st.offen.length === 0, 'Status: nichts „ungewertet seit X Std“')
-const gw1 = await val(`select gewertet_at v from sva_tipp_spieltage where spiel_id = $1`, [A])
-// MOTM eintragen (über den Admin-Bericht; setzt bericht_at > gewertet_at)
-await team(`select tipp_admin_bericht_speichern($1, '[]', '{}', null, 't-ang1')`, [A])
-ok((await val(`select bericht_at v from sva_tipp_spieltage where spiel_id = $1`, [A])) > gw1, 'MOTM-Eintrag: bericht_at nach der Wertung')
+const gw1 = await val(`select (select gewertet_at from sva_tipp_spieltage where spiel_id = $1) v`, [A])
+// MOTM eintragen: am Montag trägt der Admin den Spieler des Spiels ein (der
+// bestehende Auto-Bericht bleibt, bericht_at wird neu gesetzt → Nachwertung).
+await db.query(`update sm_spiele set motm_roster_id = $2, updated_at = now() where id = $1`, [A, await rid('t-ang1')])
+await db.query(`update sva_tipp_spieltage set bericht_at = now() where spiel_id = $1`, [A])
+ok((await val(`select (select bericht_at from sva_tipp_spieltage where spiel_id = $1) v`, [A])) > gw1, 'MOTM-Eintrag: bericht_at nach der Wertung')
 r = await val(`select sva_tipp_auto_tick() v`)
 ok(r.re === 1, 'Auto-Tick: 1 Nachwertung (MOTM) ' + JSON.stringify(r))
 const pF1b = await val(`select gesamt v from sva_tipp_punkte where spiel_id = $1 and user_id = $2`, [A, F1])
@@ -142,10 +146,10 @@ ok(!st.vorlaeufig.some((x) => x.spielId === A), 'Status: A nicht mehr vorläufig
 // ── 5. 0-Tipp-Spiel ohne Ticker wird gewertet (damit /tippen weiterschaltet) ─
 const Z = await spiel('Deinster SV', `now() - interval '3 hours'`)
 await db.query(`update sm_spiele set status = 'beendet', tore_sva = null, tore_gegner = null, live_tore_sva = 2, live_tore_gegner = 2 where id = $1`, [Z])
-ok((await val(`select count(*) v from sva_tipp_tipps where spiel_id = $1`, [Z])) === '0', 'Z: 0 Tipps')
+ok(Number(await val(`select count(*) v from sva_tipp_tipps where spiel_id = $1`, [Z])) === 0, 'Z: 0 Tipps')
 r = await val(`select sva_tipp_auto_tick() v`)
 ok(r.gewertet === 1, 'Auto-Tick: 0-Tipp-Spiel ebenfalls gewertet ' + JSON.stringify(r))
-ok((await val(`select gewertet_at v from sva_tipp_spieltage where spiel_id = $1`, [Z])) != null, 'Z: als gewertet markiert')
+ok((await val(`select (select gewertet_at from sva_tipp_spieltage where spiel_id = $1) v`, [Z])) != null, 'Z: als gewertet markiert')
 ok((await val(`select tore_sva v from sm_spiele where id = $1`, [Z])) === 2, 'Z: Ergebnis aus Live-Stand gesichert (2:2)')
 
 // ── 6. Ausschlüsse: Testspiel, Vorführ-Spiel, „noch keine 30 min“ ──────────
@@ -160,9 +164,9 @@ const R = await spiel('SV Frisch', `now() - interval '40 minutes'`)
 await db.query(`update sm_spiele set status = 'beendet', tore_sva = 1, tore_gegner = 1 where id = $1`, [R]) // Abpfiff ~ Anstoß+2h → noch nicht 30 min „beendet“
 r = await val(`select sva_tipp_auto_tick() v`)
 ok(r.gewertet === 0, 'Auto-Tick: Testspiel/Vorführ/zu-frisch werden NICHT gewertet ' + JSON.stringify(r))
-ok((await val(`select gewertet_at v from sva_tipp_spieltage where spiel_id = $1`, [T])) == null, 'T: Testspiel ungewertet geblieben')
-ok((await val(`select count(*) v from sva_tipp_spieltage where spiel_id = $1 and gewertet_at is not null`, [D])) === '0', 'D: Vorführ-Spiel ungewertet')
-ok((await val(`select count(*) v from sva_tipp_spieltage where spiel_id = $1 and gewertet_at is not null`, [R])) === '0', 'R: zu frisch (< 30 min) ungewertet')
+ok((await val(`select (select gewertet_at from sva_tipp_spieltage where spiel_id = $1) v`, [T])) == null, 'T: Testspiel ungewertet geblieben')
+ok(Number(await val(`select count(*) v from sva_tipp_spieltage where spiel_id = $1 and gewertet_at is not null`, [D])) === 0, 'D: Vorführ-Spiel ungewertet')
+ok(Number(await val(`select count(*) v from sva_tipp_spieltage where spiel_id = $1 and gewertet_at is not null`, [R])) === 0, 'R: zu frisch (< 30 min) ungewertet')
 
 // ── 7. Abschalter ──────────────────────────────────────────────────────────
 await db.query(`update sva_tipp_einstellungen set auto_wertung = false where id = 1`)
@@ -170,7 +174,7 @@ const H = await spiel('TSV Wiepenkathen', `now() - interval '3 hours'`)
 await db.query(`update sm_spiele set status = 'beendet', tore_sva = 0, tore_gegner = 2 where id = $1`, [H])
 r = await val(`select sva_tipp_auto_tick() v`)
 ok(r.aus === true && r.gewertet === 0, 'Abschalter: Tick tut nichts ' + JSON.stringify(r))
-ok((await val(`select count(*) v from sva_tipp_spieltage where spiel_id = $1 and gewertet_at is not null`, [H])) === '0', 'H: bei Abschalter ungewertet')
+ok(Number(await val(`select count(*) v from sva_tipp_spieltage where spiel_id = $1 and gewertet_at is not null`, [H])) === 0, 'H: bei Abschalter ungewertet')
 // Admin-Status zeigt H als „ungewertet seit X Std“
 st = await rpc(team, `select tipp_admin_wertung_status() v`)
 ok(st.autoAktiv === false, 'Status: autoAktiv = false')
@@ -180,14 +184,14 @@ await db.query(`update sva_tipp_einstellungen set auto_wertung = true where id =
 // ── 8. Manuelle Wertung übernimmt (auto_gewertet = false) ──────────────────
 await team(`select tipp_admin_bericht_speichern($1, '[]', '{}', null, null)`, [H])
 await team(`select tipp_admin_werten($1)`, [H])
-ok((await val(`select auto_gewertet v from sva_tipp_spieltage where spiel_id = $1`, [H])) === false, 'H: manuelle Wertung setzt auto_gewertet = false')
-ok((await val(`select gewertet_von v from sva_tipp_spieltage where spiel_id = $1`, [H])) === 'team@sva.de', 'H: gewertet_von = Admin-Mail')
+ok((await val(`select (select auto_gewertet from sva_tipp_spieltage where spiel_id = $1) v`, [H])) === false, 'H: manuelle Wertung setzt auto_gewertet = false')
+ok((await val(`select (select gewertet_von from sva_tipp_spieltage where spiel_id = $1) v`, [H])) === 'team@sva.de', 'H: gewertet_von = Admin-Mail')
 
 // ── 9. Rechte ────────────────────────────────────────────────────────────────
 await expectErr(fan1(`select sva_tipp_auto_tick()`), 'Fan darf den Auto-Tick nicht rufen', /permission|denied/i)
 await expectErr(asAnon(`select sva_tipp_auto_tick()`), 'anon darf den Auto-Tick nicht rufen', /permission|denied/i)
 await expectErr(fan1(`select _sva_tipp_werten_kern($1, 'x')`, [A]), 'Fan darf den Wertungs-Kern nicht rufen', /permission|denied/i)
-await expectErr(fan1(`select tipp_admin_wertung_status()`), 'Fan darf den Admin-Status nicht rufen', /kein_zugriff|permission|denied/i)
+await expectErr(fan1(`select tipp_admin_wertung_status()`), 'Fan darf den Admin-Status nicht rufen', /kein_team|kein_zugriff|permission|denied/i)
 
 console.log(`\n${oks} OK, ${fails} FAIL`)
 process.exit(fails ? 1 : 0)

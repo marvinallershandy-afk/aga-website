@@ -98,8 +98,24 @@ export interface TippEinstellungen {
   preise: string | null
   story_code: string | null
   elf_frei: boolean
+  auto_wertung: boolean
   winter_von: string
   winter_bis: string
+}
+
+// v25-B: Status fürs Admin-Mahnbanner (ungewertet seit X Std / vorläufig)
+export interface WertungStatusSpiel {
+  spielId: string
+  gegner: string
+  heim: boolean
+  spieltag: number | null
+  anstoss: string
+  stunden?: number
+}
+export interface WertungStatus {
+  autoAktiv: boolean
+  offen: WertungStatusSpiel[]
+  vorlaeufig: WertungStatusSpiel[]
 }
 
 async function rpc<T>(fn: string, args?: Record<string, unknown>): Promise<T> {
@@ -114,10 +130,22 @@ export const tippKeys = {
   story: ['tipp_admin_story'] as const,
   teilnehmer: (q: string) => ['tipp_admin_teilnehmer', q] as const,
   einstellungen: ['sva_tipp_einstellungen'] as const,
+  wertungStatus: ['tipp_admin_wertung_status'] as const,
 }
 
 export function useTippSpieltage() {
   return useQuery({ queryKey: tippKeys.spieltage, queryFn: () => rpc<AdminSpieltag[]>('tipp_admin_spieltage'), retry: false })
+}
+
+// v25-B: Mahnbanner-Status (ungewertet seit X Std / vorläufig — MOTM fehlt).
+// Alle 5 min frisch; still bei fehlender Berechtigung/Migration.
+export function useWertungStatus() {
+  return useQuery({
+    queryKey: tippKeys.wertungStatus,
+    queryFn: () => rpc<WertungStatus>('tipp_admin_wertung_status'),
+    retry: false,
+    refetchInterval: 5 * 60_000,
+  })
 }
 
 export function useBericht(spiel: string | null) {
