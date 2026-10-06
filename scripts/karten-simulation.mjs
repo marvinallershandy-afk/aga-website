@@ -7,6 +7,14 @@
 //   Chance seines Typs auf die gerade ziehbare limitierte Wochenkarte (MOTM,
 //   Derby) und ersetzt dann die letzte Karte (nur, wenn der Fan sie noch nicht hat).
 //
+// v26 (Ziele/Kult/Barometer): supabase/migrations/20261021100000_sva_album_v26_ziele.sql,
+//   20261021110000_sva_album_v26_kult.sql, 20261021120000_sva_album_v26_barometer.sql.
+//   · Zielkatalog 69 (album_admin_ziele_standard): neue Ziele geben MEIST Lose (Hebel 1),
+//     Album-Karten nur im Endgame (checkin_8, glanz_24, dauerkarte_5, Tipp-/Geheim-Ziele).
+//   · Kult-Slot 25 % im Spieltags-Pack (nur fehlende, album-neutral) + Kult-Check-in-Ziele.
+//   · Fan-Barometer: BAROMETER_QUOTE (§7-Annahme 50 %) der Heimspiele erreicht → Event-Pack.
+//   · Kult/Lose/Barometer-Lose zählen NIE fürs Album-% (Dramaturgie „Stammfan ~April").
+//
 // MUSS ZUR MIGRATION PASSEN: supabase/migrations/20261012110000_sva_karten.sql
 // und (v22, Shiny) supabase/migrations/20261014110000_sva_album_v22.sql:
 //   · jede gezogene Spieler-/Trainer-Karte (nicht limitiert) ist mit
@@ -34,6 +42,7 @@ export const EINSTELLUNGEN = {
   karten_pro_pack: 3,        // Check-in-Pack
   karten_starter: 5, starter_min_silber: true,
   karten_heimsieg: 1, karten_tipp: 1, karten_story: 1, karten_freund: 1, karten_kapitel: 1,
+  kult_chance_prozent: 25,   // v26-K: Kult-Slot im Spieltags-Pack (nur fehlende, album-neutral)
   doppelte_bremse: 5,        // % (v20: 25; v24 gesenkt — größere Packs liefern genug Neue)
   smart_pack: true,
   smart_ab_karten: 2,        // v24: Smart-Pack nur in Packs ab 2 Karten (Story/Advent/Freund = reine Zufallskarte)
@@ -124,6 +133,10 @@ const PERSONAS = [
   { name: 'Stammfan', ziel: 'komplett ~April/Mai (Tausch)', heim: 0.75, tipp: 0.4, story: 0.15, advent: 0.15, freund: 0.3, tausch: 0.35, wunsch: true },
 ]
 const P_HEIMSIEG = 0.6
+// v26-B: Anteil der Heimspiele, die das Fan-Barometer erreichen (Annahme 50 %, §7)
+const BAROMETER_QUOTE = process.env.BARO != null ? Number(process.env.BARO) : 0.5
+// v26-S: ob die (Endgame-)Ziele überhaupt Album-Karten geben (Test: 0 = nur Lose/Kult)
+const V26KARTE = process.env.V26KARTE == null || process.env.V26KARTE === '1'
 const P_TIPP_EXAKT = 0.1      // Ziel „tipp_exakt" (extern, 1 Karte mind. Silber)
 const P_KAPITAEN_TRIFFT = 0.05 // Ziel „tipp_kapitaen_trifft" (extern, 1 Karte)
 
@@ -208,14 +221,14 @@ function lauf(persona) {
   const alleP = new Set(album.map((k) => k.platz))
   const kapitelP = {}
   for (const k of album) (kapitelP[k.kapitel] ??= new Set()).add(k.platz)
-  const fan = { besitz: new Map(), plaetze: new Set(), karten: 0, lose: 0, komplettT: null, ziele: new Set(), tauschT: -99, wochenTausche: [], personKarten: 0, shiny: 0, shinyPersonen: new Set() }
+  const fan = { besitz: new Map(), plaetze: new Set(), karten: 0, lose: 0, komplettT: null, ziele: new Set(), tauschT: -99, wochenTausche: [], personKarten: 0, shiny: 0, shinyPersonen: new Set(), kult: new Set(), checkins: 0, exakte: 0 }
   // gezogen = aus einem Pack (nur dort entscheidet der Shiny-Trigger); Tausch zählt nicht
   const zuschreiben = (pack, t, gezogen = true) => {
     for (const k of pack) {
       fan.besitz.set(k.id, (fan.besitz.get(k.id) || 0) + 1); if (k.album) fan.plaetze.add(k.platz); fan.karten++
       if (gezogen && (k.typ === 'spieler' || k.typ === 'trainer') && !k.limitiert) {
         fan.personKarten++
-        if (E.shiny_chance > 0 && rnd() * E.shiny_chance < 1) { fan.shiny++; fan.shinyPersonen.add(k.platz) }
+        if (E.shiny_chance > 0 && rnd() * E.shiny_chance < 1) { fan.shiny++; fan.shinyPersonen.add(k.platz); if (!fan.ziele.has('shiny_fund')) { fan.ziele.add('shiny_fund'); fan.lose += 3 } }
       }
     }
     pruefeSammelziele(t)
@@ -231,15 +244,44 @@ function lauf(persona) {
     rueckennummern: new Set(['r0', 'r2', 'r3', 'r4', 'r11', 'r12', 'r13', 'r21', 'r22']), // Nummern 1–11 (9 Spieler)
     meister_2026: new Set(album.filter((k) => k.serie === 'Meister 2026').map((k) => k.platz)),
     die_kurve: kapitelP.fan, partner_set: kapitelP.partner,
+    // v26: neue Familien-/Sets (je 1 Karte; die_achse mind. Silber) — Mitglieder approximativ
+    neuber: new Set(['r5', 'r6']), drei_justins: new Set(['r2', 'r11', 'r13']),
+    die_neuen: new Set(['r7', 'r12', 'r14', 'r21']), die_achse: new Set(['s0', 's1', 'r18']),
+    hohe_nummern: new Set(['r4', 'r8', 'r9', 'r22', 'r23', 'r19']),
   }
-  const setMin = { meister_2026: 'spezial', familie: 'gold' }
+  const setMin = { meister_2026: 'spezial', familie: 'gold', die_achse: 'silber' }
   const setN = { familie: 3 }
+  // v26-S (Ökonomie-Tuning, Hebel 1): die NEUEN Sets geben LOSE statt Album-Karten,
+  // damit der Zielkatalog „kaum zusätzliche Album-Karten" ausschüttet (Band ~April).
+  const setLose = new Set(['neuber', 'drei_justins', 'die_neuen', 'die_achse', 'hohe_nummern'])
   function pruefeSammelziele(t) {
-    for (const [key, ps] of Object.entries(sets)) if (ps.size && [...ps].every((p) => fan.plaetze.has(p))) ziel(key, t, { n: setN[key] || 1, min: setMin[key] })
+    for (const [key, ps] of Object.entries(sets)) if (ps.size && [...ps].every((p) => fan.plaetze.has(p))) ziel(key, t, setLose.has(key) ? { lose: 1 } : { n: setN[key] || 1, min: setMin[key] })
     for (const [kap, ps] of Object.entries(kapitelP)) if ([...ps].every((p) => fan.plaetze.has(p))) ziel('kapitel_' + kap, t, { n: PACK_TYPEN.ziel.karten })
     const pct = (100 * fan.plaetze.size) / alleP.size
     for (const [m, lose] of [[10, 1], [25, 1], [50, 2], [75, 3], [100, 5]]) if (pct >= m) ziel('meilenstein_' + m, t, { n: 1, lose })
     if (fan.plaetze.size === alleP.size && fan.komplettT === null) { fan.komplettT = t; fan.lose += E.lose_komplett }
+    v26Bestand(t)
+  }
+  // v26: Kult-Pool (9 aktive Kabinen-Kult, album-neutral). Pejas 4er-Set bleibt
+  // inaktiv (Gate G2) → hier nicht ziehbar; Kult zählt nie fürs Album.
+  const KULT_N = 9
+  const kultZiehen = () => { if (fan.kult.size >= KULT_N) return; const f = [...Array(KULT_N).keys()].filter((i) => !fan.kult.has(i)); fan.kult.add(pick(f)); fan.karten++ }
+  // v26: Bestand-/Sammel-Ziele — meist Lose, wenige Karten (bewusst spät/album-neutral)
+  function v26Bestand(t) {
+    const have = (sel) => [...fan.besitz.keys()].some((id) => K[id].selt === sel && !K[id].limitiert)
+    if (fan.karten >= 25) ziel('karten_25', t, { lose: 1 })
+    if (fan.karten >= 50) ziel('karten_50', t, { lose: 2 })
+    if (have('silber')) ziel('erste_silber', t, { lose: 1 })
+    if (have('gold')) ziel('erste_gold', t, { lose: 1 })
+    if (have('spezial')) ziel('erste_spezial', t, { lose: 2 })
+    const glanz = [...fan.besitz.keys()].filter((id) => K[id].variante).length
+    if (glanz >= 1) ziel('erster_glanz', t, { lose: 1 })
+    if (glanz >= 5) ziel('glanz_5', t, { lose: 1 })
+    if (glanz >= 24) ziel('glanz_24', t, V26KARTE ? { n: 1, min: 'spezial', lose: 3 } : { lose: 3 })
+    const limit = [...fan.besitz.keys()].filter((id) => K[id].limitiert).length
+    if (limit >= 5) ziel('bonus_seite_5', t, { lose: 1 })
+    const dop = [...fan.besitz.values()].reduce((a, n) => a + Math.max(0, n - 1), 0)
+    if (dop >= 10) ziel('doppelte_10', t, { lose: 1 })
   }
   // Tausch + Wunschkarte (Stammfan)
   const doppelte = () => [...fan.besitz].filter(([id, n]) => n >= 2 && !K[id].limitiert)
@@ -254,6 +296,8 @@ function lauf(persona) {
     zuschreiben([pick(f)], t, false)
     fan.wochenTausche.push(t)
     ziel('erster_tausch', t, { n: 1 })
+    fan.tauschZahl = (fan.tauschZahl || 0) + 1
+    if (fan.tauschZahl >= 3) ziel('tausch_3', t, { lose: 1 })
   }
   function wuenschen(t) {
     if (!persona.wunsch) return
@@ -264,6 +308,7 @@ function lauf(persona) {
       let rest = E.wunsch_kosten
       for (const [id, n] of doppelte()) { const ab = Math.min(rest, n - 1); fan.besitz.set(id, n - ab); rest -= ab; if (!rest) break }
       zuschreiben([pick(f)], t)
+      ziel('wunsch_erfuellt', t, { lose: 1 })
     }
   }
   // Limitierte Karten
@@ -293,11 +338,19 @@ function lauf(persona) {
         getippt = true
         imFenster.forEach((m) => (m.tipp = true))
         pack(t, { typ: 'tipp' })
+        // v26-Woche: Tipp der Woche (1 Los) + Volles Programm (Tipp + Elf, 2 Lose)
+        fan.lose += 1; fan.ziele.add('woche_tipp')
+        if (rnd() < 0.5) { fan.lose += 2; fan.ziele.add('woche_voll') }
         const w = Math.floor((t + 1) / 7); tippWochen.add(w)
         let n = 0; while (tippWochen.has(w - n)) n++
         if (n >= 4) ziel('tipp_serie', t, { n: 1 })
-        if (rnd() < P_TIPP_EXAKT) pack(t, { n: 1, minSelt: 'silber', ziel: true, typ: 'ziel' })
+        if (rnd() < P_TIPP_EXAKT) { pack(t, { n: 1, minSelt: 'silber', ziel: true, typ: 'ziel' }); fan.exakte++; if (fan.exakte >= 3) ziel('tipp_hellseher', t, V26KARTE ? { n: 1, min: 'gold' } : { lose: 1 }) }
         if (rnd() < P_KAPITAEN_TRIFFT) pack(t, { n: 1, ziel: true, typ: 'ziel' })
+        // v26-Tipp-Ziele (Lose): Trainerfuchs (1. Elf), Der Riecher, Dreimal richtig
+        ziel('elf_aufgestellt', t, { lose: 1 })
+        if (rnd() < 0.25) ziel('tipp_erster_torschuetze', t, { lose: 1 })
+        if (rnd() < 0.15) ziel('tipp_bonus_perfekt', t, { lose: 1 })
+        if (!fan.ziele.has('erster_tipp')) ziel('erster_tipp', t, { lose: 1 })
       }
       if (s.derby) add({ typ: 'moment', selt: 'spezial', limitiert: true, nurSpiel: s.t, kapitel: 'moment' })
       if (s.heim) {
@@ -307,24 +360,38 @@ function lauf(persona) {
           drin = true
           imFenster.forEach((m) => (m.checkin = true))
           serie++
+          fan.checkins++
           fan.lose += E.lose_checkin
           // Derby: Check-in-Pack ist ein Event-Pack (Größe/Garantie wie Spieltag, Wochen-Slot des Events)
           if (s.derby && PACK_TYPEN.event.karten > 0) pack(t, { typ: 'event', n: Math.max(PACK_TYPEN.spieltag.karten, PACK_TYPEN.event.karten), minSelt: PACK_TYPEN.spieltag.min, spiel: s.t })
           else pack(t, { typ: 'spieltag', spiel: s.t })
-          if (rnd() < persona.freund) { pack(t, { n: E.karten_freund, spiel: s.t }); ziel('freund_geworben', t, { n: 1 }) }
+          // v26-K: Kult-Slot 25 % (nur fehlende, album-neutral)
+          if (rnd() < (E.kult_chance_prozent ?? 25) / 100) kultZiehen()
+          // v26-K: Check-in-Ziele — Kult (album-neutral) + spät 1 Gold-Karte
+          if (!fan.ziele.has('erster_checkin')) { fan.ziele.add('erster_checkin'); kultZiehen() }
+          if (fan.checkins >= 3 && !fan.ziele.has('checkin_3')) { fan.ziele.add('checkin_3'); kultZiehen(); fan.lose += 1 }
+          if (fan.checkins >= 5 && !fan.ziele.has('checkin_5')) { fan.ziele.add('checkin_5'); kultZiehen(); fan.lose += 2 }
+          if (fan.checkins >= 8) ziel('checkin_8', t, V26KARTE ? { n: 1, min: 'gold', lose: 3 } : { lose: 3 })
+          // v26-B: Fan-Barometer — BAROMETER_QUOTE der Heimspiele erreichen → Event-Pack für Anwesende
+          if (PACK_TYPEN.event.karten > 0 && rnd() < BAROMETER_QUOTE) { pack(t, { typ: 'event', spiel: s.t }); fan.lose += 1; fan.ziele.add('barometer_held') }
+          if (rnd() < persona.freund) { pack(t, { n: E.karten_freund, spiel: s.t }); ziel('freund_geworben', t, { n: 1 }); fan.freundZahl = (fan.freundZahl || 0) + 1; if (fan.freundZahl >= 3) ziel('freunde_3', t, { lose: 1 }) }
           if (serie >= 3) ziel('dauerkarte', t, { n: 1, min: 'gold' })
+          if (serie >= 5) ziel("dauerkarte_5", t, V26KARTE ? { n: 1, min: "gold", lose: 2 } : { lose: 2 })
         } else serie = 0
         // v24: Sieg-Pack für alle, die eingecheckt ODER getippt haben (v20: nur Check-in)
         if (sieg && (drin || (getippt && !ALT))) {
           imFenster.forEach((m) => (m.sieg = true))
           pack(t, { typ: 'sieg', spiel: s.t })
         }
+        // v26: geheimes Ziel „Frühaufsteher" (früher Check-in) + „Wochenwahl-Sammler" (3 MOTM)
+        if (drin && rnd() < 0.3) ziel('fruehaufsteher', t, V26KARTE ? { n: 1, min: 'silber' } : { lose: 1 })
+        if (fan.checkins >= 3) ziel('motm_3', t, { lose: 2 })
       }
       // „Spieler des Spiels": limitierte Spezialkarte, ziehbar Mo–So der Folgewoche
       const k = add({ typ: 'spieler', selt: 'spezial', limitiert: true, von: t + 1, bis: t + 8, kapitel: 'MIT' })
       motm.push({ k, tipp: false, checkin: false, heim: false, sieg: false })
     } else if (e.art === 'story') {
-      if (rnd() < persona.story) pack(t, { n: E.karten_story })
+      if (rnd() < persona.story) { pack(t, { n: E.karten_story }); ziel('erster_code', t, { lose: 1 }); if ((t % 28 < 7) && fan.ziele.has('woche_tipp')) { fan.lose += 2; fan.ziele.add('monat_aktiv') } }
     } else if (e.art === 'event') {
       if (PACK_TYPEN.event.karten > 0 && rnd() < persona.story) pack(t, { typ: 'event' })
     } else if (e.art === 'advent') {
@@ -335,7 +402,7 @@ function lauf(persona) {
   }
   const motmStat = motm.map((m) => ({ tipp: m.tipp, checkin: m.checkin, heim: m.heim, sieg: m.sieg, hat: fan.besitz.has(m.k.id) }))
   const dop = [...fan.besitz.values()].reduce((a, n) => a + n - 1, 0)
-  return { karten: fan.karten, pct: (100 * fan.plaetze.size) / alleP.size, komplettT: fan.komplettT, dop, lose: fan.lose, plaetze: alleP.size, personKarten: fan.personKarten, shiny: fan.shiny, motmStat }
+  return { karten: fan.karten, pct: (100 * fan.plaetze.size) / alleP.size, komplettT: fan.komplettT, dop, lose: fan.lose, plaetze: alleP.size, personKarten: fan.personKarten, shiny: fan.shiny, zieleN: fan.ziele.size, kult: fan.kult.size, motmStat }
 }
 
 // ── Auswertung ────────────────────────────────────────────────────────────────
@@ -345,8 +412,10 @@ const zeilen = []
 const shinyJeFan = []
 const motmAlle = []
 let plaetze = 0
+const alleR = []
 for (const p of PERSONAS) {
   const r = Array.from({ length: LAEUFE }, () => lauf(p))
+  alleR.push(r)
   plaetze = r[0].plaetze
   const pct = r.map((x) => x.pct).sort((a, b) => a - b)
   const fertig = r.filter((x) => x.komplettT !== null)
@@ -360,6 +429,8 @@ for (const p of PERSONAS) {
     Median: q(pct, 0.5).toFixed(1), P10: q(pct, 0.1).toFixed(1), P90: q(pct, 0.9).toFixed(1),
     'komplett %': ((100 * fertig.length) / LAEUFE).toFixed(1),
     'Ø fertig': mittelT === null ? '–' : monat(Math.round(mittelT)),
+    'Ø Ziele': (r.reduce((a, x) => a + x.zieleN, 0) / LAEUFE).toFixed(1),
+    'Ø Kult': (r.reduce((a, x) => a + x.kult, 0) / LAEUFE).toFixed(1),
     'Ø Doppelte': (r.reduce((a, x) => a + x.dop, 0) / LAEUFE).toFixed(1),
     'Ø Lose': (r.reduce((a, x) => a + x.lose, 0) / LAEUFE).toFixed(1),
     'Ø Personenkarten': (r.reduce((a, x) => a + x.personKarten, 0) / LAEUFE).toFixed(1),
@@ -375,8 +446,25 @@ if (process.env.KURZ) {
     `| MOTM aktiv ${m((x) => x.tipp && x.checkin)}% nurTipp ${m((x) => x.tipp && !x.checkin)}%`)
   process.exit(0)
 }
-console.log(`Sammelkarten-Simulation v24${ALT ? ' (ALT=1: v20-Ökonomie zum Vergleich)' : ''} · ${LAEUFE} Läufe je Persona · ${plaetze} Album-Plätze (${PARTNER} Partner) · Restsaison 17 Spieltage / 8 Heimspiele\n`)
+console.log(`Sammelkarten-Simulation v26${ALT ? ' (ALT=1: v20-Ökonomie zum Vergleich)' : ''} · ${LAEUFE} Läufe je Persona · ${plaetze} Album-Plätze (${PARTNER} Partner) · Restsaison 17 Spieltage / 8 Heimspiele · Barometer-Quote ${BAROMETER_QUOTE}\n`)
 console.table(zeilen)
+
+// ── v26-S: Abnahmeband (§7) ────────────────────────────────────────────────
+const avg = (a, f) => a.reduce((s, x) => s + f(x), 0) / a.length
+const [rG, rF, rS] = alleR
+const sFertig = rS.filter((x) => x.komplettT !== null)
+const sMonat = sFertig.length ? monat(Math.round(avg(sFertig, (x) => x.komplettT))) : '–'
+const band = [
+  { Kriterium: 'Stammfan komplett 80–95 %', Ist: (100 * sFertig.length / rS.length).toFixed(1) + ' %', Soll: '80–95 %', OK: (100 * sFertig.length / rS.length) >= 80 && (100 * sFertig.length / rS.length) <= 95 ? '✓' : '⚠' },
+  { Kriterium: 'Stammfan Ø fertig (nicht vor 15.03.)', Ist: sMonat, Soll: '~April', OK: sMonat >= '2027-04' ? '✓' : '⚠' },
+  { Kriterium: 'Stammfan Ø Kult (von 9 aktiven; Pejas inaktiv G2)', Ist: avg(rS, (x) => x.kult).toFixed(1), Soll: '~4–5', OK: avg(rS, (x) => x.kult) >= 3.5 ? '✓' : '⚠' },
+  { Kriterium: 'Typischer Follower Ø Album 70–85 %', Ist: avg(rF, (x) => x.pct).toFixed(1) + ' %', Soll: '70–85 %', OK: avg(rF, (x) => x.pct) >= 70 && avg(rF, (x) => x.pct) <= 85 ? '✓' : '⚠' },
+  { Kriterium: 'Typischer Follower Ø Ziele ≥ 15', Ist: avg(rF, (x) => x.zieleN).toFixed(1), Soll: '≥ 15', OK: avg(rF, (x) => x.zieleN) >= 15 ? '✓' : '⚠' },
+  { Kriterium: 'Gelegenheits-Follower Ø Album 55–70 %', Ist: avg(rG, (x) => x.pct).toFixed(1) + ' %', Soll: '55–70 %', OK: avg(rG, (x) => x.pct) >= 55 && avg(rG, (x) => x.pct) <= 70 ? '✓' : '⚠' },
+  { Kriterium: 'Gelegenheits-Follower Ø Ziele ≥ 8', Ist: avg(rG, (x) => x.zieleN).toFixed(1), Soll: '≥ 8', OK: avg(rG, (x) => x.zieleN) >= 8 ? '✓' : '⚠' },
+]
+console.log('\nAbnahmeband (v26-S / Gate G6):')
+console.table(band)
 console.log('Standardwerte:', JSON.stringify({ ...EINSTELLUNGEN, partner_seltenheit: PARTNER_SELTENHEIT }))
 console.log('Pack-Typen:', JSON.stringify(PACK_TYPEN))
 

@@ -657,3 +657,55 @@ direkt im Album).
   Chromium (Metal-GPU, Handy): p95 16,9–17,7 ms (60 fps). WebKit headless läuft ohne GPU: p95 22–26 ms, das alte
   Pack auf demselben Stand 21 ms.
 - `node scripts/packs-v24-admin-shots.mjs` — Admin „Pack-Typen“ und „Pack-Kontrolle“ (gemockt, `?preview`).
+
+---
+
+## v26: Ziele 69, Kabinen-Kult, Fan-Barometer, Endgame
+
+**Zielkatalog 69** (`album_admin_ziele_standard()`): 30 Bestand + 38 neu (Z1) + `pejas_kollektion`
+(V26-K). Neue Typen `bestand` (Besitz/Aktivität über `bedingung`), `woche`/`monat` (wiederholbar,
+Perioden-Bezug `woche:IYYY-Www` / `monat:yyyy-mm`), dazu `extern` wie bisher. Kategorien fürs UI:
+start · platz · woche · monat · sammeln · sets · tipp · sozial · geheim.
+**Hotfix §0.4:** `_sva_tipp_werten_kern` vergibt jetzt `tipp_kapitaen_trifft` (vorher `kapitaen_trifft`
+→ nie vergeben). Neue Tipp-Hooks: `elf_aufgestellt`, `tipp_bonus_perfekt`, `tipp_erster_torschuetze`,
+`tipp_hellseher`.
+
+**Belohnungs-Disziplin (Hebel 1, Ökonomie):** Die neuen Ziele geben **meist Lose** — Album-Karten nur
+im Endgame (`checkin_8` Gold, `glanz_24` Spezial, `dauerkarte_5` Gold, `tipp_hellseher` Gold,
+Geheim-Ziele) oder **album-neutral** (Kult, Lose). `glanz_5`, `bonus_seite_5`, die neuen Sets
+(`neuber`, `drei_justins`, `die_neuen`, `die_achse`, `hohe_nummern`), `tausch_3`, `freunde_3` geben
+**Lose** statt Karten, damit der Katalog „kaum zusätzliche Album-Karten" ausschüttet.
+`smart_pack_belohnung = false`.
+
+**Kabinen-Kult:** eigene Serie, immer `limitiert`, zählt **nie** fürs Album, nie Zufalls-Pack.
+Quellen: Kult-Slot im Spieltags-Pack (`kult_chance_prozent`, Standard 25 %, nur **fehlende**, keine
+Doppelten) + Check-in-Ziele (`erster_checkin`/`checkin_3`/`checkin_5`, je 1 Kult). Startbestand per
+`album_admin_kult_standard()`: 9 aktive „Kabinen-Kult"-Karten (Bilder *picture by Nele*) +
+Pejas-Kollektion als 4 **inaktive** Platzhalter (Gate G2: Einverständnis/Namen offen). Monats-Moment-
+Pool (16, inaktiv, limitiert → album-neutral; Admin schaltet monatlich eine frei, Audit I11).
+
+**Fan-Barometer:** Gemeinschaftsziel je Heimspiel (`album_admin_barometer`, Vorschlag Schnitt × 1,15,
+mind. 10). Erreichen alle das Check-in-Ziel, bekommt jede/r Eingecheckte ein **Event-Pack** (v24-Art
+`event`, `quelle = barometer:Spiel`, einmalig) + Ziel `barometer_held`. Anzeige erst ab
+`barometer_min_anzeige` (Standard 5).
+
+**Endgame:** Goldene Seite bei 100 % + öffentliche Wall of Fame (`album_wall_of_fame`), Name per
+Opt-in (`album_wall_optin`), sonst „Fan aus Agathenburg"; Name als Snapshot (überlebt Konto-Löschung).
+
+### Ökonomie-Abnahme (10 000 Läufe, `node scripts/karten-simulation.mjs`)
+
+| Persona | Ø Karten | Ø Album % | komplett % | Ø fertig | Ø Ziele | Ø Kult | Ø Lose |
+|---|---|---|---|---|---|---|---|
+| Gelegenheits-Follower | 45,1 | 60,7 | 0,3 % | Mai | 22,1 | 1,1 | 29,3 |
+| Typischer Follower | 56,9 | 70,9 | 2,4 % | Mai | 27,9 | 1,7 | 36,6 |
+| Stammfan | 113,2 | 99,8 | 97,5 % | **März** | 52,7 | 4,4 | 69,5 |
+
+**Abnahmeband (Gate G6):** Gelegenheits-Follower 55–70 % + ≥ 8 Ziele ✓ (60,7 % / 22) · Typischer
+Follower 70–85 % + ≥ 15 Ziele ✓ (70,9 % / 28) · Stammfan Ø Kult ~4–5 ✓ (4,4).
+**⚠ Offen für Marvin (G6):** Der sehr aktive Stammfan (75 % Heimspiele, Tausch + Wunschkarte) liegt
+mit **97,5 % / März** knapp **über** dem Band (80–95 % / Ø April). Ursache ist das **Fan-Barometer**:
+schon der reine v24-Stand bringt diese Persona auf ~93 %/April, die Barometer-Event-Packs (Annahme
+50 % der Heimspiele erreicht) schieben auf ~97,5 %/März. Hebel 1 (neue Ziele → Lose) ist ausgereizt;
+weiter drehen hieße: Barometer-Belohnung album-neutral/kleiner, Barometer-Quote-Annahme senken, oder
+das Band auf ~90–97 % weiten. **Tuning-Hebel** (BARO=, V26KARTE=, doppelte_bremse) stehen im
+Simulations-Kopf.

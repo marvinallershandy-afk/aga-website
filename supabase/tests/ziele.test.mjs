@@ -131,7 +131,8 @@ ok(mein.abzeichen.includes('TW'), 'Kapitel TW (Pils + T. Ebeling) komplett → A
 const kz = await one(`select e.pack_id from sva_album_ziel_erreicht e where e.ziel_id = $1 and e.fan_user_id = $2`, [Z.kapitel_tw.id, A.id])
 ok(!!kz?.pack_id && (await count(`select count(*)::int n from sva_album_packs where fan_user_id = $1 and art = 'kapitel'`, [A.id])) === 0, 'Kapitel-Bonus läuft über das Ziel (art ziel), kein doppeltes Kapitel-Pack')
 const B = await neuerFan('Ben', 'B')
-for (const s of ['p-huettry', 'p-sladek', 'p-kalwa']) await setze(B.id, await karte(s))
+// 3 Spieler ohne gemeinsames Set (v26: drei_justins würde sonst 1 Los geben) + 1 fürs Meilenstein-10
+for (const s of ['p-huettry', 'p-sladek', 'p-pils']) await setze(B.id, await karte(s))
 op = await val(B.f, `select album_pack_oeffnen($1)`, [await festPack(B.id, await karte('p-matthes'))])
 const m10 = op.ziele.find((z) => z.schluessel === 'meilenstein_10')
 ok(!!m10?.packId && m10.lose === 1, '4 von 40 Plätzen → Meilenstein 10 %: Pack + 1 Los')
