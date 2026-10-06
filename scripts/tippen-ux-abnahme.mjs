@@ -160,6 +160,8 @@ for (const [v, view] of [['m', M], ['d', D]]) {
   await page.getByRole('button', { name: /Jetzt werten/ }).click()
   await page.waitForTimeout(800)
   ok(await page.locator('.tp-aufl').first().isVisible() && (await page.locator('.tp-formular').count()) === 1, 'F5', 'nach der Wertung: Auflösung + SG Lühe öffnet zum Tippen')
+  // Seit v25 steht oben „Neue Punkte! +n · Ansehen“; die Auflösung zählt erst hoch, wenn sie im Bild ist.
+  await page.locator('.tp-aufl').first().scrollIntoViewIfNeeded()
   await page.waitForTimeout(6500)
   const ziel = (await page.locator('.tp-aufl__zahl').first().textContent())?.trim()
   await page.locator('.tp-steuer__phasen button', { hasText: 'Montag' }).click()
