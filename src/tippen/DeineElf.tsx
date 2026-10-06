@@ -189,7 +189,7 @@ export function DeineElf({
                       {POS_LANG[k.position]}
                       {zweit && <span className="tp-tag tp-tag--zweit">auch {POS_LANG[soll]}</span>}
                       {!zweit && k.zweitposition && <span className="tp-tag">auch {k.zweitposition}</span>}
-                      {drin && !weg ? ' · in deiner Elf' : ''}
+                      {drin && !weg && <span className="tp-tag tp-tag--ich">in deiner Elf</span>}
                     </small>
                     {weg && (
                       <small className="tp-wahl__weg">

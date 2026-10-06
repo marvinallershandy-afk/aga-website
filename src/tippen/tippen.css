@@ -455,8 +455,8 @@ img { display: block; max-width: 100%; }
 
 /* ── Deine Elf: Spielfeld ───────────────────────────────── */
 .tp-platz {
-  position: relative; display: flex; flex-direction: column; justify-content: space-between; gap: var(--s-5);
-  margin: 0 calc(-1 * var(--s-4)); padding: var(--s-5) var(--s-2) var(--s-6);
+  position: relative; display: flex; flex-direction: column; justify-content: space-between; gap: 40px;
+  margin: 0 calc(-1 * var(--s-4)); padding: var(--s-6) var(--s-2) var(--s-6);
   overflow: hidden;
   background:
     repeating-linear-gradient(180deg, rgba(255, 255, 255, .022) 0 48px, rgba(255, 255, 255, 0) 48px 96px),

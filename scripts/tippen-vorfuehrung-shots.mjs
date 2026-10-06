@@ -101,7 +101,7 @@ for (const v of NUR) {
       await s.page.locator('.tp-rang--live').scrollIntoViewIfNeeded().catch(() => {})
       await bild(s.page, `live-serie-${v}-${String(n - 1).padStart(2, '0')}b-rang`)
       await s.page.evaluate(() => window.scrollTo(0, 0))
-      if (await s.page.locator('.tp-aufl').count()) break
+      if (/phase=abpfiff/.test(s.page.url())) break
     }
     log.push(`[${v}] Live-Serie: ${n} Ereignisse, Fehler ${s.fehler.length}, DB ${s.db()}`)
     await s.ctx.close()
