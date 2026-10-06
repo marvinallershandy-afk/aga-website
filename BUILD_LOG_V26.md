@@ -14,6 +14,7 @@ Simulation läuft · Screenshots (WebKit 390×844 + Chromium/Desktop 1440×900) 
 | `20261021120000_sva_album_v26_barometer.sql` | B | Barometer-Spalten, `album_barometer` (anon), Verteilung im Check-in-Kern (Event-Pack idempotent), `album_admin_barometer` (Vorschlag ×1,15), Statistik |
 | `20261021130000_sva_album_v26_endgame.sql` | E | `sva_album_wall_of_fame`, Wall-Eintrag bei `meilenstein_100`, `album_wall_optin`, `album_wall_of_fame` (anon), album_mein (komplett), Statistik komplettFans |
 | `20261021140000_sva_album_v26_bilder.sql` | K-Content | `album_admin_kult_standard()`: 9 aktive Kabinen-Kult + 16 inaktiver Monats-Moment-Pool (I11) — Admin-RPC, **nicht** beim Migrieren geseedet (sonst zählen Tests mit) |
+| `20261021150000_sva_album_v26_barometer_neutral.sql` | G6 | `sva_album_barometer_pack`: album-neutrales Gemeinschafts-Pack (Silber-Glanz/Kult/Wochenkarte, sonst Lose); `sva_album_barometer_verteilen` neu gefasst |
 
 ## Erledigt je Paket
 - **Z1 🔴** Ziel-Maschine (bestand/woche/monat mit Perioden-Bezug), 68-Katalog, Tipp-Hooks
@@ -36,23 +37,26 @@ Simulation läuft · Screenshots (WebKit 390×844 + Chromium/Desktop 1440×900) 
   (KARTEN.md/ALBUM.md/RUNBOOK.md). **Hebel 1 angewandt** (neue Sets + glanz_5/bonus_seite_5/
   tausch_3/freunde_3 → Lose) synchron in Migration + Sim.
 
-## Simulationsergebnis (10 000 Läufe)
+## Simulationsergebnis (10 000 Läufe, nach G6 = album-neutrales Barometer)
 | Persona | Ø Album % | komplett % | Ø fertig | Ø Ziele | Ø Kult |
 |---|---|---|---|---|---|
-| Gelegenheits-Follower | 60,7 | 0,3 % | Mai | 22,1 | 1,1 |
-| Typischer Follower | 70,9 | 2,4 % | Mai | 27,9 | 1,7 |
-| Stammfan | 99,8 | **97,5 %** | **März** | 52,7 | 4,4 |
+| Gelegenheits-Follower | 58,6 | 0,0 % | Mai | 21,3 | 1,3 |
+| Typischer Follower | 67,8 | 0,6 % | Mai | 26,3 | 2,1 |
+| Stammfan | 99,6 | **94,3 %** | **April** | 52,3 | 5,3 |
 
-Band: Follower 55–70 % / 70–85 % ✓, Ziele ≥ 8 / ≥ 15 ✓, Stammfan Kult ~4–5 ✓.
+Band: Stammfan 80–95 % ✓ · Ø April ✓ · Kult ~4–5 ✓ · Gelegenheits-Follower 55–70 % + ≥ 8 Ziele ✓ ·
+Typischer Follower ≥ 15 Ziele ✓. ⚠ Typischer Follower Album **67,8 %** knapp unter 70 % (Nebeneffekt
+des album-neutralen Barometers; bewusst in Kauf genommen — Gelegenheits- und Stammfan solide im Band).
 
-## Offene Gates / Entscheidungen für Marvin
-- **G6 (Ökonomie-Band) — ⚠ ENTSCHEIDUNG NÖTIG:** Der sehr aktive Stammfan liegt mit **97,5 %/März**
-  knapp **über** dem Band (80–95 %/Ø April). Ursache = **Fan-Barometer**: schon der reine v24-Stand
-  bringt diese Persona auf ~93 %/April, die Barometer-Event-Packs (Annahme 50 % der Heimspiele
-  erreicht) schieben auf ~97,5 %/März. Hebel 1 (neue Ziele → Lose) ist ausgereizt. **Optionen:**
-  (a) Barometer-Belohnung album-neutraler/kleiner machen, (b) Barometer-Quote-Annahme senken,
-  (c) Band auf ~90–97 % weiten und „Ø März/April" akzeptieren. Tuning-Flags im Sim-Kopf
-  (`BARO=`, `V26KARTE=`, `doppelte_bremse`).
+## Entschiedene Gates
+- **G6 (Ökonomie) — ✅ ENTSCHIEDEN (Leitstand 06.10.) + UMGESETZT:** Barometer-Belohnung **album-
+  neutral** statt Band weiten. Neue Migration `20261021150000_sva_album_v26_barometer_neutral.sql`:
+  `sva_album_barometer_pack` zieht das Gemeinschafts-Pack (3 Karten, Titel „Gemeinschafts-Pack") nur
+  aus Silber-Glanz-Varianten, aktiven Kabinen-Kult-Karten (ohne Doppelte) und der ziehbaren
+  Wochenkarte (MOTM/Derby, Event-Chance); leere Quelle → Los. Ergebnis: Stammfan zurück im Band
+  (vorher 97,5 %/März → **94,3 %/April**). `album_v26.test.mjs` prüft die Album-Neutralität.
+
+## Offene Gates für Marvin
 - **G2 (Einverständnis/Namen Pejas + Kabinen-Kult-Zuordnung):** Pejas-Kollektion liegt als 4
   **inaktive** Platzhalter bereit (Namen/Einverständnis von Elias Pejas offen). Die 9 Kabinen-Kult-
   Karten sind aktiv **ohne** Spielerzuordnung (Marvins Freigabe 06.10.); Namen trägt Marvin im Admin
@@ -60,7 +64,9 @@ Band: Follower 55–70 % / 70–85 % ✓, Ziele ≥ 8 / ≥ 15 ✓, Stammfan Kul
 - **G8 (Titel-Abnahme Zielkatalog):** Titel sind Vorschläge — bitte drüberlesen (Migration = Quelle).
 
 ## Marvins To-dos (nach Merge/Deploy)
-1. **G6 entscheiden** (Barometer vs. Band) — ggf. ein Tuning-Lauf, dann Werte final.
+1. (G6 ist entschieden + umgesetzt — Barometer album-neutral; nur zur Info: Typischer Follower
+   landet dadurch bei ~68 % statt ~71 %. Bei Bedarf eine Follower-freundliche Mini-Kompensation,
+   sonst so lassen.)
 2. `album_admin_katalog_standard()` + `album_admin_ziele_standard()` + `album_admin_kult_standard()`
    im Admin **einmal** ausführen (seedet Katalog, 69 Ziele, Kult-Startbestand/Moment-Pool).
 3. Pejas-Kollektion: Einverständnis klären, dann im Admin aktiv schalten (Haken).

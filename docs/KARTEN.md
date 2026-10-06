@@ -685,27 +685,32 @@ Pejas-Kollektion als 4 **inaktive** Platzhalter (Gate G2: Einverständnis/Namen 
 Pool (16, inaktiv, limitiert → album-neutral; Admin schaltet monatlich eine frei, Audit I11).
 
 **Fan-Barometer:** Gemeinschaftsziel je Heimspiel (`album_admin_barometer`, Vorschlag Schnitt × 1,15,
-mind. 10). Erreichen alle das Check-in-Ziel, bekommt jede/r Eingecheckte ein **Event-Pack** (v24-Art
-`event`, `quelle = barometer:Spiel`, einmalig) + Ziel `barometer_held`. Anzeige erst ab
-`barometer_min_anzeige` (Standard 5).
+mind. 10). Erreichen alle das Check-in-Ziel, bekommt jede/r Eingecheckte ein **Gemeinschafts-Pack** +
+Ziel `barometer_held`. Anzeige erst ab `barometer_min_anzeige` (Standard 5).
+**G6 (Leitstand 06.10., entschieden + umgesetzt):** Die Barometer-Belohnung ist **album-neutral**
+(`sva_album_barometer_pack`): das Event-Pack (3 Karten, Titel „Gemeinschafts-Pack") zieht **nur** aus
+Silber-Glanz-Varianten, aktiven Kabinen-Kult-Karten (ohne Doppelte) und der ziehbaren Wochenkarte
+(MOTM/Derby, Event-Chance) — **keine Basis-Album-Karten**; ist eine Quelle leer, gibt es für den Slot
+ein Los. So zählt das Barometer nie fürs Album-% und der Stammfan bleibt im Band (~April).
 
 **Endgame:** Goldene Seite bei 100 % + öffentliche Wall of Fame (`album_wall_of_fame`), Name per
 Opt-in (`album_wall_optin`), sonst „Fan aus Agathenburg"; Name als Snapshot (überlebt Konto-Löschung).
 
 ### Ökonomie-Abnahme (10 000 Läufe, `node scripts/karten-simulation.mjs`)
 
+Stand **nach G6** (album-neutrales Barometer), 10 000 Läufe:
+
 | Persona | Ø Karten | Ø Album % | komplett % | Ø fertig | Ø Ziele | Ø Kult | Ø Lose |
 |---|---|---|---|---|---|---|---|
-| Gelegenheits-Follower | 45,1 | 60,7 | 0,3 % | Mai | 22,1 | 1,1 | 29,3 |
-| Typischer Follower | 56,9 | 70,9 | 2,4 % | Mai | 27,9 | 1,7 | 36,6 |
-| Stammfan | 113,2 | 99,8 | 97,5 % | **März** | 52,7 | 4,4 | 69,5 |
+| Gelegenheits-Follower | 44,9 | 58,6 | 0,0 % | Mai | 21,3 | 1,3 | 28,8 |
+| Typischer Follower | 56,1 | 67,8 | 0,6 % | Mai | 26,3 | 2,1 | 35,6 |
+| Stammfan | 114,2 | 99,6 | **94,3 %** | **April** | 52,3 | 5,3 | 69,0 |
 
-**Abnahmeband (Gate G6):** Gelegenheits-Follower 55–70 % + ≥ 8 Ziele ✓ (60,7 % / 22) · Typischer
-Follower 70–85 % + ≥ 15 Ziele ✓ (70,9 % / 28) · Stammfan Ø Kult ~4–5 ✓ (4,4).
-**⚠ Offen für Marvin (G6):** Der sehr aktive Stammfan (75 % Heimspiele, Tausch + Wunschkarte) liegt
-mit **97,5 % / März** knapp **über** dem Band (80–95 % / Ø April). Ursache ist das **Fan-Barometer**:
-schon der reine v24-Stand bringt diese Persona auf ~93 %/April, die Barometer-Event-Packs (Annahme
-50 % der Heimspiele erreicht) schieben auf ~97,5 %/März. Hebel 1 (neue Ziele → Lose) ist ausgereizt;
-weiter drehen hieße: Barometer-Belohnung album-neutral/kleiner, Barometer-Quote-Annahme senken, oder
-das Band auf ~90–97 % weiten. **Tuning-Hebel** (BARO=, V26KARTE=, doppelte_bremse) stehen im
-Simulations-Kopf.
+**Abnahmeband (Gate G6 — entschieden + umgesetzt):**
+Stammfan komplett **94,3 % ✓** (80–95 %) · Ø fertig **April ✓** (nicht vor 15.03.) · Ø Kult 5,3 ✓ ·
+Gelegenheits-Follower 58,6 % ✓ (55–70 %) + 21,3 Ziele ✓ · Typischer Follower 26,3 Ziele ✓.
+Marvins G6-Entscheidung (Barometer album-neutral statt Band weiten) bringt den Stammfan zurück ins
+Band (vorher 97,5 %/März). **Kleiner Nebeneffekt:** der Typische Follower liegt bei **67,8 %** knapp
+unter der 70-%-Bandgrenze (das Barometer war für ihn vorher eine Album-Quelle) — bewusst in Kauf
+genommen, da Gelegenheits- und Stammfan solide im Band sind. Tuning-Hebel (BARO=, V26KARTE=,
+doppelte_bremse) stehen im Simulations-Kopf.

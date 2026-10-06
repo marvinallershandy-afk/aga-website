@@ -309,6 +309,11 @@ ok(ci3.barometer?.erreicht === true, '3. Check-in erreicht das Ziel (Check-in-An
 ok((await eventPacks(B1.id)) === 1 && (await eventPacks(B2.id)) === 1 && (await eventPacks(B3.id)) === 1,
   'Bei Erreichen bekommen ALLE drei genau 1 Event-Pack (barometer:Spiel)')
 ok((await erreicht(B1.id, 'barometer_held')) === 1 && (await erreicht(B3.id, 'barometer_held')) === 1, 'Ziel „Gemeinsam voll" (barometer_held) für alle Anwesenden')
+// G6: Barometer-Pack ist ALBUM-NEUTRAL (nur Varianten/Kult/limitiert, kein Basis-Album-Platz)
+const baroPack = await one(`select karten, titel from sva_album_packs where fan_user_id = $1 and quelle = $2`, [B1.id, 'barometer:' + SB.id])
+const baroNeutral = await count(`select count(*)::int n from sva_album_karten where id = any($1) and (variante or kult or limitiert)`, [baroPack.karten])
+ok(baroPack.titel === 'Gemeinschafts-Pack' && baroNeutral === baroPack.karten.length,
+  'G6: Gemeinschafts-Pack album-neutral (Silber-Glanz/Kult/Wochenkarte, keine Basis-Album-Karten)')
 // Fan 4 checkt später ein → bekommt das Event-Pack direkt
 const ci4 = await val(B4.f, `select album_checkin($1)`, [SB.token])
 ok(ci4.barometer?.erreicht === true && (await eventPacks(B4.id)) === 1, 'Später eincheckender Fan bekommt das Event-Pack direkt')

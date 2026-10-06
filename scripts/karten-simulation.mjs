@@ -372,8 +372,14 @@ function lauf(persona) {
           if (fan.checkins >= 3 && !fan.ziele.has('checkin_3')) { fan.ziele.add('checkin_3'); kultZiehen(); fan.lose += 1 }
           if (fan.checkins >= 5 && !fan.ziele.has('checkin_5')) { fan.ziele.add('checkin_5'); kultZiehen(); fan.lose += 2 }
           if (fan.checkins >= 8) ziel('checkin_8', t, V26KARTE ? { n: 1, min: 'gold', lose: 3 } : { lose: 3 })
-          // v26-B: Fan-Barometer — BAROMETER_QUOTE der Heimspiele erreichen → Event-Pack für Anwesende
-          if (PACK_TYPEN.event.karten > 0 && rnd() < BAROMETER_QUOTE) { pack(t, { typ: 'event', spiel: s.t }); fan.lose += 1; fan.ziele.add('barometer_held') }
+          // v26-B (G6): Fan-Barometer — BAROMETER_QUOTE der Heimspiele erreichen → ALBUM-NEUTRALES
+          // Gemeinschafts-Pack (Silber-Glanz, Kult, Wochenkarte) + Ziel barometer_held (1 Los).
+          // Zählt NIE fürs Album-% → kein Platz wird belegt.
+          if (PACK_TYPEN.event.karten > 0 && rnd() < BAROMETER_QUOTE) {
+            fan.karten += PACK_TYPEN.event.karten           // album-neutrale Karten (keine Plätze)
+            if (rnd() < 0.3) kultZiehen()                   // gelegentlich eine fehlende Kult-Karte
+            fan.lose += 1; fan.ziele.add('barometer_held')
+          }
           if (rnd() < persona.freund) { pack(t, { n: E.karten_freund, spiel: s.t }); ziel('freund_geworben', t, { n: 1 }); fan.freundZahl = (fan.freundZahl || 0) + 1; if (fan.freundZahl >= 3) ziel('freunde_3', t, { lose: 1 }) }
           if (serie >= 3) ziel('dauerkarte', t, { n: 1, min: 'gold' })
           if (serie >= 5) ziel("dauerkarte_5", t, V26KARTE ? { n: 1, min: "gold", lose: 2 } : { lose: 2 })
