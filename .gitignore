@@ -67,3 +67,7 @@ scripts/.seo-events.json
 
 # v19-3D: Beweis-Shots (lokal, nicht committen)
 shots-v19-3d/
+
+# v20-K: Karten-Labor + Beweise (lokal, nicht committen)
+shots-v20-karten/
+scripts/_v20k/
