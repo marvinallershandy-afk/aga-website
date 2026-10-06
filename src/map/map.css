@@ -892,7 +892,9 @@ html.is-map body {
 @media (max-width: 759px), (max-aspect-ratio: 1/1) {
   .hs-hint--karte {
     left: var(--gutter); right: var(--gutter); max-width: none;
-    bottom: calc(68px + env(safe-area-inset-bottom) + var(--s-3) + 22px);
+    /* v19-F (Punkt 4): wie der Album-Teaser sauber über die 2-zeilige Fußzeile
+       gehoben (belegt denselben Slot im 72-h-Fenster). */
+    bottom: calc(68px + env(safe-area-inset-bottom) + var(--s-3) + 60px);
   }
   /* Mobil ist unten nur Platz für EINE Karte — der Heimspiel-Hinweis hat im
      72-h-Fenster Vorrang, der Album-Teaser weicht. */
