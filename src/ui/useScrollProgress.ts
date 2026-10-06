@@ -70,8 +70,16 @@ export function useScrollProgress(enabled: boolean) {
           return [{ el, w0: el.offsetTop, w1: el.offsetTop + Math.max(0, el.offsetHeight - vh) }]
         }
         if (id === 'musik') return [{ el, w0: span.musik[0], w1: span.musik[1] }]
-        const w0 = id === 'verein' ? 0 : SNAP_START_IDS.has(id) ? el.offsetTop : center
-        const w1 = SNAP_START_IDS.has(id) ? el.offsetTop + Math.max(0, el.offsetHeight - vh) : center
+        // v19-F (Punkt 1 & 5): Die Punkt-Stationen (Sponsoren, Fanblock) hatten
+        // ein Fenster der BREITE 0 (w0=w1=center) → der Text war nur voll
+        // deckend, wenn die gedämpfte Kamera EXAKT auf dem Anker ruhte; schon
+        // ±150 px (normales Ausrollen nach dem Scroll) blendeten ihn auf ~0.26.
+        // Dadurch wirkten Sponsoren-Konfigurator und Fan-Text „bei Ankunft nicht
+        // da". Ein kleines Halte-Band (±0.16 vh) hält den Text rund um den Halt
+        // voll deckend; die Nachbarstationen bleiben getrennt (Lücke ≫ Band+Fade).
+        const hold = id === 'sponsoren' || id === 'fanblock' ? vh * 0.16 : 0
+        const w0 = id === 'verein' ? 0 : SNAP_START_IDS.has(id) ? el.offsetTop : center - hold
+        const w1 = SNAP_START_IDS.has(id) ? el.offsetTop + Math.max(0, el.offsetHeight - vh) : center + hold
         return [{ el, w0, w1 }]
       })
     }

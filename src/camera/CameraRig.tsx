@@ -64,12 +64,18 @@ function teamPresence(s: number): number {
 // nach rechts — die Komposition der Halte bleibt erhalten, der Fokus-
 // punkt rückt nur aus der Bildmitte in die rechte Bühnenhälfte.
 const TEAM_VIEW_SHIFT = 0.17 // Anteil der Bildbreite
+// v19-F (Punkt 1/3): gleiche Bild-nach-rechts-Verschiebung an den Stationen
+// mit linker DOM-Spalte, deren 3D-Motiv sonst mittig unter dem Text läge:
+// Sponsoren (Bande) und Finale (gekippte Anfahrts-Karte).
+const SPONSOR_VIEW_SHIFT = 0.13
+const KONTAKT_VIEW_SHIFT = 0.19
 // v18-R Fahrt-Feder (Routen-Kosten ≈ Weltmeter): Glättzeit, Grundtempo,
 // längste Fahrt bei großen Sprüngen (Tempo wächst mit der Restdistanz).
 const TOUR_SMOOTH = 0.34
 const TOUR_V0 = 5.2
 const TOUR_MAX_S = 1.5
 const SPONSOR_STOP = STOP_INDEX.sponsoren
+const KONTAKT_STOP = STOP_INDEX.kontakt
 const MAX_BACK = 2.4 // max. Hochformat-Rückzug in Weltmetern
 const PHONE_TEAM_FOV = 56
 const _off = new THREE.Vector3()
@@ -286,6 +292,10 @@ function tourFrame(r: Rig, state: FrameState, delta: number) {
   const wMann = teamState.w
   // In der Karten-Totale keine Hochformat-/Sway-Korrektur (Pose = Karte)
   const free = 1 - sm.karte
+  // v19-F: Stations-Gewichte (1 am Halt, 0 eine halbe Etappe entfernt) für
+  // die Bild-nach-rechts-Verschiebung (Punkt 1/3) und das Banden-Karussell.
+  const wSp = 1 - smoothstep(0.06, 0.5, Math.abs(sNow - SPONSOR_STOP))
+  const wKon = 1 - smoothstep(0.06, 0.5, Math.abs(sNow - KONTAKT_STOP))
 
   // Portrait-Anpassung: die Halte sind für 16:9 komponiert — auf schmalen
   // Viewports zieht die Kamera vom Blickpunkt zurück (Komposition bleibt).
@@ -301,6 +311,9 @@ function tourFrame(r: Rig, state: FrameState, delta: number) {
     const door = 1 - smoothstep(0.0, 0.5, Math.min(Math.abs(sNow - STOP_INDEX['musik-tuer']), Math.abs(sNow - STOP_INDEX['musik-raus'])))
     let k = THREE.MathUtils.lerp(kFull, kTeam, wMann)
     k = THREE.MathUtils.lerp(k, 1 + (1 - aspect) * 0.6, door)
+    // v19-F (Punkt 1, Handy): an der Bande weniger Rückzug → die Tafel bleibt
+    // groß und oben im Bild, statt dass der Rückzug die Fan-Kurve darüber zeigt.
+    k = THREE.MathUtils.lerp(k, 1 + (1 - aspect) * 0.5, wSp)
     k = THREE.MathUtils.lerp(1, k, free)
     _off.copy(r.pos).sub(r.look)
     const len = _off.length()
@@ -313,8 +326,12 @@ function tourFrame(r: Rig, state: FrameState, delta: number) {
 
   // Bildverschiebung für die Textspalte (nur Landscape, weich ein/aus).
   // Hochformat: Text oben, Spielername unten → Karte ins freie Mittelfeld.
-  const wantShift = aspect >= 1 ? TEAM_VIEW_SHIFT * wMann : 0
-  const wantShiftY = aspect < 1 ? (phone ? -0.06 : 0.13) * wMann : 0
+  // v19-F: Sponsoren + Finale teilen dieselbe Landscape-Verschiebung (Motiv
+  // nach rechts, DOM-Spalte links auf ruhiger Fläche).
+  const wantShift = aspect >= 1 ? TEAM_VIEW_SHIFT * wMann + SPONSOR_VIEW_SHIFT * wSp + KONTAKT_VIEW_SHIFT * wKon : 0
+  // v19-F (Punkt 1, Handy): an der Bande das Bild nach oben schieben → die
+  // Tafel sitzt im oberen Bilddrittel, der DOM-Konfigurator darunter.
+  const wantShiftY = aspect < 1 ? (phone ? -0.06 : 0.13) * wMann + (phone ? -0.13 : -0.08) * wSp : 0
   if (Math.abs(wantShift) + Math.abs(wantShiftY) > 0.0005) {
     const w = state.size.width
     const h = state.size.height
@@ -336,7 +353,6 @@ function tourFrame(r: Rig, state: FrameState, delta: number) {
 
   // v12-E6: Sponsoren-Karussell — am Banden-Halt fährt die Kamera seitlich
   // an der Bande entlang auf die fokussierte Tafel (Pfeile im DOM).
-  const wSp = 1 - smoothstep(0.06, 0.5, Math.abs(sNow - SPONSOR_STOP))
   if (wSp > 0.001) {
     const targetBx = sponsorBoardX(st.sponsorFocus)
     r.smoothedSponsorX = THREE.MathUtils.damp(r.smoothedSponsorX, targetBx, 3.5, delta)
