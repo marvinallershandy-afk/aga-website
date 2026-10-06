@@ -51,7 +51,8 @@
 .po__kicker { font-size: var(--t-label); font-weight: 700; letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--c-red); text-align: center; }
 .po[data-selt="gold"] .po__kicker { color: var(--c-accent); }
 .po__hint { min-height: 1.4em; font-weight: 700; font-size: var(--t-label); letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--c-text-2); }
-.po__auf { min-width: 200px; }
+.po__auf { min-width: 200px; transition: opacity var(--d-2) var(--ease); }
+.po--reissen .po__auf, .po--reissen .po__hint { opacity: 0; pointer-events: none; }
 
 /* ── Tütchen ─────────────────────────────────────────────────── */
 .po-tuete {

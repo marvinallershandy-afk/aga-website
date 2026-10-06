@@ -64,6 +64,8 @@ export interface ZeichenOpts {
   zeit?: number
   /** Bodenschatten unter die Karte */
   schatten?: boolean
+  /** ohne Folie/Glanz (Video: Grundbild einmal, Folie je Frame darüber) */
+  ohneFolie?: boolean
 }
 
 function abstand(ctx: CanvasRenderingContext2D, px: number) {
@@ -478,7 +480,7 @@ function vorne(ctx: CanvasRenderingContext2D, d: KartenDaten, a: KartenAssets, x
   ctx.fillStyle = pl
   ctx.fillRect(x, y + H - 62 * u, W, 62 * u)
   rahmen(ctx, d.seltenheit, x, y, W)
-  folie(ctx, d, a, x, y, W, H, o.mx ?? 0.5, o.my ?? 0.3, o.licht ?? 0)
+  if (!o.ohneFolie) folie(ctx, d, a, x, y, W, H, o.mx ?? 0.5, o.my ?? 0.3, o.licht ?? 0)
   ctx.restore()
 
   if (mitFigur && a.figur) figur(ctx, d, a.figur, x, y, W)
@@ -677,7 +679,7 @@ function vorne(ctx: CanvasRenderingContext2D, d: KartenDaten, a: KartenAssets, x
   ctx.restore()
 
   // Glanz
-  if ((o.licht ?? 0) > 0) {
+  if (!o.ohneFolie && (o.licht ?? 0) > 0) {
     ctx.save()
     polyPfad(ctx, UMRISS, x, y, W)
     ctx.clip()
@@ -769,6 +771,27 @@ function hinten(ctx: CanvasRenderingContext2D, d: KartenDaten, a: KartenAssets, 
     abstand(ctx, 0.16 * u)
     ctx.fillStyle = 'rgba(244,242,239,0.5)'
     ctx.fillText(`Foto: ${d.credit}`, cx, y + 126 * u)
+  }
+  ctx.restore()
+}
+
+/** Nur Folie + Glanz (über ein vorgerendertes Grundbild, z. B. im Video). */
+export function zeichneFolie(ctx: CanvasRenderingContext2D, d: KartenDaten, a: KartenAssets, x: number, y: number, W: number, o: ZeichenOpts = {}) {
+  const H = W * 1.4
+  ctx.save()
+  polyPfad(ctx, UMRISS, x, y, W)
+  ctx.clip()
+  folie(ctx, d, a, x, y, W, H, o.mx ?? 0.5, o.my ?? 0.3, o.licht ?? 0)
+  if ((o.licht ?? 0) > 0) {
+    ctx.globalCompositeOperation = 'overlay'
+    ctx.globalAlpha = (o.licht ?? 0) * 0.9
+    const gx = x + W * (o.mx ?? 0.5)
+    const gy = y + H * (o.my ?? 0.3)
+    const g = ctx.createRadialGradient(gx, gy, 0, gx, gy, W * 0.7)
+    g.addColorStop(0, 'rgba(255,255,255,0.45)')
+    g.addColorStop(0.6, 'rgba(255,255,255,0)')
+    ctx.fillStyle = g
+    ctx.fillRect(x, y, W, H)
   }
   ctx.restore()
 }
