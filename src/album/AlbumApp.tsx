@@ -952,15 +952,17 @@ function Flug({ karte, nr, gesamt, saison, rect, onLanden }: { karte: Karte; nr:
 
 /** v25-D: nach dem Check-in der zum Moment passende nächste Schritt. */
 function CheckinNaechster({ anstoss }: { anstoss?: string }) {
-  const [status, setStatus] = useState<'vor' | 'live' | 'nach' | null>(null)
+  const [jetzt] = useState(() => Date.now()) // einmal beim Mounten (reiner Render)
+  // Heuristik aus dem Anstoß als Startwert (kein synchrones setState im Effect)
+  const [status, setStatus] = useState<'vor' | 'live' | 'nach' | null>(() => {
+    if (!anstoss) return null
+    const a = new Date(anstoss).getTime()
+    const n = Date.now()
+    return n < a ? 'vor' : n < a + 2 * 3600_000 ? 'live' : 'nach'
+  })
   useEffect(() => {
     let aktiv = true
-    if (anstoss) {
-      const a = new Date(anstoss).getTime()
-      const now = Date.now()
-      setStatus(now < a ? 'vor' : now < a + 2 * 3600_000 ? 'live' : 'nach')
-    }
-    // echter Status aus /api/live (überschreibt die Heuristik)
+    // echter Status aus /api/live (überschreibt die Heuristik, async → kein cascading render)
     fetch('/api/live', { cache: 'no-store' })
       .then((r) => (r.ok ? r.json() : null))
       .then((d: { match?: { status?: string } } | null) => {
@@ -977,7 +979,7 @@ function CheckinNaechster({ anstoss }: { anstoss?: string }) {
   }, [anstoss])
   if (!status) return null
   if (status === 'vor') {
-    const min = anstoss ? Math.round((new Date(anstoss).getTime() - Date.now()) / 60000) : null
+    const min = anstoss ? Math.round((new Date(anstoss).getTime() - jetzt) / 60000) : null
     return (
       <a className="al-ci__next" href="/tippen">
         <b>Tipp fürs Spiel gleich abgeben</b>
