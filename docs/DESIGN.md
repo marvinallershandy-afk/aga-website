@@ -143,8 +143,9 @@ Logofarbe. Gleiche Zeichnung wie auf der 3D-Bande (`src/partner/bande/tafel.ts`)
 Freie 3D-Tafeln: Schwarz, rote Kante links, Claim in Anton — keine gestrichelten
 Platzhalter-Boxen. Details: docs/PARTNER.md.
 
-## 8. Sammelalbum
+## 8. Sammelalbum + Sammelkarten
 
-Siehe docs/ALBUM.md. Gleiche Tokens; Panini nur als Akzent (helle Sticker-Kante,
+v20-K: Alle Karten (Album, Spielerkarten, Story, 3D) kommen aus `src/karten/` (`<SvaKarte/>`),
+Gestaltung und Animationen: **docs/KARTEN.md**. Siehe docs/ALBUM.md. Gleiche Tokens; Panini nur als Akzent (helle Sticker-Kante,
 Tütchen). Seltenheit = Folienkante (`--folie-silber/-gold/-holo`), Bewegung nur
 beim Aufdecken.

@@ -1,3 +1,168 @@
+# SVA-Sammelkarten (v20-K)
+
+Ein Kartensystem für alles: das Sammelalbum (`/album`), die Spielerkarten der Website (Galerie,
+Modal, 3D-Rundgang, Story-Teilen), Instagram-Content und — über einen eigenen Adapter — die
+Tipp-Liga. Code: `src/karten/`. Gestaltung nach `docs/DESIGN.md` (Rot/Schwarz/warmes Weiß, Gold nur
+für Rückennummer, Kapitän und Meister, Anton + Archivo).
+
+> **Grundsatz:** Seltenheit bewertet nie einen Spieler. Jeder Spieler hat eine Basis-Karte
+> („Kader“), Gold-Basis nur für objektive Rollen (Kapitän, Trainerstab). Silber-Glanz sind
+> Varianten (Sammelstücke), Spezial sind Momente und limitierte Karten. Keine Ratings.
+
+## 1. Bausteine (`src/karten/`)
+
+| Datei | Zweck |
+|---|---|
+| `typen.ts` | `KartenDaten` — das neutrale Kartenformat (Art, Seltenheit, Titel, Bilder, Serie, Credit, Werte …) |
+| `adapter.ts` | `vonSpieler(player)`, `vonStab(staff)`, `vonAlbumKarte(karte, {nr, gesamt, saison})` — Bilder **nur** über `playerMedia()` |
+| `SvaKarte.tsx` + `karten.css` | **die Karte** (DOM/CSS-3D): Vorder-/Rückseite, Material, Holo-Neigung, lebende Karte |
+| `Ruecken.tsx` | neutraler Kartenrücken (verdeckt im Pack) |
+| `geometrie.ts` | Schild-Form, Rahmen, Lage aller Elemente — eine Quelle für DOM **und** Canvas |
+| `zeichnen.ts` | Canvas-Renderer (gleiches Design) für Story, Reel, 3D-Textur |
+| `muster.ts` | Material-Muster als SVG (Guilloche, Bürstung, Funkeln, Rauten) + Seltenheits-Symbole |
+| `medien.ts`, `gyro.ts` | Modul-Caches (Bilder, Freisteller-Messung, Schriften), Haptik, Gyro-Neigung (iOS-Erlaubnis per Tipp) |
+| `export/bild.ts` | Story „Neue Karte im Album“, „Zeig deinen Pull“ (1080×1920 PNG), Teilen/Download |
+| `export/video.ts` | Pack-Opening-Reel (1080×1920, 7 s, MP4/WebM per MediaRecorder) |
+
+### `<SvaKarte />` — öffentliche Komponente (auch für die Tipp-Liga)
+
+```tsx
+import { SvaKarte } from '../karten/SvaKarte'
+import { vonSpieler } from '../karten/adapter'
+
+<SvaKarte daten={vonSpieler(player)} />                         // Raster, ruhig
+<SvaKarte daten={d} stufe="gross" interaktiv lebend />           // Bühne: Holo-Neigung, Video-Loop
+<SvaKarte daten={d} seite={gedreht ? 'hinten' : 'vorne'} />      // mit Rückseite, Dreh 0,8 s
+```
+
+| Prop | Bedeutung |
+|---|---|
+| `daten` | `KartenDaten` (über einen Adapter erzeugen; eigene Adapter z. B. `src/tippen/…` bauen einfach `KartenDaten`) |
+| `seite` | `'vorne' \| 'hinten'` — rendert die Rückseite mit und dreht bei Wechsel |
+| `interaktiv` | Zeiger- + Gyro-Neigung mit Glanz (nur für **eine** große Karte gleichzeitig) |
+| `lebend` | Greenscreen-Loop statt Standbild, wenn vorhanden (fällt bei Fehler aufs Bild zurück) |
+| `stufe` | `klein` (Raster: ohne Folien-Ebenen, 640er-Freisteller) · `normal` · `gross` |
+| `aufdecken` | einmaliger Licht-Streif über die Folie (Aufdecken, Einkleben) |
+| `eager`, `onClick`, `className`, `style`, `ariaLabel` | wie üblich |
+
+Die Größe bestimmt der Container (Breite; Höhe = 1,4 × Breite). Alle Maße sind `cqw` →
+die Karte skaliert von 60 px bis Vollbild. CSS kommt mit der Komponente.
+
+## 2. Gestaltung
+
+**Form:** Wappen-Schild — oben angeschrägte Ecken, unten flache Spitze (100 × 140 u).
+**Material je Seltenheit** (echte Unterschiede, nicht nur die Rahmenfarbe):
+
+| Seltenheit | Körper | Rahmen | Folie (bewegt sich mit Neigung) |
+|---|---|---|---|
+| Kader (Bronze) | mattes Schwarz-Rot, Blindprägung des Wappens, feines Rautenraster | Rot | zarter Lichtschimmer |
+| Silber | Graphit, gebürstetes Metall, diagonale Lichtbahnen, Rückennummer als Prägung | Silberband | kühler Metallglanz |
+| Gold | Schwarz mit Guilloche-Gravur (Rosette + Wellenlinien) | Goldband | warmer Goldglanz |
+| Spezial | lebender Hintergrund (Licht dreht sich langsam, Strahlen) | Holo | Regenbogen-Folie + Funkeln (color-dodge) |
+
+**Kartenarten:**
+- **Spieler:** Freisteller groß, rechts der Mitte, Kopf ragt leicht über die Rahmenlinie
+  (Parallaxe gegen das Licht), Rückennummer gold + Position + Wappen links, Kapitän-„C“,
+  Vorname klein / NACHNAME groß, Position · Kapitän, Kartennummer „017/042“, Symbol, Saison.
+- **Trainerstab:** Rolle senkrecht in Rot statt Nummer, Gold-Basis.
+- **Moment / Kurve:** Foto im Fenster (Querformat sauber ins Hochformat über `bild_fokus`),
+  Serie oben („Meister 2026“ in Gold), Titel groß, Credit senkrecht am Rand
+  („Foto: picture by Nele“ — Pflicht). Ohne Foto: typografische Karte (z. B. „Dodos Raum“).
+- **Partner:** Logo auf warm-weißer Tafel (wie die Bande), Name, „Partner seit 2024“ (aus
+  `sm_sponsoren.laufzeit_von`). Ohne Logo: typografisch.
+- **Rückseite** (alle): Wappen, „Sammelkarte · Saison 2026/27“, Art/Position, Titel, sachliche
+  Werte (Position, Rückennummer, im Verein seit, Tore/Vorlagen der Saison aus dem Ticker,
+  Serie, präsentiert von), Steckbrief-Text (`rueckseite`), Kartennummer, Seltenheit, Credit.
+- **Seltenheits-Symbol:** 1/2/3 Balken (Kader/Silber/Gold), Stern (Spezial). Tags: „Glanz“,
+  „Limitiert“, „Neu“ (Neuzugang).
+
+## 3. Animationen (alles transform/opacity, `prefers-reduced-motion` = ruhig)
+
+- **Pack öffnen** (`src/album/PackOpening.tsx`, `pack.css`): Pack schwebt, Folie glänzt. Über
+  die Lasche **wischen** → sie reißt mit dem Finger auf (Haptik-Ticks), durch den Spalt leuchtet
+  das Licht der **besten** Karte. Karten steigen verdeckt heraus. Je Karte baut sich Licht in
+  Seltenheitsfarbe auf; **Gold/Spezial = Walkout:** Bühne dunkel, Lichtblitz, Strahlen,
+  Kamerafahrt (Karte fliegt aus der Tiefe heran und dreht sich), Hinweise blenden ein
+  (Position → Nummer bzw. Serie), dann dreht sie. Beste Karte zuletzt, „Alle zeigen“ springt.
+  Übersicht mit Neu-Badges, Doppelte als Stapel ×n, erreichte Ziele/Kapitel, „Ins Album
+  einkleben“, „Zeig deinen Pull“. Haptik über `navigator.vibrate` (Android).
+- **Einkleben:** Das Album blättert zur Seite, die Karte fliegt mit leichter 3D-Drehung in
+  ihren Platz, wird angedrückt, Licht-Streif, Kapitel-Zähler rollt hoch.
+- **Album als Buch** (`Heft.tsx`, `heft.css`): Handy eine Seite, Desktop Doppelseite. Umblättern
+  ist ein echtes Blatt, das sich um den Rücken dreht und dem Finger folgt (Wischen), sonst
+  Pfeiltasten, Reiter, Knöpfe.
+- **Fortschritt:** Gesamtbalken mit Meilenstein-Kerben 10/25/50/75/100 %, Kapitel-Balken,
+  Abzeichen-Stempel bei komplettem Kapitel, Zähler rollen hoch, Glanz läuft über den Balken,
+  „Nächstes Ziel“-Leiste oben, wartende Packs als Fach unten.
+- **Holo-Neigung:** Maus am Desktop; Handy per Gyro — iOS fragt nach einem Tipp auf die Karte
+  bzw. „Mit dem Handy neigen“ (Detailansicht).
+
+## 4. Katalog pflegen (Admin → Album)
+
+| Tab | Was |
+|---|---|
+| **Woche** | Wochen-Checkliste mit Direkt-Knöpfen (siehe 6.) |
+| **Karten** | „Standard-Katalog anlegen“ (Spieler-Basis + Silber-Glanz, Trainerstab, 8 Momente, Kurve, Partner), „Neue Karte“ mit **Live-Vorschau** (Vorder-/Rückseite), Foto-Upload mit Fokus-Klick, Credit, Serie, „präsentiert von“, Glanz/Limitiert, Zeitfenster, Derby-Spiel. Je Karte **Story-Bild** und **Reel** |
+| **Ziele** | Sammelziele aus Vorlagen: Familie (Personen), Set (Karten), Kapitel, Serie, Sozial, Tipp-Liga, Wochen-Challenge, Meilenstein; Belohnung (Karten, Mindest-Seltenheit, Lose), geheim, Zeitraum; „Zuletzt erreicht“ |
+| **Codes** | Story-Code (24 h), Partner-Code (liefert die Partnerkarte), Massen-Erzeugung (je Tag ein Code), Adventskalender (24 Codes, 24.12. = Weihnachtskarte) |
+| **Verlosungen** | Verlosung anlegen (Preis-Vorlagen, Bild, Partner, Stichtag, Mindest-Lose), **Ziehen + Glücksrad** (Vollbild, zum Abfilmen; Ergebnis steht vorher fest und ist protokolliert) |
+| **Regeln** | Chancen, Packgrößen je Quelle, Smart-Pack, Schwellen 3/6/8, Tausch/Wunschkarte, Lose, Teilnahmebedingungen |
+
+**Neue Karte anlegen:** Art + Seltenheit wählen → bei Spieler/Trainer die Person (Bild kommt
+automatisch), bei Partner den Sponsor (Logo + „Partner seit“ kommen aus Admin → Partner) →
+Titel/Untertitel/Serie → bei Moment/Kurve Foto hochladen, ins Bild klicken für den Ausschnitt,
+Credit prüfen → Speichern. Die Vorschau rechts ist die echte Karte.
+
+**Partner-Karten (verkaufbare Leistung „Deine Firma als Sammelkarte“):** Logo in Admin → Partner
+hochladen (die Logo-Aufbereitung der Bande trimmt Ränder), Laufzeit-Beginn eintragen → „Standard-
+Katalog anlegen“ legt je aktivem Partner die Karte an (Bronze, früh im Album). Partner-Codes für
+den Laden unter Codes. „Präsentiert von“ geht auf jeder Karte (z. B. Meister-Momente).
+
+**Fotos (picture by Nele):** keine erkennbaren Kinder, kein Alkohol im Fokus, Credit Pflicht.
+Standard-Momente liegen in `public/karten/` (`node scripts/karten-fotos.mjs` erzeugt 1400er +
+640er aus den Vereinsfotos).
+
+## 5. Greenscreen und lebende Karten
+
+Die Karten fragen Bilder **nur** über `playerMedia(id)` (`src/data/playerMedia.ts`):
+Greenscreen-`card.webp` → HD-Freisteller → Foto. Sobald nach dem Dreh
+`node scripts/greenscreen/build.mjs` gelaufen ist und `src/data/greenscreen.ts` Einträge hat,
+zeigen **alle** Karten (Album, Galerie, Modal, Story, 3D-Rundgang) automatisch die neuen
+Freisteller. Hat ein Spieler einen `pose-loop`, wird die große Karte (`lebend`) zur **lebenden
+Karte**: Video mit Alpha (HEVC für Safari/iOS, VP9 sonst), Kopf auf derselben Höhe wie beim
+Standbild, Fehler → Standbild. Im Raster und bei reduzierter Bewegung bleibt das Standbild.
+Nichts in `src/karten/` muss dafür geändert werden.
+
+## 6. Wöchentlicher Ablauf in 2 Minuten (Admin → Album → Woche)
+
+| Tag | Aufgabe | Klicks |
+|---|---|---|
+| **So** | Spielbericht: Ergebnis, Torschützen, **Spieler des Spiels** unter Spiele/Live eintragen | Heimsieg-Bonus geht automatisch raus |
+| **Mo** | **„MOTM-Karte veröffentlichen“** — erzeugt die limitierte Spezialkarte „MOTM · n. Spieltag · Gegner“ (Bild über playerMedia), ziehbar Mo 00:00 bis So 23:59, **und** lädt Story-Bild + Reel herunter | 1 |
+| **Fr** | „Code für Freitag erzeugen“ → Code ist kopiert → in die Story | 1 |
+| **Sa** | Story „Noch nicht getippt?“ + Album-Teaser posten, Haken setzen | 1 |
+| Dez. | Einmal „Kalender anlegen“ (Codes) — jeden Tag den Code des Tages posten | — |
+
+Haken setzen sich von selbst, sobald etwas erledigt ist.
+
+## 7. Instagram
+
+- **Admin, je Karte:** „Story-Bild“ (PNG 1080×1920, „Neue Karte im Album“) und „Reel“ (7 s,
+  1080×1920, MP4 wo der Browser es aufnimmt, sonst WebM) — läuft im Browser, kein Server.
+- **Fan:** nach dem Pack „Zeig deinen Pull“ (beste Karte groß, zwei gefächert, „Lena B. hat
+  gezogen“), in der Detailansicht „Karte teilen“. Teilen per Share-Sheet, sonst Download.
+
+## 8. Prüfen
+
+- `npx tsc -b`, `npx vite build`
+- PGlite-Tests: siehe unten (Ökonomie).
+- Messwerte v20-K (Headless-Chromium, Metal-GPU, M3; Handy-Profil 390×844, DPR 1): Pack-Öffnen
+  (Reißen + 4 Karten inkl. 2 Walkouts) p95 18,2 ms — die Leerlauf-Basis derselben Messung liegt
+  bei 17,8–18,4 ms (Taktungsrauschen der Headless-Umgebung); auf Vsync gerundet p95 16,7 ms, keine
+  Frames > 25 ms. Album (8× Umblättern, Scrollen) p95 18,1–18,3 ms, gerundet 16,7 ms. Mit 4×
+  CPU-Drossel weiterhin p95(vsync) 16,7 ms. 3D-Rundgang alt (v14) vs. neu: p95 17,9 vs. 18,2 ms
+  (Desktop) bzw. 18,5 vs. 18,0 ms (Handy), lange Frames 6 → 3 (Texturen werden im Leerlauf gezeichnet).
+
 ## Ökonomie & Ziehung
 
 Stand v20-K. Datenbank: `supabase/migrations/20261012100000_sva_karten.sql` (additiv, idempotent,

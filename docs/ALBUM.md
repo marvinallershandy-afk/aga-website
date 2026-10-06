@@ -1,5 +1,11 @@
 # SVA-Stickerheft („Sammelalbum“) mit QR-Check-in
 
+> **v20-K:** Das Album ist jetzt ein Sammelkarten-Album — Kartensystem, Pack-Öffnen, Kapitel,
+> Ziele, Tausch, Codes, Lose/Verlosungen, Admin-Woche: **docs/KARTEN.md**. Migration
+> `20261012100000_sva_karten.sql` nach `20261011110000_sva_am_platz.sql` anwenden; neue
+> Standard-Schwellen 3 / 6 / 8 („Getränk nach Wahl“, „Bratwurst + Getränk nach Wahl oder
+> Fanartikel“, Verlosungs-Los). Die Abschnitte unten beschreiben den Check-in-Teil weiter gültig.
+
 Stand v17-A. Fans scannen bei jedem Heimspiel am Eingang einen QR-Code, reißen ein
 Sticker-Tütchen auf und kleben die Sticker in ihr digitales Heft auf **`/album`**.
 Ab dem 5. und 10. Check-in gibt es Gutscheine (am Stand per Knopf „Einlösen“ + Bestätigung, v17-D), wer die
@@ -37,9 +43,8 @@ Assets in `public/album/` (Tisch, Deko, Cover-Foto) werden nicht mehr geladen.
    - Für mehr als ein paar Login-Mails pro Stunde einen **eigenen SMTP-Versand**
      einrichten (Supabase-Standardversand ist stark limitiert). Anbieter dann in
      `public/datenschutz.html` Abschnitt 7b nachtragen.
-3. Admin → **Album → Sticker** → „Sticker aus Kader erzeugen“ (Spieler als Kader-Sticker,
-   Kapitän zusätzlich als Gold-Sticker, Trainerstab für die Trainerstab-Seite).
-   Dann Momente („Foto des Jahres“), Partner- und Fan-Sticker mit Foto anlegen.
+3. Admin → **Album → Karten** → „Standard-Katalog anlegen“ (v20-K: Spieler-Basis, Silber-Glanz,
+   Trainerstab, Momente, Kurve, Partner) und unter **Ziele** „Standard-Ziele anlegen“.
 4. Admin → **Album → Regeln** → Belohnungen
    mit „präsentiert von“-Partnern prüfen.
 5. „Website veröffentlichen“ — erst dann erscheint die Check-in-Zahl auf `/partner`.
@@ -93,11 +98,11 @@ Teaser-Bild neu erzeugen: `node scripts/album-teaser.mjs`.
 
 | Einstellung | Standard | Wirkung |
 |---|---|---|
-| Chancen Kader / Silber / Gold / Glitzer | 70 / 22 / 7 / 1 | je Sticker; Stufen ohne aktiven Sticker fallen raus |
-| Sticker pro Tütchen | 3 | 1–5 |
-| Doppelten-Bremse | 50 % | so oft wird innerhalb der Stufe ein noch fehlender Sticker bevorzugt |
+| Chancen Kader / Silber / Gold / Spezial | 70 / 22 / 7 / 1 | je Karte; Stufen ohne ziehbare Karte fallen raus |
+| Karten pro Check-in-Pack | 3 | 1–5 (weitere Quellen: docs/KARTEN.md) |
+| Doppelten-Bremse | 25 % (v20-K) | so oft wird innerhalb der Stufe eine noch fehlende Karte bevorzugt; dazu Smart-Pack |
 | Fenster vor / nach Anstoß | 60 / 135 min | Gültigkeit des QR-Codes |
-| Belohnungen | 5. Heimspiel: Freibier oder Bratwurst · 10.: Fanartikel · Mannschaft komplett: Verlosungs-Los | je mit optionalem Partner |
+| Belohnungen | 3. Heimspiel: Getränk nach Wahl · 6.: Bratwurst + Getränk nach Wahl oder Fanartikel · 8.: Verlosungs-Los · Mannschaft komplett: Verlosungs-Los | je mit optionalem Partner |
 | Album aktiv | an | aus = Check-ins freundlich abgelehnt (Sommerpause) |
 
 **Rechenbeispiel:** 24 Spieler, 3 Sticker pro Tütchen, ~13 Heimspiele + Heimsieg-Boni
