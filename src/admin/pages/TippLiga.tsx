@@ -27,6 +27,9 @@ import {
   useTippSpieltage,
   useTippKader,
   useTippSpielerSpeichern,
+  useTippPreise,
+  useTippPreisAktionen,
+  type TippPreis,
   type AdminSpieltag,
   type TippKaderZeile,
   type BerichtZeile,
@@ -781,7 +784,138 @@ function KabineTab() {
         )}
       </section>
       <Regeln />
+      <div className="lg:col-span-2">
+        <PreiseVerwaltung />
+      </div>
     </div>
+  )
+}
+
+// ── v22-T: Preise (Saison Platz 1–5, Monat Platz 1–3) ───────
+// Leer = auf /tippen unsichtbar. Altersgrenze (16/18) → U18 bekommt die
+// Alternative (leer = „Softdrink-Variante“). Kabine ist ausgeschlossen.
+const PREIS_PLAETZE: { wertung: 'saison' | 'monat'; platz: number; label: string }[] = [
+  ...[1, 2, 3, 4, 5].map((n) => ({ wertung: 'saison' as const, platz: n, label: `Saison · Platz ${n}` })),
+  ...[1, 2, 3].map((n) => ({ wertung: 'monat' as const, platz: n, label: n === 1 ? 'Monatssieger' : `Monat · Platz ${n}` })),
+]
+
+function PreiseVerwaltung() {
+  const preise = useTippPreise()
+  const fehlt = preise.error && (isMissingSchema(preise.error) || /sva_tipp_preise/.test(String((preise.error as { message?: string }).message)))
+  if (fehlt) {
+    return (
+      <EmptyState
+        icon={Trophy}
+        title="Preise brauchen die neue Migration"
+        description="Die Migration 20261014100000_sva_tippliga_v22.sql fehlt noch. Danach lassen sich hier Preise für Saison und Monat pflegen."
+      />
+    )
+  }
+  return (
+    <section className="rounded-lg border border-border bg-card" data-testid="tipp-preise">
+      <div className="space-y-1 border-b border-border p-4">
+        <h2 className="flex items-center gap-2 font-display text-xl">
+          <Trophy className="h-5 w-5" /> Preise
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Erscheinen auf /tippen in der Rangliste unter „Das kannst du gewinnen“ (Saison und Monat). Leer = Bereich unsichtbar. Nüchtern formulieren; bei alkoholischen Preisen
+          „ab 18“ wählen — unter 18 gibt es automatisch die Alternative. Kabine-Konten sind ausgeschlossen (Teilnahmebedingungen).
+        </p>
+      </div>
+      {preise.isLoading ? (
+        <SkeletonRows rows={4} />
+      ) : (
+        <ul className="divide-y divide-border">
+          {PREIS_PLAETZE.map((pl) => (
+            <PreisZeile key={`${pl.wertung}-${pl.platz}`} label={pl.label} wertung={pl.wertung} platz={pl.platz} preis={(preise.data ?? []).find((x) => x.aktiv && x.wertung === pl.wertung && x.platz === pl.platz)} />
+          ))}
+        </ul>
+      )}
+    </section>
+  )
+}
+
+function PreisZeile({ label, wertung, platz, preis }: { label: string; wertung: 'saison' | 'monat'; platz: number; preis?: TippPreis }) {
+  const sp = useSponsoren()
+  const { speichern, loeschen } = useTippPreisAktionen()
+  const toast = useToast()
+  const [titel, setTitel] = useState(preis?.titel ?? '')
+  const [text, setText] = useState(preis?.beschreibung ?? '')
+  const [partner, setPartner] = useState(preis?.partner_id ?? '')
+  const [alter, setAlter] = useState<string>(preis?.ab_alter ? String(preis.ab_alter) : '')
+  const [alt, setAlt] = useState(preis?.alternative ?? '')
+  const geaendert =
+    titel.trim() !== (preis?.titel ?? '') ||
+    text.trim() !== (preis?.beschreibung ?? '') ||
+    partner !== (preis?.partner_id ?? '') ||
+    alter !== (preis?.ab_alter ? String(preis.ab_alter) : '') ||
+    (alter !== '' && alt.trim() !== (preis?.alternative ?? ''))
+  const sichern = async () => {
+    if (titel.trim().length < 2) return toast.error('Bitte einen Titel (mind. 2 Zeichen) eintragen.')
+    try {
+      await speichern.mutateAsync({
+        id: preis?.id,
+        wertung,
+        platz,
+        titel: titel.trim(),
+        beschreibung: text.trim() || null,
+        partner_id: partner || null,
+        ab_alter: alter ? (Number(alter) as 16 | 18) : null,
+        alternative: alter ? alt.trim() || null : null,
+      })
+      toast.success(`${label} gespeichert.`)
+    } catch (e) {
+      toast.error(friendlyError(e))
+    }
+  }
+  return (
+    <li className="grid gap-2 px-4 py-3 lg:grid-cols-[140px_1.2fr_1.4fr_190px_390px] lg:items-center">
+      <p className="text-sm font-medium">{label}</p>
+      <Input aria-label={`${label}: Titel`} maxLength={60} placeholder={platz === 1 ? 'z. B. Trikot nach Wahl' : 'Preis (leer = kein Preis)'} value={titel} onChange={(e) => setTitel(e.target.value)} />
+      <Input aria-label={`${label}: Beschreibung`} maxLength={200} placeholder="Beschreibung (optional)" value={text} onChange={(e) => setText(e.target.value)} />
+      <Select aria-label={`${label}: präsentiert von`} value={partner} onChange={(e) => setPartner(e.target.value)}>
+        <option value="">— ohne Partner —</option>
+        {(sp.data ?? [])
+          .filter((x) => x.aktiv)
+          .map((x) => (
+            <option key={x.id} value={x.id}>
+              präsentiert von {x.name}
+            </option>
+          ))}
+      </Select>
+      <div className="flex flex-wrap items-center gap-2">
+        <Select aria-label={`${label}: Altersgrenze`} className="h-9 w-28" value={alter} onChange={(e) => setAlter(e.target.value)}>
+          <option value="">alle Alter</option>
+          <option value="16">ab 16</option>
+          <option value="18">ab 18</option>
+        </Select>
+        {alter && <Input aria-label={`${label}: Alternative unter ${alter}`} className="h-9 w-44" maxLength={80} placeholder="U18: Softdrink-Variante" value={alt} onChange={(e) => setAlt(e.target.value)} />}
+        <Button size="sm" onClick={() => void sichern()} disabled={!geaendert || speichern.isPending || !titel.trim()}>
+          Speichern
+        </Button>
+        {preis && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={async () => {
+              try {
+                await loeschen.mutateAsync(preis.id)
+                setTitel('')
+                setText('')
+                setPartner('')
+                setAlter('')
+                setAlt('')
+                toast.success(`${label} entfernt.`)
+              } catch (e) {
+                toast.error(friendlyError(e))
+              }
+            }}
+          >
+            Entfernen
+          </Button>
+        )}
+      </div>
+    </li>
   )
 }
 

@@ -244,3 +244,49 @@ export function useTippSpielerSpeichern() {
     onSuccess: () => void qc.invalidateQueries({ queryKey: ['tipp_admin_kader'] }),
   })
 }
+
+// ── v22-T: Preise (Tabelle sva_tipp_preise, RLS: nur Admin) ──
+export interface TippPreis {
+  id: string
+  wertung: 'saison' | 'monat'
+  platz: number
+  titel: string
+  beschreibung: string | null
+  partner_id: string | null
+  ab_alter: 16 | 18 | null
+  alternative: string | null
+  aktiv: boolean
+}
+
+export function useTippPreise() {
+  return useQuery({
+    queryKey: ['sva_tipp_preise'],
+    queryFn: async (): Promise<TippPreis[]> => {
+      const { data, error } = await db.from('sva_tipp_preise').select('*').order('wertung').order('platz')
+      if (error) throw error
+      return (data ?? []) as TippPreis[]
+    },
+    retry: false,
+  })
+}
+
+export function useTippPreisAktionen() {
+  const qc = useQueryClient()
+  const neu = () => void qc.invalidateQueries({ queryKey: ['sva_tipp_preise'] })
+  const speichern = useMutation({
+    mutationFn: async (p: Omit<TippPreis, 'id' | 'aktiv'> & { id?: string }) => {
+      const zeile = { wertung: p.wertung, platz: p.platz, titel: p.titel, beschreibung: p.beschreibung, partner_id: p.partner_id, ab_alter: p.ab_alter, alternative: p.alternative, aktiv: true }
+      const { error } = p.id ? await db.from('sva_tipp_preise').update(zeile).eq('id', p.id) : await db.from('sva_tipp_preise').insert(zeile)
+      if (error) throw error
+    },
+    onSuccess: neu,
+  })
+  const loeschen = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await db.from('sva_tipp_preise').delete().eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: neu,
+  })
+  return { speichern, loeschen }
+}
