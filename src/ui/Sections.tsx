@@ -196,7 +196,7 @@ export function Sections() {
 
       {/* 6 · MITMACHEN/FINALE — v18-R: aus dem Partyraum zurück vor die Tür,
           dann steigt die Kamera in die Anfahrts-Karte auf. */}
-      <section id={kontakt.id} className="section section--left section--snap-start">
+      <section id={kontakt.id} className="section section--left section--snap-start section--finale">
         {/* v13-E3: sprechender Anker-Alias fürs Link-in-Bio —
             /#mitmachen landet direkt am CTA-Beat. Absolut an der Sektions-
             Oberkante, damit der native Anker-Sprung exakt am Snap-Ruhepunkt

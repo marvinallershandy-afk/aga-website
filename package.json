@@ -28,10 +28,15 @@
     "postprocessing": "^6.39.2",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
-    "react-router-dom": "^7.18.1",
+    "react-router-dom": "^7.18.2",
     "tailwind-merge": "^3.6.0",
     "three": "^0.184.0",
     "zustand": "^5.0.14"
+  },
+  "pnpm": {
+    "overrides": {
+      "fflate@<0.6.11": "^0.6.11"
+    }
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

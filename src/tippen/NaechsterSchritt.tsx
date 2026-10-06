@@ -48,17 +48,10 @@ function schrittFuer(lage: Lage, now: number, angemeldet: boolean): Schritt | nu
       knopf: 'Live',
     }
   }
-  if (gesperrt && gesperrt.status === 'beendet') {
-    return {
-      key: 'nach',
-      ton: 'ruhig',
-      icon: Clock,
-      stark: 'Abpfiff · Wertung folgt',
-      text: lage.naechstes ? `danach öffnet der nächste Spieltag (${lage.naechstes.heim ? 'gegen' : 'bei'} ${lage.naechstes.gegner})` : 'die Auflösung kommt mit dem Spielbericht, meist am selben Abend',
-      ziel: 'live',
-    }
-  }
-  // 3. Tipp offen
+  // 3. Tipp offen — gewinnt VOR „Abpfiff · Wertung folgt“ (v25 Befund 1):
+  // sobald der nächste Spieltag offen ist, führt der Erstkontakt nach vorn
+  // („tippe jetzt“), nicht zurück. Die Wertungs-Info des alten Spiels wird zur
+  // Nebenzeile an dessen Spielkarte (SpieltagTab), nicht mehr hier doppelt.
   if (offen?.offen) {
     const ms = new Date(offen.schluss).getTime() - now
     if (!angemeldet && !offen.meinTipp) {
@@ -78,6 +71,17 @@ function schrittFuer(lage: Lage, now: number, angemeldet: boolean): Schritt | nu
         : `Anpfiff ${datumKurz(offen.anstoss)} ${uhrzeit(offen.anstoss)} · Auflösung am Abend · änderbar bis Anpfiff`,
       ziel: 'tippschein',
       knopf: elfFehlt ? 'Elf' : undefined,
+    }
+  }
+  // 4. Abpfiff, Wertung folgt — nur noch, wenn KEIN nächster Spieltag offen ist.
+  if (gesperrt && gesperrt.status === 'beendet') {
+    return {
+      key: 'nach',
+      ton: 'ruhig',
+      icon: Clock,
+      stark: 'Abpfiff · Wertung folgt',
+      text: lage.naechstes ? `danach öffnet der nächste Spieltag (${lage.naechstes.heim ? 'gegen' : 'bei'} ${lage.naechstes.gegner})` : 'die Auflösung kommt mit dem Spielbericht, meist am selben Abend',
+      ziel: 'live',
     }
   }
   if (lage.einstellungen.winterpause.aktiv) {

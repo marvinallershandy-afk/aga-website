@@ -36,6 +36,8 @@ for (const f of fs.readdirSync(M).filter((f) => f.endsWith('.sql')).sort()) {
 await defaults()
 await run(NEU) // zweiter Lauf: idempotent
 for (const f of fs.readdirSync(M).filter((f) => f.endsWith('.sql')).sort().filter((f) => f > NEU)) await run(f)
+// v25-D: Diese Tests prüfen den statischen Check-in → Rotation (Standard an) hier aus.
+await db.exec(`update public.sva_album_einstellungen set checkin_rotation = false where id = 1`).catch(() => {})
 
 const claims = (uid, email) => JSON.stringify({ sub: uid, email, role: 'authenticated' })
 const as = async (uid, email, sql, params) => {

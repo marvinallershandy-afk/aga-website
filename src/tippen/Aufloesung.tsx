@@ -196,7 +196,24 @@ export function Aufloesung({ spiel, kader, platz, kompakt }: { spiel: TippSpiel;
                   </b>
                   {z.detail && <small>{z.detail}</small>}
                 </span>
-                <span className="tp-aufl__p">{sichtbar ? <Zaehler ziel={z.punkte} start={lauf >= 0} vorzeichen /> : ''}</span>
+                <span className="tp-aufl__p">
+                  {sichtbar ? (
+                    z.kapitaen && z.punkte !== 0 ? (
+                      // v25 Befund 11: Verdopplung transparent machen („+13 ×2 = +26“)
+                      <span className="tp-aufl__kapmath">
+                        <small>
+                          {z.punkte / 2 > 0 ? '+' : ''}
+                          {z.punkte / 2} ×2 =
+                        </small>{' '}
+                        <Zaehler ziel={z.punkte} start={lauf >= 0} vorzeichen />
+                      </span>
+                    ) : (
+                      <Zaehler ziel={z.punkte} start={lauf >= 0} vorzeichen />
+                    )
+                  ) : (
+                    ''
+                  )}
+                </span>
               </motion.li>
             )
           })}

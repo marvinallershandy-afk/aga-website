@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { Check, Crown, Share2, Sparkles } from 'lucide-react'
 import { albumPackHref, elfSpeichern, tippAbgeben, TippFehler, type BonusKey, type KaderSpieler, type Lage, type TippSpiel } from './api'
-import { datumKurz, elfEinordnen, entwurfLesen, entwurfSchreiben, haptik, kuerzel, uhrzeit, verfuegbar, type Entwurf } from './model'
+import { datumKurz, elfEinordnen, entwurfLesen, entwurfSchreiben, haptik, kurzname, uhrzeit, verfuegbar, type Entwurf } from './model'
 import { Kapitel } from './teile'
 import { ErgebnisStepper } from './Stepper'
 import { SpielerLeiste } from './SpielerLeiste'
@@ -112,7 +112,7 @@ export function TippFormular({
   const geaendert = !gespeichert || !gleich(s, gespeichert)
   const jokerGesperrt = lage.ich?.jokerFrei === false && !spiel.meinTipp?.joker
   // v21-UX (Befund 8): für welches Spiel getippt wird — steht im Abgabe-Knopf
-  const fuer = `für ${datumKurz(spiel.anstoss)} ${uhrzeit(spiel.anstoss)} · ${spiel.heim ? 'gegen' : 'bei'} ${kuerzel(spiel.gegner)}`
+  const fuer = `für ${datumKurz(spiel.anstoss)} ${uhrzeit(spiel.anstoss)} · ${spiel.heim ? 'gegen' : 'bei'} ${kurzname(spiel.gegner)}`
   // v22-T: was fehlt noch? (Rückfrage statt stillem 0:0 / halber Elf)
   const fehlt: { text: string; ziel: string; knopf: string }[] = []
   if (!beruehrt) fehlt.push({ text: 'Ergebnis', ziel: 'tp-h-ergebnis', knopf: 'Ergebnis wählen' })

@@ -198,6 +198,10 @@
 }
 .ll__pkt b { font: 400 1.375rem/1 var(--f-display, Anton, sans-serif); font-variant-numeric: tabular-nums; }
 .ll__pkt small { font: 800 .5rem/1 var(--f-body, Archivo, sans-serif); font-stretch: 125%; letter-spacing: .14em; text-transform: uppercase; color: rgba(244, 242, 239, .55); white-space: nowrap; }
+/* Idee S: Joker aktiv → „×2 aktiv“ pulsierend an der Punktezahl */
+.ll__joker { color: #e91d29; animation: ll-joker 1.5s ease-in-out infinite; }
+@keyframes ll-joker { 50% { opacity: .45; } }
+@media (prefers-reduced-motion: reduce) { .ll__joker { animation: none; } }
 .ll__pkt.is-hoch { background: rgba(61, 220, 132, .14); }
 .ll__pkt.is-hoch b { color: #3ddc84; }
 .ll__extra { flex: none; font: 700 .625rem/1.2 var(--f-body, Archivo, sans-serif); color: rgba(244, 242, 239, .6); max-width: 30%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

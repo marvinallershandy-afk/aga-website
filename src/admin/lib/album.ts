@@ -92,6 +92,10 @@ export interface EinstellungenRow {
   vereins_geburtstag?: string | null
   /** v24-P: Smart-Pack erst ab so vielen Karten je Pack (Einzelkarten = reiner Zufall) */
   smart_ab_karten?: number
+  /** v25-D: Fern-Check-in verhindern — Code rotiert (Standard an) */
+  checkin_rotation?: boolean
+  /** v25-D: Rotationsintervall in Minuten (1–10, Standard 3) */
+  checkin_rotation_minuten?: number
 }
 export type EinstellungenInput = Partial<Omit<EinstellungenRow, 'id' | 'updated_at' | 'updated_by'>>
 
@@ -289,6 +293,30 @@ export function useCodeErzeugen() {
       return data as { spielId: string; token: string; partnerId: string | null }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: albumKeys.codes }),
+  })
+}
+
+// ── v25-D: rotierender Check-in-Code + 2-h-Vorschau (Check-in-Anzeige) ──
+export interface CheckinCode {
+  rotation: boolean
+  intervallMin: number
+  token: string
+  jetzt: { code: string; bis: string }
+  codes: { code: string; von: string; bis: string }[]
+}
+export function useCheckinCode(spielId: string | null) {
+  return useQuery({
+    queryKey: ['album_checkin_code', spielId] as const,
+    enabled: !!spielId,
+    // alle 2 Minuten frisch, hält aber die Vorschau bei kurzen WLAN-Aussetzern
+    refetchInterval: 2 * 60_000,
+    staleTime: 60_000,
+    queryFn: async (): Promise<CheckinCode> => {
+      const { data, error } = await db.rpc('album_checkin_code', { p_spiel: spielId })
+      if (error) throw error
+      return data as CheckinCode
+    },
+    retry: false,
   })
 }
 

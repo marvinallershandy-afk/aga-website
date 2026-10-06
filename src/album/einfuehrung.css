@@ -11,6 +11,8 @@
   background: radial-gradient(110% 60% at 50% -10%, rgba(233, 29, 41, .14), rgba(233, 29, 41, 0) 60%), var(--c-ink);
   border: var(--border); box-shadow: 0 30px 80px rgba(0, 0, 0, .55); outline: none;
   animation: ef-hoch .45s var(--ease) both;
+  /* v25 Befund 8: beim Wischen über die Schritte wird nichts blau markiert */
+  user-select: none; -webkit-user-select: none; touch-action: pan-y;
 }
 @keyframes ef-hoch { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
 .ef__x { position: absolute; right: 8px; top: 8px; display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 50%; background: none; color: var(--c-text-2); cursor: pointer; }

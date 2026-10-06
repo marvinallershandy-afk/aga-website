@@ -40,16 +40,29 @@ export function LiveTabelle({ settings, konferenz }: { settings: LiveSettings; k
       ) : TABLE_PREVIEW.length === 0 ? (
         <FussballDeWidget settings={settings} />
       ) : (
-        <Veroeffentlicht />
+        <Veroeffentlicht live={hatLive} onLive={liveMoeglich ? () => setModus('live') : undefined} />
       )}
     </div>
   )
 }
 
-function Veroeffentlicht() {
+function Veroeffentlicht({ live = false, onLive }: { live?: boolean; onLive?: () => void }) {
   const mitTore = TABLE_PREVIEW.some((r) => r.goals != null && r.against != null)
   return (
     <>
+      {/* v25 Befund 20: Läuft gerade ein Spieltag, ist die veröffentlichte Tabelle
+          der Stand VOR diesem Spieltag — klar kennzeichnen und zur Live-Tabelle führen. */}
+      {live && (
+        <div className="lv-table__badge" role="note">
+          <i className="lv-puls lv-puls--sm" aria-hidden="true" />
+          <span>Stand vor diesem Spieltag</span>
+          {onLive && (
+            <button type="button" className="lv-table__livelink" onClick={onLive}>
+              Live-Tabelle
+            </button>
+          )}
+        </div>
+      )}
       <table className="lv-table">
         <thead>
           <tr>
@@ -75,7 +88,7 @@ function Veroeffentlicht() {
           })}
         </tbody>
       </table>
-      <p className="lv-table__quelle">Stand: letzter veröffentlichter Spieltag · Quelle fussball.de</p>
+      <p className="lv-table__quelle">Stand: letzter veröffentlichter Spieltag · Quelle: fussball.de</p>
     </>
   )
 }
@@ -132,7 +145,7 @@ function LiveStand({ zeilen }: { zeilen: TabelleZeile[] }) {
           Weniger zeigen
         </button>
       )}
-      <p className="lv-table__quelle">vorläufig · berechnet aus FuPa-Ständen</p>
+      <p className="lv-table__quelle">vorläufig · Quelle: FuPa (aus Live-Ständen berechnet)</p>
     </>
   )
 }

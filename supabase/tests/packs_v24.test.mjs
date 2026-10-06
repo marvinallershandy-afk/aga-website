@@ -75,6 +75,9 @@ const settingsVorher = await one(`select doppelte_bremse, wunsch_kosten from sva
 await defaults()
 await run(NEU)
 await run(NEU) // idempotent + entzieht Default-Rechte wieder
+for (const f of files.filter((f) => f > NEU)) await run(f) // spätere Migrationen (v25 …) obendrauf
+// v25: Check-in-Rotation lehnt statische Tokens ab — die Tests checken mit dem statischen Code ein
+await db.exec(`update sva_album_einstellungen set checkin_rotation = false where id = 1`)
 
 ok(JSON.stringify((await db.query(`select fan_user_id, karte_id, anzahl from sva_album_besitz order by 1, 2`)).rows) === besitzVorher, 'Bestand: Besitz der Fans unverändert')
 ok(JSON.stringify((await db.query(`select id, art, karten, seltenheiten, geoeffnet_at from sva_album_packs order by id`)).rows) === packsVorher, 'Bestand: Packs (Karten, Seltenheiten, geöffnet) unverändert')

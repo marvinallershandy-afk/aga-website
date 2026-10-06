@@ -42,6 +42,9 @@ for (const f of files) {
   await run(f)
 }
 await run(NEU) // zweiter Lauf: idempotent + Rechte
+for (const f of files.filter((f) => f > NEU)) await run(f) // echte Reihenfolge: spätere Migrationen danach
+// v25: Check-in-Rotation lehnt statische Tokens ab — die Tests checken mit dem statischen Code ein
+await db.exec(`update sva_album_einstellungen set checkin_rotation = false where id = 1`)
 
 const claims = (uid, email) => JSON.stringify({ sub: uid, email, role: 'authenticated' })
 const as = async (uid, email, sql, params) => {

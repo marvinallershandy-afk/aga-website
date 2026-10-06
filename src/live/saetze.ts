@@ -119,15 +119,20 @@ export function zeileTexte(e: LiveEvent, ctx: SatzKontext): ZeileTexte {
   return { titel: e.type === 'kommentar' ? '' : TYP_LABEL[e.type], text }
 }
 
-/** Fuß-Hinweis zur Quelle (für den Ticker-Abschluss). */
-export function quelleFuss(source: 'fupa' | 'pult' | undefined, fupaUrl?: string): { text: string; url?: string } {
+/** Fuß-Hinweis zur Quelle (eine zustandsabhängige Zeile, v25 Befund 5).
+ * In der Vorführung NIE mit FuPa werben (G-FUPA bis zur Erlaubnis `aus`) —
+ * die Demo kennzeichnet sich als „Vorführung“. */
+export function quelleFuss(source: 'fupa' | 'pult' | undefined, fupaUrl?: string, vorfuehrung = false): { text: string; url?: string } {
+  if (vorfuehrung) return { text: 'Vorführung · ohne Gewähr' }
   if (source === 'fupa') return { text: 'Live-Daten: FuPa · ohne Gewähr', url: fupaUrl }
   return { text: 'Eigener Liveticker des Vereins · ohne Gewähr' }
 }
 
-/** Credit-Zeile für Reportertexte („Text: Niko · via FuPa“). */
-export function reporterCredit(e: LiveEvent, autorVorname?: string): string | null {
+/** Credit-Zeile für Reportertexte („Text: Niko · via FuPa“). In der Vorführung
+ * „Text: Vorführung“ statt „via FuPa“ (v25 Befund 5). */
+export function reporterCredit(e: LiveEvent, autorVorname?: string, vorfuehrung = false): string | null {
   if (e.source !== 'fupa' || e.textSource !== 'reporter') return null
+  if (vorfuehrung) return 'Text: Vorführung'
   const vn = (autorVorname ?? '').trim().split(/\s+/)[0]
   return vn ? `Text: ${vn} · via FuPa` : 'Text via FuPa'
 }

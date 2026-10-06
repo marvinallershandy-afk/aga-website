@@ -986,6 +986,8 @@ function Regeln() {
       </h2>
       <Switch checked={s.aktiv} onChange={(v) => void ab({ aktiv: v })} label="Tipp-Liga aktiv" hint="Aus = Abgaben pausiert (Ranglisten bleiben sichtbar)" />
       <Switch checked={s.elf_frei} onChange={(v) => void ab({ elf_frei: v })} label="„Deine Elf“ frei aufstellen erlaubt" hint="Sonst nur 1 TW/ABW · 2 MIT · 2 ANG" />
+      {/* v25-B: Auto-Wertung — wertet Pflichtspiele automatisch, sobald ≥ 30 min beendet */}
+      <Switch checked={s.auto_wertung} onChange={(v) => void ab({ auto_wertung: v })} label="Automatisch werten" hint="Wertet jedes Pflichtspiel ~30 Min nach Abpfiff aus Ticker/Bericht (vorläufig bis MOTM). Von Hand „Werten“ geht weiter." />
       <div>
         <Label htmlFor="tp-partner">„Tipp-Liga präsentiert von …“</Label>
         <Select id="tp-partner" value={s.partner_id ?? ''} onChange={(ev) => void ab({ partner_id: ev.target.value || null })}>
