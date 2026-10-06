@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { BookOpen, CalendarCheck, Download, ImagePlus, Loader2, QrCode, RefreshCw, Settings2, Sparkles, Ticket, Trash2, Users, Video } from 'lucide-react'
+import { BookOpen, CalendarCheck, Download, KeyRound, ListChecks, QrCode, RefreshCw, Settings2, Sparkles, Target, Ticket, Trophy, Users } from 'lucide-react'
 import { PageHeader } from './Placeholder'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
+import { Textarea } from '../components/ui/textarea'
 import { Label } from '../components/ui/label'
 import { Modal } from '../components/ui/modal'
 import { Select } from '../components/ui/select'
@@ -13,30 +14,24 @@ import { EmptyState } from '../components/ui/empty-state'
 import { useToast } from '../components/ui/toast'
 import { useConfirm } from '../components/ui/confirm'
 import { friendlyError, isMissingSchema } from '../lib/db'
-import { useRoster, useSpiele, useSponsoren } from '../lib/queries'
-import { uploadPublicImage } from '../lib/pflege'
-import { ACCEPT_IMAGES, loadImage } from '../lib/image'
+import { useSpiele, useSponsoren } from '../lib/queries'
 import { cn } from '../lib/utils'
 import {
-  SELTEN,
-  TYPEN,
-  renderStickerFoto,
-  typLabel,
   useAlbumEinstellungen,
   useAlbumStatistik,
   useCodeErzeugen,
   useCodes,
   useGutscheinEinloesen,
   useGutscheine,
-  useKarten,
-  useKartenMutations,
   useSaveAlbumEinstellungen,
-  walkoutSuchen,
   type EinstellungenInput,
-  type KarteInput,
-  type KarteRow,
 } from '../lib/album'
 import { A4, canvasZuBlob, herunterladen, plakatPdf, zeichnePlakat } from '../lib/albumPlakat'
+import { KartenTab } from './album/KartenTab'
+import { ZieleTab } from './album/ZieleTab'
+import { CodesTab } from './album/CodesTab'
+import { VerlosungenTab } from './album/VerlosungenTab'
+import { WocheTab } from './album/WocheTab'
 
 // ─────────────────────────────────────────────────────────────
 // v17-A: Admin „Album“ (Sammelalbum / Stickerheft auf /album).
@@ -49,8 +44,8 @@ import { A4, canvasZuBlob, herunterladen, plakatPdf, zeichnePlakat } from '../li
 // Die Ziehung passiert in der Datenbank; hier wird nur gepflegt.
 // ─────────────────────────────────────────────────────────────
 
-type Tab = 'spieltage' | 'sticker' | 'gutscheine' | 'einstellungen'
-const TABS: Tab[] = ['spieltage', 'sticker', 'gutscheine', 'einstellungen']
+type Tab = 'woche' | 'spieltage' | 'karten' | 'ziele' | 'codes' | 'verlosungen' | 'gutscheine' | 'einstellungen'
+const TABS: Tab[] = ['woche', 'spieltage', 'karten', 'ziele', 'codes', 'verlosungen', 'gutscheine', 'einstellungen']
 
 const datum = (iso: string) =>
   new Date(iso).toLocaleString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Berlin' })
@@ -67,19 +62,24 @@ function MigrationFehlt() {
 
 export function Album() {
   const [params, setParams] = useSearchParams()
-  const tab = (TABS.includes(params.get('tab') as Tab) ? params.get('tab') : 'spieltage') as Tab
-  const setTab = (t: Tab) => setParams(t === 'spieltage' ? {} : { tab: t }, { replace: true })
+  const roh = params.get('tab') === 'sticker' ? 'karten' : params.get('tab')
+  const tab = (TABS.includes(roh as Tab) ? roh : 'woche') as Tab
+  const setTab = (t: Tab) => setParams(t === 'woche' ? {} : { tab: t }, { replace: true })
   const stat = useAlbumStatistik(tab === 'spieltage')
   const fehlt = stat.error && isMissingSchema(stat.error)
 
   return (
     <>
-      <PageHeader title="Album" subtitle="Das Stickerheft auf /album: QR-Check-in am Eingang, Sticker-Katalog, Gutscheine und Regeln." />
-      <div role="tablist" aria-label="Album-Bereiche" className="mb-5 grid grid-cols-2 gap-1 rounded-lg bg-secondary p-1 sm:inline-grid sm:grid-cols-4">
+      <PageHeader title="Album" subtitle="Das Sammelalbum auf /album: Wochen-Ablauf, QR-Check-in, Kartenkatalog, Ziele, Codes, Verlosungen, Gutscheine und Regeln." />
+      <div role="tablist" aria-label="Album-Bereiche" className="mb-5 grid grid-cols-2 gap-1 rounded-lg bg-secondary p-1 sm:inline-grid sm:grid-cols-4 lg:grid-cols-8">
         {(
           [
+            ['woche', 'Woche', ListChecks],
             ['spieltage', 'Spieltage', CalendarCheck],
-            ['sticker', 'Sticker', Sparkles],
+            ['karten', 'Karten', Sparkles],
+            ['ziele', 'Ziele', Target],
+            ['codes', 'Codes', KeyRound],
+            ['verlosungen', 'Verlosungen', Trophy],
             ['gutscheine', 'Gutscheine', Ticket],
             ['einstellungen', 'Regeln', Settings2],
           ] as const
@@ -107,8 +107,12 @@ export function Album() {
         <MigrationFehlt />
       ) : (
         <>
+          {tab === 'woche' && <WocheTab />}
           {tab === 'spieltage' && <SpieltageTab />}
-          {tab === 'sticker' && <StickerTab />}
+          {tab === 'karten' && <KartenTab />}
+          {tab === 'ziele' && <ZieleTab />}
+          {tab === 'codes' && <CodesTab />}
+          {tab === 'verlosungen' && <VerlosungenTab />}
           {tab === 'gutscheine' && <GutscheineTab />}
           {tab === 'einstellungen' && <EinstellungenTab />}
         </>
@@ -350,316 +354,6 @@ function PlakatModal({
   )
 }
 
-// ── Sticker-Katalog ─────────────────────────────────────────
-function StickerTab() {
-  const toast = useToast()
-  const confirm = useConfirm()
-  const karten = useKarten()
-  const roster = useRoster()
-  const sponsoren = useSponsoren()
-  const { save, remove, ausKader } = useKartenMutations()
-  const [editor, setEditor] = useState<{ row: KarteRow | null } | null>(null)
-  const [suche, setSuche] = useState(false)
-  const [filter, setFilter] = useState<string>('alle')
-
-  const rows = karten.data ?? []
-  const sichtbar = filter === 'alle' ? rows : rows.filter((r) => r.typ === filter)
-  const rosterSlug = (id: string | null) => (roster.data ?? []).find((r) => r.id === id)?.slug
-
-  const walkouts = async () => {
-    setSuche(true)
-    let n = 0
-    try {
-      for (const k of rows.filter((r) => (r.typ === 'spieler' || r.typ === 'trainer') && !r.walkout_url)) {
-        const url = await walkoutSuchen(k, rosterSlug(k.roster_id))
-        if (url) {
-          await save.mutateAsync({ id: k.id, input: { walkout_url: url } })
-          n++
-        }
-      }
-      toast.success(n ? `${n} Walkout-Video${n === 1 ? '' : 's'} verknüpft.` : 'Keine neuen Walkout-Videos gefunden (public/players/walkout/).')
-    } catch (e) {
-      toast.error(friendlyError(e))
-    } finally {
-      setSuche(false)
-    }
-  }
-
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <Button
-          onClick={async () => {
-            try {
-              const r = await ausKader.mutateAsync()
-              toast.success(`Aus dem Kader: ${r.bronze} Spieler-, ${r.gold} Kapitäns- und ${r.trainer} Trainerstab-Sticker neu (Saison ${r.saison}).`)
-            } catch (e) {
-              toast.error(friendlyError(e))
-            }
-          }}
-          disabled={ausKader.isPending}
-        >
-          <Users className="h-4 w-4" /> Sticker aus Kader erzeugen
-        </Button>
-        <Button variant="outline" onClick={() => setEditor({ row: null })}>
-          <ImagePlus className="h-4 w-4" /> Neuer Sticker
-        </Button>
-        <Button variant="ghost" onClick={() => void walkouts()} disabled={suche || !rows.length}>
-          {suche ? <Loader2 className="h-4 w-4 animate-spin" /> : <Video className="h-4 w-4" />} Walkouts suchen
-        </Button>
-        <Select aria-label="Typ filtern" value={filter} onChange={(e) => setFilter(e.target.value)} className="ml-auto w-auto">
-          <option value="alle">Alle ({rows.length})</option>
-          {TYPEN.map((t) => (
-            <option key={t.value} value={t.value}>
-              {t.label} ({rows.filter((r) => r.typ === t.value).length})
-            </option>
-          ))}
-        </Select>
-      </div>
-      <p className="text-sm text-muted-foreground">
-        Jeder Spieler hat einen Platz im Heft — weitere Versionen (Silber, Gold, Glitzer) zählen für denselben Platz. Momente sind meist Gold oder Glitzer.
-        Partner-Sticker sind eine verkaufbare Leistung („Deine Firma als Sticker im SVA-Heft“).
-      </p>
-      {karten.isLoading ? (
-        <SkeletonRows rows={6} />
-      ) : rows.length === 0 ? (
-        <EmptyState icon={Sparkles} title="Noch keine Sticker" description="Starte mit „Sticker aus Kader erzeugen“ — danach Momente und Partner ergänzen." />
-      ) : (
-        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {sichtbar.map((k) => (
-            <li key={k.id} className={cn('flex gap-3 rounded-lg border border-border bg-card p-3', !k.aktiv && 'opacity-60')}>
-              <div className="h-20 w-16 shrink-0 overflow-hidden rounded bg-secondary">
-                {k.bild_url && <img src={k.bild_url} alt="" className="h-full w-full object-cover" loading="lazy" />}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-medium">{k.titel}</p>
-                <p className="truncate text-xs text-muted-foreground">
-                  {typLabel(k.typ)}
-                  {k.untertitel ? ` · ${k.untertitel}` : ''}
-                  {k.saison ? ` · ${k.saison}` : ' · jede Saison'}
-                  {k.walkout_url ? ' · Walkout' : ''}
-                </p>
-                <div className="mt-2 flex items-center gap-2">
-                  <Select
-                    aria-label={`Seltenheit ${k.titel}`}
-                    value={k.seltenheit}
-                    className="h-9 w-auto py-0 text-xs"
-                    onChange={async (e) => {
-                      try {
-                        await save.mutateAsync({ id: k.id, input: { seltenheit: e.target.value as KarteRow['seltenheit'] } })
-                      } catch (err) {
-                        toast.error(friendlyError(err))
-                      }
-                    }}
-                  >
-                    {SELTEN.map((s) => (
-                      <option key={s.value} value={s.value}>
-                        {s.label}
-                      </option>
-                    ))}
-                  </Select>
-                  <Button variant="ghost" size="sm" onClick={() => setEditor({ row: k })}>
-                    Bearbeiten
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label={`${k.titel} löschen`}
-                    onClick={async () => {
-                      const ok = await confirm({
-                        title: 'Sticker löschen?',
-                        description: 'Fans verlieren diesen Sticker aus ihrem Heft. Besser: deaktivieren.',
-                        confirmLabel: 'Löschen',
-                        destructive: true,
-                      })
-                      if (!ok) return
-                      try {
-                        await remove.mutateAsync(k.id)
-                      } catch (err) {
-                        toast.error(friendlyError(err))
-                      }
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
-      {editor && (
-        <StickerEditor
-          row={editor.row}
-          roster={(roster.data ?? []).map((r) => ({ id: r.id, name: r.name, foto: r.foto_url, rolle: (r as { rolle?: string }).rolle ?? 'spieler' }))}
-          sponsoren={(sponsoren.data ?? []).map((s) => ({ id: s.id, name: s.name }))}
-          onClose={() => setEditor(null)}
-        />
-      )}
-    </div>
-  )
-}
-
-function StickerEditor({
-  row,
-  roster,
-  sponsoren,
-  onClose,
-}: {
-  row: KarteRow | null
-  roster: { id: string; name: string; foto: string | null; rolle: string }[]
-  sponsoren: { id: string; name: string }[]
-  onClose: () => void
-}) {
-  const toast = useToast()
-  const { save } = useKartenMutations()
-  const stat = useAlbumStatistik()
-  const [f, setF] = useState<KarteInput>(
-    row ?? { typ: 'moment', seltenheit: 'gold', aktiv: true, saison: stat.data?.saison ?? null, titel: '', untertitel: null, bild_url: null, roster_id: null, sponsor_id: null, sortierung: 0 },
-  )
-  const [upload, setUpload] = useState(false)
-  const datei = useRef<HTMLInputElement>(null)
-  const set = (p: KarteInput) => setF((x) => ({ ...x, ...p }))
-
-  const hochladen = async (file: File) => {
-    setUpload(true)
-    try {
-      const img = await loadImage(file)
-      const blob = await renderStickerFoto(img)
-      set({ bild_url: await uploadPublicImage(blob, 'album', f.titel || 'sticker') })
-    } catch (e) {
-      toast.error(friendlyError(e, 'Upload fehlgeschlagen.'))
-    } finally {
-      setUpload(false)
-    }
-  }
-  const speichern = async () => {
-    if (!f.titel || f.titel.trim().length < 2) return toast.error('Bitte einen Titel eingeben.')
-    if ((f.typ === 'spieler' || f.typ === 'trainer') && !f.roster_id) return toast.error('Bitte den Spieler bzw. Trainer auswählen.')
-    try {
-      await save.mutateAsync({ id: row?.id, input: { ...f, titel: f.titel.trim(), untertitel: f.untertitel?.trim() || null, saison: f.saison?.trim() || null } })
-      toast.success('Sticker gespeichert.')
-      onClose()
-    } catch (e) {
-      toast.error(friendlyError(e))
-    }
-  }
-
-  return (
-    <Modal
-      open
-      onClose={onClose}
-      title={row ? 'Sticker bearbeiten' : 'Neuer Sticker'}
-      footer={
-        <>
-          <Button variant="ghost" onClick={onClose}>
-            Abbrechen
-          </Button>
-          <Button onClick={() => void speichern()} disabled={save.isPending || upload}>
-            Speichern
-          </Button>
-        </>
-      }
-    >
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="st-typ">Art</Label>
-            <Select id="st-typ" value={f.typ} onChange={(e) => set({ typ: e.target.value as KarteRow['typ'] })} disabled={!!row}>
-              {TYPEN.map((t) => (
-                <option key={t.value} value={t.value}>
-                  {t.label}
-                </option>
-              ))}
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="st-selt">Seltenheit</Label>
-            <Select id="st-selt" value={f.seltenheit} onChange={(e) => set({ seltenheit: e.target.value as KarteRow['seltenheit'] })}>
-              {SELTEN.map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.label} ({s.chance})
-                </option>
-              ))}
-            </Select>
-          </div>
-        </div>
-        {(f.typ === 'spieler' || f.typ === 'trainer') && (
-          <div className="space-y-1.5">
-            <Label htmlFor="st-roster">{f.typ === 'spieler' ? 'Spieler' : 'Trainerstab'}</Label>
-            <Select
-              id="st-roster"
-              value={f.roster_id ?? ''}
-              onChange={(e) => {
-                const r = roster.find((x) => x.id === e.target.value)
-                set({ roster_id: e.target.value || null, titel: r?.name ?? f.titel, bild_url: f.bild_url ?? r?.foto ?? null })
-              }}
-            >
-              <option value="">— auswählen —</option>
-              {roster
-                .filter((r) => (f.typ === 'spieler' ? r.rolle === 'spieler' : r.rolle !== 'spieler'))
-                .map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.name}
-                  </option>
-                ))}
-            </Select>
-            <p className="text-xs text-muted-foreground">Für Sonderversionen (z. B. Gold „Torjäger“, Glitzer „Spieler des Spiels“) — zählt für denselben Platz im Heft.</p>
-          </div>
-        )}
-        {f.typ === 'partner' && (
-          <div className="space-y-1.5">
-            <Label htmlFor="st-sponsor">Partner</Label>
-            <Select
-              id="st-sponsor"
-              value={f.sponsor_id ?? ''}
-              onChange={(e) => set({ sponsor_id: e.target.value || null, titel: f.titel || sponsoren.find((s) => s.id === e.target.value)?.name || '' })}
-            >
-              <option value="">— auswählen —</option>
-              {sponsoren.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </Select>
-            <p className="text-xs text-muted-foreground">Ohne eigenes Foto zeigt der Sticker das Partner-Logo.</p>
-          </div>
-        )}
-        <div className="space-y-1.5">
-          <Label htmlFor="st-titel">Titel *</Label>
-          <Input id="st-titel" value={f.titel ?? ''} maxLength={60} onChange={(e) => set({ titel: e.target.value })} placeholder="z. B. Das Tor zur Meisterschaft" />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="st-unter">Untertitel / Bildunterschrift</Label>
-          <Input id="st-unter" value={f.untertitel ?? ''} maxLength={80} onChange={(e) => set({ untertitel: e.target.value })} placeholder="z. B. 90+7. Minute · Meister 2026" />
-        </div>
-        <div className="space-y-1.5">
-          <Label>Foto</Label>
-          <div className="flex items-center gap-3">
-            <div className="h-24 w-20 overflow-hidden rounded bg-secondary">{f.bild_url && <img src={f.bild_url} alt="" className="h-full w-full object-cover" />}</div>
-            <input ref={datei} type="file" accept={ACCEPT_IMAGES} className="hidden" onChange={(e) => e.target.files?.[0] && void hochladen(e.target.files[0])} />
-            <Button variant="outline" onClick={() => datei.current?.click()} disabled={upload}>
-              {upload ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />} Foto wählen
-            </Button>
-          </div>
-          <p className="text-xs text-muted-foreground">Keine Kinder ohne Einwilligung der Eltern, keine Alkohol-Motive im Vordergrund.</p>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="st-saison">Saison</Label>
-            <Input id="st-saison" value={f.saison ?? ''} onChange={(e) => set({ saison: e.target.value })} placeholder="leer = jede Saison" />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="st-walk">Walkout-Video (optional)</Label>
-            <Input id="st-walk" value={f.walkout_url ?? ''} onChange={(e) => set({ walkout_url: e.target.value || null })} placeholder="/players/walkout/…" />
-          </div>
-        </div>
-        <Switch checked={!!f.aktiv} onChange={(v) => set({ aktiv: v })} label="Aktiv" hint="Nur aktive Sticker können gezogen werden und erscheinen im Heft." />
-      </div>
-    </Modal>
-  )
-}
-
 // ── Gutscheine ──────────────────────────────────────────────
 function GutscheineTab() {
   const toast = useToast()
@@ -751,7 +445,7 @@ function EinstellungenTab() {
       {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
     </div>
   )
-  const partnerWahl = (key: 'partner_1_id' | 'partner_2_id' | 'partner_komplett_id') => (
+  const partnerWahl = (key: 'partner_1_id' | 'partner_2_id' | 'partner_3_id' | 'partner_komplett_id') => (
     <Select aria-label="präsentiert von" value={f[key] ?? ''} onChange={(e) => set({ [key]: e.target.value || null } as EinstellungenInput)}>
       <option value="">— ohne Partner —</option>
       {(sponsoren.data ?? [])
@@ -794,7 +488,13 @@ function EinstellungenTab() {
             <Input id="e-b2" value={f.belohnung_2 ?? ''} maxLength={80} onChange={(e) => set({ belohnung_2: e.target.value })} />
           </div>
           <div className="space-y-1.5 self-end">{partnerWahl('partner_2_id')}</div>
-          <div className="flex items-end pb-2 text-sm text-muted-foreground">Heft voll</div>
+          {zahl('schwelle_3', 'Check-ins', 3, 60)}
+          <div className="space-y-1.5">
+            <Label htmlFor="e-b3">3. Belohnung (Verlosungs-Los)</Label>
+            <Input id="e-b3" value={f.belohnung_3 ?? ''} maxLength={80} onChange={(e) => set({ belohnung_3: e.target.value })} />
+          </div>
+          <div className="space-y-1.5 self-end">{partnerWahl('partner_3_id')}</div>
+          <div className="flex items-end pb-2 text-sm text-muted-foreground">Mannschaft voll</div>
           <div className="space-y-1.5">
             <Label htmlFor="e-bk">Mannschaft komplett</Label>
             <Input id="e-bk" value={f.belohnung_komplett ?? ''} maxLength={80} onChange={(e) => set({ belohnung_komplett: e.target.value })} />
@@ -804,21 +504,50 @@ function EinstellungenTab() {
       </section>
 
       <section className="space-y-4 rounded-lg border border-border p-4">
-        <h2 className="font-display text-xl">Tütchen & Chancen</h2>
+        <h2 className="font-display text-xl">Packs & Chancen</h2>
         <div className="grid gap-3 sm:grid-cols-4">
           {zahl('gewicht_bronze', `Kader · ${pct(f.gewicht_bronze)}`, 0, 1000)}
           {zahl('gewicht_silber', `Silber · ${pct(f.gewicht_silber)}`, 0, 1000)}
           {zahl('gewicht_gold', `Gold · ${pct(f.gewicht_gold)}`, 0, 1000)}
-          {zahl('gewicht_spezial', `Glitzer · ${pct(f.gewicht_spezial)}`, 0, 1000)}
+          {zahl('gewicht_spezial', `Spezial · ${pct(f.gewicht_spezial)}`, 0, 1000)}
         </div>
         <div className="grid gap-3 sm:grid-cols-4">
-          {zahl('karten_pro_pack', 'Sticker pro Tütchen', 1, 5, 'Standard 3')}
-          {zahl('doppelte_bremse', 'Doppelten-Bremse %', 0, 100, 'bevorzugt fehlende Sticker')}
+          {zahl('karten_pro_pack', 'Karten je Check-in-Pack', 1, 5, 'Standard 3')}
+          {zahl('doppelte_bremse', 'Doppelten-Bremse %', 0, 100, 'bevorzugt fehlende Karten (Standard 25)')}
           {zahl('fenster_vor_min', 'Fenster vor Anstoß (min)', 0, 240)}
           {zahl('fenster_nach_min', 'Fenster nach Anstoß (min)', 15, 360, '135 ≈ Abpfiff + 30 min')}
         </div>
-        <Switch checked={!!f.bonus_heimsieg} onChange={(v) => set({ bonus_heimsieg: v })} label="Bonus-Tütchen bei Heimsieg" hint="Wird automatisch verteilt, sobald das Ergebnis feststeht." />
+        <div className="grid gap-3 sm:grid-cols-4">
+          {zahl('karten_starter', 'Starter-Pack', 1, 10, 'bei Anmeldung, Standard 5')}
+          {zahl('karten_heimsieg', 'Heimsieg-Bonus', 0, 5, 'Karten, Standard 1')}
+          {zahl('karten_tipp', 'Je Tipp', 0, 5, 'Tipp-Liga, Standard 1')}
+          {zahl('karten_story', 'Story-Code', 0, 5, 'Standard 1')}
+          {zahl('karten_freund', 'Freund-Bonus', 0, 5, 'beide eingecheckt, Standard 1')}
+          {zahl('karten_kapitel', 'Kapitel komplett', 0, 5, 'Bonus-Karten, Standard 1')}
+        </div>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <Switch checked={!!f.starter_min_silber} onChange={(v) => set({ starter_min_silber: v })} label="Starter mit mind. 1 Silber" />
+          <Switch checked={!!f.smart_pack} onChange={(v) => set({ smart_pack: v })} label="Smart-Pack" hint="Erste Karte jedes Packs ist eine fehlende" />
+          <Switch checked={!!f.smart_pack_belohnung} onChange={(v) => set({ smart_pack_belohnung: v })} label="Smart-Pack auch bei Belohnungen" hint="Aus empfohlen (sonst zu schnell komplett)" />
+          <Switch checked={!!f.bonus_heimsieg} onChange={(v) => set({ bonus_heimsieg: v })} label="Bonus-Pack bei Heimsieg" hint="Wird automatisch verteilt, sobald das Ergebnis feststeht." />
+        </div>
         <Switch checked={!!f.aktiv} onChange={(v) => set({ aktiv: v })} label="Album aktiv" hint="Aus = Check-ins werden freundlich abgelehnt (z. B. Sommerpause)." />
+      </section>
+
+      <section className="space-y-4 rounded-lg border border-border p-4">
+        <h2 className="font-display text-xl">Tausch, Codes & Lose</h2>
+        <div className="grid gap-3 sm:grid-cols-4">
+          {zahl('tausch_min_tage', 'Tausch ab Kontoalter (Tage)', 0, 60, 'Standard 7')}
+          {zahl('tausch_pro_woche', 'Tausche pro Woche', 0, 50, 'Standard 5')}
+          {zahl('wunsch_kosten', 'Doppelte je Wunschkarte', 2, 10, 'Standard 3')}
+          {zahl('code_fehler_limit', 'Code-Fehlversuche/Std.', 3, 100, 'danach gesperrt')}
+          {zahl('lose_checkin', 'Lose je Check-in', 0, 10, 'Standard 1')}
+          {zahl('lose_komplett', 'Lose für volles Album', 0, 100, 'Standard 5')}
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="e-tn">Teilnahmebedingungen Verlosung</Label>
+          <Textarea id="e-tn" rows={4} value={f.teilnahme_text ?? ''} onChange={(e) => set({ teilnahme_text: e.target.value })} />
+        </div>
       </section>
 
       <div className="flex flex-wrap gap-2">

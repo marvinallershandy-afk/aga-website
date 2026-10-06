@@ -13,6 +13,10 @@ const GRUND: Record<string, string> = {
   limit: 'Diese Woche sind schon fünf Tausche gelaufen.',
   abgelaufen: 'Dieses Angebot ist abgelaufen.',
   eigen: 'Das ist dein eigenes Angebot — schick den Link an einen Freund.',
+  erledigt: 'Dieser Tausch ist schon gelaufen.',
+  zurueckgezogen: 'Das Angebot wurde zurückgezogen.',
+  kein_profil: 'Bitte zuerst deinen Vornamen speichern.',
+  partner_keine_doppelte: 'Dein Tauschpartner hat die Karte nicht mehr doppelt.',
 }
 
 export function TauschDialog({ code, karten, saison, onSchliessen, onErledigt }: { code: string; karten: Map<string, Karte>; saison: string; onSchliessen: () => void; onErledigt: () => void }) {

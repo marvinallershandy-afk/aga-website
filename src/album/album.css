@@ -210,77 +210,6 @@ em { font-style: normal; color: var(--c-red); }
 .al-ci__puls, .al-gut__puls { width: 8px; height: 8px; border-radius: 50%; background: var(--c-red); flex: none; display: inline-block; animation: al-blink 1.6s ease-in-out infinite; }
 @keyframes al-blink { 50% { opacity: .3; } }
 
-/* ══ Sticker ════════════════════════════════════════════════
-   Helle Sticker-Kante (Panini), innen dunkle Folie mit scharfem
-   Freisteller. Seltenheit = Kante als feine Folie. */
-.st {
-  position: relative; container-type: inline-size; aspect-ratio: 5 / 6;
-  display: flex; flex-direction: column; overflow: hidden;
-  padding: 4% 4% 0; border-radius: var(--r-s);
-  background: var(--sticker-kante);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 6px 16px rgba(0, 0, 0, .3);
-}
-.st__bild {
-  position: relative; flex: 1; min-height: 0; overflow: hidden; border-radius: 2px;
-  background: radial-gradient(110% 85% at 50% 22%, #5a1219 0%, #23090c 55%, #0d0607 100%);
-}
-.st__bild img, .st__bild video { width: 100%; height: 100%; object-fit: cover; object-position: 50% 16%; }
-.st__bild--frei img { object-fit: cover; object-position: 50% 0; transform: scale(1.2); transform-origin: 50% 6%; }
-.st__bild--logo { background: #fff; display: grid; place-items: center; }
-.st__bild--logo img { width: 78%; height: 70%; object-fit: contain; }
-.st__ohne { position: absolute; inset: 0; display: grid; place-items: center; }
-.st__bild .st__ohne img { width: 44%; height: auto; object-fit: contain; opacity: .55; margin-bottom: 18%; }
-.st__ohne span { position: absolute; bottom: 8%; font-family: var(--f-display); font-size: 24cqw; line-height: 1; color: rgba(244, 242, 239, .8); }
-.st__fuss {
-  flex: none; height: 15cqw; display: flex; align-items: center; justify-content: space-between; gap: 2cqw; padding: 0 1cqw;
-  font-weight: 700; font-size: 6.6cqw; line-height: 1; letter-spacing: .08em; text-transform: uppercase; color: #1a1718;
-}
-.st__fuss span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.st__fuss img { height: 10cqw; width: auto; }
-.st__c { position: absolute; top: 4cqw; right: 4cqw; display: grid; place-items: center; width: 12cqw; height: 12cqw; border-radius: 50%; background: var(--c-accent); color: #16120a; font-family: var(--f-display); font-size: 7.5cqw; }
-.st__band { position: absolute; left: 0; right: 0; bottom: 0; padding: 2cqw 0; text-align: center; font-weight: 700; font-size: 6cqw; letter-spacing: .14em; text-transform: uppercase; color: var(--c-white); background: rgba(11, 10, 11, .78); }
-.st--gold .st__band { color: var(--c-accent); }
-.st--moment { aspect-ratio: 6 / 5; }
-.st--moment .st__bild img { object-position: 50% 40%; }
-/* Veredelung: Folienkante statt grellem Verlauf */
-.st--silber { background: var(--folie-silber); }
-.st--gold { background: var(--folie-gold); }
-.st--spezial { background: var(--folie-holo); }
-.st--silber .st__fuss, .st--gold .st__fuss, .st--spezial .st__fuss { color: #141112; }
-.st__folie { position: absolute; inset: 0; pointer-events: none; z-index: 2; border-radius: inherit; }
-.st--spezial .st__folie { z-index: 0; }
-.st--spezial .st__bild, .st--spezial .st__fuss { z-index: 1; }
-.st--spezial .st__fuss { position: relative; }
-/* Holo nur als Hauch über dem Foto */
-.st--spezial .st__bild::after {
-  content: ""; position: absolute; inset: 0; pointer-events: none; mix-blend-mode: soft-light; opacity: .3;
-  background: linear-gradient(115deg, rgba(255, 80, 200, .6), rgba(80, 220, 255, .6) 35%, rgba(160, 255, 120, .5) 60%, rgba(255, 215, 90, .6));
-  background-size: 300% 300%;
-}
-.al-flip .st--spezial .st__bild::after, .al-detail .st--spezial .st__bild::after { animation: al-holo 6s linear infinite; }
-@keyframes al-holo { to { background-position: 300% 50%; } }
-/* Ein Lichtstreif über die Folie — nur beim Aufdecken / in der Detailansicht */
-.st--silber .st__folie, .st--gold .st__folie, .st--spezial .st__folie {
-  background: linear-gradient(110deg, transparent 38%, rgba(255, 255, 255, .45) 48%, rgba(255, 255, 255, .06) 55%, transparent 62%);
-  background-size: 260% 100%; background-position: 120% 0; mix-blend-mode: soft-light;
-}
-.al-flip.is-vorne .st__folie, .al-detail .st__folie { animation: al-streif 1.2s var(--ease) .1s 1 both; }
-@keyframes al-streif { from { background-position: 120% 0; } to { background-position: -40% 0; } }
-
-/* Rückseite (Abziehpapier, Panini-Akzent) */
-.st-rueck {
-  position: relative; container-type: inline-size; aspect-ratio: 5 / 6; border-radius: var(--r-s); overflow: hidden;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
-  background: var(--c-ink); border: 1px solid rgba(244, 242, 239, .18);
-  color: var(--c-white); box-shadow: var(--shadow-float);
-}
-.st-rueck::after { content: ""; position: absolute; inset: 6cqw; border: 1px solid rgba(244, 242, 239, .12); border-radius: 2px; }
-.st-rueck img { width: 30%; }
-.st-rueck b { font-family: var(--f-display); font-weight: 400; font-size: 10cqw; text-transform: uppercase; line-height: 1; letter-spacing: .02em; }
-.st-rueck span { font-size: 4cqw; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--c-red); }
-.st-rueck em { margin-top: 2cqw; font-family: var(--f-display); font-size: 6cqw; color: var(--c-text-2); }
-.st-rueck small { position: absolute; right: 8cqw; bottom: 8cqw; font-size: 3.6cqw; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--c-text-3); }
-
 /* ══ Das aufgeschlagene Heft ════════════════════════════════ */
 .hf { padding-top: var(--s-4); }
 /* Reiter: Text mit roter Unterstreichung statt Papierreiter */
@@ -443,90 +372,6 @@ em { font-style: normal; color: var(--c-red); }
 .al-chip--neu { background: var(--c-red); border-color: var(--c-red); }
 .al-chip--neu::before { display: none; }
 
-/* ── Tütchen aufreißen ───────────────────────────────────── */
-.al-pack {
-  position: fixed; inset: 0; z-index: 100; overflow-y: auto;
-  display: flex; align-items: center; justify-content: center;
-  padding: calc(var(--s-5) + env(safe-area-inset-top)) var(--s-4) calc(var(--s-5) + env(safe-area-inset-bottom));
-}
-.al-pack__bg { position: fixed; inset: 0; background: radial-gradient(70% 50% at 50% 42%, #1d1214 0%, #0b0a0b 70%); }
-.al-pack__bg::after { content: ""; position: absolute; inset: 0; opacity: 0; transition: opacity .6s var(--ease); }
-.al-pack__bg[data-selt="silber"]::after { opacity: 1; background: radial-gradient(45% 35% at 50% 42%, rgba(220, 226, 235, .18), transparent 70%); }
-.al-pack__bg[data-selt="gold"]::after { opacity: 1; background: radial-gradient(45% 35% at 50% 42%, rgba(232, 193, 90, .26), transparent 72%); }
-.al-pack__bg[data-selt="spezial"]::after { opacity: 1; background: radial-gradient(45% 35% at 50% 42%, rgba(200, 170, 255, .2), transparent 72%); }
-.al-pack__stage { position: relative; display: flex; flex-direction: column; align-items: center; gap: var(--s-4); width: 100%; max-width: 420px; }
-.al-pack__stage--ende { max-width: 560px; }
-.al-pack__kicker { font-size: var(--t-label); font-weight: 700; letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--c-red); text-align: center; }
-.al-pack__story { margin-top: var(--s-3); font-size: var(--t-small); color: var(--c-text-2); text-align: center; }
-.al-pack__stage--ende .ig-zeile { margin-top: var(--s-2); }
-.al-pack__hint { min-height: 1.5em; font-weight: 700; color: var(--c-text-2); letter-spacing: var(--ls-label); text-transform: uppercase; font-size: var(--t-label); }
-.al-pack__info { display: flex; flex-direction: column; align-items: center; gap: var(--s-2); min-height: 64px; text-align: center; }
-.al-pack__name { font-family: var(--f-display); font-size: 1.75rem; line-height: 1; text-transform: uppercase; }
-.al-pack__liste { list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-4); width: 100%; }
-.al-pack__liste li { display: flex; flex-direction: column; align-items: center; gap: var(--s-2); }
-.al-pack__liste li .st { width: 100%; }
-.al-pack__gut { width: 100%; padding: var(--s-3) var(--s-4); border-radius: var(--r-s); text-align: center; background: var(--c-ink-2); border: 1px solid var(--c-accent); color: var(--c-white); font-weight: 600; }
-.al-pack .al-h2 { text-align: center; }
-/* Tütchen: rote Folie, ruhig schwebend */
-.al-tuete {
-  position: relative; width: min(58vw, 230px); aspect-ratio: 250 / 350; padding: 0; border: 0; background: none;
-  filter: drop-shadow(0 24px 36px rgba(0, 0, 0, .6));
-  animation: al-schweben 4s ease-in-out infinite;
-}
-.al-tuete:disabled { cursor: progress; }
-.al-tuete.is-laden { animation: al-zittern .5s ease-in-out infinite; }
-.al-tuete__koerper, .al-tuete__rand {
-  position: absolute; left: 0; right: 0;
-  background:
-    linear-gradient(115deg, transparent 22%, rgba(255, 255, 255, .18) 32%, transparent 42%),
-    linear-gradient(170deg, #e9232e 0%, #a5121a 45%, #3f070b 85%, #1a0507 100%);
-}
-.al-tuete__rand { top: 0; height: 13%; border-radius: 3px 3px 0 0;
-  -webkit-mask: linear-gradient(#000 0 0) top / 100% 82% no-repeat, linear-gradient(135deg, #000 50%, transparent 50%) bottom left / 10px 18% repeat-x;
-  mask: linear-gradient(#000 0 0) top / 100% 82% no-repeat, linear-gradient(135deg, #000 50%, transparent 50%) bottom left / 10px 18% repeat-x;
-}
-.al-tuete__koerper {
-  top: 12%; bottom: 0; border-radius: 0 0 var(--r-s) var(--r-s);
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--s-1); padding: 6% 10% 30%;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .16);
-}
-.al-tuete__koerper img { width: 40%; }
-.al-tuete__koerper b { font-family: var(--f-display); font-weight: 400; font-size: 2.5rem; line-height: .95; letter-spacing: .03em; color: var(--c-white); text-transform: uppercase; }
-.al-tuete__koerper em { color: var(--c-white); font-weight: 700; font-size: .625rem; letter-spacing: .24em; text-transform: uppercase; }
-.al-tuete__koerper small { margin-top: var(--s-1); font-weight: 700; font-size: .6875rem; letter-spacing: .12em; text-transform: uppercase; color: var(--c-white); opacity: .8; }
-.al-tuete__partner { position: absolute; left: 8%; right: 8%; bottom: 5%; display: flex; flex-direction: column; align-items: center; gap: var(--s-1); padding: 6px; border-radius: var(--r-s); background: #fff; color: #222; font-size: .5625rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
-.al-tuete__partner img { max-height: 24px; max-width: 80%; object-fit: contain; }
-.al-tuete__partner strong { font-size: .8rem; letter-spacing: .04em; text-transform: none; }
-.al-tuete.is-reissen { animation: al-ruck .25s ease-out 1; }
-.al-tuete.is-reissen .al-tuete__rand { animation: al-abreissen .55s cubic-bezier(.3, .6, .4, 1) forwards; }
-.al-tuete.is-reissen .al-tuete__koerper { animation: al-weg .45s ease-in .3s forwards; }
-@keyframes al-schweben { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
-@keyframes al-zittern { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-1.5deg); } 75% { transform: rotate(1.5deg); } }
-@keyframes al-ruck { 50% { transform: scale(1.03); } }
-@keyframes al-abreissen { to { transform: translate(55%, -110%) rotate(22deg); opacity: 0; } }
-@keyframes al-weg { to { transform: translateY(24%) scale(.92); opacity: 0; } }
-/* Sticker umdrehen */
-.al-flip { position: relative; width: min(64vw, 280px); padding: 0; border: 0; background: none; perspective: 1400px; }
-.al-flip__innen { position: relative; display: block; aspect-ratio: 5 / 6; transform-style: preserve-3d; transition: transform .7s var(--ease); }
-.al-flip.is-rueck .al-flip__innen, .al-flip.is-spannung .al-flip__innen { transform: rotateY(180deg); }
-.al-flip.is-rueck .al-flip__innen { animation: al-einflug .45s var(--ease) both; }
-@keyframes al-einflug { from { transform: rotateY(180deg) translateY(30%) scale(.8); opacity: 0; } to { transform: rotateY(180deg); opacity: 1; } }
-.al-flip__seite { position: absolute; inset: 0; display: block; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
-.al-flip__seite .st { width: 100%; box-shadow: var(--shadow-float); }
-.al-flip__hinten { transform: rotateY(180deg); }
-.al-flip.is-spannung .al-flip__hinten { animation: al-zittern .2s linear infinite; }
-/* Seltenheit: nur ein weicher Lichtschein hinter dem Sticker */
-.al-flip__glow { position: absolute; inset: -10%; border-radius: 24px; opacity: 0; transition: opacity var(--d-3) var(--ease); filter: blur(28px); }
-.al-flip--silber .al-flip__glow { background: rgba(220, 226, 235, .35); }
-.al-flip--gold .al-flip__glow { background: rgba(232, 193, 90, .45); }
-.al-flip--spezial .al-flip__glow { background: rgba(200, 170, 255, .35); }
-.al-flip.is-spannung .al-flip__glow { opacity: 1; }
-.al-flip.is-vorne:not(.al-flip--bronze) .al-flip__glow { opacity: .6; }
-.al-flip__strahlen { display: none; }
-.al-konfetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 101; }
-.al-konfetti i { position: absolute; top: -20px; border-radius: 1px; animation-name: al-fall; animation-timing-function: cubic-bezier(.25, .6, .5, 1); animation-fill-mode: forwards; }
-@keyframes al-fall { to { transform: translate(var(--w), 110vh) rotate(var(--r)); } }
-
 /* ── Detail ──────────────────────────────────────────────── */
 .al-detail {
   position: fixed; inset: 0; z-index: 90; overflow-y: auto;
@@ -597,11 +442,7 @@ em { font-style: normal; color: var(--c-red); }
 
 /* ── Ruhige Bewegung ─────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  .al-tuete, .al-tuete.is-laden, .st__folie, .al-gut__bg, .al-ci__puls, .al-gut__puls, .hf-platz.is-frisch .st, .al-flip .st__folie, .al-detail .st__folie { animation: none !important; }
-  .al-flip__innen, .al-cover__bild, .hf-balken i, .hf-platz__btn { transition: none; }
+  .al-gut__bg, .al-ci__puls, .al-gut__puls { animation: none !important; }
+  .al-cover__bild, .hf-balken i, .hf-platz__btn { transition: none; }
   .hf-seiten { scroll-behavior: auto; }
 }
-.al-pack--ruhig .al-flip__innen { transform: none !important; animation: none !important; }
-.al-pack--ruhig .al-flip__hinten { display: none; }
-.al-pack--ruhig .al-flip__vorne { animation: al-einblenden .3s ease both; }
-@keyframes al-einblenden { from { opacity: 0; } to { opacity: 1; } }
