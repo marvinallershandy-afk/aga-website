@@ -167,6 +167,49 @@ export function mapStandings(standings, cfg) {
 }
 
 /**
+ * v23-U: FuPa-Kader (GET /v1/teams/<slug>/squad) → schlanke Zeilen für
+ * sva_fupa_kader. Nur die genutzten Felder, KEINE birthday/image/age
+ * (Datenminimierung). Form je Eintrag unter squad[].players[] oder squad[]:
+ *   { player:{id, firstName, lastName}, jerseyNumber, matches, goals, assists }
+ */
+export function mapSquad(squad) {
+  // FuPa liefert entweder ein Array von Gruppen ({position, players:[…]}) oder
+  // direkt ein Spieler-Array. Beides einsammeln.
+  const roh = []
+  const sammle = (arr) => {
+    for (const e of Array.isArray(arr) ? arr : []) {
+      if (e && Array.isArray(e.players)) sammle(e.players)
+      else if (e && (e.player || e.id || e.firstName)) roh.push(e)
+    }
+  }
+  if (Array.isArray(squad)) sammle(squad)
+  else if (squad && Array.isArray(squad.squad)) sammle(squad.squad)
+  else if (squad && Array.isArray(squad.players)) sammle(squad.players)
+
+  const out = []
+  const gesehen = new Set()
+  for (const e of roh) {
+    const p = e.player ?? e
+    const id = p && p.id != null && p.id !== '' && istGanzzahl(Number(p.id)) ? Number(p.id) : null
+    if (id == null || id <= 0 || gesehen.has(id)) continue
+    const vorname = typeof p.firstName === 'string' ? p.firstName.trim() : ''
+    const nachname = typeof p.lastName === 'string' ? p.lastName.trim() : ''
+    if (!vorname && !nachname) continue
+    gesehen.add(id)
+    out.push({
+      fupa_spieler_id: id,
+      vorname: vorname || null,
+      nachname: nachname || null,
+      nummer: istGanzzahl(Number(e.jerseyNumber)) ? Number(e.jerseyNumber) : null,
+      spiele: istGanzzahl(Number(e.matches)) ? Number(e.matches) : 0,
+      tore: istGanzzahl(Number(e.goals)) ? Number(e.goals) : 0,
+      vorlagen: istGanzzahl(Number(e.assists)) ? Number(e.assists) : 0,
+    })
+  }
+  return out
+}
+
+/**
  * Liga-Wettbewerbs-Slug aus den Matches ermitteln (für den standings-Aufruf).
  * Nimmt den ersten Liga-Eintrag (category 'league').
  */

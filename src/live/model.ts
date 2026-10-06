@@ -13,6 +13,8 @@ export type LiveStatus = 'geplant' | 'live' | 'halbzeit' | 'beendet'
 export const TICKER_TYPEN = [
   'anpfiff', 'tor', 'gegentor', 'gelb', 'gelbrot', 'rot', 'wechsel',
   'halbzeit', 'wiederanpfiff', 'abpfiff', 'elfmeter', 'kommentar',
+  // v23-L: zusätzliche Bot-Typen (FuPa)
+  'elfmeter_verschossen', 'wechsel_gegner',
 ] as const
 export type TickerTyp = (typeof TICKER_TYPEN)[number]
 
@@ -48,6 +50,22 @@ export interface LiveEvent {
   text?: string
   /** Zeitpunkt auf dem Gerät des Tickernden (ISO) */
   at: string
+  // ── v23-L (web_live v2): FuPa-Bot-Zeilen ────────────────────
+  /** 'fupa' = kam vom FuPa-Live-Bot (sonst vom Pult). */
+  source?: 'fupa'
+  /** Bei Gegner-Ereignissen 'gegner', bei uns 'sva' (für Karten/Wechsel). */
+  team?: 'sva' | 'gegner' | null
+  /** Klartext-Name, wenn kein Kader-Match (Gegner-Torschütze, nicht zugeordnet). */
+  name?: string
+  /** Klartext-Vorlage/raus ohne Kader-Match. */
+  name2?: string
+  /** Woher der Text stammt: 'vorlage' (UI baut Satz), 'reporter', 'pult', 'ki'. */
+  textSource?: 'vorlage' | 'reporter' | 'pult' | 'ki'
+  /** Platzhalter-Tor aus dem Soft-Ticker-Stand (Torschütze folgt). */
+  placeholder?: boolean
+  /** Optionaler Zusatz zum Tor (Kopfball/Elfmeter/Freistoß/Eigentor) — Vorführung
+   *  bzw. optionaler Bot-Ausbau; Reportertexte tragen das ohnehin im Text. */
+  zusatz?: string
 }
 
 export interface LiveMatch {
@@ -69,6 +87,13 @@ export interface LiveMatch {
   updatedAt?: string
   /** v18-T: nur aus web_live_demo() — Vorführ-Spiel, kein echtes Spiel */
   demo?: boolean
+  // ── v23-L (web_live v2) ─────────────────────────────────────
+  /** Effektive Ticker-Quelle: 'fupa' (Bot) oder 'pult' (Verein tickert). */
+  source?: 'fupa' | 'pult'
+  /** Link zum Spiel bei FuPa (nur bei Quelle fupa). */
+  fupaUrl?: string
+  /** Name des FuPa-Reporters (nur wenn freigegeben) — für den Text-Credit. */
+  fupaAutor?: string
 }
 
 export interface LiveLineup {
@@ -112,6 +137,79 @@ export interface LiveData {
   settings: LiveSettings
   /** v16-S: „Live-Ticker präsentiert von“ (Admin → Partner). Fehlt vor der Migration. */
   partner?: LivePartner | null
+  // ── v23-L (web_live v2): Reaktionen, Konferenz, Tipp-Kurz ───
+  /** Summen je Ereignis-ID: { tickerId: { emoji: anzahl } }. null = aus/leer. */
+  reactions?: ReactionSummen | null
+  /** Kreisliga-Konferenz des Spieltags. null = aus / keine frischen Daten. */
+  conference?: Konferenz | null
+  /** Kurzkennzahl der Tipp-Liga zu diesem Spiel. null = keine. */
+  tipp?: TippKurz | null
+}
+
+// v23-L: Emojis zum Mitjubeln (Schlüssel in der DB, Zeichen fürs UI).
+export const REAKTION_EMOJIS = ['tor', 'feuer', 'applaus', 'schock', 'wut'] as const
+export type ReaktionEmoji = (typeof REAKTION_EMOJIS)[number]
+export const EMOJI_ZEICHEN: Record<ReaktionEmoji, string> = {
+  tor: '⚽', feuer: '🔥', applaus: '👏', schock: '😱', wut: '😤',
+}
+/** Ereignis-Typen, an die man eine Reaktion hängen darf. */
+export const REAKTION_TYPEN: TickerTyp[] = ['tor', 'gegentor', 'gelb', 'gelbrot', 'rot', 'elfmeter', 'elfmeter_verschossen', 'abpfiff']
+
+/** { tickerId: { emoji: anzahl } } */
+export type ReactionSummen = Record<string, Partial<Record<ReaktionEmoji, number>>>
+
+/** Ein Spiel in der Kreisliga-Konferenz (aus FuPa). */
+export interface KonferenzSpiel {
+  fupaId: number
+  heim: string
+  gast: string
+  heimSlug?: string
+  gastSlug?: string
+  toreHeim: number | null
+  toreGast: number | null
+  section: 'PRE' | 'LIVE' | 'POST' | null
+  minute?: number | null
+  nachspielzeit?: number | null
+  tickerTyp?: string | null
+  anstoss: string
+  url: string
+  /** Enthält unser Team? (fett + oben) */
+  sva?: boolean
+}
+
+/** Eine Zeile der live gerechneten Tabelle (tabelle_live.mjs). */
+export interface TabelleZeile {
+  platz: number
+  team: string
+  slug: string
+  sp: number
+  s: number
+  u: number
+  n: number
+  tore: number
+  gegen: number
+  diff: number
+  pkt: number
+  live?: boolean
+  self?: boolean
+  trend?: number
+}
+
+export interface Konferenz {
+  spiele: KonferenzSpiel[]
+  spieltag?: number | null
+  /** live gerechnete Tabelle (nur wenn mit FuPa übereinstimmend). */
+  zeilen?: TabelleZeile[]
+  /** true = Rechnung stimmt mit der FuPa-Tabelle (Umschalter zeigen). */
+  stimmt?: boolean
+}
+
+export interface TippKurz {
+  tipps: number
+  /** erst nach Tippschluss (Prozent). */
+  sieg?: number
+  remis?: number
+  niederlage?: number
 }
 
 export interface LivePartner {
@@ -164,6 +262,8 @@ export const TYP_LABEL: Record<TickerTyp, string> = {
   abpfiff: 'Abpfiff',
   elfmeter: 'Elfmeter',
   kommentar: 'Kommentar',
+  elfmeter_verschossen: 'Elfmeter verschossen',
+  wechsel_gegner: 'Wechsel Gegner',
 }
 
 /** Chronologisch (älteste zuerst) — Ticker kommen neueste zuerst. */

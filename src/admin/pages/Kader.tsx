@@ -10,6 +10,7 @@ import { useToast } from '../components/ui/toast'
 import { PflegeHinweis } from '../components/PflegeHinweis'
 import { SpielerKarte } from '../components/SpielerKarte'
 import { KaderEditor, type KaderSpeichern } from '../components/KaderEditor'
+import { FupaFehlende } from '../components/FupaFehlende'
 import type { RosterRow } from '../lib/db'
 import { friendlyError, isMissingSchema } from '../lib/db'
 import { useLineup, useRoster, useRosterMutations } from '../lib/queries'
@@ -129,6 +130,9 @@ export function Kader() {
       />
 
       {(altesSchema || (rosterQ.error && isMissingSchema(rosterQ.error))) && <PflegeHinweis schema className="mb-4" />}
+
+      {/* v23-U: FuPa-Kaderspieler ohne Website-Eintrag */}
+      <FupaFehlende />
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <Tabs

@@ -17,6 +17,11 @@ import {
 import { liveKonfiguriert } from './api'
 import { TvAufstellung } from './aufstellung/TvAufstellung'
 import { LiveTabelle } from './LiveTabelle'
+import { Konferenz } from './Konferenz'
+import { zeileTexte, quelleFuss, reporterCredit } from './saetze'
+import { useReaktionen, type ReaktionenNabe } from './useReaktionen'
+import { ReaktionenLeiste, MitjubelnSheet, JubelFlug } from './Reaktionen'
+import { REAKTION_TYPEN } from './model'
 import { Icon } from './icons'
 // v18-A: gemeinsame Kalender-Komponente (Spiel + Abo)
 import { KalenderKnopf } from '../alltag/Kalender'
@@ -24,6 +29,7 @@ import { ArrowRight, QrCode, Trophy } from 'lucide-react'
 import { ALBUM_LINK, TIPP_LINK } from '../data/club'
 // v18-T: Vorführ-Spiel nur über /live?vorfuehrung=1
 import { VORFUEHRUNG } from './vorfuehrung'
+import { mitVorfuehrLive } from './vorfuehrungLive'
 import { VorfuehrungsHinweis } from './VorfuehrungsHinweis'
 import { InstagramZeile } from '../ui/InstagramZeile'
 import { CONTACT } from '../data/content'
@@ -61,9 +67,11 @@ export function LiveApp() {
   const now = useNow(1000) + live.offset
   const [tab, setTab] = useState<Tab>('ticker')
   const [toast, setToast] = useState<string | null>(null)
-  const d = live.data
+  const d = useMemo(() => (VORFUEHRUNG && live.data ? mitVorfuehrLive(live.data) : live.data), [live.data])
   const m = d?.match ?? null
   const players = useMemo(() => new Map((d?.players ?? []).map((p) => [p.id, p])), [d?.players])
+  // v23-U: Mitjubeln (Reaktionen) — reines fetch, kein Supabase-SDK.
+  const nabe = useReaktionen(d, VORFUEHRUNG)
 
   // v22-T: Tor fällt → große Einblendung über allem; Live-Leiste, sobald der
   // Kopf mit dem Spielstand aus dem Bild gescrollt ist
@@ -186,7 +194,7 @@ export function LiveApp() {
         </>
       ) : (
         <>
-          <Hero m={m} now={now} players={players} adresse={d?.settings.address || VEREIN_ADRESSE} prev={d?.previous ?? null} onTeilen={() => void teilen()} />
+          <Hero m={m} now={now} players={players} adresse={d?.settings.address || VEREIN_ADRESSE} prev={d?.previous ?? null} tipp={d?.tipp ?? null} onTeilen={() => void teilen()} />
           {live.error && (
             <p className="lv-netz" role="status">
               <Icon name="offline" /> Verbindung wackelt — zeige Stand von{' '}
@@ -208,7 +216,8 @@ export function LiveApp() {
               <h2 className="lv-h2" id="h-ticker">
                 Liveticker
               </h2>
-              <Ticker data={d!} players={players} />
+              <Ticker data={d!} players={players} nabe={nabe} />
+              {d!.conference && <Konferenz daten={d!.conference} />}
             </section>
             <section className="lv-col lv-col--aufstellung" aria-labelledby="h-auf">
               <h2 className="lv-h2" id="h-auf">
@@ -220,7 +229,7 @@ export function LiveApp() {
               <h2 className="lv-h2" id="h-tab">
                 Tabelle
               </h2>
-              <LiveTabelle settings={d!.settings} />
+              <LiveTabelle settings={d!.settings} konferenz={d!.conference} />
               {d!.previous && <Zuletzt prev={d!.previous} />}
             </section>
           </main>
@@ -257,6 +266,13 @@ export function LiveApp() {
         />
       )}
       <TorMelder spielKey={laeuft && m ? m.id : null} toreSva={m?.goalsFor} toreGegner={m?.goalsAgainst} bauen={torBauen} />
+      {m && laeuft && nabe.aktiv && <JubelFlug ausloeser={m.goalsFor} />}
+      <MitjubelnSheet offen={nabe.loginOffen} onClose={nabe.schliesseLogin} />
+      {nabe.fehler && (
+        <div className="lv-toast" role="status">
+          {nabe.fehler}
+        </div>
+      )}
       {toast && (
         <div className="lv-toast" role="status">
           {toast}
@@ -290,7 +306,7 @@ function teilenText(m: LiveMatch): string {
 }
 
 // ── Kopf ────────────────────────────────────────────────────
-function Hero({ m, now, players, adresse, prev, onTeilen }: { m: LiveMatch; now: number; players: Map<string, LivePlayer>; adresse: string; prev: LiveData['previous']; onTeilen: () => void }) {
+function Hero({ m, now, players, adresse, prev, tipp, onTeilen }: { m: LiveMatch; now: number; players: Map<string, LivePlayer>; adresse: string; prev: LiveData['previous']; tipp: LiveData['tipp']; onTeilen: () => void }) {
   const p = paarung(m)
   const kickoff = new Date(m.kickoff)
   const lm = laufendeMinute(m.status, m.anpfiffAt, m.wiederanpfiffAt, now)
@@ -364,7 +380,7 @@ function Hero({ m, now, players, adresse, prev, onTeilen }: { m: LiveMatch; now:
       </div>
 
       {/* v20-T: Tipp-Liga — vor Anpfiff „Jetzt tippen“, danach „Auflösung“ (nie im Vorführ-Modus) */}
-      {!m.demo && <TippEinstieg status={m.status} />}
+      {!m.demo && <TippEinstieg status={m.status} tipp={tipp} />}
 
       {/* v18-P: Heimspiel → am Eingang einchecken (Sammelalbum, QR am Tor) */}
       {m.home && m.status !== 'beendet' && <AlbumCheckin laeuft={m.status === 'live' || m.status === 'halbzeit'} />}
@@ -372,9 +388,17 @@ function Hero({ m, now, players, adresse, prev, onTeilen }: { m: LiveMatch; now:
   )
 }
 
-function TippEinstieg({ status }: { status: LiveMatch['status'] }) {
+function TippEinstieg({ status, tipp }: { status: LiveMatch['status']; tipp: LiveData['tipp'] }) {
   const titel = status === 'geplant' ? TIPP_LINK.titel : status === 'beendet' ? TIPP_LINK.aufloesung : 'Tipp-Liga läuft'
-  const text = status === 'geplant' ? TIPP_LINK.nutzen : status === 'beendet' ? 'Punkte, Spieltagssieger und Fans vs. Kabine — sobald der Spielbericht drin ist.' : TIPP_LINK.live
+  // v23-U: live die echte Kurzkennzahl zeigen (tipp_live_kurz): Tipps + Tendenz.
+  let text: string
+  if (status === 'geplant') text = TIPP_LINK.nutzen
+  else if (status === 'beendet') text = 'Punkte, Spieltagssieger und Fans vs. Kabine — sobald der Spielbericht drin ist.'
+  else if (tipp && tipp.tipps > 0) {
+    const teile = [`${tipp.tipps} ${tipp.tipps === 1 ? 'Tipp' : 'Tipps'}`]
+    if (tipp.sieg != null) teile.push(`${tipp.sieg} % tippten Sieg`)
+    text = `${teile.join(' · ')} → Deine Punkte live`
+  } else text = TIPP_LINK.live
   return (
     <a className="lv-album" href={`${TIPP_LINK.href}?utm_source=intern`}>
       <Trophy size={24} strokeWidth={1.5} aria-hidden="true" />
@@ -473,9 +497,11 @@ function Zuletzt({ prev }: { prev: NonNullable<LiveData['previous']> }) {
 }
 
 // ── Ticker ──────────────────────────────────────────────────
-function Ticker({ data, players }: { data: LiveData; players: Map<string, LivePlayer> }) {
+function Ticker({ data, players, nabe }: { data: LiveData; players: Map<string, LivePlayer>; nabe: ReaktionenNabe }) {
   const stand = useMemo(() => spielstandVerlauf(data.events), [data.events])
   const m = data.match!
+  const spielerName = (slug?: string | null) => (slug ? players.get(slug)?.name ?? null : null)
+  const fuss = quelleFuss(m.source, m.fupaUrl)
   if (!data.events.length) {
     return (
       <div className="lv-card lv-card--pad lv-leer">
@@ -485,24 +511,71 @@ function Ticker({ data, players }: { data: LiveData; players: Map<string, LivePl
     )
   }
   return (
-    <ol className="lv-ticker">
-      {data.events.map((e) => (
-        <TickerZeile key={e.id} e={e} players={players} stand={stand.get(e.id) ?? null} home={m.home} opponent={m.opponent} />
-      ))}
-    </ol>
+    <>
+      <ol className="lv-ticker">
+        {data.events.map((e) => (
+          <TickerZeile
+            key={e.id}
+            e={e}
+            players={players}
+            spielerName={spielerName}
+            stand={stand.get(e.id) ?? null}
+            home={m.home}
+            opponent={m.opponent}
+            fupaAutor={m.fupaAutor}
+            nabe={nabe}
+          />
+        ))}
+      </ol>
+      <p className="lv-ticker__quelle">
+        {fuss.url ? (
+          <a href={fuss.url} target="_blank" rel="noopener">
+            {fuss.text}
+          </a>
+        ) : (
+          fuss.text
+        )}
+      </p>
+    </>
   )
 }
 
-function name(players: Map<string, LivePlayer>, id?: string) {
-  if (!id) return null
-  return players.get(id) ?? null
+const EV_ICON: Record<string, Parameters<typeof Icon>[0]['name']> = {
+  gegentor: 'ball',
+  gelb: 'gelb',
+  gelbrot: 'gelbrot',
+  rot: 'rot',
+  wechsel: 'wechsel',
+  wechsel_gegner: 'wechsel',
+  elfmeter: 'elfmeter',
+  elfmeter_verschossen: 'elfmeter',
+  kommentar: 'kommentar',
 }
 
-function TickerZeile({ e, players, stand, home, opponent }: { e: LiveEvent; players: Map<string, LivePlayer>; stand: [number, number] | null; home: boolean; opponent: string }) {
-  const p1 = name(players, e.player)
-  const p2 = name(players, e.player2)
+function TickerZeile({
+  e,
+  players,
+  spielerName,
+  stand,
+  home,
+  opponent,
+  fupaAutor,
+  nabe,
+}: {
+  e: LiveEvent
+  players: Map<string, LivePlayer>
+  spielerName: (slug?: string | null) => string | null
+  stand: [number, number] | null
+  home: boolean
+  opponent: string
+  fupaAutor?: string
+  nabe: ReaktionenNabe
+}) {
   const min = minuteLabel(e.minute, e.extra)
   const standText = stand ? (home ? `${stand[0]}:${stand[1]}` : `${stand[1]}:${stand[0]}`) : ''
+  const t = zeileTexte(e, { opponent, stand: standText, spielerName })
+  const credit = reporterCredit(e, fupaAutor)
+  const reaktBar = nabe.aktiv && REAKTION_TYPEN.includes(e.type) ? <ReaktionenLeiste id={e.id} nabe={nabe} /> : null
 
   if (e.type === 'anpfiff' || e.type === 'halbzeit' || e.type === 'wiederanpfiff' || e.type === 'abpfiff') {
     return (
@@ -513,64 +586,51 @@ function TickerZeile({ e, players, stand, home, opponent }: { e: LiveEvent; play
           {min && e.type !== 'anpfiff' ? ` · ${min}` : ''}
         </span>
         <span className="lv-ev__linie" aria-hidden="true" />
-        {e.text && <p className="lv-ev__statustext">{e.text}</p>}
+        {t.text && <p className="lv-ev__statustext">{t.text}</p>}
+        {credit && <p className="lv-ev__credit">{credit}</p>}
+        {reaktBar}
       </li>
     )
   }
 
   if (e.type === 'tor') {
-    const bild = p1?.cutoutUrl ?? p1?.photoUrl ?? null
+    const p1 = e.player ? players.get(e.player) : undefined
+    const bild = e.placeholder ? null : (p1?.cutoutUrl ?? p1?.photoUrl ?? null)
     return (
-      <li className="lv-ev lv-ev--tor">
+      <li className={`lv-ev lv-ev--tor${e.source === 'fupa' ? ' lv-ev--fupa' : ''}`}>
         <span className="lv-ev__min">{min}</span>
         <div className="lv-tor">
           <span className="lv-tor__face">{bild ? <img src={bild} alt="" loading="lazy" /> : <i>{p1?.number ?? '⚽'}</i>}</span>
           <div className="lv-tor__txt">
             <span className="lv-tor__kicker">
-              <Icon name="ball" /> TOR für den SVA! <b>{standText}</b>
+              <Icon name="ball" /> {t.torKicker} {standText && <b>{standText}</b>}
             </span>
-            <b className="lv-tor__name">{p1 ? p1.name : 'Tor SVA'}</b>
-            {p2 && <span className="lv-ev__sub">Vorlage: {p2.name}</span>}
-            {e.text && <p className="lv-ev__text">{e.text}</p>}
+            <b className="lv-tor__name">{t.torName}</b>
+            {t.zusatz && <span className="lv-ev__zusatz">{t.zusatz}</span>}
+            {t.sub && <span className="lv-ev__sub">{t.sub}</span>}
+            {t.text && <p className="lv-ev__text">{t.text}</p>}
+            {credit && <p className="lv-ev__credit">{credit}</p>}
+            {reaktBar}
           </div>
         </div>
       </li>
     )
   }
 
-  const icon: Record<string, Parameters<typeof Icon>[0]['name']> = {
-    gegentor: 'ball',
-    gelb: 'gelb',
-    gelbrot: 'gelbrot',
-    rot: 'rot',
-    wechsel: 'wechsel',
-    elfmeter: 'elfmeter',
-    kommentar: 'kommentar',
-  }
-  let titel: string
-  let sub: string | null = null
-  if (e.type === 'gegentor') {
-    titel = `Gegentor ${standText}`
-    sub = opponent
-  } else if (e.type === 'wechsel') {
-    titel = 'Wechsel'
-    sub = [p1 && `↑ ${p1.name}`, p2 && `↓ ${p2.name}`].filter(Boolean).join('   ') || null
-  } else if (e.type === 'kommentar') {
-    titel = ''
-  } else {
-    titel = TYP_LABEL[e.type]
-    sub = p1 ? p1.name : e.type === 'elfmeter' ? null : 'Gegner'
-  }
+  const titelText = e.type === 'gegentor' && standText ? `${t.titel} · ${standText}` : t.titel
   return (
-    <li className={`lv-ev lv-ev--${e.type}`}>
+    <li className={`lv-ev lv-ev--${e.type}${t.gegner ? ' lv-ev--gegner' : ''}${e.source === 'fupa' ? ' lv-ev--fupa' : ''}`}>
       <span className="lv-ev__min">{min}</span>
       <span className="lv-ev__icon">
-        <Icon name={icon[e.type] ?? 'kommentar'} />
+        <Icon name={EV_ICON[e.type] ?? 'kommentar'} />
       </span>
       <div className="lv-ev__body">
-        {titel && <b className="lv-ev__titel">{titel}</b>}
-        {sub && <span className="lv-ev__sub">{sub}</span>}
-        {e.text && <p className="lv-ev__text">{e.text}</p>}
+        {titelText && <b className="lv-ev__titel">{titelText}</b>}
+        {t.sub && <span className="lv-ev__sub">{t.sub}</span>}
+        {t.zusatz && <span className="lv-ev__zusatz">{t.zusatz}</span>}
+        {t.text && <p className="lv-ev__text">{t.text}</p>}
+        {credit && <p className="lv-ev__credit">{credit}</p>}
+        {reaktBar}
       </div>
     </li>
   )

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { AnimatePresence, LayoutGroup, motion } from 'framer-motion'
 import { ArrowDown, ArrowUp, Radio, Repeat2 } from 'lucide-react'
-import type { KaderSpieler, LiveEreignis, LiveHochrechnung, RangEintrag, TippSpiel } from './api'
+import type { KaderSpieler, LiveDaten, LiveEreignis, LiveHochrechnung, RangEintrag, TippSpiel } from './api'
 import { BONUS, bonusLabel, nachname } from './model'
 import { bonusStand, hochrechnen } from './punkte'
 import { SpieltagKarte } from './SpieltagKarte'
@@ -98,7 +98,11 @@ export function LiveBlock({ spiel, kader }: { spiel: TippSpiel; kader: Map<strin
         </section>
       )}
 
-      {live && live.ereignisse.length > 0 && <Ticker ereignisse={live.ereignisse} kader={kader} />}
+      {live?.tippLive && live.tippLive.tipps > 0 && <TippLiveZeile t={live.tippLive} />}
+
+      {live && live.ereignisse.length > 0 && (
+        <Ticker ereignisse={live.ereignisse} kader={kader} elf={spiel.meineElf?.spieler ?? []} quelle={live.quelle} fupaUrl={live.fupaUrl} />
+      )}
 
       {live?.rangliste && <LiveRangliste eintraege={live.rangliste} />}
 
@@ -153,12 +157,37 @@ const EREIGNIS_TEXT: Record<LiveEreignis['typ'], string> = {
   elfmeter: 'Elfmeter',
 }
 
-function Ticker({ ereignisse, kader }: { ereignisse: LiveEreignis[]; kader: Map<string, KaderSpieler> }) {
+/** v23-U: öffentliche Tipp-Kurzkennzahl (tipp_live_kurz) über dem Ticker. */
+function TippLiveZeile({ t }: { t: NonNullable<LiveDaten['tippLive']> }) {
+  const tendenz = t.sieg != null ? `${t.sieg} % tippten Sieg` : null
+  return (
+    <p className="tp-tipplive">
+      <Radio size={15} strokeWidth={1.75} aria-hidden="true" />
+      <b>
+        {t.tipps} {t.tipps === 1 ? 'Fan hat' : 'Fans haben'} getippt
+      </b>
+      {tendenz && <small>· {tendenz}</small>}
+    </p>
+  )
+}
+
+// v23-U: punktrelevant für meine Elf/meinen Tipp — jedes Tor/Gegentor, Abpfiff,
+// und Karten meiner eigenen Spieler. Max. 5 (neueste oben) + Link zum Ticker.
+function punktrelevant(e: LiveEreignis, elf: Set<string>): boolean {
+  if (e.typ === 'tor' || e.typ === 'gegentor' || e.typ === 'abpfiff') return true
+  if ((e.typ === 'gelb' || e.typ === 'gelbrot' || e.typ === 'rot') && !!e.spieler && elf.has(e.spieler)) return true
+  return false
+}
+
+function Ticker({ ereignisse, kader, elf, quelle, fupaUrl }: { ereignisse: LiveEreignis[]; kader: Map<string, KaderSpieler>; elf: string[]; quelle?: 'fupa' | 'pult'; fupaUrl?: string }) {
   const n = (id?: string) => (id ? nachname(kader.get(id)?.name ?? '') : '')
-  const liste = [...ereignisse].reverse()
+  const elfSet = useMemo(() => new Set(elf), [elf])
+  const relevant = ereignisse.filter((e) => punktrelevant(e, elfSet))
+  const liste = relevant.slice(-5).reverse()
+  const tore = ereignisse.filter((e) => e.typ === 'tor' || e.typ === 'gegentor').length
   return (
     <section className="tp-abschnitt" aria-labelledby="tp-h-ticker">
-      <Kapitel id="tp-h-ticker" titel="Ticker" meta={`${ereignisse.filter((e) => e.typ === 'tor' || e.typ === 'gegentor').length} Tore`} />
+      <Kapitel id="tp-h-ticker" titel="Was zählt" meta={`${tore} ${tore === 1 ? 'Tor' : 'Tore'}`} />
       <ol className="tp-ticker">
         <AnimatePresence initial={false}>
           {liste.map((e) => (
@@ -188,6 +217,20 @@ function Ticker({ ereignisse, kader }: { ereignisse: LiveEreignis[]; kader: Map<
           ))}
         </AnimatePresence>
       </ol>
+      <a className="tp-link tp-ticker__alle" href="/live?utm_source=tippen">
+        Ganzer Ticker &amp; Aufstellung → /live
+      </a>
+      {quelle === 'fupa' && (
+        <p className="tp-ticker__quelle">
+          {fupaUrl ? (
+            <a href={fupaUrl} target="_blank" rel="noopener">
+              Live-Daten: FuPa
+            </a>
+          ) : (
+            'Live-Daten: FuPa'
+          )}
+        </p>
+      )}
     </section>
   )
 }

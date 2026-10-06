@@ -1443,6 +1443,8 @@ export type Database = {
       sva_admin_live_quelle: { Args: { p_spiel: string; p_quelle: string }; Returns: Json }
       sva_admin_fupa_kandidaten: { Args: { p_spiel: string }; Returns: Json }
       sva_admin_fupa_zuordnung: { Args: { p_roster: string; p_fupa: number }; Returns: undefined }
+      sva_admin_fupa_fehlende: { Args: Record<string, never>; Returns: Json }
+      sva_admin_fupa_spieler_anlegen: { Args: { p_fupa: number }; Returns: Json }
       tipp_admin_fupa_vorschlag: { Args: { p_spiel: string }; Returns: Json }
       sva_array_distinct: { Args: { a: string[] }; Returns: boolean }
       sm_spieltagspaket: {

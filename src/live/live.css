@@ -381,3 +381,108 @@ a.lv-partner:hover .lv-partner__label { color: var(--fg); }
 
 /* v22-T: Platz für die Live-Leiste (src/ui/tor) am unteren Rand */
 .lv--live { padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
+
+/* ─────────────────────────────────────────────────────────────
+   v23-U: FuPa-Quelle, Reaktionen, Konferenz, Live-Tabelle, Jubel
+   ───────────────────────────────────────────────────────────── */
+.lv-puls--sm { width: 7px; height: 7px; display: inline-block; vertical-align: middle; margin-right: 5px; }
+
+/* Ereignis-Zusatz (Kopfball/Elfmeter), Reporter-Credit, Quelle-Fuß */
+.lv-ev__zusatz {
+  display: inline-block; margin-top: 2px; padding: 1px 7px; border-radius: 999px;
+  background: rgba(232,193,90,.14); color: var(--gold);
+  font-size: .72rem; font-weight: 800; letter-spacing: .02em;
+}
+.lv-ev__credit { margin-top: 3px; font-size: .72rem; color: var(--mut); }
+.lv-ev--gegner .lv-ev__titel, .lv-ev--gegner .lv-ev__sub { color: var(--mut); }
+.lv-ev--fupa { position: relative; }
+.lv-ticker__quelle {
+  margin: 10px 2px 0; font-size: .72rem; color: var(--mut); text-align: center;
+}
+.lv-ticker__quelle a { color: var(--mut); text-decoration: underline; text-underline-offset: 2px; }
+
+/* Reaktionen */
+.lv-reakt { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 8px; }
+.lv-reakt__btn {
+  display: inline-flex; align-items: center; gap: 4px; min-height: 32px; padding: 0 9px;
+  border: 1px solid var(--line); border-radius: 999px; background: rgba(255,255,255,.04);
+  cursor: pointer; transition: transform .12s ease, background .12s ease, border-color .12s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.lv-reakt__btn:active { transform: scale(.94); }
+.lv-reakt__btn.is-aktiv { background: rgba(233,29,41,.16); border-color: rgba(233,29,41,.5); }
+.lv-reakt__emoji { font-size: 1.02rem; line-height: 1; }
+.lv-reakt__n { font-size: .78rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.lv-reakt__gastzahl { font-size: .74rem; color: var(--mut); margin-left: 2px; }
+.lv-reakt--gast .lv-reakt__btn { opacity: .92; }
+
+/* Mitjubeln-Sheet (Gäste) */
+.lv-sheet {
+  position: fixed; inset: 0; z-index: 60; display: flex; align-items: flex-end; justify-content: center;
+  background: rgba(0,0,0,.55); padding: 16px; animation: lvFade .18s ease;
+}
+@keyframes lvFade { from { opacity: 0; } }
+.lv-sheet__box {
+  width: 100%; max-width: 440px; background: var(--card); border: 1px solid var(--line);
+  border-radius: 16px; padding: 20px; animation: lvRise .22s cubic-bezier(.22,1,.36,1);
+}
+@keyframes lvRise { from { transform: translateY(14px); opacity: 0; } }
+.lv-sheet__titel { font-family: var(--font-display); font-weight: 400; font-size: 1.2rem; margin: 0 0 8px; }
+.lv-sheet__text { margin: 0 0 16px; color: var(--mut); font-size: .92rem; }
+.lv-sheet__aktionen { display: flex; gap: 8px; flex-wrap: wrap; }
+@media (min-width: 560px) { .lv-sheet { align-items: center; } }
+
+/* Jubel-Flug beim SVA-Tor */
+.lv-jubel { position: fixed; inset: 0; z-index: 55; pointer-events: none; overflow: hidden; }
+.lv-jubel span {
+  position: absolute; bottom: 12%; font-size: 1.6rem; opacity: 0;
+  animation: lvJubel 1.2s cubic-bezier(.22,1,.36,1) forwards;
+}
+@keyframes lvJubel {
+  0% { transform: translateY(0) scale(.6); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translateY(-62vh) scale(1.1); opacity: 0; }
+}
+
+/* Konferenz */
+.lv-konf { margin-top: 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); overflow: hidden; }
+.lv-konf__kopf {
+  display: flex; align-items: center; gap: 8px; width: 100%; padding: 12px 14px;
+  background: none; border: 0; cursor: pointer; text-align: left;
+}
+.lv-konf__kopf b { font-size: .92rem; font-weight: 800; flex: 1; }
+.lv-konf__chev { transition: transform .2s ease; color: var(--mut); }
+.lv-konf.is-auf .lv-konf__chev { transform: rotate(180deg); }
+.lv-konf__liste { list-style: none; margin: 0; padding: 0 6px 4px; }
+.lv-konf__zeile a {
+  display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 10px;
+  padding: 8px 8px; border-top: 1px solid var(--line); text-decoration: none; color: inherit;
+}
+.lv-konf__zeile.is-sva { order: -1; }
+.lv-konf__zeile.is-sva a { font-weight: 800; }
+.lv-konf__teams { display: flex; flex-direction: column; gap: 1px; font-size: .86rem; min-width: 0; }
+.lv-konf__teams span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lv-konf__stand { font-variant-numeric: tabular-nums; font-weight: 800; font-size: .95rem; }
+.lv-konf__min { font-size: .76rem; color: var(--mut); min-width: 34px; text-align: right; }
+.lv-konf__min.is-live { color: var(--red); font-weight: 800; }
+.lv-konf__quelle { margin: 4px 14px 12px; font-size: .7rem; color: var(--mut); }
+
+/* Live-Tabelle (Umschalter + Ausschnitt) */
+.lv-tabtabs { display: inline-flex; gap: 4px; margin-bottom: 10px; background: rgba(255,255,255,.05); border-radius: 999px; padding: 3px; }
+.lv-tabtabs button {
+  display: inline-flex; align-items: center; min-height: 30px; padding: 0 14px; border: 0; border-radius: 999px;
+  background: none; color: var(--mut); font-weight: 700; font-size: .82rem; cursor: pointer;
+}
+.lv-tabtabs button[aria-selected="true"] { background: var(--card); color: var(--fg); box-shadow: 0 1px 4px rgba(0,0,0,.3); }
+.lv-table--live .lv-table__platz { display: inline-flex; align-items: center; gap: 4px; font-variant-numeric: tabular-nums; }
+.lv-table__trend { display: inline-flex; align-items: center; font-size: .66rem; font-weight: 800; }
+.lv-table__trend.is-hoch { color: #58C28A; }
+.lv-table__trend.is-runter { color: #E8706A; }
+.lv-table tr.is-live .lv-table__team { color: var(--fg); }
+.lv-table__mehr {
+  margin-top: 8px; background: none; border: 0; color: var(--gold); font-weight: 700; font-size: .82rem; cursor: pointer; padding: 4px 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lv-jubel span { animation: none; display: none; }
+  .lv-konf__chev { transition: none; }
+}

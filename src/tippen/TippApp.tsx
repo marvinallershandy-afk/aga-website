@@ -6,6 +6,7 @@ import { aktuelleSitzung, IST_VORFUEHRUNG, ladeLage, supabase, TippFehler, type 
 import { einfuehrungGesehen, einfuehrungMerken, entwurfLesen, haptik, kuerzel, nachname, reduzierteBewegung } from './model'
 import { hochrechnen } from './punkte'
 import { useLiveTicker } from './liveTicker'
+import { liveDatenAus } from './liveAdapter'
 import { laufendeMinute, minuteLabel } from '../live/model'
 import { playerMedia } from '../data/playerMedia'
 import { TorMelder, type TorDaten } from '../ui/tor/TorJubel'
@@ -330,6 +331,24 @@ export function TippApp() {
     }
   }
 
+  // v23-U: Echtbetrieb — das laufende (gesperrte) Spiel mit echten Live-Daten
+  // aus web_live anreichern (Minute, Ereignisse, meine Elf-Hochrechnung, Tipp-
+  // Kurzkennzahl). Vorführung bleibt unverändert (sim füllt .live selbst).
+  const lageAnzeige = useMemo<typeof lage>(() => {
+    if (!lage || IST_VORFUEHRUNG) return lage
+    const g = lage.gesperrt
+    if (!g || !tm) return lage
+    const live = liveDatenAus(ticker!, {
+      tipp: g.meinTipp,
+      elf: g.meineElf,
+      fragen: g.fragen,
+      heim: g.heim,
+      position: (id) => kader.get(id)?.position ?? 'MIT',
+    })
+    if (!live) return lage
+    return { ...lage, gesperrt: { ...g, toreSva: tm.goalsFor, toreGegner: tm.goalsAgainst, live } }
+  }, [lage, ticker, tm, kader])
+
   // Einführung: ein echter Spieler auf der Karte, die ins Album fliegt
   const einfFigur = useMemo(() => {
     const k = (lage?.kader ?? []).find((x) => x.cutoutUrl && x.kapitaen) ?? (lage?.kader ?? []).find((x) => x.cutoutUrl)
@@ -430,7 +449,7 @@ export function TippApp() {
     if (!lage) return null
     switch (t) {
       case 'spieltag':
-        return <SpieltagTab lage={lage} kader={kader} now={now} angemeldet={!!session} teilnehmer={istTeilnehmer} onAnmelden={anmelden} onNeu={neuLaden} onTab={setTab} />
+        return <SpieltagTab lage={lageAnzeige ?? lage} kader={kader} now={now} angemeldet={!!session} teilnehmer={istTeilnehmer} onAnmelden={anmelden} onNeu={neuLaden} onTab={setTab} />
       case 'rangliste':
         return <RanglisteTab lage={lage} angemeldet={!!session} onAnmelden={() => anmelden()} />
       case 'ligen':

@@ -18,6 +18,7 @@ import { cn } from '../lib/utils'
 import {
   useBericht,
   useBerichtAktionen,
+  useFupaVorschlag,
   useKabine,
   useSpieltagSpeichern,
   useStoryDaten,
@@ -202,6 +203,9 @@ function BerichtFormular({ spiel }: { spiel: string }) {
   const [motm, setMotm] = useState<string>('')
   const [ergebnis, setErgebnis] = useState<{ toreSva: string; toreGegner: string }>({ toreSva: '', toreGegner: '' })
   const [alle, setAlle] = useState(false)
+  // v23-U: Vorschlag aus der FuPa-Aufstellung (Minuten/Tore/Vorlagen/Karten).
+  const vorschlagQ = useFupaVorschlag(spiel)
+  const fupa = useMemo(() => new Map((vorschlagQ.data ?? []).map((v) => [v.id, v] as const)), [vorschlagQ.data])
 
   const b = q.data
   // Formular einmal aus der Antwort füllen (danach gehört es dem Nutzer)
@@ -225,6 +229,32 @@ function BerichtFormular({ spiel }: { spiel: string }) {
       if (!(n.position === 'TW' || n.position === 'ABW') || (n.minuten ?? 90) < 60 || !n.eingesetzt) n.zuNull = false
       return n
     }))
+  // v23-U: FuPa-Werte übernehmen — füllt nur LEERE Felder, überschreibt nichts.
+  const fupaUebernehmen = () => {
+    let n = 0
+    setZeilen((z) =>
+      (z ?? []).map((x) => {
+        const v = fupa.get(x.id)
+        if (!v) return x
+        const y = { ...x }
+        const spielte = !!v.start || (v.minuten ?? 0) > 0 || (v.tore ?? 0) > 0 || (v.vorlagen ?? 0) > 0
+        if (!y.eingesetzt && spielte) {
+          y.eingesetzt = true
+          y.minuten = y.minuten ?? v.minuten ?? 90
+          n++
+        } else if (y.eingesetzt && y.minuten == null && v.minuten != null) {
+          y.minuten = v.minuten
+          n++
+        }
+        if (y.tore === 0 && (v.tore ?? 0) > 0) { y.tore = v.tore!; n++ }
+        if (y.vorlagen === 0 && (v.vorlagen ?? 0) > 0) { y.vorlagen = v.vorlagen!; n++ }
+        if (!y.karte && (v.rot || v.gelbrot || v.gelb)) { y.karte = v.rot ? 'rot' : v.gelbrot ? 'gelbrot' : 'gelb'; n++ }
+        if (!(y.position === 'TW' || y.position === 'ABW') || (y.minuten ?? 90) < 60 || !y.eingesetzt) y.zuNull = false
+        return y
+      }),
+    )
+    toast.success(n ? `FuPa-Werte übernommen (${n} leere Felder gefüllt).` : 'Keine leeren Felder zu füllen.')
+  }
   const sichtbar = zeilen.filter((z) => alle || z.eingesetzt || z.tore || z.vorlagen || z.karte)
   const eingesetzt = zeilen.filter((z) => z.eingesetzt).length
   const ohneTickerErgebnis = !b.mitTicker || b.spiel.toreSva == null
@@ -306,9 +336,16 @@ function BerichtFormular({ spiel }: { spiel: string }) {
       <section className="rounded-lg border border-border bg-card">
         <div className="flex items-center justify-between gap-3 border-b border-border p-4">
           <h2 className="font-display text-xl">Spieler · {eingesetzt} eingesetzt</h2>
-          <Button variant="ghost" size="sm" onClick={() => setAlle((x) => !x)}>
-            {alle ? 'Nur Eingesetzte' : 'Ganzer Kader'}
-          </Button>
+          <div className="flex items-center gap-2">
+            {fupa.size > 0 && (
+              <Button variant="outline" size="sm" onClick={fupaUebernehmen} title="Minuten, Tore, Vorlagen und Karten aus der FuPa-Aufstellung in leere Felder übernehmen">
+                FuPa-Werte übernehmen
+              </Button>
+            )}
+            <Button variant="ghost" size="sm" onClick={() => setAlle((x) => !x)}>
+              {alle ? 'Nur Eingesetzte' : 'Ganzer Kader'}
+            </Button>
+          </div>
         </div>
         <ul className="divide-y divide-border">
           {sichtbar.map((z) => (
@@ -324,6 +361,12 @@ function BerichtFormular({ spiel }: { spiel: string }) {
                     {z.position}
                     {z.start ? ' · Startelf' : ''}
                   </span>
+                  {(() => {
+                    const v = fupa.get(z.id)
+                    if (!v || (v.minuten == null && !v.tore && !v.vorlagen)) return null
+                    const teile = [v.minuten != null ? `${v.minuten}′` : null, v.tore ? `${v.tore} T.` : null, v.vorlagen ? `${v.vorlagen} V.` : null].filter(Boolean)
+                    return <span className="block text-[11px] text-sky-400">FuPa: {teile.join(' · ')}</span>
+                  })()}
                 </span>
               </label>
               <div className="flex items-center gap-1">

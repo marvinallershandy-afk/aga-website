@@ -129,6 +129,28 @@ export function useBericht(spiel: string | null) {
   })
 }
 
+// v23-U: Vorschlag aus der FuPa-Aufstellung (nur wenn Daten vorhanden).
+export interface FupaVorschlag {
+  id: string // Kader-Slug
+  minuten?: number | null
+  tore?: number | null
+  vorlagen?: number | null
+  gelb?: boolean
+  gelbrot?: boolean
+  rot?: boolean
+  start?: boolean
+}
+export function useFupaVorschlag(spiel: string | null) {
+  return useQuery({
+    queryKey: ['tipp_admin_fupa_vorschlag', spiel ?? '-'],
+    queryFn: () => rpc<FupaVorschlag[]>('tipp_admin_fupa_vorschlag', { p_spiel: spiel }),
+    enabled: !!spiel,
+    retry: false,
+    // RPC fehlt vor der Migration → kein harter Fehler, einfach kein Knopf.
+    throwOnError: false,
+  })
+}
+
 export function useBerichtAktionen() {
   const qc = useQueryClient()
   const inv = (id: string) => {

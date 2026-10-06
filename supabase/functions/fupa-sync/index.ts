@@ -22,7 +22,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { createClient, type SupabaseClient } from 'jsr:@supabase/supabase-js@2'
-import { configAusFupaUrl, ligaCompetitionSlug, mapMatches, mapStandings } from './map.mjs'
+import { configAusFupaUrl, ligaCompetitionSlug, mapMatches, mapSquad, mapStandings } from './map.mjs'
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -130,6 +130,27 @@ Deno.serve(async (req: Request) => {
       }
     }
 
+    // ── 3b. FuPa-Kader (Squad) best effort → sva_fupa_kader ───────────────────
+    // v23-U: damit der Admin sieht, wer bei FuPa im Kader steht, aber nicht auf
+    // der Website. Datenminimal (keine Geburtsdaten/Bilder). Fehler brechen den
+    // Spiele-Abgleich NICHT ab.
+    let kaderNeu = 0
+    let kaderFehler: string | null = null
+    try {
+      const squad = await fupaJson(`/teams/${cfg.teamSlug}/squad`)
+      const zeilen = mapSquad(squad)
+      if (zeilen.length) {
+        const { error } = await admin
+          .from('sva_fupa_kader')
+          .upsert(zeilen.map((z) => ({ ...z, abgerufen_at: new Date().toISOString() })), { onConflict: 'fupa_spieler_id' })
+        if (error) throw new Error(error.message)
+        kaderNeu = zeilen.length
+      }
+    } catch (e) {
+      kaderFehler = e instanceof Error ? e.message : String(e)
+      console.error('fupa-sync: Kader übersprungen:', kaderFehler)
+    }
+
     // ── 4. sm_spiele idempotent über notizen='fupa:<id>' ──────────────────────
     const { data: vorhanden, error: exErr } = await admin
       .from('sm_spiele')
@@ -206,6 +227,8 @@ Deno.serve(async (req: Request) => {
       spiele_gesamt_fupa: spieleNeuRoh.length, tabelle_plaetze: tabelleRows.length, tabelle_geaendert: tabelleGeaendert > 0,
     }
     if (tabelleFehler) details.tabelle_fehler = tabelleFehler
+    details.kader_spieler = kaderNeu
+    if (kaderFehler) details.kader_fehler = kaderFehler
 
     // ── 6. Website veröffentlichen, wenn sich etwas geändert hat ──────────────
     let publish: 'ausgeloest' | 'nicht_konfiguriert' | 'nicht_noetig' = 'nicht_noetig'

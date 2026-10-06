@@ -28,6 +28,8 @@ import { useConfirm } from '../components/ui/confirm'
 import { PflegeHinweis } from '../components/PflegeHinweis'
 import { PublishButton } from '../components/PublishButton'
 import { LiveBotStatus } from '../components/LiveBotStatus'
+import { FupaZuordnungSheet } from '../components/FupaZuordnungSheet'
+import { supabase } from '../lib/supabase'
 import { useAuth } from '../auth/AuthProvider'
 import type { RosterRow, SpielRow } from '../lib/db'
 import { friendlyError, isMissingSchema } from '../lib/db'
@@ -134,6 +136,40 @@ export function Live() {
     : aktive
 
   const [sheet, setSheet] = useState<Sheet>(null)
+  const [zuordnenOffen, setZuordnenOffen] = useState(false)
+  const [fupaBestaetigt, setFupaBestaetigt] = useState<Set<string>>(new Set())
+
+  // v23-U: Bot-Zustand fürs Pult (gleicher Query-Key wie LiveBotStatus → geteilt):
+  // Rückfrage „FuPa tickert schon?" und Zahl unzugeordneter FuPa-Spieler.
+  const istLive = spiel?.status === 'live' || spiel?.status === 'halbzeit'
+  const statusQ = useQuery({
+    queryKey: ['sva_admin_live_status', spielId],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('sva_admin_live_status', { p_spiel: spielId! })
+      if (error) throw error
+      return data as unknown as { modus: string; quelleEffektiv: 'fupa' | 'pult'; hatFupaId: boolean; unzugeordnet?: number } | null
+    },
+    enabled: !!spielId && !vorfuehrung,
+    refetchInterval: istLive ? 15_000 : false,
+    retry: false,
+  })
+  const botAktiv = statusQ.data?.modus === 'an' && !!statusQ.data?.hatFupaId && statusQ.data?.quelleEffektiv === 'fupa'
+  const unzugeordnet = statusQ.data?.unzugeordnet ?? 0
+
+  const RUECKFRAGE = new Set(['tor', 'gegentor', 'karte', 'wechsel'])
+  // Vor TOR/GEGENTOR/GELB/ROT/WECHSEL einmal pro Spiel rückfragen, wenn der Bot tickert.
+  const oeffnen = async (s: NonNullable<Sheet>) => {
+    if (botAktiv && spiel && RUECKFRAGE.has(s.art) && !fupaBestaetigt.has(spiel.id)) {
+      const ok = await confirm({
+        title: 'FuPa tickert dieses Spiel schon',
+        description: 'Der FuPa-Live-Bot trägt Tore, Karten und Wechsel automatisch ein. Trotzdem hier von Hand eintragen? Doppelte Einträge erkennt der Bot und blendet sie aus.',
+        confirmLabel: 'Trotzdem eintragen',
+      })
+      if (!ok) return
+      setFupaBestaetigt((p) => new Set(p).add(spiel.id))
+    }
+    setSheet(s)
+  }
 
   // ── Ereignis eintragen (optimistisch über die Warteschlange) ──────────────
   const eintragen = (typ: TickerTyp, extra: Partial<TickerInsert> = {}, minuteTotal = total) => {
@@ -292,19 +328,19 @@ export function Live() {
           {/* ── Ereignis-Knöpfe ────────────────────────────────────── */}
           {lage.status !== 'beendet' && (
             <div className="mt-3 grid grid-cols-2 gap-2.5">
-              <BigBtn className="bg-primary text-white" disabled={!spielGestartet} onClick={() => setSheet({ art: 'tor' })} testid="btn-tor">
+              <BigBtn className="bg-primary text-white" disabled={!spielGestartet} onClick={() => void oeffnen({ art: 'tor' })} testid="btn-tor">
                 ⚽ TOR SVA
               </BigBtn>
-              <BigBtn className="border border-border bg-card" disabled={!spielGestartet} onClick={() => setSheet({ art: 'gegentor' })}>
+              <BigBtn className="border border-border bg-card" disabled={!spielGestartet} onClick={() => void oeffnen({ art: 'gegentor' })}>
                 GEGENTOR
               </BigBtn>
-              <BigBtn className="bg-[#f5c518] text-black" disabled={!spielGestartet} onClick={() => setSheet({ art: 'karte', farbe: 'gelb' })}>
+              <BigBtn className="bg-[#f5c518] text-black" disabled={!spielGestartet} onClick={() => void oeffnen({ art: 'karte', farbe: 'gelb' })}>
                 GELB
               </BigBtn>
-              <BigBtn className="border-2 border-primary bg-primary/15 text-white" disabled={!spielGestartet} onClick={() => setSheet({ art: 'karte', farbe: 'rot' })}>
+              <BigBtn className="border-2 border-primary bg-primary/15 text-white" disabled={!spielGestartet} onClick={() => void oeffnen({ art: 'karte', farbe: 'rot' })}>
                 ROT
               </BigBtn>
-              <BigBtn className="bg-green-700 text-white" disabled={!spielGestartet} onClick={() => setSheet({ art: 'wechsel' })}>
+              <BigBtn className="bg-green-700 text-white" disabled={!spielGestartet} onClick={() => void oeffnen({ art: 'wechsel' })}>
                 WECHSEL
               </BigBtn>
               <BigBtn className="border border-border bg-secondary" onClick={() => setSheet({ art: 'kommentar' })}>
@@ -337,6 +373,11 @@ export function Live() {
           {/* ── FuPa-Live-Bot: Quelle + Status (nur wenn Bot aktiv) ──── */}
           {spiel && !istVorfuehrSpiel(spiel) && (
             <LiveBotStatus spielId={spiel.id} istLive={spiel.status === 'live' || spiel.status === 'halbzeit'} />
+          )}
+          {spiel && !vorfuehrung && unzugeordnet > 0 && (
+            <Button variant="outline" className="mt-2 h-11 w-full border-sky-500/40 text-sky-300" onClick={() => setZuordnenOffen(true)}>
+              {unzugeordnet} {unzugeordnet === 1 ? 'FuPa-Spieler' : 'FuPa-Spieler'} zuordnen
+            </Button>
           )}
 
           {/* ── Verlauf ────────────────────────────────────────────── */}
@@ -395,6 +436,9 @@ export function Live() {
         onSave={(rein, raus) => eintragen('wechsel', { roster_id: rein, roster_id_2: raus })} />
       <KommentarSheet open={sheet?.art === 'kommentar'} onClose={() => setSheet(null)} onSave={(typ, text) => eintragen(typ, { text })} />
       <UhrSheet open={sheet?.art === 'uhr'} start={total} half={half} onClose={() => setSheet(null)} onSave={uhrStellen} />
+      {spiel && !vorfuehrung && (
+        <FupaZuordnungSheet spielId={spiel.id} open={zuordnenOffen} onClose={() => setZuordnenOffen(false)} roster={roster} />
+      )}
     </div>
   )
 }
