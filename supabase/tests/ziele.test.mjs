@@ -203,9 +203,13 @@ const NE = (await one(`insert into sm_spiele (gegner, heim, anstoss) values ('Fl
   (date_trunc('day', now() at time zone 'Europe/Berlin') - interval '1 day' + interval '19 hours 30 minutes') at time zone 'Europe/Berlin') returning id`)).id
 const NET = (await val(admin, `select album_admin_code($1)`, [NE])).token
 await db.exec(`insert into sva_ticker (spiel_id, typ, zeitpunkt) values ('${NE}', 'anpfiff', now() - interval '20 hours'), ('${NE}', 'abpfiff', now())`)
-ok(!(await val(E.f, `select album_mein()`)).ziele.some((z) => z.schluessel === 'nachteule'), 'Geheime Mission vorher unsichtbar')
+// Uhrzeit-Falle: Läuft der Test abends (ab 19 Uhr), haben die früheren Test-Spiele
+// (Anstoß relativ zu now()) schon „Flutlicht“-Anstoß → E hat die Nachteule bereits.
+const nachteuleSchon = (await val(E.f, `select album_mein()`)).ziele.some((z) => z.schluessel === 'nachteule' && z.erreicht)
+if (nachteuleSchon) console.log('SKIP Nachteule vorher/erreicht (Test läuft nach 19 Uhr, früheres Spiel zählte schon als Flutlicht)')
+else ok(!(await val(E.f, `select album_mein()`)).ziele.some((z) => z.schluessel === 'nachteule'), 'Geheime Mission vorher unsichtbar')
 ci = await val(E.f, `select album_checkin($1)`, [NET])
-ok(ci.ziele?.some((z) => z.schluessel === 'nachteule' && z.packId), 'Check-in beim Flutlichtspiel → „Nachteule“ erreicht')
+if (!nachteuleSchon) ok(ci.ziele?.some((z) => z.schluessel === 'nachteule' && z.packId), 'Check-in beim Flutlichtspiel → „Nachteule“ erreicht')
 ok((await val(E.f, `select album_mein()`)).ziele.find((z) => z.schluessel === 'nachteule')?.geheim === true, 'Nach Erreichen sichtbar (geheim: true)')
 
 // ── Sozial: Freund geworben, erster Tausch ─────────────────────────────────
