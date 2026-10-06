@@ -109,6 +109,14 @@ export function lageFixture(zustand) {
       return { ...base, gesperrt: spielLive(), offen: spielOffen({ anstoss: iso(24 * 7 + 2), schluss: iso(24 * 7 + 2), anzahlTipps: 3, id: 'sp-naechstes', gegner: 'SG Lühe' }), gewertet: spielGewertet(8), ich: ICH() }
     case 'aufloesung':
       return { ...base, offen: spielOffen({ anstoss: iso(24 * 6), schluss: iso(24 * 6), anzahlTipps: 4, gegner: 'FC Mulsum/Kutenholz' }), gewertet: spielGewertet(0.8), ich: ICH() }
+    case 'nachspiel':
+      // wie live am 06.10.: letztes Spiel beendet, noch nicht gewertet; nächstes offen + schon getippt
+      return {
+        ...base,
+        gesperrt: spielLive({ status: 'beendet', toreSva: 2, toreGegner: 2, anstoss: iso(-44), schluss: iso(-44), meinTipp: undefined, meineElf: undefined, anzahlTipps: 0 }),
+        offen: spielOffen({ meinTipp: { toreSva: 2, toreGegner: 1, ersterTorschuetze: 'p-biedermann', joker: false, bonus: { gelb: '1-2', tor20: 'ja', zuschauer: 'ueber' } }, meineElf: ELF, anzahlTipps: 1 }),
+        ich: ICH(),
+      }
     case 'winter':
       return { ...base, gewertet: spielGewertet(20), ich: ICH() }
     case 'frisch-gast':

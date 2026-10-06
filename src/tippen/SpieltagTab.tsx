@@ -1,19 +1,24 @@
 import { useEffect, useState } from 'react'
-import { ArrowRight, Radio, Share2, Snowflake } from 'lucide-react'
-import { ladeRangliste, ladeVerteilung, type KaderSpieler, type Lage, type Rangliste, type TippSpiel, type Verteilung } from './api'
-import { bonusLabel, BONUS, datumKurz, nachname, paarung } from './model'
+import { motion } from 'framer-motion'
+import { ArrowRight, Share2, Snowflake } from 'lucide-react'
+import { ladeDuell, ladeRangliste, ladeVerteilung, type Duell, type KaderSpieler, type Lage, type Rangliste, type TippSpiel, type Verteilung } from './api'
+import { ABZEICHEN, BONUS, bonusLabel, datumKurz, nachname, paarung } from './model'
 import { SpieltagKarte } from './SpieltagKarte'
 import { TippFormular } from './TippFormular'
 import { Aufloesung } from './Aufloesung'
 import { ElfReihe } from './DeineElf'
 import { SpielerGesicht } from './SpielerKarte'
+import { DuellBalken, LiveBlock } from './LiveBlock'
+import { Avatar, Kapitel, Medaille, Zaehler } from './teile'
 import { bildPlatz, teilen } from './share'
 import { zaehleEreignis } from '../statistik/zaehlen'
 import type { Tab } from './TippApp'
 
 // ─────────────────────────────────────────────────────────────
-// v20-T: Bereich „Spieltag“: laufendes Spiel (gesperrt) → offener Tipp →
-// Auflösung des letzten Spieltags. Winterpause mit Saisonstand.
+// v20-T/v21: Bereich „Spieltag“: läuft ein Spiel → Live (Scorebug,
+// Hochrechnung, Ticker, Live-Rangliste) · offener Tipp · Auflösung des
+// letzten Spieltags (Punkte zählen hoch, Spieltagssieger, Fans vs. Kabine,
+// neue Abzeichen). Winterpause mit Saisonstand.
 // ─────────────────────────────────────────────────────────────
 
 export function SpieltagTab({
@@ -42,9 +47,9 @@ export function SpieltagTab({
 
   if (!einstellungen.aktiv) {
     return (
-      <div className="tp-panel tp-leer">
+      <div className="tp-leer">
         <p className="tp-kicker">Pause</p>
-        <h1 className="tp-h2">Die Tipp-Liga macht kurz Pause</h1>
+        <h1 className="tp-titel">Die Tipp-Liga macht kurz Pause</h1>
         <p className="tp-lead">Rangliste und Ligen bleiben sichtbar. Weiter geht’s mit dem nächsten Spieltag.</p>
       </div>
     )
@@ -54,15 +59,21 @@ export function SpieltagTab({
     <div className="tp-spieltag">
       {!angemeldet && <Intro onAnmelden={() => onAnmelden('allgemein')} />}
 
-      {gesperrt && <GesperrtBlock spiel={gesperrt} kader={kader} now={now} angemeldet={angemeldet} />}
+      {gesperrt && <GesperrtBlock spiel={gesperrt} kader={kader} angemeldet={angemeldet} />}
 
       {frisch && !gesperrt && gewertet && <AufloesungBlock spiel={gewertet} kader={kader} now={now} lage={lage} angemeldet={angemeldet} onTab={onTab} />}
 
       {offen ? (
         <div className="tp-offen">
-          <SpieltagKarte spiel={offen} now={now} kicker={gesperrt ? 'Nächster Spieltag' : undefined}>
-            <p className="tp-hero__zahl">
-              {offen.anzahlTipps > 0 ? `${offen.anzahlTipps} ${offen.anzahlTipps === 1 ? 'Fan hat' : 'Fans haben'} schon getippt` : 'Sei der Erste, der tippt'}
+          <SpieltagKarte spiel={offen} now={now} kicker={gesperrt ? 'Nächster Spieltag' : undefined} kompakt={!!gesperrt}>
+            <p className="tp-match__zahl">
+              {offen.anzahlTipps > 0 ? (
+                <>
+                  <b>{offen.anzahlTipps}</b> {offen.anzahlTipps === 1 ? 'Fan hat' : 'Fans haben'} schon getippt
+                </>
+              ) : (
+                'Sei der Erste, der tippt'
+              )}
             </p>
           </SpieltagKarte>
           <TippFormular key={offen.id} spiel={offen} lage={lage} kader={kader} angemeldet={angemeldet} teilnehmer={teilnehmer} onAnmelden={onAnmelden} onNeu={onNeu} />
@@ -71,9 +82,9 @@ export function SpieltagTab({
         <Winterpause bis={einstellungen.winterpause.bis} onTab={onTab} />
       ) : (
         !gesperrt && (
-          <div className="tp-panel tp-leer">
+          <div className="tp-leer">
             <p className="tp-kicker">Nächster Spieltag</p>
-            <h2 className="tp-h2">Der Spielplan kommt gleich</h2>
+            <h2 className="tp-titel">Der Spielplan kommt gleich</h2>
             <p className="tp-lead">Sobald das nächste Pflichtspiel feststeht, kannst du hier tippen.</p>
           </div>
         )
@@ -88,10 +99,10 @@ function Intro({ onAnmelden }: { onAnmelden: () => void }) {
   return (
     <section className="tp-intro" aria-label="So funktioniert die Tipp-Liga">
       <p className="tp-kicker">Kostenlos · für alle Fans</p>
-      <h1 className="tp-h1">Tipp den Sonntag.</h1>
+      <h1 className="tp-held">Tipp den Sonntag.</h1>
       <p className="tp-lead">
-        Ergebnis tippen, drei Bonusfragen, deine Elf aufstellen — in 20 Sekunden. Punkte sammeln, mit Freunden eine eigene Liga gründen und die Kabine
-        schlagen. Jeder Tipp bringt eine Karte fürs Album.
+        Ergebnis, drei Bonusfragen, deine Elf — in 20 Sekunden. Punkte sammeln, mit Freunden eine eigene Liga gründen und die Kabine schlagen. Jeder Tipp
+        bringt eine Karte fürs Album.
       </p>
       <button type="button" className="tp-link" onClick={onAnmelden}>
         Schon dabei? Anmelden <ArrowRight size={14} strokeWidth={1.5} aria-hidden="true" />
@@ -100,7 +111,7 @@ function Intro({ onAnmelden }: { onAnmelden: () => void }) {
   )
 }
 
-function GesperrtBlock({ spiel, kader, now, angemeldet }: { spiel: TippSpiel; kader: Map<string, KaderSpieler>; now: number; angemeldet: boolean }) {
+function GesperrtBlock({ spiel, kader, angemeldet }: { spiel: TippSpiel; kader: Map<string, KaderSpieler>; angemeldet: boolean }) {
   const [v, setV] = useState<Verteilung | null>(null)
   useEffect(() => {
     let aktiv = true
@@ -111,46 +122,38 @@ function GesperrtBlock({ spiel, kader, now, angemeldet }: { spiel: TippSpiel; ka
       aktiv = false
     }
   }, [spiel.id])
-  const live = spiel.status === 'live' || spiel.status === 'halbzeit'
   const t = spiel.meinTipp
   return (
     <div className="tp-gesperrt">
-      <SpieltagKarte spiel={spiel} now={now} kicker={live ? 'Läuft gerade' : spiel.status === 'beendet' ? 'Auflösung folgt nach dem Spielbericht' : 'Tippschluss'}>
-        <a className="tp-btn tp-btn--line tp-btn--sm tp-hero__live" href="/live">
-          <Radio size={16} strokeWidth={1.5} aria-hidden="true" /> {live ? 'Zum Liveticker' : 'Spieltag auf /live'}
-        </a>
-      </SpieltagKarte>
-      <section className="tp-block" aria-labelledby="tp-h-meintipp">
-        <div className="tp-block__kopf">
-          <h2 className="tp-h3" id="tp-h-meintipp">
-            Dein Tipp
-          </h2>
-          <span className="tp-block__punkte">gesperrt</span>
-        </div>
-        {t ? (
-          <div className="tp-meintipp">
-            <span className="tp-meintipp__stand">
-              {spiel.heim ? t.toreSva : t.toreGegner}:{spiel.heim ? t.toreGegner : t.toreSva}
-              {t.joker && <span className="tp-chip is-an">Joker</span>}
-            </span>
-            <ul className="tp-meintipp__extras">
-              {t.ersterTorschuetze && (
-                <li>
-                  <SpielerGesicht spieler={kader.get(t.ersterTorschuetze)} groesse={32} /> Erster Torschütze: <b>{nachname(kader.get(t.ersterTorschuetze)?.name ?? '–')}</b>
-                </li>
-              )}
-              {spiel.fragen.map((f) => (
-                <li key={f.key}>
-                  {BONUS[f.key].kurz}: <b>{bonusLabel(f.key, t.bonus?.[f.key])}</b>
-                </li>
-              ))}
-            </ul>
-            {spiel.meineElf && <ElfReihe kader={kader} spieler={spiel.meineElf.spieler} kapitaen={spiel.meineElf.kapitaen} />}
-          </div>
-        ) : (
-          <p className="tp-lead">{angemeldet ? 'Für dieses Spiel hast du nicht getippt.' : 'Melde dich an, um beim nächsten Spieltag mitzutippen.'}</p>
-        )}
-      </section>
+      <LiveBlock spiel={spiel} kader={kader} />
+      {!spiel.live && (
+        <section className="tp-abschnitt" aria-labelledby="tp-h-meintipp">
+          <Kapitel id="tp-h-meintipp" titel="Dein Tipp" meta={spiel.status === 'beendet' ? 'Auflösung folgt nach dem Spielbericht' : 'gesperrt'} />
+          {t ? (
+            <div className="tp-meintipp">
+              <span className="tp-meintipp__stand">
+                {spiel.heim ? t.toreSva : t.toreGegner}:{spiel.heim ? t.toreGegner : t.toreSva}
+                {t.joker && <span className="tp-chip is-an">Joker</span>}
+              </span>
+              <ul className="tp-meintipp__extras">
+                {t.ersterTorschuetze && (
+                  <li>
+                    <SpielerGesicht spieler={kader.get(t.ersterTorschuetze)} groesse={32} /> Erster Torschütze: <b>{nachname(kader.get(t.ersterTorschuetze)?.name ?? '–')}</b>
+                  </li>
+                )}
+                {spiel.fragen.map((f) => (
+                  <li key={f.key}>
+                    {BONUS[f.key].kurz}: <b>{bonusLabel(f.key, t.bonus?.[f.key])}</b>
+                  </li>
+                ))}
+              </ul>
+              {spiel.meineElf && <ElfReihe kader={kader} spieler={spiel.meineElf.spieler} kapitaen={spiel.meineElf.kapitaen} />}
+            </div>
+          ) : (
+            <p className="tp-lead">{angemeldet ? 'Für dieses Spiel hast du nicht getippt.' : 'Melde dich an, um beim nächsten Spieltag mitzutippen.'}</p>
+          )}
+        </section>
+      )}
       {v && v.n > 0 && <VerteilungBlock v={v} spiel={spiel} kader={kader} />}
     </div>
   )
@@ -160,34 +163,39 @@ function VerteilungBlock({ v, spiel, kader }: { v: Verteilung; spiel: TippSpiel;
   const p = paarung(spiel)
   const kap = v.kapitaen ? kader.get(v.kapitaen.spieler) : undefined
   return (
-    <section className="tp-block" aria-labelledby="tp-h-vert">
-      <div className="tp-block__kopf">
-        <h2 className="tp-h3" id="tp-h-vert">
-          So hat Aga getippt
-        </h2>
-        <span className="tp-block__punkte">{v.n} Tipps</span>
-      </div>
+    <section className="tp-abschnitt" aria-labelledby="tp-h-vert">
+      <Kapitel id="tp-h-vert" titel="So hat Aga getippt" meta={`${v.n} Tipps`} />
       <div className="tp-tendenz" role="img" aria-label={`Sieg SVA ${v.tendenz.sieg} Prozent, Remis ${v.tendenz.remis} Prozent, Niederlage ${v.tendenz.niederlage} Prozent`}>
-        <span style={{ flexGrow: Math.max(1, v.tendenz.sieg) }} className="tp-tendenz__sieg">
-          <b>{v.tendenz.sieg}%</b> Sieg
-        </span>
-        <span style={{ flexGrow: Math.max(1, v.tendenz.remis) }} className="tp-tendenz__remis">
-          <b>{v.tendenz.remis}%</b> Remis
-        </span>
-        <span style={{ flexGrow: Math.max(1, v.tendenz.niederlage) }} className="tp-tendenz__nl">
-          <b>{v.tendenz.niederlage}%</b> Niederl.
-        </span>
+        {(
+          [
+            ['sieg', v.tendenz.sieg, 'Sieg'],
+            ['remis', v.tendenz.remis, 'Remis'],
+            ['nl', v.tendenz.niederlage, 'Niederl.'],
+          ] as const
+        ).map(([k, n, l], i) => (
+          <motion.span
+            key={k}
+            style={{ flexGrow: Math.max(1, n) }}
+            className={`tp-tendenz__${k}`}
+            initial={{ opacity: 0, scaleX: 0.6 }}
+            animate={{ opacity: 1, scaleX: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 + i * 0.08, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <b>{n}%</b> {l}
+          </motion.span>
+        ))}
       </div>
       <ul className="tp-top-tipps">
-        {v.ergebnisse.slice(0, 3).map((e) => (
+        {v.ergebnisse.slice(0, 3).map((e, i) => (
           <li key={`${e.toreSva}-${e.toreGegner}`}>
+            <small>{i + 1}.</small>
             <b>{spiel.heim ? `${e.toreSva}:${e.toreGegner}` : `${e.toreGegner}:${e.toreSva}`}</b>
             <span>{e.anteil}%</span>
           </li>
         ))}
       </ul>
       {kap && v.kapitaen && (
-        <p className="tp-block__hilfe">
+        <p className="tp-hilfe">
           Beliebtester Kapitän: <b>{nachname(kap.name)}</b> ({v.kapitaen.anteil}%) · {v.joker} Joker gesetzt · {p.heim} – {p.gast}
         </p>
       )}
@@ -213,17 +221,24 @@ function AufloesungBlock({
   kompakt?: boolean
 }) {
   const [rl, setRl] = useState<Rangliste | null>(null)
+  const [duell, setDuell] = useState<Duell | null>(null)
   const [teilt, setTeilt] = useState(false)
   useEffect(() => {
     let aktiv = true
     ladeRangliste('spieltag', spiel.id)
       .then((x) => aktiv && setRl(x))
       .catch(() => {})
+    if (!kompakt)
+      ladeDuell()
+        .then((d) => aktiv && setDuell(d))
+        .catch(() => {})
     return () => {
       aktiv = false
     }
-  }, [spiel.id])
+  }, [spiel.id, kompakt])
   const ich = rl?.ich
+  // Abzeichen der letzten 2 Tage (seit dem Spiel)
+  const neu = (lage.ich?.abzeichen ?? []).filter((a) => new Date(a.at).getTime() > new Date(spiel.anstoss).getTime())
   const teilenPlatz = async () => {
     if (!ich || !rl) return
     setTeilt(true)
@@ -232,7 +247,8 @@ function AufloesungBlock({
         platz: ich.platz,
         teilnehmer: rl.teilnehmer,
         punkte: ich.punkte,
-        bereich: `Spieltag · ${spiel.heim ? 'vs' : 'bei'} ${spiel.gegner}`,
+        art: 'spieltag',
+        bereich: `${spiel.heim ? 'SVA – ' + spiel.gegner : spiel.gegner + ' – SVA'}`,
         name: lage.ich?.profil?.anzeigename,
         partner: lage.einstellungen.partner,
       })
@@ -241,35 +257,83 @@ function AufloesungBlock({
       setTeilt(false)
     }
   }
+  const sieger = rl?.eintraege.filter((e) => e.platz === 1) ?? []
   return (
     <div className={`tp-auflblock${kompakt ? ' is-kompakt' : ''}`}>
-      <SpieltagKarte spiel={spiel} now={now} kicker={`Auflösung · ${datumKurz(spiel.anstoss)}`} />
+      <SpieltagKarte spiel={spiel} now={now} kicker={kompakt ? `Letzter Spieltag · ${datumKurz(spiel.anstoss)}` : 'Auflösung'} kompakt={kompakt} />
       {spiel.meinePunkte ? (
-        <Aufloesung spiel={spiel} kader={kader} platz={ich ? { platz: ich.platz, von: rl!.teilnehmer } : undefined} />
+        <Aufloesung spiel={spiel} kader={kader} platz={ich ? { platz: ich.platz, von: rl!.teilnehmer } : undefined} kompakt={kompakt} />
       ) : (
         <p className="tp-lead tp-auflblock__leer">{angemeldet ? 'Bei diesem Spieltag warst du nicht dabei.' : 'Melde dich an und tipp beim nächsten Spieltag mit.'}</p>
       )}
+
+      {!kompakt && neu.length > 0 && (
+        <section className="tp-abschnitt tp-neuabz" aria-labelledby="tp-h-neuabz">
+          <Kapitel id="tp-h-neuabz" titel="Neu freigeschaltet" meta={`${neu.length} Abzeichen`} />
+          <ul className="tp-neuabz__liste">
+            {neu.map((n, i) => {
+              const a = ABZEICHEN.find((x) => x.key === n.key)
+              if (!a) return null
+              return (
+                <motion.li
+                  key={n.key}
+                  initial={{ opacity: 0, scale: 0.6, rotateY: 90 }}
+                  whileInView={{ opacity: 1, scale: 1, rotateY: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.7, delay: 0.2 + i * 0.25, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <span className="tp-medaille-buehne">
+                    <Medaille a={a} da groesse={84} />
+                    <i className="tp-glanz" aria-hidden="true" />
+                  </span>
+                  <b>{a.titel}</b>
+                  <small>{a.text}</small>
+                </motion.li>
+              )
+            })}
+          </ul>
+        </section>
+      )}
+
       {rl && rl.eintraege.length > 0 && (
-        <section className="tp-block" aria-label="Spieltags-Sieger">
-          <div className="tp-block__kopf">
-            <h2 className="tp-h3">Spieltag-Top 3</h2>
-            <span className="tp-block__punkte">Ø {rl.schnitt?.toLocaleString('de-DE') ?? '–'} Punkte</span>
-          </div>
-          <ol className="tp-mini-rang">
-            {rl.eintraege.slice(0, 3).map((e) => (
-              <li key={`${e.platz}-${e.name}`} className={e.ich ? 'is-ich' : ''}>
-                <span className="tp-mini-rang__platz">{e.platz}</span>
-                <span className="tp-mini-rang__name">
-                  {e.name}
-                  {e.kabine && <small className="tp-tag">Kabine</small>}
+        <section className="tp-abschnitt" aria-label="Spieltags-Sieger">
+          <Kapitel titel={spiel.motm || !kompakt ? 'Spieltagssieger' : 'Spieltag-Top 3'} meta={`Ø ${rl.schnitt?.toLocaleString('de-DE') ?? '–'} Punkte · ${rl.teilnehmer} Tipper`} />
+          {!kompakt && sieger.length > 0 && (
+            <div className="tp-sieger">
+              {sieger.slice(0, 2).map((s) => (
+                <motion.div key={s.name} className={`tp-sieger__karte${s.ich ? ' is-ich' : ''}`} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}>
+                  <span className="tp-sieger__pokal" aria-hidden="true">
+                    <Medaille a={ABZEICHEN.find((a) => a.key === 'spieltagssieger')!} da groesse={56} />
+                  </span>
+                  <Avatar name={s.name} groesse={52} kabine={s.kabine} ich={s.ich} />
+                  <span className="tp-sieger__name">
+                    <small>{s.ich ? 'Das bist du!' : 'Tipp-Sieger'}</small>
+                    <b>{s.name}</b>
+                  </span>
+                  <b className="tp-sieger__pkt">
+                    <Zaehler wert={s.punkte} dauer={1.1} />
+                    <small>Pkt.</small>
+                  </b>
+                </motion.div>
+              ))}
+            </div>
+          )}
+          <ol className="tp-rang tp-rang--mini">
+            {rl.eintraege.slice(kompakt ? 0 : sieger.length > 0 ? sieger.length : 0, kompakt ? 3 : 5).map((e) => (
+              <li key={`${e.platz}-${e.name}`} className={`tp-rang__zeile${e.ich ? ' is-ich' : ''}`}>
+                <span className="tp-rang__platz">{e.platz}</span>
+                <Avatar name={e.name} groesse={32} kabine={e.kabine} ich={e.ich} />
+                <span className="tp-rang__name">
+                  <b>{e.name}</b>
+                  <small>{e.kabine && <span className="tp-tag tp-tag--kabine">Kabine</span>}</small>
                 </span>
-                <b>{e.punkte}</b>
+                <b className="tp-rang__pkt">{e.punkte}</b>
               </li>
             ))}
           </ol>
           <div className="tp-zeile-knoepfe">
             <button type="button" className="tp-btn tp-btn--line tp-btn--sm" onClick={() => onTab('rangliste')}>
-              Ganze Rangliste
+              Ganze Rangliste <ArrowRight size={16} strokeWidth={1.5} aria-hidden="true" />
             </button>
             {ich && (
               <button type="button" className="tp-btn tp-btn--line tp-btn--sm" onClick={() => void teilenPlatz()} disabled={teilt}>
@@ -277,6 +341,17 @@ function AufloesungBlock({
               </button>
             )}
           </div>
+        </section>
+      )}
+
+      {!kompakt && duell?.spieltag && duell.spieltag.spielId === spiel.id && duell.spieltag.nKabine > 0 && (
+        <section className="tp-abschnitt" aria-labelledby="tp-h-fvk">
+          <Kapitel
+            id="tp-h-fvk"
+            titel="Fans vs. Kabine"
+            meta={(duell.spieltag.fans ?? 0) === (duell.spieltag.kabine ?? 0) ? 'Gleichstand' : (duell.spieltag.fans ?? 0) > (duell.spieltag.kabine ?? 0) ? 'Die Fans gewinnen den Spieltag' : 'Die Kabine gewinnt den Spieltag'}
+          />
+          <DuellBalken fans={duell.spieltag.fans ?? 0} kabine={duell.spieltag.kabine ?? 0} />
         </section>
       )}
     </div>
@@ -290,7 +365,7 @@ function Winterpause({ bis, onTab }: { bis: string; onTab: (t: Tab) => void }) {
     <section className="tp-winter" aria-labelledby="tp-h-winter">
       <Snowflake size={28} strokeWidth={1.5} aria-hidden="true" />
       <p className="tp-kicker">Winterpause</p>
-      <h1 className="tp-h1" id="tp-h-winter">
+      <h1 className="tp-held" id="tp-h-winter">
         Weiter am {datum}
       </h1>
       <p className="tp-lead">Die Rückrunde kommt. Bis dahin: Saisonstand checken, Liga gründen, Kumpels einladen.</p>

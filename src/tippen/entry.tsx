@@ -1,5 +1,5 @@
 import '@fontsource/anton/400.css'
-import '@fontsource-variable/archivo/index.css'
+import '@fontsource-variable/archivo/wdth.css' // v21: Archivo mit Breiten-Achse (Condensed/Expanded)
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './tippen.css'

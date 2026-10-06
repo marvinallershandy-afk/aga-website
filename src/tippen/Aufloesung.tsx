@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { animate, motion, useInView, useReducedMotion } from 'framer-motion'
 import { Check, Minus, RotateCcw, Sparkles, X } from 'lucide-react'
-import type { KaderSpieler, TippSpiel } from './api'
-import { BONUS, POSTEN_LABEL, aufloesungGesehen, aufloesungMerken, bonusLabel, nachname } from './model'
+import { IST_VORFUEHRUNG, type KaderSpieler, type TippSpiel } from './api'
+import { BONUS, POSTEN_LABEL, aufloesungGesehen, aufloesungMerken, bonusLabel, haptik, nachname } from './model'
 import { SpielerGesicht } from './SpielerKarte'
 
 // ─────────────────────────────────────────────────────────────
@@ -51,10 +51,12 @@ interface Zeile {
   kapitaen?: boolean
 }
 
-export function Aufloesung({ spiel, kader, platz }: { spiel: TippSpiel; kader: Map<string, KaderSpieler>; platz?: { platz: number; von: number } }) {
+export function Aufloesung({ spiel, kader, platz, kompakt }: { spiel: TippSpiel; kader: Map<string, KaderSpieler>; platz?: { platz: number; von: number }; kompakt?: boolean }) {
   const p = spiel.meinePunkte
   const ruhig = useReducedMotion()
-  const [lauf, setLauf] = useState(() => (aufloesungGesehen(spiel.id) || ruhig ? -1 : 0))
+  // Vorführung: jedes Mal animiert (Phase „Abpfiff“ erneut wählen = nochmal ansehen)
+  const [lauf, setLauf] = useState(() => (kompakt || ruhig || (!IST_VORFUEHRUNG && aufloesungGesehen(spiel.id)) ? -1 : 0))
+  const [offen, setOffen] = useState(!kompakt)
   // erst hochzählen, wenn die Auflösung wirklich im Bild ist
   const sektion = useRef<HTMLElement>(null)
   const imBild = useInView(sektion, { once: true, amount: 0.25 })
@@ -111,10 +113,14 @@ export function Aufloesung({ spiel, kader, platz }: { spiel: TippSpiel; kader: M
   useEffect(() => {
     if (lauf < 0 || !imBild) return
     if (lauf >= anzahl) {
-      aufloesungMerken(spiel.id)
+      if (!IST_VORFUEHRUNG) aufloesungMerken(spiel.id)
+      haptik([14, 50, 24])
       return
     }
-    const t = window.setTimeout(() => setLauf((n) => n + 1), lauf === 0 ? 450 : 380)
+    const t = window.setTimeout(() => {
+      setLauf((n) => n + 1)
+      haptik(6)
+    }, lauf === 0 ? 650 : 420)
     return () => window.clearTimeout(t)
   }, [lauf, anzahl, spiel.id, imBild])
 
@@ -123,48 +129,60 @@ export function Aufloesung({ spiel, kader, platz }: { spiel: TippSpiel; kader: M
   const bisher = fertig ? p.gesamt : zeilen.slice(0, lauf).reduce((a, z) => a + z.punkte, 0)
 
   return (
-    <section className="tp-aufl" aria-labelledby="tp-h-aufl" ref={sektion}>
+    <section className={`tp-aufl${kompakt ? ' is-kompakt' : ''}`} aria-labelledby="tp-h-aufl" ref={sektion}>
       <div className="tp-aufl__summe">
-        <p className="tp-kicker" id="tp-h-aufl">
+        <p className="tp-aufl__label" id="tp-h-aufl">
           Deine Punkte
         </p>
-        <b className="tp-aufl__zahl" aria-live="polite">
-          <Zaehler ziel={bisher} start={lauf >= 0} dauer={0.35} />
+        <b className={`tp-aufl__zahl${fertig && lauf >= 0 ? ' is-fertig' : ''}`} aria-live="polite">
+          <Zaehler ziel={bisher} start={lauf >= 0} dauer={0.45} />
         </b>
         <p className="tp-aufl__teile">
-          Tipp {p.joker ? `${p.tipp} × 2` : p.tipp} · Elf {p.elf}
+          <span>
+            Tipp <b>{p.joker ? `${p.tipp}×2` : p.tipp}</b>
+          </span>
+          <span>
+            Elf <b>{p.elf}</b>
+          </span>
           {platz && (
-            <>
-              {' '}· Platz <b>{platz.platz}</b> von {platz.von}
-            </>
+            <span>
+              Platz <b>{platz.platz}</b>/{platz.von}
+            </span>
           )}
         </p>
       </div>
-      <ul className="tp-aufl__liste">
-        {zeilen.map((z, i) => {
-          const sichtbar = lauf < 0 || i < lauf
-          return (
-            <motion.li
-              key={z.key}
-              className={`tp-aufl__zeile is-${z.status}${z.kapitaen ? ' is-kapitaen' : ''}${z.key.startsWith('e-') && !zeilen[i - 1]?.key.startsWith('e-') ? ' is-erste-elf' : ''}`}
-              initial={false}
-              animate={{ opacity: sichtbar ? 1 : 0.18, x: sichtbar ? 0 : -6 }}
-              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            >
-              {z.spieler ? <SpielerGesicht spieler={z.spieler} groesse={40} /> : <span className="tp-aufl__icon">{z.status === 'ja' ? <Check size={18} strokeWidth={2} /> : z.status === 'nein' ? <X size={18} strokeWidth={2} /> : z.key === 'joker' ? <Sparkles size={18} strokeWidth={1.5} /> : <Minus size={18} strokeWidth={2} />}</span>}
-              <span className="tp-aufl__text">
-                <b>
-                  {z.titel}
-                  {z.kapitaen && <span className="tp-binde tp-binde--klein">C ×2</span>}
-                </b>
-                {z.detail && <small>{z.detail}</small>}
-              </span>
-              <span className="tp-aufl__p">{sichtbar ? <Zaehler ziel={z.punkte} start={lauf >= 0} vorzeichen /> : ''}</span>
-            </motion.li>
-          )
-        })}
-      </ul>
-      {fertig && zeilen.length > 0 && !ruhig && (
+      {kompakt && (
+        <button type="button" className="tp-link" onClick={() => setOffen((x) => !x)} aria-expanded={offen}>
+          {offen ? 'Details ausblenden' : 'So kamen die Punkte zustande'}
+        </button>
+      )}
+      {offen && (
+        <ul className="tp-aufl__liste">
+          {zeilen.map((z, i) => {
+            const sichtbar = lauf < 0 || i < lauf
+            return (
+              <motion.li
+                key={z.key}
+                className={`tp-aufl__zeile is-${z.status}${z.kapitaen ? ' is-kapitaen' : ''}${z.key.startsWith('e-') && !zeilen[i - 1]?.key.startsWith('e-') ? ' is-erste-elf' : ''}`}
+                initial={false}
+                animate={{ opacity: sichtbar ? 1 : 0.16, x: sichtbar ? 0 : -8 }}
+                transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
+              >
+                {z.spieler ? <SpielerGesicht spieler={z.spieler} groesse={40} /> : <span className="tp-aufl__icon">{z.status === 'ja' ? <Check size={18} strokeWidth={2} /> : z.status === 'nein' ? <X size={18} strokeWidth={2} /> : z.key === 'joker' ? <Sparkles size={18} strokeWidth={1.5} /> : <Minus size={18} strokeWidth={2} />}</span>}
+                <span className="tp-aufl__text">
+                  <b>
+                    {z.titel}
+                    {z.kapitaen && <span className="tp-binde tp-binde--klein">C ×2</span>}
+                  </b>
+                  {z.detail && <small>{z.detail}</small>}
+                </span>
+                <span className="tp-aufl__p">{sichtbar ? <Zaehler ziel={z.punkte} start={lauf >= 0} vorzeichen /> : ''}</span>
+              </motion.li>
+            )
+          })}
+        </ul>
+      )}
+      {offen && fertig && zeilen.length > 0 && !ruhig && !kompakt && (
         <button type="button" className="tp-link" onClick={() => setLauf(0)}>
           <RotateCcw size={14} strokeWidth={1.5} aria-hidden="true" /> Nochmal ansehen
         </button>

@@ -3,6 +3,7 @@
 // Regeln/Punkte rechnet NUR die Datenbank — hier stehen nur die Texte dazu.
 // ─────────────────────────────────────────────────────────────
 import type { BonusKey, KaderSpieler, Position, SpielerPosten, TippSpiel } from './api'
+import { VORFUEHRUNG } from '../live/vorfuehrung'
 
 export const VEREIN_KURZ = 'SVA'
 
@@ -91,6 +92,8 @@ export interface Abzeichen {
   key: string
   titel: string
   text: string
+  /** Medaillen-Metall: Gold nur für die ganz großen (DESIGN.md: Gold = Pokal) */
+  stufe?: 'rot' | 'silber' | 'gold'
   /** lucide-Icon-Name (Mapping in Abzeichen.tsx) */
   icon: 'eye' | 'flame' | 'square' | 'crown' | 'target' | 'sparkles' | 'footprints' | 'trophy' | 'users' | 'pen'
 }
@@ -98,13 +101,13 @@ export interface Abzeichen {
 export const ABZEICHEN: Abzeichen[] = [
   { key: 'erster_tipp', titel: 'Anstoß', text: 'Deinen ersten Tipp abgegeben', icon: 'pen' },
   { key: 'hellseher', titel: 'Hellseher', text: '3× das exakte Ergebnis getippt', icon: 'eye' },
-  { key: 'treuer_tipper', titel: 'Treuer Tipper', text: '10 Spieltage am Stück getippt', icon: 'flame' },
+  { key: 'treuer_tipper', titel: 'Treuer Tipper', text: '10 Spieltage am Stück getippt', icon: 'flame', stufe: 'silber' },
   { key: 'kartenexperte', titel: 'Kartenexperte', text: '5 Karten-Bonusfragen richtig', icon: 'square' },
   { key: 'kapitaensgriff', titel: 'Kapitänsgriff', text: 'Dein Kapitän holt 10+ Punkte', icon: 'crown' },
-  { key: 'volltreffer', titel: 'Volltreffer', text: 'Exakt + alle 3 Bonusfragen richtig', icon: 'target' },
-  { key: 'jokerkoenig', titel: 'Jokerkönig', text: 'Joker auf ein exaktes Ergebnis', icon: 'sparkles' },
+  { key: 'volltreffer', titel: 'Volltreffer', text: 'Exakt + alle 3 Bonusfragen richtig', icon: 'target', stufe: 'silber' },
+  { key: 'jokerkoenig', titel: 'Jokerkönig', text: 'Joker auf ein exaktes Ergebnis', icon: 'sparkles', stufe: 'silber' },
   { key: 'torriecher', titel: 'Torriecher', text: '3× den ersten SVA-Torschützen richtig', icon: 'footprints' },
-  { key: 'spieltagssieger', titel: 'Spieltagssieger', text: 'Platz 1 an einem Spieltag', icon: 'trophy' },
+  { key: 'spieltagssieger', titel: 'Spieltagssieger', text: 'Platz 1 an einem Spieltag', icon: 'trophy', stufe: 'gold' },
   { key: 'stammtisch', titel: 'Stammtisch', text: 'In einer Liga mit 5+ Leuten', icon: 'users' },
 ]
 export const abzeichen = (key: string) => ABZEICHEN.find((a) => a.key === key)
@@ -123,18 +126,53 @@ export const POSTEN_LABEL: Record<SpielerPosten['k'], string> = {
 
 export const POS_LANG: Record<Position, string> = { TW: 'Torwart', ABW: 'Abwehr', MIT: 'Mittelfeld', ANG: 'Angriff' }
 
-/** Plätze von „Deine Elf“ (Reihenfolge = Server). */
-export const PLAETZE: { label: string; erlaubt: Position[] }[] = [
-  { label: 'TW / ABW', erlaubt: ['TW', 'ABW'] },
-  { label: 'MIT', erlaubt: ['MIT'] },
-  { label: 'MIT', erlaubt: ['MIT'] },
-  { label: 'ANG', erlaubt: ['ANG'] },
-  { label: 'ANG', erlaubt: ['ANG'] },
+/** Plätze von „Deine Elf“ (Reihenfolge = Server, v21): 1 TW · 1 ABW · 2 MIT · 1 ANG. */
+export const PLAETZE: { label: string; pos: Position }[] = [
+  { label: 'TW', pos: 'TW' },
+  { label: 'ABW', pos: 'ABW' },
+  { label: 'MIT', pos: 'MIT' },
+  { label: 'MIT', pos: 'MIT' },
+  { label: 'ANG', pos: 'ANG' },
 ]
 
+/** Passt der Spieler auf den Platz? Haupt- ODER Zweitposition (frei: alle). */
 export function passt(slot: number, p: KaderSpieler | undefined, frei: boolean): boolean {
   if (!p) return false
-  return frei || PLAETZE[slot].erlaubt.includes(p.position)
+  if (frei) return true
+  const soll = PLAETZE[slot]?.pos
+  return p.position === soll || p.zweitposition === soll
+}
+
+export const verfuegbar = (p: KaderSpieler | undefined) => !!p && !p.nichtVerfuegbar
+
+/**
+ * Gespeicherte/letzte Elf in die aktuelle Formation bringen (z. B. die alte
+ * 1-2-2 vom letzten Spieltag): jeder Spieler sucht sich einen passenden Platz,
+ * nicht Passende/nicht Verfügbare fallen raus. Kapitän nur, wenn er drinbleibt.
+ */
+export function elfEinordnen(ids: (string | null | undefined)[], kader: Map<string, KaderSpieler>, frei: boolean): (string | null)[] {
+  const kandidaten = ids.filter((x): x is string => !!x && kader.has(x) && verfuegbar(kader.get(x)))
+  if (frei) return [0, 1, 2, 3, 4].map((i) => kandidaten[i] ?? null)
+  const plaetze: (string | null)[] = [null, null, null, null, null]
+  // 1. Durchgang: Hauptposition, in der gespeicherten Reihenfolge (gleiche Plätze bleiben gleich)
+  const rest: string[] = []
+  ids.forEach((id, i) => {
+    if (!id || !kandidaten.includes(id)) return
+    if (plaetze[i] === null && kader.get(id)!.position === PLAETZE[i]?.pos) plaetze[i] = id
+    else rest.push(id)
+  })
+  // 2. Durchgang: freie Plätze per Haupt-, dann Zweitposition
+  for (const nurHaupt of [true, false]) {
+    for (const id of [...rest]) {
+      const k = kader.get(id)!
+      const i = plaetze.findIndex((x, j) => x === null && (nurHaupt ? k.position === PLAETZE[j].pos : passt(j, k, false)))
+      if (i !== -1) {
+        plaetze[i] = id
+        rest.splice(rest.indexOf(id), 1)
+      }
+    }
+  }
+  return plaetze
 }
 
 export function nachname(name: string): string {
@@ -186,6 +224,24 @@ export function kuerzel(name: string): string {
   return woerter.map((w) => w[0]).join('').slice(0, 3).toUpperCase()
 }
 
+/** Kurzes haptisches Feedback (Android; iOS ignoriert es still). */
+export function haptik(muster: number | number[] = 8) {
+  try {
+    // nur nach einer echten Berührung (sonst warnt der Browser)
+    const aktiv = (navigator as Navigator & { userActivation?: { hasBeenActive: boolean } }).userActivation?.hasBeenActive ?? true
+    if (aktiv && !reduzierteBewegung()) navigator.vibrate?.(muster)
+  } catch {
+    /* egal */
+  }
+}
+
+/** Initialen-Farbe für Avatare (ruhig, aus dem Namen abgeleitet, nur CI-nahe Töne). */
+export function avatarTon(name: string): number {
+  let h = 0
+  for (const c of name) h = (h * 31 + c.charCodeAt(0)) >>> 0
+  return h % 5
+}
+
 export function reduzierteBewegung(): boolean {
   try {
     return window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -195,7 +251,8 @@ export function reduzierteBewegung(): boolean {
 }
 
 // ── Lokaler Entwurf (nur auf diesem Gerät, vor dem Login) ────
-const ENTWURF_KEY = 'sva-tipp-entwurf'
+// Vorführung: eigener Schlüssel — der echte Entwurf bleibt unberührt
+const ENTWURF_KEY = VORFUEHRUNG ? 'sva-tipp-entwurf-vorfuehrung' : 'sva-tipp-entwurf'
 export interface Entwurf {
   spielId: string
   toreSva: number
@@ -208,6 +265,8 @@ export interface Entwurf {
   kapitaen?: string
   frei: boolean
   absenden?: boolean
+  /** v21: Formation der gespeicherten Elf (alte Entwürfe ohne → neu einordnen) */
+  formation?: 'v21'
 }
 export function entwurfLesen(): Entwurf | null {
   try {
