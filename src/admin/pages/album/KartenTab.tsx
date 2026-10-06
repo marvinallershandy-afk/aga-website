@@ -46,7 +46,7 @@ export function KartenTab() {
   const [suche, setSuche] = useState('')
   const [walkLaeuft, setWalkLaeuft] = useState(false)
 
-  const rows = karten.data ?? []
+  const rows = useMemo(() => karten.data ?? [], [karten.data])
   const R = roster.data ?? []
   const S = sponsoren.data ?? []
   const saison = stat.data?.saison ?? '2026/27'

@@ -2,7 +2,6 @@ import { useMemo } from 'react'
 import type { Player } from '../data/players'
 import { SvaKarte } from '../karten/SvaKarte'
 import { vonSpieler } from '../karten/adapter'
-import { gyroAnfragen } from '../karten/gyro'
 
 // ─────────────────────────────────────────────────────────────
 // v20-K: Die Spielerkarte der Website ist jetzt die gemeinsame
@@ -20,9 +19,6 @@ interface Props {
   /** im Modal: Rückseite zeigen (Dreh-Animation) */
   seite?: 'vorne' | 'hinten'
 }
-
-/** Gyro-Erlaubnis (iOS) aus einer Nutzergeste — Alt-Name. */
-export const requestGyro = gyroAnfragen
 
 export function HoloCard({ player, onClick, large, seite }: Props) {
   const daten = useMemo(() => vonSpieler(player), [player])

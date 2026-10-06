@@ -80,7 +80,9 @@ export function Heft(props: Props) {
 
   // ── Umblättern ─────────────────────────────────────────────
   const blatRef = useRef<Blatt | null>(null)
-  blatRef.current = blatt
+  useEffect(() => {
+    blatRef.current = blatt
+  }, [blatt])
   const fertig = useCallback(() => {
     const b = blatRef.current
     if (!b) return

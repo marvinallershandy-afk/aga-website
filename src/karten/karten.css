@@ -155,7 +155,7 @@
   mix-blend-mode: color-dodge; opacity: calc(.45 + var(--licht) * .45);
 }
 /* Licht-Streif beim Aufdecken */
-.sk__dreh.is-streif .sk__folie { animation: sk-streif 1.3s var(--ease) .15s 1 both; }
+.sk__folie.is-streif { animation: sk-streif 1.3s var(--ease) .15s 1 both; }
 @keyframes sk-streif { from { background-position: 120% 0%; opacity: 1; } to { background-position: -30% 100%; } }
 
 /* Freisteller: über Rahmen + Platte, Parallaxe gegen das Licht */
@@ -265,5 +265,5 @@
 /* ── Ruhige Bewegung ─────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   .sk__dreh, .sk__figur, .sk__inhalt, .sk__schatten { transition: none !important; }
-  .sk__aurora i, .sk__aurora b, .sk__dreh.is-streif .sk__folie { animation: none !important; }
+  .sk__aurora i, .sk__aurora b, .sk__folie.is-streif { animation: none !important; }
 }

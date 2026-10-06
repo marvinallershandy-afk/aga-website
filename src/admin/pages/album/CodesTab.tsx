@@ -41,7 +41,7 @@ export function CodesTab() {
     void navigator.clipboard?.writeText(c)
     toast.success(`${c} kopiert.`)
   }
-  const jetzt = Date.now()
+  const [jetzt] = useState(() => Date.now())
 
   return (
     <div className="space-y-6">

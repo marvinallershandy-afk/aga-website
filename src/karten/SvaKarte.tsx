@@ -1,4 +1,4 @@
-import { memo, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { memo, useEffect, useId, useMemo, useRef, useState } from 'react'
 import './karten.css'
 import { FENSTER, FIGUR_KONVENTION, INNEN, LAYOUT, UMRISS, clipPolygon, einruecken, nachnameGroesse, svgPunkte } from './geometrie'
 import { figurMassBekannt, figurMessen, hevcZuerst, ruhigeBewegung, type FigurMass } from './medien'
@@ -213,7 +213,7 @@ function Figur({ d, lebend, eager, klein }: { d: KartenDaten; lebend: boolean; e
   )
 }
 
-function Vorderseite({ d, id, stufe, lebend, eager }: { d: KartenDaten; id: string; stufe: string; lebend: boolean; eager?: boolean }) {
+function Vorderseite({ d, id, stufe, lebend, eager, streif }: { d: KartenDaten; id: string; stufe: string; lebend: boolean; eager?: boolean; streif?: boolean }) {
   const m = muster()
   const person = d.art === 'spieler' || d.art === 'trainer'
   const mitFigur = person && !!d.figur
@@ -263,7 +263,8 @@ function Vorderseite({ d, id, stufe, lebend, eager }: { d: KartenDaten; id: stri
         )}
         <div className="sk__platte" />
         <Rahmen s={d.seltenheit} id={id} />
-        {!klein && <div className="sk__folie" />}
+        {/* key wechselt beim Aufdecken → der Licht-Streif startet neu */}
+        {!klein && <div className={`sk__folie${streif ? ' is-streif' : ''}`} key={streif ? `s-${d.id}` : 'f'} />}
         {!klein && d.seltenheit === 'spezial' && <div className="sk__funken" style={{ WebkitMaskImage: `url("${m.funkeln}")`, maskImage: `url("${m.funkeln}")` }} />}
       </div>
 
@@ -414,11 +415,6 @@ function SvaKarteRoh({ daten, seite, interaktiv = false, lebend = false, stufe =
         .join(', '),
     [ariaLabel, daten],
   )
-  // Streif nach jedem neuen „aufdecken" neu starten
-  const [streif, setStreif] = useState(0)
-  useLayoutEffect(() => {
-    if (aufdecken) setStreif((n) => n + 1)
-  }, [aufdecken, daten.id])
 
   return (
     <div
@@ -451,8 +447,8 @@ function SvaKarteRoh({ daten, seite, interaktiv = false, lebend = false, stufe =
     >
       {stufe !== 'klein' && <div className="sk__schatten" aria-hidden="true" />}
       <div className="sk__buehne">
-        <div className={`sk__dreh${streif ? ' is-streif' : ''}`} key={streif}>
-          <Vorderseite d={daten} id={id} stufe={stufe} lebend={lebend} eager={eager} />
+        <div className="sk__dreh">
+          <Vorderseite d={daten} id={id} stufe={stufe} lebend={lebend} eager={eager} streif={!!aufdecken} />
           {seite && <Rueckseite d={daten} id={id} />}
         </div>
       </div>

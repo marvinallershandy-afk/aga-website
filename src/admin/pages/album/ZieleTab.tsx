@@ -183,7 +183,7 @@ function ZielEditor({ row, vorlage, onClose }: { row: ZielRow | null; vorlage?: 
   const karten = useKarten()
   const stat = useAlbumStatistik()
   const v = VORLAGEN.find((x) => x.id === (row?.vorlage ?? vorlage)) ?? VORLAGEN[1]
-  const [f, setF] = useState<ZielInput>(
+  const [f, setF] = useState<ZielInput>(() =>
     row ?? {
       vorlage: v.id,
       typ: v.typ,

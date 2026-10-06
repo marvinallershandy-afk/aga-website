@@ -7,7 +7,7 @@ import { friendlyError } from '../../lib/db'
 import { useRoster, useSpiele, useSponsoren } from '../../lib/queries'
 import { useAlbumStatistik, useKarten } from '../../lib/album'
 import { adminKartenDaten, useCodeMutations, useKartenCodes, useMotm } from '../../lib/albumV20'
-import { reelHerunterladen, storyHerunterladen } from './KartenExport'
+import { reelHerunterladen, storyHerunterladen } from './exportHelfer'
 
 // ─────────────────────────────────────────────────────────────
 // v20-K: Wochen-Checkliste (der wöchentliche Ablauf in 2 Minuten):
@@ -41,7 +41,8 @@ export function WocheTab() {
   const motm = useMotm()
   const { massen } = useCodeMutations()
   const [laeuft, setLaeuft] = useState('')
-  const mo = useMemo(() => wochenStart(), [])
+  const [jetzt] = useState(() => Date.now())
+  const mo = useMemo(() => wochenStart(new Date(jetzt)), [jetzt])
   const so = new Date(mo.getTime() + 7 * 864e5 - 1)
   const fr = new Date(mo.getTime() + 4 * 864e5)
   const key = `sva-album-woche-${iso(mo)}`
@@ -65,12 +66,12 @@ export function WocheTab() {
 
   // letztes Spiel mit Ergebnis (bis 9 Tage zurück)
   const letztes = (spiele.data ?? [])
-    .filter((s) => s.tore_sva != null && new Date(s.anstoss).getTime() > Date.now() - 9 * 864e5 && new Date(s.anstoss).getTime() < Date.now())
+    .filter((s) => s.tore_sva != null && new Date(s.anstoss).getTime() > jetzt - 9 * 864e5 && new Date(s.anstoss).getTime() < jetzt)
     .sort((a, b) => b.anstoss.localeCompare(a.anstoss))[0]
   const motmSpieler = letztes?.motm_roster_id ? (roster.data ?? []).find((r) => r.id === letztes.motm_roster_id) : undefined
   const motmKarte = letztes ? (karten.data ?? []).find((k) => k.motm_spiel_id === letztes.id) : undefined
   const storyCode = (codes.data ?? []).find((c) => c.art === 'story' && new Date(c.gueltig_von) >= mo && new Date(c.gueltig_von) <= so)
-  const heute = (spiele.data ?? []).find((s) => Math.abs(new Date(s.anstoss).getTime() - Date.now()) < 36 * 3600e3)
+  const heute = (spiele.data ?? []).find((s) => Math.abs(new Date(s.anstoss).getTime() - jetzt) < 36 * 3600e3)
 
   const motmVeroeffentlichen = async () => {
     if (!letztes || !motmSpieler) return
