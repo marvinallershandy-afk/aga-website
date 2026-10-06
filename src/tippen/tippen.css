@@ -1086,3 +1086,35 @@ img { display: block; max-width: 100%; }
   .tp-offen, .tp-gesperrt { padding-bottom: var(--s-6); }
   .tp-abschnitt { scroll-margin-bottom: 190px; }
 }
+
+/* ═══════════════ v22-T ═══════════════ */
+
+/* Ein Fokus: Vorschau des nächsten Spieltags (noch nicht tippbar) */
+.tp-vorschau-spiel {
+  display: flex; align-items: center; gap: var(--s-3); margin-top: var(--s-6); padding: var(--s-3) var(--s-4);
+  border: 1px dashed var(--c-line-strong); border-radius: var(--r-l); color: var(--c-text-2);
+}
+.tp-vorschau-spiel__icon { flex: none; color: var(--c-text-3); }
+.tp-vorschau-spiel__text { display: grid; gap: 2px; min-width: 0; }
+.tp-vorschau-spiel small { font: 800 .5625rem/1.2 var(--f-body); font-stretch: 125%; letter-spacing: .12em; text-transform: uppercase; color: var(--c-text-3); }
+.tp-vorschau-spiel b { font-weight: 800; font-size: .9375rem; color: var(--c-white); }
+.tp-vorschau-spiel span > span { font-size: var(--t-micro); color: var(--c-text-3); }
+
+/* Abpfiff · Wertung folgt */
+.tp-wertungfolgt {
+  display: flex; align-items: center; gap: var(--s-3); margin-bottom: var(--s-4); padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-l); border: 1px solid rgba(232, 193, 90, .45); background: linear-gradient(90deg, rgba(232, 193, 90, .12), rgba(232, 193, 90, .02));
+}
+.tp-wertungfolgt b { display: block; font-weight: 800; font-size: .9375rem; }
+.tp-wertungfolgt small { display: block; margin-top: 2px; font-size: var(--t-micro); line-height: 1.4; color: var(--c-text-2); }
+.tp-wertungfolgt__puls { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--tp-gold); animation: tp-puls 1.4s var(--ease) infinite; }
+@media (min-width: 1024px) { .tp-gesperrt > .tp-wertungfolgt { max-width: 440px; } }
+
+/* Live-Leiste (src/ui/tor): am Handy über der Tab-Leiste, am Desktop unten mittig */
+.tp .ll { --ll-unten: calc(58px + max(env(safe-area-inset-bottom), 6px) + 8px); }
+@media (min-width: 1024px) { .tp .ll { --ll-unten: 16px; } }
+.tp--live { padding-bottom: calc(104px + 68px + env(safe-area-inset-bottom)); }
+@media (min-width: 1024px) { .tp--live { padding-bottom: calc(var(--s-7) + 72px); } }
+.tp-steuer__wertung { flex: 1; display: inline-flex; align-items: center; gap: 8px; font-size: .6875rem; color: var(--c-text-2); }
+.tp-steuer__wertung i { width: 8px; height: 8px; border-radius: 50%; background: var(--tp-gold); animation: tp-puls 1.4s var(--ease) infinite; }
+.tp-steuer__wertung + .tp-steuer__knopf--text { flex: none; padding: 0 var(--s-3); }

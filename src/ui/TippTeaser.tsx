@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ArrowRight, Check, Sparkles, Target } from 'lucide-react'
-import { NEXT_MATCH, nextKickoff } from '../data/content'
+import { nextKickoff } from '../data/content'
 import { TIPP_STAND_KEY, tippStandLesen, type TippStand } from '../tippen/tippStand'
 
 // ─────────────────────────────────────────────────────────────
@@ -38,7 +38,6 @@ interface Darstellung {
 
 function darstellung(stand: TippStand | null, now: number): Darstellung {
   const k = nextKickoff()
-  const kein = NEXT_MATCH.isPlaceholder || !k
   // frische Auflösung (≤ 4 Tage) und nichts Offenes mehr → Punkte feiern
   if (stand?.letztePunkte != null && stand.letzteAnstoss && now - new Date(stand.letzteAnstoss).getTime() < 4 * 86_400_000 && (!stand.offenAnstoss || stand.getippt)) {
     return { kicker: 'Tipp-Liga · Auflösung', titel: `+${stand.letztePunkte} Punkte`, zeile: 'Sieh dir deine Auflösung an', ton: 'gold', icon: Sparkles }

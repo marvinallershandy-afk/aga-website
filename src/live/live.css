@@ -378,3 +378,6 @@ a.lv-partner:hover .lv-partner__label { color: var(--fg); }
 .lv-album span { flex: 1; display: grid; gap: 3px; min-width: 0; }
 .lv-album b { font-family: var(--font-display); font-weight: 400; font-size: 1.05rem; text-transform: uppercase; letter-spacing: .02em; }
 .lv-album small { font-size: .8rem; line-height: 1.4; color: var(--mut); }
+
+/* v22-T: Platz für die Live-Leiste (src/ui/tor) am unteren Rand */
+.lv--live { padding-bottom: calc(84px + env(safe-area-inset-bottom)); }

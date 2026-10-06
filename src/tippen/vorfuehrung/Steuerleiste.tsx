@@ -1,7 +1,7 @@
 import { useEffect, useState, useSyncExternalStore } from 'react'
 import { motion } from 'framer-motion'
-import { FastForward, Pause, Play, SkipForward } from 'lucide-react'
-import { ENDE_MINUTE, PHASEN, naechstesEreignis, phaseSetzen, simAbo, simLesen, simSetzen } from './store'
+import { ClipboardCheck, FastForward, Pause, Play, SkipForward } from 'lucide-react'
+import { ENDE_MINUTE, PHASEN, naechstesEreignis, phaseSetzen, simAbo, simLesen, simSetzen, wertungAusloesen } from './store'
 import { EREIGNIS_MINUTEN } from './sim'
 import { haptik } from '../model'
 
@@ -77,6 +77,16 @@ export default function Steuerleiste() {
           <span className="tp-steuer__balken" aria-hidden="true">
             <i style={{ transform: `scaleX(${Math.min(1, z.minute / ENDE_MINUTE)})` }} />
           </span>
+        </div>
+      )}
+      {z.phase === 'abpfiff' && !z.gewertet && (
+        <div className="tp-steuer__live">
+          <span className="tp-steuer__wertung">
+            <i aria-hidden="true" /> Spielbericht fehlt noch · nächster Spieltag gesperrt
+          </span>
+          <button type="button" className="tp-steuer__knopf tp-steuer__knopf--text" onClick={() => wertungAusloesen()}>
+            <ClipboardCheck size={16} strokeWidth={1.75} aria-hidden="true" /> Jetzt werten
+          </button>
         </div>
       )}
     </section>
