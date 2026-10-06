@@ -1,0 +1,43 @@
+/* v22-A · Kartenlabor (Vorführung + Admin) — läuft im Album- und im Admin-Design */
+.kl { --kl-ink: #0b0a0b; color: #f4f2ef; font-family: var(--f-body, "Archivo Variable", system-ui, sans-serif); }
+.kl--vollbild {
+  position: fixed; inset: 0; z-index: 150; overflow-y: auto; overscroll-behavior: contain;
+  padding: calc(16px + env(safe-area-inset-top)) 16px calc(40px + env(safe-area-inset-bottom));
+  background: radial-gradient(80% 40% at 50% -10%, rgba(233, 29, 41, .12), transparent 60%), var(--kl-ink);
+  animation: kl-rein .35s cubic-bezier(.22, 1, .36, 1) both;
+}
+@keyframes kl-rein { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+.kl:not(.kl--vollbild) { padding: 16px; border-radius: 12px; background: var(--kl-ink); }
+.kl__kopf { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; max-width: 1200px; margin: 0 auto; }
+.kl__kicker { font-size: 11px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; color: #E91D29; }
+.kl__titel { margin-top: 4px; font-family: var(--f-display, Anton, sans-serif); font-weight: 400; font-size: clamp(1.6rem, 6vw, 2.4rem); line-height: 1; text-transform: uppercase; }
+.kl__text { margin-top: 8px; max-width: 60ch; font-size: 13px; line-height: 1.5; color: rgba(244, 242, 239, .66); }
+.kl__leiste {
+  position: sticky; top: -16px; z-index: 2; display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+  max-width: 1200px; margin: 16px auto 0; padding: 10px 0; background: var(--kl-ink);
+}
+.kl__f {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; border-radius: 999px;
+  border: 1px solid rgba(244, 242, 239, .18); background: transparent; color: rgba(244, 242, 239, .8);
+  font-size: 12px; font-weight: 700; letter-spacing: .04em; cursor: pointer; transition: background-color .2s, color .2s, border-color .2s;
+}
+.kl__f small { font-size: 10px; opacity: .6; }
+.kl__f:hover { border-color: rgba(244, 242, 239, .45); color: #fff; }
+.kl__f.is-aktiv { background: #f4f2ef; border-color: #f4f2ef; color: #141213; }
+.kl__schalter { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; margin-left: auto; font-size: 12px; font-weight: 700; color: rgba(244, 242, 239, .8); cursor: pointer; }
+.kl__raster { list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 22px 14px; max-width: 1200px; margin: 12px auto 0; padding: 0; }
+@media (min-width: 900px) { .kl__raster { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); } }
+.kl__raster li { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.kl__karte { display: block; width: 100%; padding: 0; border: 0; background: none; cursor: pointer; transition: transform .45s cubic-bezier(.22, 1, .36, 1); }
+.kl__karte:hover { transform: translateY(-4px); }
+.kl__karte:focus-visible { outline: 2px solid #f4f2ef; outline-offset: 4px; border-radius: 6px; }
+.kl__karte .sk { width: 100%; }
+.kl__label { font-size: 11px; font-weight: 600; line-height: 1.3; color: rgba(244, 242, 239, .62); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .kl--vollbild { animation: none; } .kl__karte { transition: none; } }
+.kl-gross {
+  position: fixed; inset: 0; z-index: 160; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  padding: 24px 16px; background: rgba(5, 4, 5, .92); animation: kl-rein .3s cubic-bezier(.22, 1, .36, 1) both;
+}
+.kl-gross__karte { width: min(78vw, 360px, calc((100dvh - 170px) / 1.4)); }
+.kl-gross__label { font-size: 13px; font-weight: 700; color: rgba(244, 242, 239, .8); text-align: center; }
+.kl-gross__knoepfe { display: flex; gap: 8px; }

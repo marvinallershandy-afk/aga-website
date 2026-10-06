@@ -7,7 +7,7 @@
 // (MOTM, Derby, Advent) liegen auf der Bonus-Seite und zählen nicht fürs
 // Album. „Mannschaft komplett" = alle Spieler-Plätze (wie sva_album_komplett()).
 // ─────────────────────────────────────────────────────────────
-import type { Belohnung, Karte, Katalog, Mein, Seltenheit } from './api'
+import type { Belohnung, Erstfund, Karte, Katalog, Mein, Seltenheit, ShinyFund } from './api'
 
 export const SELTEN_RANG: Record<Seltenheit, number> = { bronze: 1, silber: 2, gold: 3, spezial: 4 }
 /** Bronze = die Basis-Karte („Kader") — Seltenheit bewertet nie einen Spieler */
@@ -62,6 +62,8 @@ export function plaetze(katalog: Katalog | null, besitz: Map<string, number>, oh
   if (!katalog) return []
   const map = new Map<string, Platz>()
   for (const k of katalog.karten) {
+    // v22: Geheimkarten leben nur auf der Geheimseite (mein.geheim)
+    if (k.geheim) continue
     const gruppe = gruppeVon(k)
     const key =
       gruppe !== 'bonus' && (k.typ === 'spieler' || k.typ === 'trainer') && k.spieler ? `p:${k.typ}:${k.spieler.slug}` : `k:${k.id}`
@@ -163,8 +165,36 @@ export function treue(katalog: Katalog | null, checkins: number): Treue {
   }
 }
 
-export function karteById(katalog: Katalog | null): Map<string, Karte> {
-  return new Map((katalog?.karten ?? []).map((k) => [k.id, k]))
+export function karteById(katalog: Katalog | null, mein?: Mein | null): Map<string, Karte> {
+  const m = new Map((katalog?.karten ?? []).map((k) => [k.id, k]))
+  // v22: gefundene Geheimkarten (stehen nicht im öffentlichen Katalog)
+  for (const g of mein?.geheim ?? []) if (g.karte) m.set(g.karte.id, g.karte)
+  return m
+}
+
+// ── v22: Shiny-Vitrine ──────────────────────────────────────
+export interface ShinyPlatz {
+  key: string
+  /** Basis-Karte der Person (Darstellung) */
+  karte: Karte
+  nr: number
+  fund?: ShinyFund
+  /** wer die Person als Erste(r) shiny hatte (auch wenn ich sie nicht habe) */
+  erstfund?: Erstfund
+}
+
+/** Eine Vitrine-Stelle je Person (Spieler + Trainerstab) — zählt NICHT fürs Album. */
+export function shinyPlaetze(ps: Platz[], mein: Mein | null): ShinyPlatz[] {
+  const funde = new Map((mein?.shiny ?? []).map((f) => [f.karteId, f]))
+  const erst = new Map((mein?.shinyErstfunde ?? []).map((e) => [e.karteId, e]))
+  return ps
+    .filter((p) => p.gruppe !== 'bonus' && (p.versionen[0]?.typ === 'spieler' || p.versionen[0]?.typ === 'trainer'))
+    .map((p) => {
+      const ids = [...p.versionen, ...p.glanz].map((k) => k.id)
+      const fund = ids.map((id) => funde.get(id)).find(Boolean)
+      const e = ids.map((id) => erst.get(id)).find(Boolean)
+      return { key: p.key, karte: p.versionen[0], nr: p.nr, fund, erstfund: fund?.erstfund ?? e }
+    })
 }
 
 /** Anzeigename einer Karte (Spieler: echter Name) */

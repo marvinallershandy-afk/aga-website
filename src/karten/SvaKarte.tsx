@@ -48,12 +48,18 @@ export interface SvaKarteProps {
   ariaLabel?: string
 }
 
-const SEL_FARBEN: Record<Seltenheit, [string, string, string, string]> = {
+type Palette = Seltenheit | 'shiny' | 'geheim'
+const SEL_FARBEN: Record<Palette, [string, string, string, string]> = {
   bronze: ['#ff6a72', '#E91D29', '#6d0b12', '#c4161f'],
   silber: ['#ffffff', '#8b929b', '#eef1f5', '#646b74'],
   gold: ['#fff1bd', '#c4952f', '#ffe7a0', '#8f6a1f'],
   spezial: ['#ffe9a8', '#ff7aa8', '#8fdcff', '#c9ffb8'],
+  // v22: Schwarz-Gold (Shiny) · Graphit mit Goldfaden (Geheimkarte)
+  shiny: ['#fff6d6', '#d9a93c', '#1a1206', '#f6d77c'],
+  geheim: ['#d6d9de', '#3b3f46', '#e8c15a', '#16171b'],
 }
+const palette = (d: KartenDaten): Palette => (d.shiny ? 'shiny' : d.geheim ? 'geheim' : d.seltenheit)
+const datumKurz = (iso: string) => new Date(iso).toLocaleDateString('de-DE', { day: 'numeric', month: 'numeric', year: 'numeric', timeZone: 'Europe/Berlin' })
 const RAND_AUSSEN = einruecken(UMRISS, 0.45)
 const RAND_BAND = einruecken(UMRISS, 1.9)
 const CLIP = clipPolygon(UMRISS)
@@ -116,7 +122,7 @@ function Symbol({ s }: { s: Seltenheit }) {
   )
 }
 
-function Rahmen({ s, id }: { s: Seltenheit; id: string }) {
+function Rahmen({ s, id }: { s: Palette; id: string }) {
   const [a, b, c, d] = SEL_FARBEN[s]
   return (
     <svg className="sk__rahmen" viewBox="0 0 100 140" preserveAspectRatio="none" aria-hidden="true">
@@ -144,7 +150,8 @@ function Figur({ d, lebend, eager, klein }: { d: KartenDaten; lebend: boolean; e
   const [videoKaputt, setVideoKaputt] = useState(false)
   const kopfZiel = d.art === 'trainer' ? LAYOUT.figurKopfStab : LAYOUT.figurKopf
   const B = LAYOUT.figurBreite
-  const video = lebend && d.loop && !videoKaputt && !ruhigeBewegung() ? d.loop : null
+  // v22: Shiny bleibt ein Standbild (Gold-Tonung auf Video wäre teuer)
+  const video = lebend && d.loop && !d.shiny && !videoKaputt && !ruhigeBewegung() ? d.loop : null
   // Lage: Standbild nach Messung; Video nach Loop-Geometrie (Scheitel headY)
   let top: number
   let hoehe = B * (mass?.ratio ?? 1.5)
@@ -222,7 +229,7 @@ function Vorderseite({ d, id, stufe, lebend, eager, streif }: { d: KartenDaten; 
   const { vorname, nachname } = teileName(d.titel)
   const klein = stufe === 'klein'
   const meister = /meister/i.test(d.serie ?? '')
-  const titelGross = (d.art === 'fan' && !d.foto) || (d.art === 'partner' && !d.logo)
+  const titelGross = (d.art === 'fan' && !d.foto) || (d.art === 'partner' && !d.logo) || (!!d.geheim && !d.foto)
 
   return (
     <div className="sk__seite sk__vorne">
@@ -237,7 +244,7 @@ function Vorderseite({ d, id, stufe, lebend, eager, streif }: { d: KartenDaten; 
         <div
           className="sk__muster"
           style={{
-            backgroundImage: `url("${d.seltenheit === 'gold' ? m.guilloche : d.seltenheit === 'silber' ? m.buerstung : m.rauten}")`,
+            backgroundImage: `url("${d.seltenheit === 'gold' || d.shiny || d.geheim ? m.guilloche : d.seltenheit === 'silber' ? m.buerstung : m.rauten}")`,
           }}
         />
         {(person || titelGross || d.art === 'partner') && <div className="sk__praegung" />}
@@ -262,7 +269,10 @@ function Vorderseite({ d, id, stufe, lebend, eager, streif }: { d: KartenDaten; 
           </div>
         )}
         <div className="sk__platte" />
-        <Rahmen s={d.seltenheit} id={id} />
+        {d.shiny && <div className="sk__sterne" style={{ WebkitMaskImage: `url("${m.funkeln}")`, maskImage: `url("${m.funkeln}")` }} />}
+        {d.shiny && <div className="sk__shiny-wort">SHINY</div>}
+        <Rahmen s={palette(d)} id={id} />
+        {d.shiny && <div className="sk__schimmer" />}
         {/* key wechselt beim Aufdecken → der Licht-Streif startet neu */}
         {!klein && <div className={`sk__folie${streif ? ' is-streif' : ''}`} key={streif ? `s-${d.id}` : 'f'} />}
         {!klein && d.seltenheit === 'spezial' && <div className="sk__funken" style={{ WebkitMaskImage: `url("${m.funkeln}")`, maskImage: `url("${m.funkeln}")` }} />}
@@ -290,8 +300,10 @@ function Vorderseite({ d, id, stufe, lebend, eager, streif }: { d: KartenDaten; 
             <img className="sk__wappen-k" src="/brand/aga-logo.png" alt="" draggable={false} />
           </div>
         )}
-        {(d.variante || d.limitiert || d.neuzugang) && (
-          <span className={`sk__tag${d.limitiert ? ' is-limit' : ''}`}>{d.limitiert ? 'Limitiert' : d.variante ? 'Glanz' : 'Neu'}</span>
+        {d.shiny || d.geheim ? null : (
+          (d.variante || d.limitiert || d.neuzugang) && (
+            <span className={`sk__tag${d.limitiert ? ' is-limit' : ''}`}>{d.limitiert ? 'Limitiert' : d.variante ? 'Glanz' : 'Neu'}</span>
+          )
         )}
 
         {titelGross ? (
@@ -359,7 +371,7 @@ function Rueckseite({ d, id }: { d: KartenDaten; id: string }) {
         <div className="sk__grund sk__grund--hinten" />
         <div className="sk__muster" style={{ backgroundImage: `url("${m.rauten}")` }} />
         <div className="sk__praegung sk__praegung--hinten" />
-        <Rahmen s={d.seltenheit} id={`${id}h`} />
+        <Rahmen s={palette(d)} id={`${id}h`} />
       </div>
       <div className="sk__rueck">
         <div className="sk__rueck-kopf">
@@ -390,10 +402,15 @@ function Rueckseite({ d, id }: { d: KartenDaten; id: string }) {
           <b>{kartenNummer(d) ?? (d.nummer != null ? `#${d.nummer}` : 'SVA')}</b>
           <span>
             <Symbol s={d.seltenheit} />
-            {SELTEN_NAME[d.seltenheit]}
+            {d.shiny ? 'Shiny' : d.geheim ? 'Geheimkarte' : SELTEN_NAME[d.seltenheit]}
             {d.variante ? ' · Glanz' : ''}
-            {d.limitiert ? ' · Limitiert' : ''}
+            {d.limitiert && !d.geheim ? ' · Limitiert' : ''}
           </span>
+          {d.shiny && d.erstfund && (
+            <small className="sk__erstfund">
+              Erstfund von {d.erstfund.name} am {datumKurz(d.erstfund.at)}
+            </small>
+          )}
           {d.credit && <small>Foto: {d.credit}</small>}
         </div>
       </div>
@@ -413,6 +430,8 @@ function SvaKarteRoh({ daten, seite, interaktiv = false, lebend = false, stufe =
         daten.art === 'spieler' && daten.nummer != null ? `Nummer ${daten.nummer}` : null,
         daten.position ? POSITION_NAME[daten.position] : daten.art !== 'spieler' ? ART_NAME[daten.art] : null,
         SELTEN_NAME[daten.seltenheit] + (daten.variante ? '-Glanz' : ''),
+        daten.shiny ? 'Shiny' : null,
+        daten.geheim ? 'Geheimkarte' : null,
       ]
         .filter(Boolean)
         .join(', '),
@@ -428,6 +447,8 @@ function SvaKarteRoh({ daten, seite, interaktiv = false, lebend = false, stufe =
         `sk--${daten.art}`,
         `sk--${stufe}`,
         daten.figur && (daten.art === 'spieler' || daten.art === 'trainer') ? 'sk--figur' : '',
+        daten.shiny ? 'sk--shiny' : '',
+        daten.geheim ? 'sk--geheim' : '',
         interaktiv ? 'is-interaktiv' : '',
         seite === 'hinten' ? 'is-hinten' : '',
         className ?? '',

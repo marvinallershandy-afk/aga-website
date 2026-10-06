@@ -11,21 +11,33 @@
 // Alle Daten kommen aus RPCs; die Ziehung passiert in der Datenbank.
 // ─────────────────────────────────────────────────────────────
 import { createClient, isAuthRetryableFetchError, type Session } from '@supabase/supabase-js'
+import { VORFUEHRUNG } from '../live/vorfuehrung'
 
 const URL_BASE = import.meta.env.VITE_SUPABASE_URL as string | undefined
 const KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
 
-export const albumKonfiguriert = !!(URL_BASE && KEY)
+/** v22-A: /album?vorfuehrung=1 — rein clientseitige Simulation (src/album/vorfuehrung/*).
+ *  Kein Login, kein Netz zur Datenbank, nichts wird gespeichert. */
+export const ALBUM_VORFUEHRUNG = VORFUEHRUNG
 
+export const albumKonfiguriert = !!(URL_BASE && KEY) && !ALBUM_VORFUEHRUNG
+
+// In der Vorführung ein toter Client: anderer Speicherschlüssel, keine Sitzung,
+// kein Token-Refresh — eine echte Fan-Sitzung im Browser bleibt unberührt.
 export const supabase = createClient(URL_BASE || 'https://album.invalid', KEY || 'anon', {
-  auth: {
-    storageKey: 'sva-album-auth',
-    flowType: 'implicit',
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-  },
+  auth: ALBUM_VORFUEHRUNG
+    ? { storageKey: 'sva-album-vorfuehrung', persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+    : {
+        storageKey: 'sva-album-auth',
+        flowType: 'implicit',
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+      },
 })
+
+/** Sitzung des Vorführ-Fans (nur im Speicher, kein Token). */
+export const VORFUEHR_SITZUNG = { user: { id: 'vorfuehrung', email: 'lena@vorfuehrung.sva' } } as unknown as Session
 
 // ── v21-A: Sitzungs-Anker (netlify/functions/album-sitzung.mts) ─────────────
 // Safari/iOS löscht localStorage nach 7 Tagen ohne Besuch (ITP). Der aktuelle
@@ -60,7 +72,7 @@ async function ankerHolen(): Promise<string | null> {
     return null
   }
 }
-if (albumKonfiguriert && typeof window !== 'undefined') {
+if (albumKonfiguriert && !ALBUM_VORFUEHRUNG && typeof window !== 'undefined') {
   supabase.auth.onAuthStateChange((ev, s) => {
     // Kein await auf supabase.* hier (Callback läuft im Auth-Ablauf)
     if (s?.refresh_token && (ev === 'SIGNED_IN' || ev === 'TOKEN_REFRESHED' || ev === 'INITIAL_SESSION')) ankerSetzen(s.refresh_token)
@@ -102,6 +114,8 @@ export interface Karte {
   variante?: boolean
   /** v20-K: limitierte Karte (Bonus-Seite, zählt nicht fürs Album) */
   limitiert?: boolean
+  /** v22: Geheimkarte (nur durch Entdecken; nie im öffentlichen Katalog) */
+  geheim?: boolean
   ziehbarVon?: string
   ziehbarBis?: string
   /** v20-K: Derby-Karte (nur beim Check-in an einem bestimmten Spiel) */
@@ -160,6 +174,12 @@ export interface Katalog {
     teilnahmeText?: string
     loseCheckin?: number
     loseKomplett?: number
+    /** v22: Shiny-Chance 1 : N je Spieler-/Trainer-Karte (0 = aus) */
+    shinyChance?: number
+    /** v22: Vereins-Geburtstag als „MM-TT“ (Kerzen auf dem Cover) */
+    vereinsGeburtstag?: string
+    /** v22: Anzahl aktiver Geheimkarten */
+    geheimAnzahl?: number
   }
   karten: Karte[]
 }
@@ -208,6 +228,33 @@ export interface Mein {
   lose?: number
   loseVerlauf?: { anzahl: number; quelle: string; at: string }[]
   verlosungen?: Verlosung[]
+  // ── v22 ──
+  /** eigene Shiny-Funde (je Person; karteId = Basis-Karte der Person) */
+  shiny?: ShinyFund[]
+  /** wer welche Person als Erste(r) shiny gezogen hat (alle Fans) */
+  shinyErstfunde?: { karteId: string; name: string; at: string; ich?: boolean }[]
+  /** Geheimseite: Rätsel + (nach dem Fund) die Karte */
+  geheim?: GeheimPlatz[]
+}
+
+export interface Erstfund {
+  name: string
+  at: string
+  ich?: boolean
+}
+export interface ShinyFund {
+  karteId: string
+  /** tatsächlich gezogene Karte (Basis oder Glanz) */
+  gezogen?: string
+  anzahl: number
+  at: string
+  erstfund?: Erstfund
+}
+export interface GeheimPlatz {
+  nr: number
+  raetsel: string
+  gefunden: boolean
+  karte?: Karte
 }
 
 export interface TauschEintrag {
@@ -248,7 +295,7 @@ export interface Verlosung {
   teilnahme?: boolean
 }
 
-export type PackArt = 'checkin' | 'heimsieg' | 'geschenk' | 'starter' | 'tipp' | 'story' | 'partner' | 'advent' | 'freund' | 'kapitel' | 'wunsch' | 'ziel'
+export type PackArt = 'checkin' | 'heimsieg' | 'geschenk' | 'starter' | 'tipp' | 'story' | 'partner' | 'advent' | 'freund' | 'kapitel' | 'wunsch' | 'ziel' | 'geheim'
 
 export interface CheckinErgebnis {
   ok: true
@@ -267,7 +314,20 @@ export interface PackInhalt {
   id: string
   art: PackArt
   gegner?: string
-  karten: { karteId: string; seltenheit: Seltenheit; neu: boolean; anzahl: number; variante?: boolean; limitiert?: boolean }[]
+  karten: {
+    karteId: string
+    seltenheit: Seltenheit
+    neu: boolean
+    anzahl: number
+    variante?: boolean
+    limitiert?: boolean
+    /** v22: diese Ziehung ist Shiny */
+    shiny?: boolean
+    erstfund?: Erstfund
+    geheim?: boolean
+    /** v22: Geheimkarten-Daten (stehen nicht im Katalog) */
+    karte?: Karte
+  }[]
   gutscheine: { id: string; stufe: string; titel: string; code: string }[]
   /** v20-K */
   titel?: string
@@ -370,6 +430,11 @@ function alsFehler(e: unknown): AlbumFehler {
 }
 
 async function rpc<T>(fn: string, args?: Record<string, unknown>): Promise<T> {
+  // v22-A Vorführung: alles aus der Simulation im Browser — nie ins Netz, nie in die DB
+  if (ALBUM_VORFUEHRUNG) {
+    const sim = await import('./vorfuehrung/backend')
+    return (await sim.simRpc(fn, args ?? {})) as T
+  }
   if (!albumKonfiguriert) throw new AlbumFehler('nicht-verfuegbar', fehlerText('nicht-verfuegbar'))
   let res
   try {
@@ -403,7 +468,7 @@ export const gutscheinEinloesen = (id: string) =>
 export const starterHolen = () => rpc<{ packId: string | null }>('album_starter_holen')
 export type CodeErgebnis =
   | { ok: true; packId: string; art: PackArt; titel?: string }
-  | { ok: false; grund: 'ungueltig' | 'noch_nicht' | 'abgelaufen' | 'schon' | 'gesperrt' | 'kein_profil' }
+  | { ok: false; grund: 'ungueltig' | 'noch_nicht' | 'abgelaufen' | 'schon' | 'gesperrt' | 'kein_profil' | 'nicht_heute'; geheim?: boolean }
 export const codeEinloesen = (code: string) => rpc<CodeErgebnis>('album_code_einloesen', { p_code: code })
 export const freundHinzufuegen = (code: string) => rpc<{ ok: true; name: string }>('album_freund_hinzufuegen', { p_code: code })
 export const tauschAnbieten = (biete: string, wunsch: string) => rpc<{ code: string }>('album_tausch_anbieten', { p_biete: biete, p_wunsch: wunsch })
@@ -429,6 +494,7 @@ let wiederhergestellt: Promise<Session | null> | null = null
 /** Sitzung aus localStorage; ist sie weg (Safari-ITP, Speicher geleert), einmal
  *  pro Seitenaufruf aus dem Sitzungs-Anker wiederherstellen. */
 export async function aktuelleSitzung(): Promise<Session | null> {
+  if (ALBUM_VORFUEHRUNG) return VORFUEHR_SITZUNG
   if (!albumKonfiguriert) return null
   try {
     const { data } = await supabase.auth.getSession()
@@ -484,6 +550,7 @@ export async function codeBestaetigen(email: string, code: string): Promise<void
 }
 
 export async function abmelden(): Promise<void> {
+  if (ALBUM_VORFUEHRUNG) return
   try {
     await supabase.auth.signOut({ scope: 'local' })
   } catch {

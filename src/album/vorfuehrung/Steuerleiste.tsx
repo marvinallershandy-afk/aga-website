@@ -1,0 +1,115 @@
+import { useState } from 'react'
+import { FlaskConical, Gift, RotateCcw, Sparkles, Star, Trophy, Wand2, X, Layers } from 'lucide-react'
+import { VF_PACK_EREIGNIS, vfPackAnlegen, vfZuruecksetzen, type TestPack } from './backend'
+import { fundMelden, gesteRichtung } from '../geheim/ei'
+import './vorfuehrung.css'
+
+// ─────────────────────────────────────────────────────────────
+// v22-A Vorführung: Steuerleiste. Jede Animation einzeln abrufbar:
+// normales Pack · Gold-Pack (Walkout) · Shiny-Pack · Test-Pack mit JEDER
+// Kartenart · Geheimkarte finden (spielt die echte Easter-Egg-Sequenz ab) ·
+// Kartenlabor. Alles im Speicher dieses Tabs.
+// ─────────────────────────────────────────────────────────────
+
+const GESTE: ('O' | 'U' | 'L' | 'R')[] = ['O', 'O', 'U', 'U', 'L', 'R', 'L', 'R']
+const PFEIL = { O: '↑', U: '↓', L: '←', R: '→' }
+
+export default function Steuerleiste({ onNeu, onLabor, versteckt }: { onNeu: () => void; onLabor: () => void; versteckt: boolean }) {
+  const [auf, setAuf] = useState(false)
+  const [geste, setGeste] = useState<number | null>(null)
+  const [eiNr, setEiNr] = useState(0)
+
+  const pack = (art: TestPack) => {
+    const p = vfPackAnlegen(art)
+    window.dispatchEvent(new CustomEvent(VF_PACK_EREIGNIS, { detail: p }))
+    setAuf(false)
+    onNeu()
+  }
+  // Geheimkarte finden: 1. Wisch-Geste (echt über den Gesten-Erkenner), 2. Ball, 3. Geburtstag
+  const finden = () => {
+    setAuf(false)
+    const n = eiNr % 3
+    setEiNr((x) => x + 1)
+    if (n === 0) {
+      GESTE.forEach((r, i) =>
+        window.setTimeout(() => {
+          setGeste(i)
+          gesteRichtung(r)
+          if (i === GESTE.length - 1) window.setTimeout(() => setGeste(null), 700)
+        }, 350 + i * 330),
+      )
+    } else if (n === 1) void fundMelden('ball|rundgang', 'Der verlorene Ball ist wieder da.')
+    else void fundMelden('geburtstag|kerzen', 'Alles Gute, SVA! Die Kerzen brennen.')
+  }
+
+  if (versteckt) return null
+  return (
+    <>
+      {geste !== null && (
+        <div className="vf-geste" aria-live="polite">
+          <small>Wisch-Geste</small>
+          <span>
+            {GESTE.map((r, i) => (
+              <b key={i} className={i <= geste ? 'is-da' : ''}>
+                {PFEIL[r]}
+              </b>
+            ))}
+          </span>
+        </div>
+      )}
+      <div className={`vf-leiste${auf ? ' is-auf' : ''}`}>
+        {auf && (
+          <div className="vf-leiste__panel" role="menu" aria-label="Vorführung steuern">
+            <p className="vf-leiste__titel">
+              Vorführung <span>nichts wird gespeichert</span>
+            </p>
+            <button type="button" role="menuitem" onClick={() => pack('normal')}>
+              <Gift size={16} aria-hidden="true" /> Normales Pack
+            </button>
+            <button type="button" role="menuitem" onClick={() => pack('gold')}>
+              <Trophy size={16} aria-hidden="true" /> Gold-Pack <small>Walkout</small>
+            </button>
+            <button type="button" role="menuitem" className="is-shiny" onClick={() => pack('shiny')}>
+              <Sparkles size={16} aria-hidden="true" /> Shiny-Pack
+            </button>
+            <button type="button" role="menuitem" onClick={() => pack('alle')}>
+              <Layers size={16} aria-hidden="true" /> Test-Pack: alle Karten <small>9 Arten</small>
+            </button>
+            <button type="button" role="menuitem" onClick={finden}>
+              <Wand2 size={16} aria-hidden="true" /> Geheimkarte finden <small>{['Geste', 'Ball', 'Geburtstag'][eiNr % 3]}</small>
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setAuf(false)
+                onLabor()
+              }}
+            >
+              <FlaskConical size={16} aria-hidden="true" /> Kartenlabor <small>alle Karten</small>
+            </button>
+            <div className="vf-leiste__fuss">
+              <button
+                type="button"
+                onClick={() => {
+                  vfZuruecksetzen()
+                  setAuf(false)
+                  onNeu()
+                }}
+              >
+                <RotateCcw size={14} aria-hidden="true" /> Zurücksetzen
+              </button>
+              <a href="/tippen?vorfuehrung=1">
+                <Star size={14} aria-hidden="true" /> Tipp-Liga-Vorführung
+              </a>
+            </div>
+          </div>
+        )}
+        <button type="button" className="vf-leiste__knopf" onClick={() => setAuf((a) => !a)} aria-expanded={auf}>
+          {auf ? <X size={16} aria-hidden="true" /> : <FlaskConical size={16} aria-hidden="true" />}
+          {auf ? 'Schließen' : 'Vorführung steuern'}
+        </button>
+      </div>
+    </>
+  )
+}

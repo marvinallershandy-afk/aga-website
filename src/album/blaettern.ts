@@ -6,5 +6,10 @@ export function zuPlatzBlaettern(key: string, sanft = true): void {
   window.dispatchEvent(new CustomEvent(BLAETTERN_EREIGNIS, { detail: { key, sanft } }))
 }
 
+/** v22-A: zu einer benannten Seite blättern (z. B. 'geheim', 'shiny'). */
+export function zuSeiteBlaettern(seite: string, sanft = true): void {
+  window.dispatchEvent(new CustomEvent(BLAETTERN_EREIGNIS, { detail: { seite, sanft } }))
+}
+
 /** Dauer einer Seiten-Animation (ms) — Einkleben wartet so lange. */
 export const BLAETTERN_MS = 760

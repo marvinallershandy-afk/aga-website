@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { BookOpen, ChevronLeft, ChevronRight, Lock } from 'lucide-react'
-import type { Gutschein, Katalog, Mein, RanglistenEintrag } from './api'
+import type { GeheimPlatz, Gutschein, Katalog, Mein, RanglistenEintrag } from './api'
 import { SvaKarte } from '../karten/SvaKarte'
-import { kartenDaten } from './kartenDaten'
+import type { KartenDaten } from '../karten/typen'
+import { kartenDaten, shinyDaten } from './kartenDaten'
 import { BLAETTERN_EREIGNIS, BLAETTERN_MS } from './blaettern'
-import { GRUPPEN, KAPITEL_NAME, MEILENSTEINE, name, type Fortschritt, type Gruppe, type Platz, type Treue } from './model'
+import { GRUPPEN, KAPITEL_NAME, MEILENSTEINE, name, shinyPlaetze, type Fortschritt, type Gruppe, type Platz, type ShinyPlatz, type Treue } from './model'
 import { Balken, Zaehler } from './Zaehler'
 import { ruhigeBewegung, vibriere } from '../karten/medien'
 import { Medaille } from './Medaille'
@@ -39,6 +40,8 @@ interface Props {
   onPlatz: (p: Platz) => void
   onGutschein: (g: Gutschein) => void
   onKonto: () => void
+  /** v22: große Karte zeigen (Shiny-Vitrine, Geheimseite) */
+  onKarte?: (d: KartenDaten, info: { titel: string; text: string }) => void
   /** Inhalt der Start- und Sammel-Seite (kommt aus AlbumApp) */
   start: React.ReactNode
   sammeln: React.ReactNode
@@ -59,7 +62,7 @@ function useDoppel() {
 type Blatt = { von: number; nach: number; vor: boolean; winkel: number; laeuft: boolean }
 
 export function Heft(props: Props) {
-  const { ps, katalog, mein, fs, tr, frisch, rangliste, onPlatz, onGutschein, onKonto, start, sammeln } = props
+  const { ps, katalog, mein, fs, tr, frisch, rangliste, onPlatz, onGutschein, onKonto, onKarte, start, sammeln } = props
   const doppel = useDoppel()
   const ruhig = useMemo(() => ruhigeBewegung(), [])
   const gesamt = fs.gesamt
@@ -69,11 +72,15 @@ export function Heft(props: Props) {
       { id: 'start', titel: 'Mein Album', kurz: 'Start' },
       ...GRUPPEN.filter((g) => ps.some((p) => p.gruppe === g.id)).map((g) => ({ id: g.id, titel: g.titel, kurz: g.kurz, gruppe: g.id })),
       ...(ps.some((p) => p.gruppe === 'bonus') ? [{ id: 'bonus', titel: 'Bonus-Seite', kurz: 'Bonus', gruppe: 'bonus' as Gruppe }] : []),
+      // v22: Shiny-Vitrine + Geheime Seite — Bonus, zählen nicht fürs Album
+      { id: 'shiny', titel: 'Shiny-Vitrine', kurz: 'Shiny' },
+      ...((mein.geheim?.length ?? 0) > 0 ? [{ id: 'geheim', titel: 'Geheime Seite', kurz: '???' }] : []),
       { id: 'sammeln', titel: 'Sammeln & Tauschen', kurz: 'Sammeln' },
       { id: 'fans', titel: 'Treueste Fans', kurz: 'Fans' },
     ],
-    [ps],
+    [ps, mein.geheim?.length],
   )
+  const vitrine = useMemo(() => shinyPlaetze(ps, mein), [ps, mein])
   const schritt = doppel ? 2 : 1
   const [ansicht, setAnsicht] = useState(0) // erste sichtbare Seite
   const [blatt, setBlatt] = useState<Blatt | null>(null)
@@ -160,7 +167,12 @@ export function Heft(props: Props) {
   // Einkleben: zur Seite eines Platzes blättern
   useEffect(() => {
     const f = (e: Event) => {
-      const key = (e as CustomEvent<{ key: string }>).detail.key
+      const { key, seite: ziel } = (e as CustomEvent<{ key?: string; seite?: string }>).detail
+      if (ziel) {
+        const idx = seiten.findIndex((s) => s.id === ziel)
+        if (idx >= 0) blaettern(idx)
+        return
+      }
       const p = ps.find((x) => x.key === key)
       const idx = p ? seiten.findIndex((s) => s.gruppe === p.gruppe) : -1
       if (idx >= 0) blaettern(idx)
@@ -204,6 +216,8 @@ export function Heft(props: Props) {
           onPlatz={onPlatz}
           start={start}
           sammeln={sammeln}
+          shiny={<ShinyVitrine plaetze={vitrine} gesamt={gesamt} saison={katalog.saison} chance={katalog.regeln.shinyChance} blatt={wo === 'blatt'} onKarte={onKarte} />}
+          geheim={<GeheimSeite plaetze={mein.geheim ?? []} saison={katalog.saison} blatt={wo === 'blatt'} onKarte={onKarte} />}
           fans={<FansSeite katalog={katalog} liste={rangliste} mitmachen={!!mein.profil?.rangliste} onKonto={onKonto} />}
           treue={<TreuePass tr={tr} gutscheine={mein.gutscheine.filter((g) => g.saison === mein.saison || g.status === 'offen')} onGutschein={onGutschein} />}
         />
@@ -302,6 +316,8 @@ function SeitenInhalt({
   onPlatz,
   start,
   sammeln,
+  shiny,
+  geheim,
   fans,
   treue,
 }: {
@@ -317,6 +333,8 @@ function SeitenInhalt({
   onPlatz: (p: Platz) => void
   start: React.ReactNode
   sammeln: React.ReactNode
+  shiny: React.ReactNode
+  geheim: React.ReactNode
   fans: React.ReactNode
   treue: React.ReactNode
 }) {
@@ -356,6 +374,8 @@ function SeitenInhalt({
       {s.gruppe === 'bonus' && <p className="hb-hinweis">Limitierte Karten — nur kurz ziehbar, zählen nicht fürs volle Album.</p>}
 
       {s.id === 'start' && start}
+      {s.id === 'shiny' && shiny}
+      {s.id === 'geheim' && geheim}
       {s.id === 'sammeln' && sammeln}
       {s.id === 'fans' && (
         <>
@@ -418,6 +438,100 @@ function PlatzView({ p, i, gesamt, saison, frisch, onPlatz }: { p: Platz; i: num
         {p.besterGlanz && <span className="hf-platz__glanz">Glanz</span>}
       </button>
     </li>
+  )
+}
+
+// ── v22: Shiny-Vitrine ───────────────────────────────────────
+const datumKurz = (iso: string) => new Date(iso).toLocaleDateString('de-DE', { day: 'numeric', month: 'numeric', year: '2-digit', timeZone: 'Europe/Berlin' })
+function ShinyVitrine({ plaetze, gesamt, saison, chance, blatt, onKarte }: { plaetze: ShinyPlatz[]; gesamt: number; saison: string; chance?: number; blatt: boolean; onKarte?: Props['onKarte'] }) {
+  const ref = useKippen<HTMLUListElement>()
+  const n = plaetze.filter((p) => p.fund).length
+  return (
+    <div className="sv">
+      <p className="hb-hinweis">
+        Extrem selten: Jede Spieler- oder Trainerkarte kann beim Ziehen als <b>Shiny</b> erscheinen
+        {chance ? ` (Chance 1 : ${chance} je Karte)` : ''}. Kein Vorteil im Spiel, zählt nicht fürs Album — nur Glück und Glanz. Wer eine Person als Erste(r) findet,
+        steht für immer auf der Karte.
+      </p>
+      <p className="sv-stand">
+        <b>{n}</b> von {plaetze.length} Shinys in deiner Vitrine
+      </p>
+      <ul className="hf-plaetze sv-raster" ref={blatt ? undefined : ref}>
+        {plaetze.map((p, i) => {
+          const basis = kartenDaten(p.karte, p.nr || undefined, p.nr ? gesamt : undefined, saison)
+          const d = p.fund ? shinyDaten(basis, p.erstfund) : null
+          return (
+            <li key={p.key} className={`hf-platz sv-platz${p.fund ? ' is-belegt is-shiny' : ' is-leer'}`} style={{ ['--i' as string]: i }}>
+              <button
+                type="button"
+                data-kipp=""
+                className="hf-platz__btn"
+                tabIndex={blatt || !d ? -1 : 0}
+                disabled={!d}
+                onClick={d && onKarte ? () => onKarte(d, { titel: `Shiny · ${name(p.karte)}`, text: p.erstfund ? `Erstfund von ${p.erstfund.name} am ${datumKurz(p.erstfund.at)}${p.fund && p.fund.anzahl > 1 ? ` · ×${p.fund.anzahl} in deiner Vitrine` : ''}` : 'Zählt nicht fürs Album.' }) : undefined}
+                aria-label={`${name(p.karte)}: ${p.fund ? 'Shiny gefunden' : 'noch kein Shiny'}${p.erstfund ? `, Erstfund ${p.erstfund.name}` : ''}`}
+              >
+                {d ? (
+                  <SvaKarte daten={d} stufe="klein" className="is-schimmer" />
+                ) : (
+                  <span className="hb-leer sv-leer" aria-hidden="true">
+                    <span className="hb-leer__nr">✦</span>
+                    <svg viewBox="0 0 100 140" className="hb-leer__form">
+                      <polygon points="6,0 94,0 100,6 100,131 50,140 0,131 0,6" />
+                    </svg>
+                    <span className="hb-leer__name">{name(p.karte)}</span>
+                    {p.erstfund && <span className="sv-gesehen">entdeckt von {p.erstfund.name}</span>}
+                  </span>
+                )}
+                {p.fund && p.fund.anzahl > 1 && <span className="hf-platz__n">×{p.fund.anzahl}</span>}
+              </button>
+            </li>
+          )
+        })}
+      </ul>
+    </div>
+  )
+}
+
+// ── v22: Geheime Seite ───────────────────────────────────────
+function GeheimSeite({ plaetze, saison, blatt, onKarte }: { plaetze: GeheimPlatz[]; saison: string; blatt: boolean; onKarte?: Props['onKarte'] }) {
+  const n = plaetze.filter((p) => p.gefunden).length
+  return (
+    <div className="gs">
+      <p className="hb-hinweis">Diese Karten bekommt man nicht in Tütchen. Man muss sie finden. Mehr verraten wir nicht.</p>
+      <p className="sv-stand">
+        <b>{n}</b> von {plaetze.length} entdeckt
+      </p>
+      <ul className="gs-liste">
+        {plaetze.map((p) => {
+          const d = p.gefunden && p.karte ? kartenDaten(p.karte, undefined, undefined, saison) : null
+          return (
+            <li key={p.nr} className={`gs-platz${d ? ' is-gefunden' : ''}`}>
+              <button
+                type="button"
+                className="gs-platz__btn"
+                disabled={!d}
+                tabIndex={blatt || !d ? -1 : 0}
+                onClick={d && onKarte ? () => onKarte(d, { titel: d.titel, text: p.raetsel }) : undefined}
+                aria-label={d ? `${d.titel} — gefunden` : `Geheimkarte ${p.nr}: noch nicht entdeckt`}
+              >
+                {d ? (
+                  <SvaKarte daten={d} stufe="klein" />
+                ) : (
+                  <span className="gs-silhouette" aria-hidden="true">
+                    <svg viewBox="0 0 100 140">
+                      <polygon points="6,0 94,0 100,6 100,131 50,140 0,131 0,6" />
+                    </svg>
+                    <b>???</b>
+                  </span>
+                )}
+              </button>
+              <p className="gs-raetsel">„{p.raetsel}“</p>
+            </li>
+          )
+        })}
+      </ul>
+    </div>
   )
 }
 

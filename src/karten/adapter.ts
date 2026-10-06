@@ -21,6 +21,8 @@ export interface AlbumKarteQuelle {
   seltenheit: Seltenheit
   variante?: boolean
   limitiert?: boolean
+  /** v22: Geheimkarte (nicht im öffentlichen Katalog) */
+  geheim?: boolean
   serie?: string
   credit?: string
   bildFokus?: string
@@ -113,6 +115,7 @@ export function vonAlbumKarte(k: AlbumKarteQuelle, opts: { nr?: number; gesamt?:
     untertitel: k.untertitel,
     variante: k.variante,
     limitiert: k.limitiert,
+    geheim: k.geheim,
     serie: k.serie,
     credit: k.credit,
     fokus: k.bildFokus,
@@ -159,7 +162,7 @@ export function vonAlbumKarte(k: AlbumKarteQuelle, opts: { nr?: number; gesamt?:
   }
   // v21-A: Kurve-Karten nie ohne Foto — fehlt eins (z. B. frisch im Admin
   // angelegt), springt das Kurve-Foto ein (picture by Nele).
-  if (k.typ === 'fan' && !k.bildUrl) {
+  if (k.typ === 'fan' && !k.bildUrl && !k.geheim) {
     return { ...basis, foto: KURVE_ERSATZ, fokus: '50% 50%', credit: k.credit ?? 'picture by Nele' }
   }
   return { ...basis, foto: k.bildUrl ?? null }

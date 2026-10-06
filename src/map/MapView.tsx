@@ -13,6 +13,9 @@ import { useMapScrollToTour } from './intro'
 import { AlbumTeaser } from '../ui/AlbumTeaser'
 import { InstagramZeile } from '../ui/InstagramZeile'
 import { HeimspielHinweis } from '../ui/HeimspielHinweis'
+// v22-A: Easter Egg (7× aufs Wappen) — klein, ohne Supabase
+import { wappenTipp } from '../album/geheim/ei'
+import { GeheimHinweis } from '../album/geheim/GeheimHinweis'
 // map.css kommt direkt aus index.html (vor dem JS verfügbar, s. dort)
 
 // ─────────────────────────────────────────────────────────────
@@ -240,7 +243,7 @@ export function MapView() {
   return (
     <div className="kmap" data-open={place ?? undefined} data-intro={intro !== 'off' || undefined} data-heimspiel={heimKickoff ? '' : undefined}>
       <header className="kmap__head">
-        <a className="kmap__brand" href="/" onClick={(e) => { e.preventDefault(); closePlace() }}>
+        <a className="kmap__brand" href="/" onClick={(e) => { e.preventDefault(); wappenTipp(); closePlace() }}>
           <img src="/brand/aga-logo.png" alt="" width="36" height="42" />
           <span>
             <b>{CLUB.name}</b>
@@ -270,6 +273,7 @@ export function MapView() {
       {heimKickoff && <HeimspielHinweis kickoff={heimKickoff} />}
       {/* v18-P: ruhiger Einstieg ins Sammelalbum (nach dem Intro sichtbar) */}
       <AlbumTeaser variante="karte" />
+      <GeheimHinweis />
       <footer className="kmap__foot">
         <InstagramZeile className="ig-zeile--karte" />
         <span className="kmap__foot-links">

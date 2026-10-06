@@ -68,6 +68,12 @@ export interface KartenDaten {
   variante?: boolean
   /** limitierte Karte (Bonus-Seite) */
   limitiert?: boolean
+  /** v22: Shiny — extrem seltene Schwarz-Gold-Fassung derselben Person (reines Sammler-Glück) */
+  shiny?: boolean
+  /** v22: Erstfund dieser Shiny-Person (wird auf der Rückseite verewigt) */
+  erstfund?: { name: string; at: string } | null
+  /** v22: Geheimkarte (nur durch Entdecken, Geheimseite) */
+  geheim?: boolean
   /** Kartennummer in der Serie, z. B. 17 von 42 */
   kartenNr?: number
   kartenGesamt?: number

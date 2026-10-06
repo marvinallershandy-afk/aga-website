@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Book } from 'lucide-react'
 import type { Session } from '@supabase/supabase-js'
 import {
@@ -21,10 +21,14 @@ import {
   type RanglistenEintrag,
   starterHolen,
   freundHinzufuegen,
+  codeEinloesen,
+  ALBUM_VORFUEHRUNG,
 } from './api'
 import { Gesamtstand, Heft } from './Heft'
-import { BLAETTERN_MS, zuPlatzBlaettern } from './blaettern'
-import { KarteDetail } from './KarteDetail'
+import { BLAETTERN_MS, zuPlatzBlaettern, zuSeiteBlaettern } from './blaettern'
+import { KarteBuehne, KarteDetail } from './KarteDetail'
+import type { KartenDaten } from '../karten/typen'
+import { GEHEIM_EREIGNIS, fundErledigt, fundMelden, gesteRichtung, istGeheimToken, offeneFunde, type GeheimFund } from './geheim/ei'
 import { CodeEinloesen, NaechstesZiel, SammelSeite, Advent, type PackNeu } from './Sammeln'
 import { TauschDialog } from './Tausch'
 import { SvaKarte } from '../karten/SvaKarte'
@@ -41,6 +45,31 @@ import { InstagramZeile } from '../ui/InstagramZeile'
 import { standAus, standSchreiben, standVergessen } from './fanStand'
 import { useKippen } from './medaille-logik'
 import './tiefe.css'
+import './v22.css'
+import './vorfuehrung/vorfuehrung.css'
+
+// v22-A: Vorführung (/album?vorfuehrung=1) — Steuerleiste + Kartenlabor nur dann laden
+const Steuerleiste = lazy(() => import('./vorfuehrung/Steuerleiste'))
+const VorfuehrLabor = lazy(() => import('./vorfuehrung/Labor'))
+const VF_PACK_EREIGNIS = 'album-vf-pack'
+
+/** v22-A: ?g=<Token> (aus dem Easter-Egg-Hinweis der Startseite/des Rundgangs) übernehmen. */
+function geheimAusUrl(): string | null {
+  try {
+    const url = new URL(window.location.href)
+    const g = url.searchParams.get('g')
+    if (!url.searchParams.has('g')) return null
+    url.searchParams.delete('g')
+    window.history.replaceState(null, '', url.pathname + (url.search || '') + url.hash)
+    return g && istGeheimToken(g) ? g.trim().toUpperCase() : null
+  } catch {
+    return null
+  }
+}
+const heuteMMTT = () => {
+  const [d, m] = new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', timeZone: 'Europe/Berlin' }).split('.')
+  return `${m}-${d}`
+}
 
 // ─────────────────────────────────────────────────────────────
 // v17-A: Seite /album — „Das offizielle Stickerheft“ des SVA mit
@@ -168,6 +197,9 @@ export function AlbumApp() {
   const [freundCode] = useState<string | null>(() => urlParam('f', /^[A-Za-z0-9]{4,12}$/))
   const [storyCode] = useState<string | null>(() => urlParam('code', /^[A-Za-z0-9-]{4,24}$/))
   const [meldung, setMeldung] = useState<{ text: string; n: number } | null>(null)
+  const [buehne, setBuehne] = useState<{ daten: KartenDaten; titel: string; text: string } | null>(null)
+  const [labor, setLabor] = useState(false)
+  const [geheimUrl] = useState<string | null>(() => geheimAusUrl())
 
   useEffect(() => {
     ladeKatalog()
@@ -270,12 +302,12 @@ export function AlbumApp() {
   const ps = useMemo(() => plaetze(katalog, besitz, ohne), [katalog, besitz, ohne])
   const fs = useMemo(() => fortschritt(ps), [ps])
   const tr = useMemo(() => treue(katalog, mein?.checkins ?? 0), [katalog, mein?.checkins])
-  const kartenMap = useMemo(() => karteById(katalog), [katalog])
+  const kartenMap = useMemo(() => karteById(katalog, mein), [katalog, mein])
   const nummern = useMemo(() => new Map(ps.flatMap((p) => [...p.versionen, ...p.glanz].map((v) => [v.id, p.nr] as const))), [ps])
 
   // v21-A: Stand für die Startseiten-Kachel merken („3/42 · 1 Tütchen wartet“)
   useEffect(() => {
-    if (uid && katalog && mein?.profil) standSchreiben(standAus(uid, katalog, mein))
+    if (uid && katalog && mein?.profil && !ALBUM_VORFUEHRUNG) standSchreiben(standAus(uid, katalog, mein))
   }, [uid, katalog, mein])
 
   // v20-K: Starter-Pack direkt nach der Anmeldung (einmalig, serverseitig idempotent)
@@ -305,6 +337,92 @@ export function AlbumApp() {
       .catch((e) => setMeldung({ text: e instanceof AlbumFehler ? e.message : 'Der Freundes-Code hat nicht geklappt.', n: Date.now() }))
   }, [freundCode, mein, neuLaden])
   const packNeu = useCallback((p: PackNeu) => setPacks((q) => [...q, { id: p.id, art: p.art, titel: p.titel }]), [])
+
+  // ── v22-A: Geheimkarten (Easter Eggs) einlösen ─────────────
+  // Quellen: ?g= aus dem Hinweis, gemerkte Funde (localStorage), Funde hier im Album
+  // (Geste, Kerzen). Der Server entscheidet — hier wird nur das Token geschickt.
+  const geheimLaeuft = useRef(new Set<string>())
+  const geheimEinloesen = useCallback(
+    async (token: string) => {
+      if (geheimLaeuft.current.has(token)) return
+      geheimLaeuft.current.add(token)
+      try {
+        const r = await codeEinloesen(token)
+        if (r.ok) {
+          fundErledigt(token)
+          setPacks((q) => [...q, { id: r.packId, art: 'geheim', titel: 'Geheimkarte entdeckt' }])
+          void neuLaden()
+        } else {
+          if (r.grund !== 'gesperrt' && r.grund !== 'kein_profil') fundErledigt(token)
+          const text =
+            r.grund === 'schon'
+              ? 'Diese Geheimkarte hast du schon — schau auf deine Geheime Seite.'
+              : r.grund === 'nicht_heute'
+                ? 'Psst … diese Karte gibt es nur an einem ganz bestimmten Tag.'
+                : r.grund === 'gesperrt'
+                  ? 'Zu viele Versuche. Bitte in einer Stunde noch einmal.'
+                  : 'Hier war nichts versteckt. Oder doch woanders?'
+          setMeldung({ text, n: Date.now() })
+        }
+      } catch {
+        geheimLaeuft.current.delete(token)
+      }
+    },
+    [neuLaden],
+  )
+  useEffect(() => {
+    if (!mein?.profil) return
+    const offen = [...new Set([...(geheimUrl ? [geheimUrl] : []), ...offeneFunde()])]
+    offen.forEach((t) => void geheimEinloesen(t))
+  }, [mein?.profil, geheimUrl, geheimEinloesen])
+  useEffect(() => {
+    const f = (e: Event) => {
+      const fund = (e as CustomEvent<GeheimFund>).detail
+      if (mein?.profil) void geheimEinloesen(fund.token)
+      else setMeldung({ text: `${fund.text} Melde dich an, um deine Geheimkarte abzuholen.`, n: Date.now() })
+    }
+    window.addEventListener(GEHEIM_EREIGNIS, f)
+    return () => window.removeEventListener(GEHEIM_EREIGNIS, f)
+  }, [mein?.profil, geheimEinloesen])
+  // (d) Wisch-Geste im Album (Pfeiltasten oder Wischen) — geprüft wird nur ein Hash
+  useEffect(() => {
+    const taste = (e: KeyboardEvent) => {
+      if ((e.target as HTMLElement)?.closest?.('input, textarea')) return
+      const r = ({ ArrowUp: 'O', ArrowDown: 'U', ArrowLeft: 'L', ArrowRight: 'R' } as const)[e.key as 'ArrowUp']
+      if (r) gesteRichtung(r)
+    }
+    let start: { x: number; y: number } | null = null
+    const ab = (e: PointerEvent) => {
+      if (e.pointerType !== 'mouse') start = { x: e.clientX, y: e.clientY }
+    }
+    const auf = (e: PointerEvent) => {
+      if (!start) return
+      const dx = e.clientX - start.x
+      const dy = e.clientY - start.y
+      start = null
+      if (Math.max(Math.abs(dx), Math.abs(dy)) < 40) return
+      gesteRichtung(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'R' : 'L') : dy > 0 ? 'U' : 'O')
+    }
+    window.addEventListener('keydown', taste)
+    window.addEventListener('pointerdown', ab, { passive: true })
+    window.addEventListener('pointerup', auf, { passive: true })
+    return () => {
+      window.removeEventListener('keydown', taste)
+      window.removeEventListener('pointerdown', ab)
+      window.removeEventListener('pointerup', auf)
+    }
+  }, [])
+  // Vorführung: Test-Packs aus der Steuerleiste
+  useEffect(() => {
+    if (!ALBUM_VORFUEHRUNG) return
+    const f = (e: Event) => {
+      const p = (e as CustomEvent<PackNeu>).detail
+      setPacks((q) => [...q, { id: p.id, art: p.art, titel: p.titel }])
+    }
+    window.addEventListener(VF_PACK_EREIGNIS, f)
+    return () => window.removeEventListener(VF_PACK_EREIGNIS, f)
+  }, [])
+  const geburtstag = !!katalog?.regeln.vereinsGeburtstag && katalog.regeln.vereinsGeburtstag === heuteMMTT()
 
   // Meilensteine: kurze Meldung beim Überschreiten (10/25/50/75/100 %)
   const letzterStand = useRef<number | null>(null)
@@ -342,12 +460,21 @@ export function AlbumApp() {
     setOffen(false)
   }
 
-  const packFertig = (_inhalt: PackInhalt | null, neue: string[]) => {
+  const packFertig = (inhalt: PackInhalt | null, neue: string[]) => {
     setPacks((p) => p.slice(1))
-    if (neue.length) {
+    const geheimNeu = inhalt?.karten.some((k) => k.geheim) ?? false
+    const shinyNeu = inhalt?.karten.filter((k) => k.shiny).length ?? 0
+    const kleben2 = neue.filter((id) => !inhalt?.karten.find((k) => k.karteId === id)?.geheim)
+    if (kleben2.length) {
       setFrisch(new Set())
-      setKleben((k) => [...k, ...neue])
+      setKleben((k) => [...k, ...kleben2])
       heftAuf(true)
+    }
+    // v22: Geheimkarte → Geheime Seite aufschlagen; Shiny → Hinweis auf die Vitrine
+    if (geheimNeu || shinyNeu) {
+      heftAuf(true)
+      window.setTimeout(() => zuSeiteBlaettern(geheimNeu ? 'geheim' : 'shiny', !ruhig), kleben2.length ? (BLAETTERN_MS + 1300) * kleben2.length + 300 : 400)
+      if (shinyNeu) setMeldung({ text: 'Dein Shiny liegt jetzt in der Shiny-Vitrine (zählt nicht fürs Album — ist einfach nur schön).', n: Date.now() })
     }
     void neuLaden()
   }
@@ -462,18 +589,23 @@ export function AlbumApp() {
   }
 
   return (
-    <div className={`al${zeigeHeft ? ' is-offen' : ''}`}>
+    <div className={`al${zeigeHeft ? ' is-offen' : ''}${ALBUM_VORFUEHRUNG ? ' al--vorfuehrung' : ''}`}>
+      {ALBUM_VORFUEHRUNG && (
+        <p className="al-vf-band" role="note">
+          Vorführung <span>· Demo-Fan, nichts wird gespeichert</span>
+        </p>
+      )}
       <header className="al-top">
         <a className="al-brand" href="/" aria-label="Zur Vereinsseite">
           <img src="/brand/aga-logo.png" alt="" width="28" height="33" />
           <span className="al-brand__wort">SV Agathenburg-Dollern</span>
         </a>
-        {/* v21-A: Umschalter Album | Tipp-Liga (gleiches Konto) */}
+        {/* v21-A: Umschalter Album | Tipp-Liga (gleiches Konto); v22: in der Vorführung zur Tipp-Liga-Vorführung */}
         <nav className="al-wechsel" aria-label="Bereich">
-          <a className="al-wechsel__b is-aktiv" href="/album" aria-current="page" onClick={(e) => { e.preventDefault(); if (zeigeHeft) window.scrollTo({ top: 0, behavior: 'smooth' }) }}>
+          <a className="al-wechsel__b is-aktiv" href={ALBUM_VORFUEHRUNG ? '/album?vorfuehrung=1' : '/album'} aria-current="page" onClick={(e) => { e.preventDefault(); if (zeigeHeft) window.scrollTo({ top: 0, behavior: 'smooth' }) }}>
             Album
           </a>
-          <a className="al-wechsel__b" href="/tippen">
+          <a className="al-wechsel__b" href={ALBUM_VORFUEHRUNG ? '/tippen?vorfuehrung=1' : '/tippen'}>
             Tipp-Liga
           </a>
         </nav>
@@ -534,8 +666,21 @@ export function AlbumApp() {
               onPlatz={setDetail}
               onGutschein={setGutschein}
               onKonto={() => setKonto(true)}
+              onKarte={(daten, info) => setBuehne({ daten, ...info })}
               start={
                 <div className="hb-startseite">
+                  {geburtstag && (
+                    <button
+                      type="button"
+                      className="al-kerzen"
+                      aria-label="Drei kleine Kerzen"
+                      onClick={() => void fundMelden('geburtstag|kerzen', 'Alles Gute, SVA! Die Kerzen brennen.')}
+                    >
+                      <i />
+                      <i />
+                      <i />
+                    </button>
+                  )}
                   <Gesamtstand fs={fs} name={mein.profil?.anzeigename} onKapitel={kapitelAufschlagen} />
                   {mein.advent ? (
                     <Advent tage={mein.advent} onPack={packNeu} onNeu={() => void neuLaden()} />
@@ -607,11 +752,31 @@ export function AlbumApp() {
           gesamt={fs.gesamt}
           saison={katalog?.saison}
           fanName={mein?.profil?.anzeigename}
+          shinyChance={katalog?.regeln.shinyChance}
           onFertig={packFertig}
         />
       )}
+      {buehne && <KarteBuehne daten={buehne.daten} titel={buehne.titel} text={buehne.text} onSchliessen={() => setBuehne(null)} />}
+      {ALBUM_VORFUEHRUNG && (
+        <Suspense fallback={null}>
+          <Steuerleiste versteckt={packs.length > 0 || labor} onNeu={() => void neuLaden()} onLabor={() => setLabor(true)} />
+          {labor && katalog && (
+            <VorfuehrLabor katalog={katalog} onSchliessen={() => setLabor(false)} />
+          )}
+        </Suspense>
+      )}
       {flug && <Flug karte={flug.karte} nr={flug.nr} gesamt={fs.gesamt} saison={katalog?.saison} rect={flug.rect} onLanden={() => landen(flug.platzKey)} />}
-      {detail && katalog && <KarteDetail platz={detail} besitz={besitz} gesamt={fs.gesamt} saison={katalog.saison} fanName={mein?.profil?.anzeigename} onSchliessen={() => setDetail(null)} />}
+      {detail && katalog && (
+        <KarteDetail
+          platz={detail}
+          besitz={besitz}
+          gesamt={fs.gesamt}
+          saison={katalog.saison}
+          fanName={mein?.profil?.anzeigename}
+          shiny={(mein?.shiny ?? []).find((f) => [...detail.versionen, ...detail.glanz].some((k) => k.id === f.karteId))}
+          onSchliessen={() => setDetail(null)}
+        />
+      )}
       {tauschCode && bereit && katalog && (
         <TauschDialog code={tauschCode} karten={kartenMap} saison={katalog.saison} onSchliessen={() => setTauschCode(null)} onErledigt={() => void neuLaden()} />
       )}

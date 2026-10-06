@@ -267,3 +267,79 @@
   .sk__dreh, .sk__figur, .sk__inhalt, .sk__schatten { transition: none !important; }
   .sk__aurora i, .sk__aurora b, .sk__folie.is-streif { animation: none !important; }
 }
+
+/* ═══ v22 · SHINY — Schwarz-Gold-Inversion ═══════════════════════════
+   Dieselbe Person, aber edel umgekehrt: tiefschwarzer Körper, Guilloche in
+   Gold, Freisteller gold getont (Statue), Sternenstaub, langsamer Schimmer,
+   „SHINY“ als Prägung. Kein Mehrwert im Spiel — nur selten und schön.
+   Animiert wird nur opacity/transform. ═══════════════════════════════ */
+.sk--shiny { --gold-a: #fff6d6; --gold-b: #f0c862; --gold-c: #a87a22; }
+.sk--shiny .sk__grund {
+  background:
+    radial-gradient(80% 46% at 50% 24%, rgba(240, 200, 98, .28), rgba(240, 200, 98, 0) 72%),
+    radial-gradient(130% 90% at 50% 40%, #16110a 0%, #070604 60%, #000 100%) !important;
+}
+.sk--shiny .sk__aurora { display: none; }
+.sk--shiny .sk__muster { opacity: .42 !important; background-size: 100% 100% !important; mix-blend-mode: normal !important; }
+.sk--shiny .sk__praegung { background: linear-gradient(150deg, rgba(255, 236, 170, .55), rgba(255, 236, 170, .04) 45%, rgba(0, 0, 0, .5) 82%) !important; opacity: .55; mix-blend-mode: normal; }
+.sk--shiny .sk__platte { background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, .86) 34%, rgba(0, 0, 0, .97) 62%); }
+.sk--shiny .sk__wasser { -webkit-text-stroke-color: rgba(255, 226, 150, .34); }
+.sk--shiny .sk__figur-el { filter: grayscale(1) sepia(1) saturate(2.3) hue-rotate(-8deg) brightness(1.04) contrast(1.16) drop-shadow(0 0 1.4cqw rgba(240, 200, 98, .45)); }
+.sk--shiny.sk--klein .sk__figur-el { filter: grayscale(1) sepia(1) saturate(2.3) hue-rotate(-8deg) brightness(1.04) contrast(1.16); }
+.sk--shiny .sk__foto img { filter: grayscale(1) sepia(1) saturate(2) hue-rotate(-8deg) contrast(1.12); }
+.sk--shiny .sk__name b, .sk--shiny .sk__gross b {
+  background: linear-gradient(180deg, #fff6d6 0%, #f0c862 55%, #a87a22 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none;
+  filter: drop-shadow(0 .5cqw 1cqw rgba(0, 0, 0, .7));
+}
+.sk--shiny.sk--klein .sk__name b { filter: none; }
+.sk--shiny .sk__name small, .sk--shiny .sk__info { color: rgba(255, 236, 190, .78); }
+.sk--shiny .sk__name i { background: linear-gradient(90deg, transparent, #f0c862, #fff6d6, #f0c862, transparent); }
+.sk--shiny .sk__pos, .sk--shiny .sk__rolle { color: #f6d77c; }
+.sk--shiny .sk__fuss, .sk--shiny .sk__fuss .sk__symbol { color: rgba(246, 215, 124, .75); }
+.sk--shiny .sk__linie { opacity: 1; }
+/* Sternenstaub: Funkel-Maske, Gold, flackert sanft */
+.sk__sterne {
+  background: radial-gradient(120% 90% at 50% 40%, #fff6d6, #f0c862 45%, #a87a22 100%);
+  -webkit-mask-size: 100% 100%; mask-size: 100% 100%;
+  mix-blend-mode: screen; opacity: .55;
+}
+.sk--shiny:not(.sk--klein) .sk__sterne { animation: sk-sterne 3.4s ease-in-out infinite; }
+@keyframes sk-sterne { 0%, 100% { opacity: .35; transform: scale(1); } 50% { opacity: .85; transform: scale(1.012); } }
+/* „SHINY“-Prägung senkrecht am rechten Rand */
+.sk__shiny-wort {
+  inset: auto; right: 4.4cqw; top: 22cqw; writing-mode: vertical-rl;
+  font-family: var(--f-display, Anton, sans-serif); font-size: 7.6cqw; letter-spacing: .34em; line-height: 1;
+  color: transparent; -webkit-text-stroke: .28cqw rgba(246, 215, 124, .55);
+  text-shadow: .3cqw .3cqw 0 rgba(0, 0, 0, .55);
+}
+/* Schimmer: goldene Bahn läuft alle paar Sekunden über die Karte */
+.sk__schimmer {
+  overflow: hidden;
+  background: linear-gradient(112deg, transparent 38%, rgba(255, 240, 190, .0) 42%, rgba(255, 240, 190, .55) 50%, rgba(255, 240, 190, 0) 58%, transparent 62%);
+  mix-blend-mode: overlay; transform: translateX(-120%);
+}
+.sk--shiny:not(.sk--klein) .sk__schimmer, .sk--shiny.is-schimmer .sk__schimmer { animation: sk-schimmer 4.2s cubic-bezier(.45, .05, .25, 1) 0.6s infinite; }
+@keyframes sk-schimmer { 0% { transform: translateX(-120%); } 38%, 100% { transform: translateX(120%); } }
+.sk--shiny .sk__wappen, .sk--shiny .sk__wappen-k { filter: grayscale(1) sepia(1) saturate(2.4) hue-rotate(-8deg) brightness(1.1) drop-shadow(0 .4cqw .8cqw rgba(0, 0, 0, .5)); }
+.sk__tag.is-shiny { background: linear-gradient(140deg, #fff6d6, #e0b24a 55%, #a87a22); color: #1a1206; box-shadow: 0 0 2cqw rgba(240, 200, 98, .45); }
+.sk__erstfund { color: rgba(246, 215, 124, .9) !important; font-weight: 700 !important; letter-spacing: .08em !important; }
+.sk--shiny .sk__grund--hinten { background: radial-gradient(120% 70% at 50% 30%, #1c150a 0%, #0a0805 55%, #000 100%) !important; }
+.sk--shiny .sk__rueck-art { color: #f0c862; }
+
+/* ═══ v22 · GEHEIMKARTE — typografisch, Graphit + Goldfaden ════════════ */
+.sk--geheim .sk__grund { background: radial-gradient(110% 70% at 50% 30%, #1d1f24 0%, #0d0e11 58%, #050506 100%) !important; }
+.sk--geheim .sk__aurora { opacity: .28; filter: grayscale(.6); }
+.sk--geheim .sk__muster { background-size: 100% 100% !important; opacity: .16 !important; mix-blend-mode: normal !important; }
+.sk--geheim .sk__praegung { opacity: .5 !important; background: linear-gradient(150deg, rgba(232, 193, 90, .42), rgba(232, 193, 90, .03) 46%, rgba(0, 0, 0, .45) 84%) !important; }
+.sk--geheim .sk__serie { color: #e8c15a; background: rgba(5, 5, 6, .8); box-shadow: inset 0 0 0 .25cqw rgba(232, 193, 90, .45); }
+.sk--geheim .sk__gross { top: 32cqw; }
+.sk--geheim .sk__gross b { font-size: 17cqw; color: #f4f2ef; }
+.sk--geheim .sk__gross b:nth-child(2n) { color: #e8c15a; }
+.sk--geheim .sk__name i { background: linear-gradient(90deg, transparent, #e8c15a, transparent); }
+.sk__tag.is-geheim { background: #0b0b0d; color: #e8c15a; box-shadow: inset 0 0 0 .3cqw rgba(232, 193, 90, .7); }
+.sk--geheim .sk__rueck-art { color: #e8c15a; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sk__sterne, .sk__schimmer { animation: none !important; }
+}

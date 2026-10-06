@@ -420,6 +420,11 @@ em { font-style: normal; color: var(--c-red); }
 .al-chip--spezial::before { background: var(--folie-holo); }
 .al-chip--neu { background: var(--c-red); border-color: var(--c-red); }
 .al-chip--neu::before { display: none; }
+/* v22 */
+.al-chip--shiny { background: linear-gradient(140deg, #fff6d6, #e0b24a 55%, #a87a22); border-color: #f0c862; color: #1a1206; }
+.al-chip--shiny::before { background: #1a1206; border-radius: 50%; width: 6px; height: 6px; }
+.al-chip--geheim { border-color: #e8c15a; color: #e8c15a; }
+.al-chip--geheim::before { background: #e8c15a; }
 
 /* ── Detail ──────────────────────────────────────────────── */
 .al-detail {
@@ -499,3 +504,4 @@ em { font-style: normal; color: var(--c-red); }
 .al-tipp { display: flex; align-items: baseline; gap: var(--s-2); padding: var(--s-2) var(--s-3); border: var(--border); border-radius: var(--r-s); text-decoration: none; font-size: var(--t-small); color: var(--c-text-2); transition: border-color var(--d-1) var(--ease); }
 .al-tipp b { font-family: var(--f-display); font-weight: 400; font-size: 1rem; letter-spacing: .03em; text-transform: uppercase; color: var(--c-white); }
 .al-tipp:hover { border-color: var(--c-line-strong); }
+.al-gold { color: #f6d77c; font-weight: 700; }

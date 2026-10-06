@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { RotateCw, Share2, Smartphone } from 'lucide-react'
-import type { Karte } from './api'
+import type { Karte, ShinyFund } from './api'
 import { SvaKarte } from '../karten/SvaKarte'
+import type { KartenDaten } from '../karten/typen'
 import { gyroAnfragen, gyroBeobachten, gyroBrauchtErlaubnis } from '../karten/gyro'
-import { kartenDaten } from './kartenDaten'
+import { kartenDaten, shinyDaten } from './kartenDaten'
 import { SELTEN_LABEL, name, type Platz } from './model'
 
 // ─────────────────────────────────────────────────────────────
@@ -20,20 +21,15 @@ interface Props {
   gesamt: number
   saison: string
   fanName?: string
+  /** v22: Shiny dieser Person (falls gefunden) */
+  shiny?: ShinyFund
   onSchliessen: () => void
 }
 
-export function KarteDetail({ platz, besitz, gesamt, saison, fanName, onSchliessen }: Props) {
-  const alle = [...platz.versionen, ...platz.glanz]
-  const [aktiv, setAktiv] = useState<Karte>(platz.beste ?? platz.besterGlanz ?? platz.versionen[0])
-  const [hinten, setHinten] = useState(false)
-  const [gyro, setGyro] = useState(gyroBrauchtErlaubnis)
-  const [teilt, setTeilt] = useState('')
-  const ref = useRef<HTMLDivElement>(null)
-  const n = besitz.get(aktiv.id) ?? 0
-  const daten = kartenDaten(aktiv, platz.nr || undefined, platz.nr ? gesamt : undefined, saison)
+const SHINY_ID = '__shiny__'
+const datumLang = (iso: string) => new Date(iso).toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Berlin' })
 
-  useEffect(() => gyroBeobachten(() => setGyro(gyroBrauchtErlaubnis())), [])
+function useDialog(ref: React.RefObject<HTMLDivElement | null>, onSchliessen: () => void) {
   useEffect(() => {
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
@@ -44,7 +40,24 @@ export function KarteDetail({ platz, besitz, gesamt, saison, fanName, onSchliess
       document.body.style.overflow = prev
       window.removeEventListener('keydown', esc)
     }
-  }, [onSchliessen])
+  }, [onSchliessen, ref])
+}
+
+export function KarteDetail({ platz, besitz, gesamt, saison, fanName, shiny, onSchliessen }: Props) {
+  const alle = [...platz.versionen, ...platz.glanz]
+  const [aktivId, setAktivId] = useState<string>((platz.beste ?? platz.besterGlanz ?? platz.versionen[0]).id)
+  const istShiny = aktivId === SHINY_ID && !!shiny
+  const aktiv: Karte = alle.find((k) => k.id === aktivId) ?? platz.beste ?? platz.versionen[0]
+  const [hinten, setHinten] = useState(false)
+  const [gyro, setGyro] = useState(gyroBrauchtErlaubnis)
+  const [teilt, setTeilt] = useState('')
+  const ref = useRef<HTMLDivElement>(null)
+  const n = istShiny ? shiny!.anzahl : besitz.get(aktiv.id) ?? 0
+  const basisDaten = kartenDaten(aktiv, platz.nr || undefined, platz.nr ? gesamt : undefined, saison)
+  const daten = istShiny ? shinyDaten(basisDaten, shiny!.erstfund) : basisDaten
+
+  useEffect(() => gyroBeobachten(() => setGyro(gyroBrauchtErlaubnis())), [])
+  useDialog(ref, onSchliessen)
 
   const karteTeilen = async () => {
     setTeilt('…')
@@ -67,7 +80,7 @@ export function KarteDetail({ platz, besitz, gesamt, saison, fanName, onSchliess
         </button>
         <div className="al-detail__karte">
           {n > 0 ? (
-            <SvaKarte key={aktiv.id} daten={daten} stufe="gross" interaktiv lebend aufdecken seite={hinten ? 'hinten' : 'vorne'} onClick={() => setHinten((h) => !h)} eager />
+            <SvaKarte key={daten.id} daten={daten} stufe="gross" interaktiv lebend aufdecken seite={hinten ? 'hinten' : 'vorne'} onClick={() => setHinten((h) => !h)} eager />
           ) : (
             <span className="hb-leer hb-leer--gross" role="img" aria-label="Noch nicht im Album">
               <span className="hb-leer__nr">{platz.nr ? String(platz.nr).padStart(2, '0') : ''}</span>
@@ -84,7 +97,12 @@ export function KarteDetail({ platz, besitz, gesamt, saison, fanName, onSchliess
             {aktiv.serie ? ` · ${aktiv.serie}` : aktiv.untertitel ? ` · ${aktiv.untertitel}` : ''}
           </p>
           <h2 className="al-h2">{name(aktiv)}</h2>
-          {n > 0 ? (
+          {istShiny ? (
+            <p className="al-lead">
+              <b className="al-gold">Shiny.</b> {shiny!.erstfund ? (shiny!.erstfund.ich ? `Dein Erstfund vom ${datumLang(shiny!.erstfund.at)} — dein Name steht auf der Rückseite.` : `Erstfund von ${shiny!.erstfund.name} am ${datumLang(shiny!.erstfund.at)}.`) : ''}{' '}
+              Reines Sammler-Glück: zählt nicht fürs Album{shiny!.anzahl > 1 ? ` · ×${shiny!.anzahl}` : ''}.
+            </p>
+          ) : n > 0 ? (
             <p className="al-lead">
               {n === 1 ? 'Im Album.' : `Im Album — und ${n - 1}× doppelt zum Tauschen.`}
               {aktiv.variante && ' Glanz-Variante: Sammelstück, füllt keinen Platz.'}
@@ -100,7 +118,7 @@ export function KarteDetail({ platz, besitz, gesamt, saison, fanName, onSchliess
           ) : (
             <p className="al-lead">Fehlt noch. Beim nächsten Heimspiel einchecken, tippen oder einen Story-Code einlösen.</p>
           )}
-          {alle.length > 1 && (
+          {(alle.length > 1 || shiny) && (
             <div className="al-versionen" role="group" aria-label="Versionen">
               {alle.map((v) => {
                 const m = besitz.get(v.id) ?? 0
@@ -111,7 +129,7 @@ export function KarteDetail({ platz, besitz, gesamt, saison, fanName, onSchliess
                     className={`al-chip al-chip--${v.seltenheit}${v.id === aktiv.id ? ' is-aktiv' : ''}${m === 0 ? ' is-fehlt' : ''}`}
                     aria-pressed={v.id === aktiv.id}
                     onClick={() => {
-                      setAktiv(v)
+                      setAktivId(v.id)
                       setHinten(false)
                     }}
                   >
@@ -121,6 +139,19 @@ export function KarteDetail({ platz, besitz, gesamt, saison, fanName, onSchliess
                   </button>
                 )
               })}
+              {shiny && (
+                <button
+                  type="button"
+                  className={`al-chip al-chip--shiny${istShiny ? ' is-aktiv' : ''}`}
+                  aria-pressed={istShiny}
+                  onClick={() => {
+                    setAktivId(SHINY_ID)
+                    setHinten(false)
+                  }}
+                >
+                  Shiny{shiny.anzahl > 1 ? ` ×${shiny.anzahl}` : ''}
+                </button>
+              )}
             </div>
           )}
           {n > 0 && (
@@ -139,6 +170,37 @@ export function KarteDetail({ platz, besitz, gesamt, saison, fanName, onSchliess
             </div>
           )}
           {teilt && teilt !== '…' && <p className="hf-klein">{teilt}</p>}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/** v22: Große Karte ohne Platz (Shiny-Vitrine, Geheimseite, Kartenlabor). */
+export function KarteBuehne({ daten, titel, text, onSchliessen }: { daten: KartenDaten; titel: string; text: string; onSchliessen: () => void }) {
+  const [hinten, setHinten] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  useDialog(ref, onSchliessen)
+  return (
+    <div className="al-detail" role="dialog" aria-modal="true" aria-label={titel} onClick={onSchliessen}>
+      <div className="al-detail__panel" ref={ref} tabIndex={-1} onClick={(e) => e.stopPropagation()}>
+        <button type="button" className="al-x" onClick={onSchliessen} aria-label="Schließen">
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+          </svg>
+        </button>
+        <div className="al-detail__karte">
+          <SvaKarte key={daten.id} daten={daten} stufe="gross" interaktiv lebend aufdecken seite={hinten ? 'hinten' : 'vorne'} onClick={() => setHinten((h) => !h)} eager />
+        </div>
+        <div className="al-detail__info">
+          <p className="al-kicker">{daten.shiny ? 'Shiny-Vitrine' : daten.geheim ? 'Geheime Seite' : 'Karte'}</p>
+          <h2 className="al-h2">{titel}</h2>
+          <p className="al-lead">{text}</p>
+          <div className="al-detail__knoepfe">
+            <button type="button" className="al-btn al-btn--ghost al-btn--sm" onClick={() => setHinten((h) => !h)}>
+              <RotateCw size={14} strokeWidth={1.5} aria-hidden="true" /> {hinten ? 'Vorderseite' : 'Rückseite'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -4,7 +4,7 @@ import { SvaKarte } from '../karten/SvaKarte'
 import { KartenRuecken } from '../karten/Ruecken'
 import { ruhigeBewegung, vibriere } from '../karten/medien'
 import { POSITION_NAME, SELTEN_NAME, SELTEN_RANG, type KartenDaten, type Seltenheit } from '../karten/typen'
-import { kartenDaten } from './kartenDaten'
+import { kartenDaten, shinyDaten } from './kartenDaten'
 import { InstagramZeile } from '../ui/InstagramZeile'
 import './pack.css'
 
@@ -37,12 +37,24 @@ interface Props {
   gesamt?: number
   saison?: string
   fanName?: string
+  /** v22: für den Shiny-Chip („1 : 250“) */
+  shinyChance?: number
   /** einkleben = Liste neuer Karten-IDs in Aufdeck-Reihenfolge */
   onFertig: (inhalt: PackInhalt | null, einkleben: string[]) => void
 }
 
 type Phase = 'laden' | 'tuete' | 'reissen' | 'karte' | 'ende' | 'fehler'
-type KP = 'rein' | 'dunkel' | 'kamera' | 'hinweis' | 'dreh' | 'auf'
+type KP = 'rein' | 'dunkel' | 'stille' | 'kamera' | 'hinweis' | 'dreh' | 'auf'
+/** v22: Bühnen-Stufe einer Karte (Shiny/Geheim über allen Seltenheiten) */
+type Stufe = Seltenheit | 'geheim' | 'shiny'
+const STUFE_RANG: Record<Stufe, number> = { bronze: 1, silber: 2, gold: 3, spezial: 4, geheim: 5, shiny: 6 }
+const istGross = (s: Stufe) => s === 'gold' || s === 'spezial' || s === 'geheim' || s === 'shiny'
+// Sternenstaub: feste Startpunkte (deterministisch), sammeln sich zur Karte
+const STAUB = Array.from({ length: 26 }, (_, n) => {
+  const a = (n / 26) * Math.PI * 2 + (n % 3) * 0.4
+  const r = 34 + ((n * 37) % 23)
+  return { dx: Math.cos(a) * r, dy: Math.sin(a) * r * 1.25, d: (n % 7) * 90, g: 3 + (n % 4) * 1.5 }
+})
 
 const ART_TEXT: Record<PackArt, string> = {
   checkin: 'Check-in-Pack',
@@ -57,23 +69,29 @@ const ART_TEXT: Record<PackArt, string> = {
   kapitel: 'Kapitel-Bonus',
   wunsch: 'Wunschkarte',
   ziel: 'Sammelziel erreicht',
+  geheim: 'Geheimkarte entdeckt',
 }
 
-const HAPTIK: Record<Seltenheit, number | number[]> = {
+const HAPTIK: Record<Stufe, number | number[]> = {
   bronze: 12,
   silber: [14, 40, 14],
   gold: [24, 50, 40, 50, 90],
   spezial: [30, 40, 30, 40, 30, 60, 160],
+  geheim: [40, 60, 40, 60, 120],
+  shiny: [20, 30, 20, 30, 20, 30, 60, 60, 220],
 }
+const datumLang = (iso: string) => new Date(iso).toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Berlin' })
 
 function hinweise(d: KartenDaten): string[] {
+  if (d.geheim) return ['Geheimkarte', 'Entdeckt']
+  if (d.shiny) return ['Shiny', d.art === 'spieler' ? (d.position ? POSITION_NAME[d.position] : 'Spieler') : d.rolle ?? 'Trainerstab']
   if (d.art === 'spieler') return [d.position ? POSITION_NAME[d.position] : 'Spieler', d.nummer != null ? `Nummer ${d.nummer}` : d.serie ?? 'SVA']
   if (d.art === 'trainer') return ['Trainerstab', d.rolle ?? '']
   if (d.art === 'partner') return ['Partner', d.partnerSeit ? `seit ${d.partnerSeit}` : 'des SVA']
   return [d.serie ?? (d.art === 'fan' ? 'Die Kurve' : 'Moment'), d.limitiert ? 'Limitiert' : SELTEN_NAME[d.seltenheit]]
 }
 
-export function PackOpening({ packId, art, gegner, titel, partner, karten, nummern, gesamt, saison, fanName, onFertig }: Props) {
+export function PackOpening({ packId, art, gegner, titel, partner, karten, nummern, gesamt, saison, fanName, shinyChance, onFertig }: Props) {
   const ruhig = useMemo(() => ruhigeBewegung(), [])
   const [phase, setPhase] = useState<Phase>('laden')
   const [inhalt, setInhalt] = useState<PackInhalt | null>(null)
@@ -122,15 +140,18 @@ export function PackOpening({ packId, art, gegner, titel, partner, karten, numme
     () =>
       (inhalt?.karten ?? [])
         .map((k, idx) => {
-          const karte = karten.get(k.karteId)
-          return karte ? { ...k, idx, karte, daten: kartenDaten(karte, nummern.get(k.karteId), gesamt, saison) } : null
+          const karte = karten.get(k.karteId) ?? k.karte
+          if (!karte) return null
+          const basis = kartenDaten(karte, nummern.get(k.karteId), gesamt, saison)
+          const stufe: Stufe = k.shiny ? 'shiny' : k.geheim || karte.geheim ? 'geheim' : k.seltenheit
+          return { ...k, idx, karte, stufe, daten: k.shiny ? shinyDaten(basis, k.erstfund) : basis }
         })
         .filter((k): k is NonNullable<typeof k> => !!k)
-        // Spannung: schlechteste zuerst, beste zuletzt
-        .sort((a, b) => SELTEN_RANG[a.seltenheit] - SELTEN_RANG[b.seltenheit] || Number(a.neu) - Number(b.neu) || a.idx - b.idx),
+        // Spannung: schlechteste zuerst, beste zuletzt (Shiny ganz am Ende)
+        .sort((a, b) => STUFE_RANG[a.stufe] - STUFE_RANG[b.stufe] || SELTEN_RANG[a.seltenheit] - SELTEN_RANG[b.seltenheit] || Number(a.neu) - Number(b.neu) || a.idx - b.idx),
     [inhalt, karten, nummern, gesamt, saison],
   )
-  const beste: Seltenheit = reihe.length ? reihe[reihe.length - 1].seltenheit : 'bronze'
+  const beste: Stufe = reihe.length ? reihe[reihe.length - 1].stufe : 'bronze'
   const aktuell = reihe[i]
   const neue = reihe.filter((k) => k.neu)
 
@@ -147,16 +168,43 @@ export function PackOpening({ packId, art, gegner, titel, partner, karten, numme
         return
       }
       setKp('rein')
-      const gross = k.seltenheit === 'gold' || k.seltenheit === 'spezial'
-      if (!gross) {
+      if (!istGross(k.stufe)) {
         later(() => setKp('dreh'), 650)
         later(() => {
           setKp('auf')
-          vibriere(HAPTIK[k.seltenheit])
+          vibriere(HAPTIK[k.stufe])
         }, k.seltenheit === 'silber' ? 1350 : 1150)
         return
       }
-      const lang = k.seltenheit === 'spezial' ? 1.15 : 1
+      if (k.stufe === 'shiny') {
+        // v22 Shiny: völlige Stille → Sternenstaub sammelt sich → goldener
+        // Blitz, die Karte schwebt heran → „SHINY“ → Dreh → Staub fliegt auseinander
+        later(() => setKp('dunkel'), 420)
+        later(() => {
+          setKp('stille')
+          vibriere(8)
+        }, 1150)
+        later(() => {
+          setKp('kamera')
+          vibriere([18, 40, 18])
+        }, 2650)
+        later(() => {
+          setKp('hinweis')
+          setHinweisN(1)
+          vibriere(12)
+        }, 3550)
+        later(() => {
+          setHinweisN(2)
+          vibriere(10)
+        }, 4150)
+        later(() => setKp('dreh'), 4800)
+        later(() => {
+          setKp('auf')
+          vibriere(HAPTIK.shiny)
+        }, 5550)
+        return
+      }
+      const lang = k.stufe === 'spezial' || k.stufe === 'geheim' ? 1.15 : 1
       later(() => setKp('dunkel'), 450)
       later(() => {
         setKp('kamera')
@@ -174,7 +222,7 @@ export function PackOpening({ packId, art, gegner, titel, partner, karten, numme
       later(() => setKp('dreh'), 3150 * lang)
       later(() => {
         setKp('auf')
-        vibriere(HAPTIK[k.seltenheit])
+        vibriere(HAPTIK[k.stufe])
       }, 3850 * lang)
     },
     [reihe, ruhig],
@@ -243,7 +291,7 @@ export function PackOpening({ packId, art, gegner, titel, partner, karten, numme
       stopAlle()
       setHinweisN(2)
       setKp('auf')
-      vibriere(HAPTIK[aktuell.seltenheit])
+      vibriere(HAPTIK[aktuell.stufe])
       return
     }
     if (i + 1 < reihe.length) zeigeKarte(i + 1)
@@ -269,8 +317,9 @@ export function PackOpening({ packId, art, gegner, titel, partner, karten, numme
     }
   }
 
-  const selt = phase === 'karte' && aktuell ? aktuell.seltenheit : phase === 'reissen' ? beste : undefined
-  const walkout = phase === 'karte' && aktuell && (aktuell.seltenheit === 'gold' || aktuell.seltenheit === 'spezial') && kp !== 'rein'
+  const selt = phase === 'karte' && aktuell ? aktuell.stufe : phase === 'reissen' ? beste : undefined
+  const walkout = phase === 'karte' && aktuell && istGross(aktuell.stufe) && kp !== 'rein'
+  const shinyBuehne = phase === 'karte' && aktuell?.stufe === 'shiny'
 
   return (
     <div
@@ -285,7 +334,19 @@ export function PackOpening({ packId, art, gegner, titel, partner, karten, numme
         <i className="po__licht" />
         <i className="po__strahlen" />
         <i className="po__blitz" key={phase === 'karte' ? `b${i}-${kp === 'kamera' ? 1 : 0}` : phase} />
+        {shinyBuehne && (
+          <span className="po__staub" key={`staub-${i}`}>
+            {STAUB.map((t, n) => (
+              <i key={n} style={{ '--dx': `${t.dx}vmin`, '--dy': `${t.dy}vmin`, '--d': `${t.d}ms`, '--g': `${t.g}px` } as React.CSSProperties} />
+            ))}
+          </span>
+        )}
       </div>
+      {shinyBuehne && kp === 'stille' && (
+        <p className="po__raunen" aria-live="polite">
+          Etwas sehr Seltenes …
+        </p>
+      )}
 
       {(phase === 'laden' || phase === 'tuete' || phase === 'reissen') && (
         <div className="po__buehne">
@@ -355,7 +416,7 @@ export function PackOpening({ packId, art, gegner, titel, partner, karten, numme
               Alle zeigen
             </button>
           </div>
-          <div className={`po__karte po__karte--${aktuell.seltenheit} is-${kp}`} key={aktuell.karteId + i}>
+          <div className={`po__karte po__karte--${aktuell.seltenheit}${aktuell.stufe !== aktuell.seltenheit ? ` po__karte--${aktuell.stufe}` : ''} is-${kp}`} key={aktuell.karteId + i}>
             <i className="po__glow" aria-hidden="true" />
             <div className="po__flip">
               <div className="po__seite po__seite--vorne">
@@ -365,6 +426,11 @@ export function PackOpening({ packId, art, gegner, titel, partner, karten, numme
                 <KartenRuecken />
               </div>
             </div>
+            {aktuell.stufe === 'shiny' && kp === 'auf' && (
+              <span className="po__stempel" aria-hidden="true">
+                Shiny
+              </span>
+            )}
             {walkout && kp !== 'auf' && (
               <ul className="po__hinweise" aria-hidden="true">
                 {hinweise(aktuell.daten).map((h, n) => (
@@ -380,19 +446,34 @@ export function PackOpening({ packId, art, gegner, titel, partner, karten, numme
               <>
                 <p className="po__name">{aktuell.daten.titel}</p>
                 <p className="po__chips">
-                  <span className={`al-chip al-chip--${aktuell.seltenheit}`}>
-                    {SELTEN_NAME[aktuell.seltenheit]}
-                    {aktuell.daten.variante ? '-Glanz' : ''}
-                  </span>
-                  {aktuell.daten.limitiert && <span className="al-chip">Limitiert</span>}
+                  {aktuell.stufe === 'shiny' && <span className="al-chip al-chip--shiny">Shiny · 1 : {shinyChance || 250}</span>}
+                  {aktuell.stufe === 'geheim' ? (
+                    <span className="al-chip al-chip--geheim">Geheimkarte</span>
+                  ) : (
+                    <span className={`al-chip al-chip--${aktuell.seltenheit}`}>
+                      {SELTEN_NAME[aktuell.seltenheit]}
+                      {aktuell.daten.variante ? '-Glanz' : ''}
+                    </span>
+                  )}
+                  {aktuell.daten.limitiert && !aktuell.daten.geheim && <span className="al-chip">Limitiert</span>}
                   {aktuell.neu ? <span className="al-chip al-chip--neu">Neu</span> : <span className="al-chip">Doppelt · ×{aktuell.anzahl}</span>}
                 </p>
+                {aktuell.stufe === 'shiny' && (
+                  <p className="po__erstfund">
+                    {aktuell.erstfund?.ich
+                      ? 'Erstfund! Niemand hat diese Shiny vor dir gezogen — dein Name steht jetzt auf ihrer Rückseite.'
+                      : aktuell.erstfund
+                        ? `Erstfund von ${aktuell.erstfund.name} am ${datumLang(aktuell.erstfund.at)}`
+                        : 'Zählt nicht fürs Album — sie wandert in deine Shiny-Vitrine.'}
+                  </p>
+                )}
+                {aktuell.stufe === 'geheim' && <p className="po__erstfund po__erstfund--geheim">Liegt jetzt auf deiner Geheimseite. Erzähl’s nicht weiter.</p>}
               </>
             )}
           </div>
           <div className="po__punkte" aria-hidden="true">
             {reihe.map((k, n) => (
-              <i key={n} className={`${n < i ? 'is-da' : ''}${n === i ? ' is-jetzt' : ''}`} data-selt={n < i || (n === i && kp === 'auf') ? k.seltenheit : undefined} />
+              <i key={n} className={`${n < i ? 'is-da' : ''}${n === i ? ' is-jetzt' : ''}`} data-selt={n < i || (n === i && kp === 'auf') ? k.stufe : undefined} />
             ))}
           </div>
           <button
@@ -413,13 +494,19 @@ export function PackOpening({ packId, art, gegner, titel, partner, karten, numme
         <div className="po__buehne po__buehne--ende">
           <p className="po__kicker">{titel ?? ART_TEXT[art]}</p>
           <h2 className="al-h2">
-            {neue.length > 0 ? `${neue.length} ${neue.length === 1 ? 'neue Karte' : 'neue Karten'}` : 'Nur Doppelte — ab zum Tauschen'}
+            {reihe.some((k) => k.stufe === 'shiny')
+              ? 'Ein Shiny! Glückwunsch.'
+              : reihe.some((k) => k.stufe === 'geheim')
+                ? 'Geheimkarte gefunden'
+                : neue.length > 0
+                  ? `${neue.length} ${neue.length === 1 ? 'neue Karte' : 'neue Karten'}`
+                  : 'Nur Doppelte — ab zum Tauschen'}
           </h2>
           <ul className="po__liste">
             {reihe.map((k, n) => (
-              <li key={k.karteId + k.idx} style={{ '--n': n } as React.CSSProperties} className={k.anzahl > 1 ? 'is-doppelt' : ''}>
-                <SvaKarte daten={k.daten} stufe="klein" />
-                <span className={k.neu ? 'al-chip al-chip--neu' : 'al-chip'}>{k.neu ? 'Neu' : `×${k.anzahl}`}</span>
+              <li key={k.karteId + k.idx} style={{ '--n': n } as React.CSSProperties} className={`${k.anzahl > 1 ? 'is-doppelt' : ''}${k.stufe === 'shiny' ? ' is-shiny' : ''}`}>
+                <SvaKarte daten={k.daten} stufe="klein" className={k.stufe === 'shiny' ? 'is-schimmer' : undefined} />
+                <span className={k.stufe === 'shiny' ? 'al-chip al-chip--shiny' : k.neu ? 'al-chip al-chip--neu' : 'al-chip'}>{k.stufe === 'shiny' ? 'Shiny' : k.neu ? 'Neu' : `×${k.anzahl}`}</span>
               </li>
             ))}
           </ul>
