@@ -208,3 +208,20 @@ Die Fan-Sitzung (Album + Tipp-Liga, gleiches Konto) liegt in `localStorage['sva-
 Rotation an (Reuse-Intervall 10 s); **keine** Timebox für Sitzungen; **kein** Inaktivitäts-Timeout;
 „Single session per user“ aus. Redirect-Allowlist: `https://sva-agathenburg-dollern.netlify.app/**`
 (+ spätere eigene Domain). Site-URL = Produktion.
+
+---
+
+## v26 (Fan-Sicht): Ziele, Kabinen-Kult, Fan-Barometer, Goldene Seite
+
+- **Ziele-Seite** im Heft (neben Sammeln): großer Ring, Filter-Chips (Fast geschafft, Start,
+  Platz & Check-in, Woche & Monat, Sammeln, Sets & Familien, Tipp-Liga, Sozial, Geheim),
+  „???"-Kacheln für geheime Ziele (nur ein Hinweis). Fast alle neuen Ziele bringen **Lose** —
+  die großen Karten bleiben fürs Album selbst.
+- **Kabinen-Kult:** Insider-Karten aus der Kabine (eigene Serie, zählen **nicht** fürs volle Album).
+  Gibt's nur am Spieltag: im Spieltags-Pack mit 25 % Chance eine fehlende Kult-Karte, dazu über die
+  ersten Check-in-Ziele. Eigene Heft-Seite „Kabinen-Kult".
+- **Fan-Barometer:** je Heimspiel ein gemeinsames Check-in-Ziel. Schaffen es alle, bekommt
+  **jede/r Eingecheckte** ein Event-Pack. Balken im Album (Startseite + Check-in-Banner) und im
+  Live-Ticker.
+- **Album komplett (100 %):** goldene Abschluss-Seite im Heft + öffentliche **Wall of Fame**
+  (mit Namen nur per Opt-in, sonst „Fan aus Agathenburg").

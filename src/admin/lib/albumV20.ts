@@ -87,6 +87,36 @@ export function useMotm() {
   })
 }
 
+// ── v26-K: Kabinen-Kult ─────────────────────────────────────
+export function useKultStandard() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () => rpc<{ kultNeu: number; momentPoolNeu: number; kultGesamt: number; momentPool: number }>('album_admin_kult_standard'),
+    onSuccess: () => qc.invalidateQueries({ queryKey: albumKeys.karten }),
+  })
+}
+export function useKultKarte() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (a: { roster?: string | null; titel: string; anekdote?: string | null; kollektion: string; bild?: string | null; einverstaendnis: boolean }) =>
+      rpc<{ id: string; kollektion: string; aktiv: boolean }>('album_admin_kult_karte', {
+        p_roster: a.roster ?? null, p_titel: a.titel, p_anekdote: a.anekdote ?? null,
+        p_kollektion: a.kollektion, p_bild: a.bild ?? null, p_einverstaendnis: a.einverstaendnis,
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: albumKeys.karten }),
+  })
+}
+
+// ── v26-B: Fan-Barometer ────────────────────────────────────
+export function useBarometer() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (a: { spiel: string; ziel: number | null }) =>
+      rpc<{ spielId: string; ziel: number | null; vorschlag: number; schnitt: number }>('album_admin_barometer', { p_spiel: a.spiel, p_ziel: a.ziel }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['album_admin_statistik'] }),
+  })
+}
+
 // ── Codes ───────────────────────────────────────────────────
 export interface KartenCodeRow {
   id: string

@@ -86,6 +86,26 @@ if (TEIL.includes('album')) {
   await sl
   await ctx.close()
 }
+if (TEIL.includes('ziele')) {
+  // v26-Z2: Ziele-Seite (Ring, Chips, Raster, Geheim-Kacheln, Vitrine) scrollen
+  const { ctx, page } = await seite()
+  await page.goto(`${BASE}/album?vorfuehrung=1`, { waitUntil: 'networkidle' })
+  await page.waitForTimeout(800)
+  await page.locator('.al-cover').click()
+  await page.waitForTimeout(1200)
+  await page.locator('.hf-reiter__b').filter({ hasText: 'Ziele' }).first().click()
+  await page.waitForTimeout(1200)
+  const sz = page.evaluate(async () => { for (let i = 0; i < 70; i++) { window.scrollBy(0, 40); await new Promise((r) => requestAnimationFrame(r)) } })
+  ergebnis.push(['Ziele-Seite scrollen (Raster + Vitrine)', await messen(page, 2500)])
+  await sz
+  // Filter umschalten (Re-Render des Rasters)
+  for (const c of ['Fast geschafft', 'Sets & Familien', 'Geheim', 'Alle']) {
+    await page.locator('.zm-chip').filter({ hasText: c }).first().click()
+    await page.waitForTimeout(150)
+  }
+  ergebnis.push(['Ziele-Filter umschalten', await messen(page, 1500)])
+  await ctx.close()
+}
 if (TEIL.includes('start')) {
   for (const base of [BASE, ...START_BASE]) {
     const { ctx, page } = await seite()

@@ -23,6 +23,9 @@ export interface AlbumKarteQuelle {
   limitiert?: boolean
   /** v22: Geheimkarte (nicht im öffentlichen Katalog) */
   geheim?: boolean
+  /** v26: Kabinen-Kult-Karte */
+  kult?: boolean
+  kollektion?: string
   serie?: string
   credit?: string
   bildFokus?: string
@@ -116,6 +119,8 @@ export function vonAlbumKarte(k: AlbumKarteQuelle, opts: { nr?: number; gesamt?:
     variante: k.variante,
     limitiert: k.limitiert,
     geheim: k.geheim,
+    kult: k.kult,
+    kollektion: k.kollektion,
     serie: k.serie,
     credit: k.credit,
     fokus: k.bildFokus,

@@ -351,7 +351,7 @@ ok(p3.exakt === true && p3.details.tipp.ergebnis === 4, 'Fan 3 (Kabine): exakt 2
 ok((await val(`select gewertet_at is not null v from sva_tipp_spieltage where spiel_id = $1`, [S1])) === true, 'Spieltag als gewertet markiert')
 const ziele = (await db.query(`select ziel, uid from _ziele_log order by ziel`)).rows
 ok(ziele.some((z) => z.ziel === 'tipp_exakt' && z.uid === F3), 'Album-Mission tipp_exakt für Fan 3 ausgelöst')
-ok(ziele.some((z) => z.ziel === 'kapitaen_trifft' && z.uid === F1), 'Album-Mission kapitaen_trifft für Fan 1 (Kapitän Ang1 traf)')
+ok(ziele.some((z) => z.ziel === 'tipp_kapitaen_trifft' && z.uid === F1), 'Album-Mission tipp_kapitaen_trifft für Fan 1 (Kapitän Ang1 traf — Hotfix §0.4)')
 ok(ziele.some((z) => z.ziel === 'tipp_spieltagssieg'), 'Album-Mission tipp_spieltagssieg ausgelöst')
 
 // ── 14. Korrektur: MOTM nachtragen (Montag) → Neuberechnung ─────────────────

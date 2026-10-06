@@ -15,6 +15,11 @@ import {
   ladeKatalog,
   ladeMein,
   ladeRangliste,
+  ladeBarometer,
+  type Barometer as BarometerDaten,
+  ladeWall,
+  wallOptin,
+  type WallEintrag,
   supabase,
   type Gutschein,
   type Karte,
@@ -36,6 +41,10 @@ import { KarteBuehne, KarteDetail } from './KarteDetail'
 import type { KartenDaten } from '../karten/typen'
 import { GEHEIM_EREIGNIS, fundErledigt, fundMelden, gesteRichtung, istGeheimToken, offeneFunde, type GeheimFund } from './geheim/ei'
 import { CodeEinloesen, NaechstesZiel, SammelSeite, Advent, type PackNeu } from './Sammeln'
+import { ZieleSeite } from './Ziele'
+import { Barometer } from './Barometer'
+import { GoldeneSeite, WallOfFame } from './Endgame'
+import { alsBlob, storyKomplett, teilen } from '../karten/export/bild'
 import { TauschDialog } from './Tausch'
 import { SvaKarte } from '../karten/SvaKarte'
 import { kartenDaten } from './kartenDaten'
@@ -233,6 +242,12 @@ export function AlbumApp() {
   const [gutschein, setGutschein] = useState<Gutschein | null>(null)
   const [konto, setKonto] = useState(false)
   const [rangliste, setRangliste] = useState<RanglistenEintrag[] | null>(null)
+  const [barometer, setBarometer] = useState<BarometerDaten | null>(
+    ALBUM_VORFUEHRUNG ? { spielId: 'vf', gegner: 'TuS Harsefeld', anstoss: new Date(Date.now() + 36e5).toISOString(), ziel: 40, stand: 28, erreicht: false } : null,
+  )
+  const [wall, setWall] = useState<WallEintrag[] | null>(
+    ALBUM_VORFUEHRUNG ? [{ saison: '2026/27', name: 'Tom K.', at: new Date(Date.now() - 6 * 864e5).toISOString() }, { saison: '2026/27', name: 'Fan aus Agathenburg', at: new Date(Date.now() - 2 * 864e5).toISOString() }] : null,
+  )
   const [abschied, setAbschied] = useState(false)
   const [offen, setOffen] = useState(() => {
     try {
@@ -274,6 +289,21 @@ export function AlbumApp() {
       .catch(() => setKatalogFehlt(true))
   }, [])
 
+  // v26-B: Fan-Barometer des nächsten/laufenden Heimspiels laden
+  const barometerLaden = useCallback(() => {
+    if (ALBUM_VORFUEHRUNG) return
+    ladeBarometer().then(setBarometer).catch(() => {})
+  }, [])
+  useEffect(() => {
+    barometerLaden()
+  }, [barometerLaden])
+
+  // v26-E: Wall of Fame (öffentlich) laden
+  useEffect(() => {
+    if (ALBUM_VORFUEHRUNG) return
+    ladeWall().then(setWall).catch(() => {})
+  }, [])
+
   useEffect(() => {
     let aktiv = true
     aktuelleSitzung().then((s) => aktiv && setSession(s))
@@ -301,6 +331,32 @@ export function AlbumApp() {
       return null
     }
   }, [])
+  // v26-E: Wall-Opt-in + „Album komplett" teilen
+  const wallUmschalten = useCallback(
+    async (v: boolean) => {
+      if (ALBUM_VORFUEHRUNG) {
+        setMein((m) => (m?.profil ? { ...m, profil: { ...m.profil, wallOptIn: v } } : m))
+        return
+      }
+      try {
+        await wallOptin(v)
+        await neuLaden()
+        ladeWall().then(setWall).catch(() => {})
+      } catch {
+        /* egal */
+      }
+    },
+    [neuLaden],
+  )
+  const goldTeilen = useCallback(async () => {
+    if (!meinRoh) return
+    try {
+      const c = await storyKomplett({ name: meinRoh.profil?.anzeigename, saison: meinRoh.saison, datum: meinRoh.komplettAt ? new Date(meinRoh.komplettAt).toLocaleDateString('de-DE') : undefined })
+      await teilen(await alsBlob(c), 'album-komplett.png', 'Mein SVA-Album ist komplett!')
+    } catch {
+      /* egal */
+    }
+  }, [meinRoh])
 
   useEffect(() => {
     if (uid) queueMicrotask(() => void neuLaden())
@@ -335,8 +391,10 @@ export function AlbumApp() {
       if (r.freundPackId) neu.push({ id: r.freundPackId, art: 'freund', titel: r.freunde?.length ? `Freundes-Bonus · mit ${r.freunde.join(', ')}` : 'Freundes-Bonus' })
       setPacks((p) => [...p, ...neu])
       void neuLaden()
+      // v26-B: Barometer nach dem Check-in aktualisieren (füllt sichtbar weiter)
+      barometerLaden()
     },
-    [neuLaden],
+    [neuLaden, barometerLaden],
   )
 
   const einchecken = useCallback(
@@ -795,7 +853,7 @@ export function AlbumApp() {
             </button>
           </div>
         )}
-        {ci && <CheckinBanner ci={ci} onNochmal={() => token && void einchecken(token)} onWeg={() => setCi(null)} />}
+        {ci && <CheckinBanner ci={ci} barometer={barometer} onNochmal={() => token && void einchecken(token)} onWeg={() => setCi(null)} />}
 
         {meldung && (
           <div className="al-ci al-ci--ok al-meldung" role="status" key={meldung.n}>
@@ -835,6 +893,11 @@ export function AlbumApp() {
                     </button>
                   )}
                   <Gesamtstand fs={fs} name={mein.profil?.anzeigename} onKapitel={kapitelAufschlagen} />
+                  {barometer && (
+                    <div className="sa-block">
+                      <Barometer b={barometer} />
+                    </div>
+                  )}
                   <KartenQuellen katalog={katalog} onMehr={() => setEinf(true)} />
                   {mein.advent ? (
                     <Advent tage={mein.advent} onPack={packNeu} onNeu={() => void neuLaden()} />
@@ -844,9 +907,12 @@ export function AlbumApp() {
                       <CodeEinloesen onPack={packNeu} onNeu={() => void neuLaden()} vorbelegt={storyCode ?? undefined} />
                     </div>
                   )}
+                  {(wall?.length || mein.komplett) && <WallOfFame eintraege={wall} />}
                 </div>
               }
               sammeln={<SammelSeite katalog={katalog} mein={mein} ps={ps} besitz={besitz} onPack={packNeu} onNeu={() => void neuLaden()} />}
+              ziele={<ZieleSeite ziele={mein.ziele ?? []} geheimZiele={mein.geheimZiele} />}
+              komplett={mein.komplett ? <GoldeneSeite mein={mein} optIn={!!mein.profil?.wallOptIn} onOptIn={(v) => void wallUmschalten(v)} onTeilen={() => void goldTeilen()} /> : undefined}
             />
             {wartende.length > 0 && !packs.length && (
               <button type="button" className={`al-fach${fussNah ? ' is-weg' : ''}`} onClick={packsOeffnen}>
@@ -1056,7 +1122,7 @@ function CheckinNaechster({ anstoss }: { anstoss?: string }) {
   )
 }
 
-function CheckinBanner({ ci, onNochmal, onWeg }: { ci: CheckinStatus; onNochmal: () => void; onWeg: () => void }) {
+function CheckinBanner({ ci, barometer, onNochmal, onWeg }: { ci: CheckinStatus; barometer?: BarometerDaten | null; onNochmal: () => void; onWeg: () => void }) {
   if (ci.status === 'laeuft') {
     return (
       <div className="al-ci al-ci--laeuft" role="status">
@@ -1070,6 +1136,11 @@ function CheckinBanner({ ci, onNochmal, onWeg }: { ci: CheckinStatus; onNochmal:
         <span>
           <b>Eingecheckt: SVA gegen {ci.gegner}.</b> Das ist dein {ci.checkins}. Heimspiel diese Saison.
           <CheckinNaechster anstoss={ci.anstoss} />
+          {barometer && (
+            <span className="al-ci__baro">
+              <Barometer b={barometer} kompakt />
+            </span>
+          )}
         </span>
         <button type="button" className="al-ci__x" onClick={onWeg} aria-label="Hinweis schließen">
           ×

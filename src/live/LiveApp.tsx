@@ -29,6 +29,9 @@ import { ArrowRight, QrCode, Trophy } from 'lucide-react'
 import { ALBUM_LINK, TIPP_LINK } from '../data/club'
 // v18-T: Vorführ-Spiel nur über /live?vorfuehrung=1
 import { VORFUEHRUNG } from './vorfuehrung'
+// v26-B: Fan-Barometer (anon, keine PII) im Live-Ticker
+import { Barometer } from '../album/Barometer'
+import { ladeBarometer, type Barometer as BarometerDaten } from '../album/api'
 import { mitVorfuehrLive } from './vorfuehrungLive'
 import { VorfuehrungsHinweis } from './VorfuehrungsHinweis'
 import { InstagramZeile } from '../ui/InstagramZeile'
@@ -414,17 +417,35 @@ function TippEinstieg({ status, tipp }: { status: LiveMatch['status']; tipp: Liv
 }
 
 function AlbumCheckin({ laeuft }: { laeuft: boolean }) {
+  const [baro, setBaro] = useState<BarometerDaten | null>(null)
+  useEffect(() => {
+    if (VORFUEHRUNG) {
+      setBaro({ spielId: 'vf', gegner: 'TuS Harsefeld', anstoss: new Date().toISOString(), ziel: 40, stand: 28, erreicht: false })
+      return
+    }
+    let aktiv = true
+    const laden = () => ladeBarometer().then((b) => aktiv && setBaro(b)).catch(() => {})
+    laden()
+    const t = setInterval(laden, 45000)
+    return () => {
+      aktiv = false
+      clearInterval(t)
+    }
+  }, [])
   return (
-    <a className="lv-album" href={ALBUM_LINK.href}>
-      <QrCode size={24} strokeWidth={1.5} aria-hidden="true" />
-      <span>
-        <b>{laeuft ? 'Am Platz? Noch schnell einchecken' : 'Am Eingang einchecken'}</b>
-        {/* v25 Befund 3: Belohnungstext zentral aus club.ts (ALBUM_LINK.belohnung) —
-            „Getränk nach Wahl“ statt veraltetem „Freibier“ (Jugendschutz). */}
-        <small>QR-Code am Eingang scannen, Sticker-Tütchen öffnen — {ALBUM_LINK.belohnung}.</small>
-      </span>
-      <ArrowRight size={18} strokeWidth={1.5} aria-hidden="true" />
-    </a>
+    <div className="lv-album-block">
+      <a className="lv-album" href={ALBUM_LINK.href}>
+        <QrCode size={24} strokeWidth={1.5} aria-hidden="true" />
+        <span>
+          <b>{laeuft ? 'Am Platz? Noch schnell einchecken' : 'Am Eingang einchecken'}</b>
+          {/* v25 Befund 3: Belohnungstext zentral aus club.ts (ALBUM_LINK.belohnung) —
+              „Getränk nach Wahl“ statt veraltetem „Freibier“ (Jugendschutz). */}
+          <small>QR-Code am Eingang scannen, Sticker-Tütchen öffnen — {ALBUM_LINK.belohnung}.</small>
+        </span>
+        <ArrowRight size={18} strokeWidth={1.5} aria-hidden="true" />
+      </a>
+      {baro && <Barometer b={baro} />}
+    </div>
   )
 }
 

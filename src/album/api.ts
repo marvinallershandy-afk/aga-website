@@ -118,6 +118,9 @@ export interface Karte {
   limitiert?: boolean
   /** v22: Geheimkarte (nur durch Entdecken; nie im öffentlichen Katalog) */
   geheim?: boolean
+  /** v26: Kabinen-Kult-Karte (eigene Insider-Serie, zählt nie fürs Album) */
+  kult?: boolean
+  kollektion?: string
   ziehbarVon?: string
   ziehbarBis?: string
   /** v20-K: Derby-Karte (nur beim Check-in an einem bestimmten Spiel) */
@@ -206,6 +209,15 @@ export interface Profil {
   anzeigename: string
   rangliste: boolean
   erinnerung: boolean
+  /** v26-E: Opt-in, mit Namen an die Wall of Fame (sonst „Fan aus Agathenburg") */
+  wallOptIn?: boolean
+}
+
+/** v26-E: Eintrag der Wall of Fame (volles Album). */
+export interface WallEintrag {
+  saison: string
+  name: string
+  at: string
 }
 
 export interface Mein {
@@ -228,6 +240,8 @@ export interface Mein {
   starterOffen?: boolean
   advent?: { tag: number; eingeloest: boolean }[] | null
   ziele?: Ziel[]
+  /** v26: offene geheime Ziele als ???-Kacheln (nur id + hinweis) */
+  geheimZiele?: GeheimZiel[]
   naechstesZiel?: Ziel | null
   lose?: number
   loseVerlauf?: { anzahl: number; quelle: string; at: string }[]
@@ -239,6 +253,9 @@ export interface Mein {
   shinyErstfunde?: { karteId: string; name: string; at: string; ich?: boolean }[]
   /** Geheimseite: Rätsel + (nach dem Fund) die Karte */
   geheim?: GeheimPlatz[]
+  /** v26-E: Album zu 100 % voll (Goldene Seite) */
+  komplett?: boolean
+  komplettAt?: string
 }
 
 export interface Erstfund {
@@ -271,19 +288,37 @@ export interface TauschEintrag {
   at: string
 }
 
+export type ZielKategorie = 'start' | 'platz' | 'woche' | 'monat' | 'sammeln' | 'sets' | 'tipp' | 'sozial' | 'geheim'
+
 export interface Ziel {
   id: string
   schluessel: string
   typ: string
+  vorlage?: string
+  /** v26: UI-Filter-Kategorie */
+  kategorie?: ZielKategorie
   titel: string
   beschreibung?: string
   fortschritt: number
   benoetigt: number
   erreicht: boolean
   erreichtAt?: string
-  belohnung: { karten?: number; minSeltenheit?: Seltenheit; lose?: number }
+  /** v26: wie oft erreicht (nur wiederholbare Ziele) */
+  anzahlErreicht?: number
+  /** v26: wiederholbares Perioden-Ziel */
+  wiederholbar?: boolean
+  /** v26: laufende Periode offener Woche-/Monat-Ziele ('woche:2026-W43') */
+  periode?: string
+  belohnung: { karten?: number; minSeltenheit?: Seltenheit; lose?: number; kult?: number }
   gueltigBis?: string
   geheim?: boolean
+}
+
+/** v26: offenes geheimes Ziel — nur id + Hinweis, Titel/Bedingung bleiben verborgen. */
+export interface GeheimZiel {
+  id: string
+  hinweis: string
+  erreicht: false
 }
 
 export interface Verlosung {
@@ -312,6 +347,23 @@ export interface CheckinErgebnis {
   /** v20-K: Freund-Bonus (Freund ist beim selben Spiel eingecheckt) */
   freundPackId?: string
   freunde?: string[]
+  /** v26-K: Anzahl angehängter Kult-Karten */
+  kult?: number
+  /** v26-B: Fan-Barometer-Stand nach diesem Check-in */
+  barometer?: Barometer | null
+}
+
+/** v26-B: Fan-Barometer (Gemeinschaftsziel je Heimspiel) — keine PII. */
+export interface Barometer {
+  spielId: string
+  gegner: string
+  anstoss: string
+  ziel: number
+  /** Stand (null unter der Anzeige-Schwelle) */
+  stand?: number | null
+  text?: string
+  erreicht: boolean
+  erreichtAt?: string
 }
 
 export interface PackInhalt {
@@ -461,6 +513,12 @@ export const checkinVormerken = (spiel: string, email: string, code: string) =>
   rpc<{ ok: true }>('album_checkin_vormerken', { p_spiel: spiel, p_email: email, p_code: code })
 export const ladeKatalog = () => rpc<Katalog>('album_katalog')
 export const ladeRangliste = () => rpc<RanglistenEintrag[]>('album_rangliste')
+/** v26-B: Fan-Barometer des nächsten/laufenden Heimspiels (oder eines bestimmten Spiels). */
+export const ladeBarometer = (spiel?: string) => rpc<Barometer | null>('album_barometer', { p_spiel: spiel ?? null })
+/** v26-E: Wall of Fame (volle Alben, öffentlich). */
+export const ladeWall = () => rpc<WallEintrag[]>('album_wall_of_fame')
+/** v26-E: Opt-in „mit Namen an die Wall of Fame". */
+export const wallOptin = (opt: boolean) => rpc<{ wallOptIn: boolean }>('album_wall_optin', { p_opt: opt })
 
 // ── Eingeloggt ──────────────────────────────────────────────
 export const ladeMein = () => rpc<Mein>('album_mein')

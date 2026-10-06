@@ -244,7 +244,7 @@ function Vorderseite({ d, id, stufe, lebend, eager, streif }: { d: KartenDaten; 
         <div
           className="sk__muster"
           style={{
-            backgroundImage: `url("${d.seltenheit === 'gold' || d.shiny || d.geheim ? m.guilloche : d.seltenheit === 'silber' ? m.buerstung : m.rauten}")`,
+            backgroundImage: `url("${d.kult ? m.buerstung : d.seltenheit === 'gold' || d.shiny || d.geheim ? m.guilloche : d.seltenheit === 'silber' ? m.buerstung : m.rauten}")`,
           }}
         />
         {(person || titelGross || d.art === 'partner') && <div className="sk__praegung" />}
@@ -296,11 +296,13 @@ function Vorderseite({ d, id, stufe, lebend, eager, streif }: { d: KartenDaten; 
           </div>
         ) : (
           <div className="sk__kopf">
-            <span className={`sk__serie${meister ? ' is-gold' : ''}`}>{(d.serie ?? ART_NAME[d.art]).toUpperCase()}</span>
+            <span className={`sk__serie${meister ? ' is-gold' : ''}${d.kult ? ' is-kult' : ''}`}>{(d.kult ? (d.kollektion ?? 'Kabinen-Kult') : d.serie ?? ART_NAME[d.art]).toUpperCase()}</span>
             <img className="sk__wappen-k" src="/brand/aga-logo.png" alt="" draggable={false} />
           </div>
         )}
-        {d.shiny || d.geheim ? null : (
+        {d.shiny || d.geheim ? null : d.kult ? (
+          <span className="sk__tag is-kult">KULT</span>
+        ) : (
           (d.variante || d.limitiert || d.neuzugang) && (
             <span className={`sk__tag${d.limitiert ? ' is-limit' : ''}`}>{d.limitiert ? 'Limitiert' : d.variante ? 'Glanz' : 'Neu'}</span>
           )
@@ -406,7 +408,7 @@ function Rueckseite({ d, id }: { d: KartenDaten; id: string }) {
           <b>{kartenNummer(d) ?? (d.nummer != null ? `#${d.nummer}` : 'SVA')}</b>
           <span>
             <Symbol s={d.seltenheit} />
-            {d.shiny ? 'Shiny' : d.geheim ? 'Geheimkarte' : SELTEN_NAME[d.seltenheit]}
+            {d.kult ? 'Kabinen-Kult' : d.shiny ? 'Shiny' : d.geheim ? 'Geheimkarte' : SELTEN_NAME[d.seltenheit]}
             {d.variante ? ' · Glanz' : ''}
             {d.limitiert && !d.geheim ? ' · Limitiert' : ''}
           </span>
@@ -453,6 +455,7 @@ function SvaKarteRoh({ daten, seite, interaktiv = false, lebend = false, stufe =
         daten.figur && (daten.art === 'spieler' || daten.art === 'trainer') ? 'sk--figur' : '',
         daten.shiny ? 'sk--shiny' : '',
         daten.geheim ? 'sk--geheim' : '',
+        daten.kult ? 'sk--kult' : '',
         interaktiv ? 'is-interaktiv' : '',
         seite === 'hinten' ? 'is-hinten' : '',
         className ?? '',

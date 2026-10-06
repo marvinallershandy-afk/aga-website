@@ -17,7 +17,7 @@ import { uploadPublicImage } from '../../lib/pflege'
 import { ACCEPT_IMAGES, loadImage } from '../../lib/image'
 import { cn } from '../../lib/utils'
 import { SELTEN, TYPEN, renderStickerFoto, typLabel, useAlbumStatistik, useKarten, useKartenMutations, walkoutSuchen, type KarteInput, type KarteRow } from '../../lib/album'
-import { adminKartenDaten, useKatalogStandard } from '../../lib/albumV20'
+import { adminKartenDaten, useKatalogStandard, useKultKarte, useKultStandard } from '../../lib/albumV20'
 import { SvaKarte } from '../../../karten/SvaKarte'
 import { KartenExportKnoepfe } from './KartenExport'
 
@@ -142,6 +142,7 @@ export function KartenTab() {
         Seltenheit bewertet nie einen Spieler: jeder hat eine Basis-Karte (Kader, Kapitän/Trainer Gold). Glanz-Varianten sind Sammelstücke ohne eigenen Platz. Spezial = Momente und limitierte
         Karten (Spieler des Spiels, Derby, Advent) — die liegen auf der Bonus-Seite. Partner-Karten sind eine verkaufbare Leistung („Deine Firma als Sammelkarte“).
       </p>
+      <KultPanel />
       {karten.isLoading ? (
         <SkeletonRows rows={6} />
       ) : rows.length === 0 ? (
@@ -468,5 +469,104 @@ function KartenEditor({ row, saison, onClose }: { row: KarteRow | null; saison: 
         </div>
       </div>
     </Modal>
+  )
+}
+
+// v26-K: Kabinen-Kult — Startbestand + „Neue Kult-Karte" (Einverständnis-Pflicht).
+function KultPanel() {
+  const toast = useToast()
+  const roster = useRoster()
+  const standard = useKultStandard()
+  const anlegen = useKultKarte()
+  const datei = useRef<HTMLInputElement>(null)
+  const [bild, setBild] = useState<string | null>(null)
+  const [titel, setTitel] = useState('')
+  const [anekdote, setAnekdote] = useState('')
+  const [kollektion, setKollektion] = useState('Kabinen-Kult')
+  const [rosterId, setRosterId] = useState('')
+  const [ok, setOk] = useState(false)
+  const [upload, setUpload] = useState(false)
+  const R = roster.data ?? []
+
+  const hochladen = async (file: File) => {
+    setUpload(true)
+    try {
+      const img = await loadImage(file)
+      const blob = await renderStickerFoto(img)
+      setBild(await uploadPublicImage(blob, 'album', titel || 'kult'))
+    } catch (e) {
+      toast.error(friendlyError(e, 'Upload fehlgeschlagen.'))
+    } finally {
+      setUpload(false)
+    }
+  }
+  const speichern = async () => {
+    if (titel.trim().length < 2) return toast.error('Bitte einen Titel eingeben.')
+    if (!ok) return toast.error('Ohne „Spieler hat zugestimmt" darf keine Kult-Karte aktiv werden.')
+    try {
+      await anlegen.mutateAsync({ roster: rosterId || null, titel: titel.trim(), anekdote: anekdote.trim() || null, kollektion: kollektion.trim() || 'Kabinen-Kult', bild, einverstaendnis: ok })
+      toast.success('Kult-Karte angelegt.')
+      setTitel(''); setAnekdote(''); setBild(null); setRosterId(''); setOk(false)
+    } catch (e) {
+      toast.error(friendlyError(e))
+    }
+  }
+
+  return (
+    <section className="rounded-lg border border-border bg-card/40 p-4 space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h3 className="font-semibold">Kabinen-Kult</h3>
+          <p className="text-sm text-muted-foreground">Insider-Karten aus der Kabine — eigene Serie, zählt nie fürs Album. Nur mit Einverständnis des/der Abgebildeten.</p>
+        </div>
+        <Button
+          variant="outline"
+          disabled={standard.isPending}
+          onClick={async () => {
+            try {
+              const r = await standard.mutateAsync()
+              toast.success(`Kult-Startbestand: ${r.kultNeu} Kabinen-Kult-Karten + ${r.momentPoolNeu} Monats-Momente neu.`)
+            } catch (e) {
+              toast.error(friendlyError(e))
+            }
+          }}
+        >
+          <Sparkles className="h-4 w-4" /> Startbestand anlegen
+        </Button>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-1">
+          <Label htmlFor="kult-titel">Titel</Label>
+          <Input id="kult-titel" value={titel} onChange={(e) => setTitel(e.target.value)} placeholder="z. B. Der Krampf" maxLength={60} />
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="kult-koll">Kollektion</Label>
+          <Input id="kult-koll" value={kollektion} onChange={(e) => setKollektion(e.target.value)} maxLength={60} />
+        </div>
+        <div className="space-y-1 sm:col-span-2">
+          <Label htmlFor="kult-text">Anekdote (Rückseite)</Label>
+          <Textarea id="kult-text" value={anekdote} onChange={(e) => setAnekdote(e.target.value)} rows={2} maxLength={200} placeholder="Kurze Kabinen-Geschichte …" />
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="kult-roster">Person (optional)</Label>
+          <Select id="kult-roster" value={rosterId} onChange={(e) => setRosterId(e.target.value)} className="w-full">
+            <option value="">— ohne Zuordnung —</option>
+            {R.map((r) => (
+              <option key={r.id} value={r.id}>{r.name}</option>
+            ))}
+          </Select>
+        </div>
+        <div className="flex items-end gap-2">
+          <input ref={datei} type="file" accept={ACCEPT_IMAGES} className="hidden" onChange={(e) => e.target.files?.[0] && void hochladen(e.target.files[0])} />
+          <Button variant="ghost" onClick={() => datei.current?.click()} disabled={upload}>
+            {upload ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />} {bild ? 'Bild ersetzen' : 'Foto hochladen'}
+          </Button>
+        </div>
+      </div>
+      <Switch checked={ok} onChange={setOk} label="Spieler hat zugestimmt" hint="Pflicht: ohne Einverständnis bleibt die Karte gesperrt." />
+      <Button onClick={() => void speichern()} disabled={anlegen.isPending || !ok || titel.trim().length < 2}>
+        <ImagePlus className="h-4 w-4" /> Kult-Karte anlegen
+      </Button>
+    </section>
   )
 }

@@ -71,3 +71,11 @@ Keine Panik: Jede Nacht wird alles gesichert.
 - **Ticker schlägt Automatik.** Am Spieltag zählt, was ihr tippt.
 - **Im Zweifel anrufen, nichts löschen.** Nichts geht kaputt, was ein Backup
   nicht wiederholt.
+
+## v26 · Sonntag: Fan-Barometer fürs nächste Heimspiel
+
+Im Admin unter **Album → Woche** die Karte „Fan-Barometer" nutzen: „Vorschlag holen"
+(Ø Check-ins × 1,15, mind. 10) und ein **knapp erreichbares** Ziel setzen — lieber knapp als
+ambitioniert. Erreichen es alle gemeinsam, bekommt jede/r Eingecheckte ein Event-Pack.
+Optional „Story-Bild" für Instagram herunterladen. Kabinen-Kult-Startbestand einmalig per
+„Album → Karten → Kabinen-Kult → Startbestand anlegen".

@@ -17,7 +17,7 @@ import { SvaKarte } from '../karten/SvaKarte'
 import { kartenDaten } from './kartenDaten'
 import { doppelteListe, name, type Platz } from './model'
 import { Zaehler } from './Zaehler'
-import { ZieleVitrine } from './Ziele'
+import { ZieleTeaser } from './Ziele'
 
 // ─────────────────────────────────────────────────────────────
 // v20-K: Sammel-Seite des Albums: Code einlösen (Story/Partner/Advent),
@@ -414,7 +414,7 @@ export function SammelSeite(props: Props) {
           <CodeEinloesen onPack={onPack} onNeu={onNeu} />
         </div>
       )}
-      {(mein.ziele?.length ?? 0) > 0 && <ZieleVitrine ziele={mein.ziele!} />}
+      {(mein.ziele?.length ?? 0) > 0 && <ZieleTeaser ziele={mein.ziele!} />}
       <Tauschen {...props} />
       <Wunsch {...props} />
       <Freunde mein={mein} onNeu={onNeu} />

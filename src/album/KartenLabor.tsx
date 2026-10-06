@@ -15,7 +15,7 @@ import './labor.css'
 // (nur gelesen, nichts wird gespeichert).
 // ─────────────────────────────────────────────────────────────
 
-type Filter = 'alle' | 'spieler' | 'glanz' | 'stab' | 'moment' | 'fan' | 'partner' | 'limitiert' | 'shiny' | 'geheim'
+type Filter = 'alle' | 'spieler' | 'glanz' | 'stab' | 'moment' | 'fan' | 'partner' | 'limitiert' | 'kult' | 'shiny' | 'geheim'
 const FILTER: [Filter, string][] = [
   ['alle', 'Alle'],
   ['spieler', 'Spieler'],
@@ -25,6 +25,7 @@ const FILTER: [Filter, string][] = [
   ['fan', 'Kurve'],
   ['partner', 'Partner'],
   ['limitiert', 'Limitiert'],
+  ['kult', 'Kult'],
   ['shiny', 'Shiny'],
   ['geheim', 'Geheim'],
 ]
@@ -49,12 +50,13 @@ export function KartenLabor({ katalog, geheim, onSchliessen }: { katalog: Katalo
     for (const k of katalog.karten) {
       const d = kartenDaten(k, nr.get(k.id) || undefined, nr.get(k.id) ? gesamt : undefined, katalog.saison)
       const f: Filter[] = ['alle']
-      if (k.limitiert) f.push('limitiert')
+      if (k.kult) f.push('kult')
+      else if (k.limitiert) f.push('limitiert')
       else if (k.variante) f.push('glanz')
       else if (k.typ === 'spieler') f.push('spieler')
       else if (k.typ === 'trainer') f.push('stab')
       else f.push(k.typ as Filter)
-      out.push({ key: k.id, daten: d, label: `${name(k)} · ${k.limitiert ? 'Limitiert' : k.variante ? 'Silber-Glanz' : { bronze: 'Kader', silber: 'Silber', gold: 'Gold', spezial: 'Spezial' }[k.seltenheit]}`, filter: f })
+      out.push({ key: k.id, daten: d, label: `${name(k)} · ${k.kult ? 'Kabinen-Kult' : k.limitiert ? 'Limitiert' : k.variante ? 'Silber-Glanz' : { bronze: 'Kader', silber: 'Silber', gold: 'Gold', spezial: 'Spezial' }[k.seltenheit]}`, filter: f })
     }
     // Shiny-Fassung jeder Person (Basis-Karte)
     for (const sp of shinyPlaetze(ps, null)) {

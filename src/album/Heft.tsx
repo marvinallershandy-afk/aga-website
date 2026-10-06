@@ -46,6 +46,10 @@ interface Props {
   /** Inhalt der Start- und Sammel-Seite (kommt aus AlbumApp) */
   start: React.ReactNode
   sammeln: React.ReactNode
+  /** v26-Z2: Inhalt der Ziele-Seite */
+  ziele: React.ReactNode
+  /** v26-E: Goldene Abschluss-Seite (nur bei 100 %) */
+  komplett?: React.ReactNode
 }
 
 const DOPPEL = '(min-width: 960px)'
@@ -63,7 +67,7 @@ function useDoppel() {
 type Blatt = { von: number; nach: number; vor: boolean; winkel: number; laeuft: boolean }
 
 export function Heft(props: Props) {
-  const { ps, katalog, mein, fs, tr, frisch, rangliste, onPlatz, onGutschein, onKonto, onKarte, start, sammeln } = props
+  const { ps, katalog, mein, fs, tr, frisch, rangliste, onPlatz, onGutschein, onKonto, onKarte, start, sammeln, ziele, komplett } = props
   const doppel = useDoppel()
   const ruhig = useMemo(() => ruhigeBewegung(), [])
   const gesamt = fs.gesamt
@@ -76,10 +80,12 @@ export function Heft(props: Props) {
       // v22: Shiny-Vitrine + Geheime Seite — Bonus, zählen nicht fürs Album
       { id: 'shiny', titel: 'Shiny-Vitrine', kurz: 'Shiny' },
       ...((mein.geheim?.length ?? 0) > 0 ? [{ id: 'geheim', titel: 'Geheime Seite', kurz: '???' }] : []),
+      { id: 'ziele', titel: 'Ziele', kurz: 'Ziele' },
       { id: 'sammeln', titel: 'Sammeln & Tauschen', kurz: 'Sammeln' },
       { id: 'fans', titel: 'Treueste Fans', kurz: 'Fans' },
+      ...(mein.komplett ? [{ id: 'komplett', titel: 'Album komplett', kurz: '100 %' }] : []),
     ],
-    [ps, mein.geheim?.length],
+    [ps, mein.geheim?.length, mein.komplett],
   )
   const vitrine = useMemo(() => shinyPlaetze(ps, mein), [ps, mein])
   const schritt = doppel ? 2 : 1
@@ -217,6 +223,8 @@ export function Heft(props: Props) {
           onPlatz={onPlatz}
           start={start}
           sammeln={sammeln}
+          ziele={ziele}
+          komplett={komplett}
           shiny={<ShinyVitrine plaetze={vitrine} gesamt={gesamt} saison={katalog.saison} chance={katalog.regeln.shinyChance} blatt={wo === 'blatt'} onKarte={onKarte} />}
           geheim={<GeheimSeite plaetze={mein.geheim ?? []} saison={katalog.saison} blatt={wo === 'blatt'} onKarte={onKarte} />}
           fans={<FansSeite katalog={katalog} liste={rangliste} mitmachen={!!mein.profil?.rangliste} onKonto={onKonto} />}
@@ -317,6 +325,8 @@ function SeitenInhalt({
   onPlatz,
   start,
   sammeln,
+  ziele,
+  komplett,
   shiny,
   geheim,
   fans,
@@ -334,6 +344,8 @@ function SeitenInhalt({
   onPlatz: (p: Platz) => void
   start: React.ReactNode
   sammeln: React.ReactNode
+  ziele: React.ReactNode
+  komplett?: React.ReactNode
   shiny: React.ReactNode
   geheim: React.ReactNode
   fans: React.ReactNode
@@ -373,8 +385,11 @@ function SeitenInhalt({
         </div>
       )}
       {s.gruppe === 'bonus' && <p className="hb-hinweis">Limitierte Karten — nur kurz ziehbar, zählen nicht fürs volle Album.</p>}
+      {s.gruppe === 'kult' && <p className="hb-hinweis">Kabinen-Kult — Insider-Karten aus der Kabine. Gibt's nur am Spieltag, zählen nicht fürs volle Album.</p>}
 
       {s.id === 'start' && start}
+      {s.id === 'ziele' && ziele}
+      {s.id === 'komplett' && komplett}
       {s.id === 'shiny' && shiny}
       {s.id === 'geheim' && geheim}
       {s.id === 'sammeln' && sammeln}

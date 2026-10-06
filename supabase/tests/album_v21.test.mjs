@@ -151,7 +151,7 @@ const expectErr = async (p, msg, re) => {
   ok(JSON.stringify(fans.map((f) => f.titel)) === '["Die Kurve","Die Fahne","Das Urknall-Banner"]' && fans.every((f) => f.bild_url && f.credit && f.rueckseite), 'Kurve: Kurve, Fahne, Urknall-Banner — alle mit Foto, Credit, Rückseite')
   ok((await one(`select count(*)::int n from sva_album_karten where typ in ('fan', 'moment') and bild_url not like '/album/karten/%'`)).n === 0, 'Keine alten /karten/-Pfade mehr im Standard')
   const z = await val(admin, `select album_admin_ziele_standard()`)
-  ok(z.angelegt === 30 && (await one(`select cardinality(roster_ids) n from sva_album_ziele where schluessel = 'rote_familie'`)).n === 3, 'Standard-Ziele: 30 inkl. Rote Familie (3 Spieler)')
+  ok(z.angelegt === 68 && (await one(`select cardinality(roster_ids) n from sva_album_ziele where schluessel = 'rote_familie'`)).n === 3, 'Standard-Ziele: 68 (v26-Katalog) inkl. Rote Familie (3 Spieler)')
   await db.close()
 }
 
