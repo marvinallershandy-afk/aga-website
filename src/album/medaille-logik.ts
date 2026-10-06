@@ -23,6 +23,7 @@ export function lohnText(b: Ziel['belohnung']): string {
   const teile: string[] = []
   if (b.karten) teile.push(b.karten === 1 ? '1 Karte' : `${b.karten} Karten`)
   if (b.minSeltenheit && b.minSeltenheit !== 'bronze') teile.push(`mind. ${b.minSeltenheit === 'spezial' ? 'Spezial' : b.minSeltenheit === 'gold' ? 'Gold' : 'Silber'}`)
+  if (b.kult) teile.push(b.kult === 1 ? 'Kult-Karte' : `${b.kult} Kult-Karten`)
   if (b.lose) teile.push(`${b.lose} ${b.lose === 1 ? 'Los' : 'Lose'}`)
   return teile.join(' · ')
 }

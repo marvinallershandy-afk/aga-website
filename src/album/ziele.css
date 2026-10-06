@@ -172,7 +172,54 @@
 .sa-verlosung__dabei { display: inline-flex; align-items: center; gap: 6px; }
 .sa-verlosung__dabei::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #3ddc84; }
 
+/* ── v26-Z2: eigene Ziele-Seite (Kopf-Ring, Filter-Chips, Geheim-Kacheln) ── */
+.zm--seite { gap: var(--s-5); }
+.zm-kopf { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: var(--s-4); }
+.zm-ring { position: relative; width: 92px; height: 92px; flex: none; display: grid; place-items: center; }
+.zm-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.zm-ring__spur { fill: none; stroke: rgba(244, 242, 239, .09); stroke-width: 9; }
+.zm-ring__wert { fill: none; stroke: url(#zmg); stroke: var(--c-red); stroke-width: 9; stroke-linecap: round; stroke-dasharray: 327; transition: stroke-dashoffset 1.2s cubic-bezier(.22, 1, .36, 1) .1s; }
+.zm-ring__zahl { position: absolute; display: grid; justify-items: center; line-height: 1; }
+.zm-ring__zahl b { font: 400 1.75rem/1 var(--f-display); color: var(--c-white); font-variant-numeric: tabular-nums; }
+.zm-ring__zahl small { font-size: .625rem; letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--c-text-3); margin-top: 2px; }
+.zm-kopf__text { min-width: 0; display: grid; gap: var(--s-2); }
+.zm-kopf__unter { font-size: .75rem; line-height: 1.4; color: var(--c-text-3); }
+.zm-kopf .zm-quote { margin-top: 0; }
+
+/* Filter-Chips: waagerecht wischbar */
+.zm-chips { display: flex; gap: var(--s-2); overflow-x: auto; margin: 0 calc(-1 * var(--s-4)); padding: 2px var(--s-4); scrollbar-width: none; overscroll-behavior-x: contain; scroll-snap-type: x proximity; }
+.zm-chips::-webkit-scrollbar { display: none; }
+.zm-chip {
+  flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 var(--s-3); scroll-snap-align: start;
+  border-radius: 999px; border: 1px solid var(--c-line); background: transparent; color: var(--c-text-2);
+  font-weight: 700; font-size: .75rem; white-space: nowrap; transition: border-color var(--d-1) var(--ease), color var(--d-1) var(--ease), background var(--d-1) var(--ease);
+}
+.zm-chip:hover { border-color: var(--c-line-strong); }
+.zm-chip.is-aktiv { background: var(--c-red); border-color: var(--c-red); color: #fff; }
+.zm-chip__n { font-size: .625rem; letter-spacing: .04em; color: var(--c-text-3); font-variant-numeric: tabular-nums; }
+.zm-chip.is-aktiv .zm-chip__n { color: rgba(255, 255, 255, .85); }
+
+.zm-k__mal { position: absolute; top: var(--s-2); right: var(--s-2); padding: 1px 6px; border-radius: 999px; background: var(--c-accent); color: #1a1412; font-weight: 800; font-size: .625rem; }
+.zm-k__periode { font-size: .625rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--c-accent); }
+.zm-k__raetsel { font-style: italic; color: var(--c-text-2); -webkit-line-clamp: 3; }
+.zm-leer { padding: var(--s-4); text-align: center; font-size: var(--t-small); color: var(--c-text-3); }
+
+/* Teaser auf der Sammeln-Seite */
+.zm-teaser__kopf { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); }
+.zm-teaser__kopf h3 span { color: var(--c-text-3); font-weight: 400; }
+.zm-teaser__link { display: inline-flex; align-items: center; gap: 2px; background: none; border: 0; color: var(--c-accent); font-weight: 700; font-size: var(--t-small); cursor: pointer; }
+.zm-teaser__link svg { transition: transform var(--d-1) var(--ease); }
+.zm-teaser__link:hover svg { transform: translateX(3px); }
+.zm-teaser__liste { list-style: none; display: grid; gap: var(--s-2); margin-top: var(--s-3); }
+.zm-teaser__liste li { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: var(--s-3); }
+.zm-teaser__t { min-width: 0; display: grid; gap: 1px; }
+.zm-teaser__t b { font-size: .875rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.zm-teaser__t small { font-size: .75rem; color: var(--c-text-3); }
+.zm-teaser__leer { display: flex; align-items: center; gap: var(--s-2); margin-top: var(--s-2); font-size: var(--t-small); color: var(--c-text-3); }
+
+@media (min-width: 560px) { .zm-ring { width: 104px; height: 104px; } }
+
 @media (prefers-reduced-motion: reduce) {
-  .md__koerper, .md__wert, .zm-quote i, .ls-ticket { transition: none !important; }
+  .md__koerper, .md__wert, .zm-quote i, .ls-ticket, .zm-ring__wert { transition: none !important; }
   .md.is-neu .md__koerper, .md.is-neu .md__glanz::after, .md__burst, .zm-k.is-neu .zm-k__ok, .md__glanz::after, .ls-ticket--oben::before { animation: none !important; }
 }

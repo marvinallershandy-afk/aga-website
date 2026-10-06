@@ -228,6 +228,8 @@ export interface Mein {
   starterOffen?: boolean
   advent?: { tag: number; eingeloest: boolean }[] | null
   ziele?: Ziel[]
+  /** v26: offene geheime Ziele als ???-Kacheln (nur id + hinweis) */
+  geheimZiele?: GeheimZiel[]
   naechstesZiel?: Ziel | null
   lose?: number
   loseVerlauf?: { anzahl: number; quelle: string; at: string }[]
@@ -271,19 +273,37 @@ export interface TauschEintrag {
   at: string
 }
 
+export type ZielKategorie = 'start' | 'platz' | 'woche' | 'monat' | 'sammeln' | 'sets' | 'tipp' | 'sozial' | 'geheim'
+
 export interface Ziel {
   id: string
   schluessel: string
   typ: string
+  vorlage?: string
+  /** v26: UI-Filter-Kategorie */
+  kategorie?: ZielKategorie
   titel: string
   beschreibung?: string
   fortschritt: number
   benoetigt: number
   erreicht: boolean
   erreichtAt?: string
-  belohnung: { karten?: number; minSeltenheit?: Seltenheit; lose?: number }
+  /** v26: wie oft erreicht (nur wiederholbare Ziele) */
+  anzahlErreicht?: number
+  /** v26: wiederholbares Perioden-Ziel */
+  wiederholbar?: boolean
+  /** v26: laufende Periode offener Woche-/Monat-Ziele ('woche:2026-W43') */
+  periode?: string
+  belohnung: { karten?: number; minSeltenheit?: Seltenheit; lose?: number; kult?: number }
   gueltigBis?: string
   geheim?: boolean
+}
+
+/** v26: offenes geheimes Ziel — nur id + Hinweis, Titel/Bedingung bleiben verborgen. */
+export interface GeheimZiel {
+  id: string
+  hinweis: string
+  erreicht: false
 }
 
 export interface Verlosung {

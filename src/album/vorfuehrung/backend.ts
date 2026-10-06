@@ -250,23 +250,47 @@ function ziele(s: Zustand): Ziel[] {
     return [l.filter((k) => hat(k.id)).length, l.length] as const
   }
   const set = (slugs: string[]) => [slugs.filter((x) => hat(basisId(x))).length, slugs.length] as const
-  const roh: [string, string, string, string | undefined, readonly [number, number], Ziel['belohnung']][] = [
-    ['zwillinge', 'set', 'Die Zwillinge', 'Elias und Noah Pejas im Album.', set(['p-pejas-e', 'p-pejas-n']), { karten: 1 }],
-    ['rote_familie', 'set', 'Die Rote Familie', 'Drei Mann, drei Platzverweise – sammle Brettschneider, Nauerz und Brünjes.', set(['p-brettschneider', 'p-nauerz', 'p-bruenjes']), { karten: 1, minSeltenheit: 'silber' }],
-    ['vater_sohn', 'set', 'Vater & Sohn', 'Adolf (Trainerstab) und Tino Ebeling im Album.', set(['s-ebeling-a', 'p-ebeling-t']), { karten: 1 }],
-    ['kapitel_tw', 'kapitel', 'Kapitel komplett: Torwart', undefined, kap((k) => k.spieler?.position === 'TW' && k.typ === 'spieler'), { karten: 1 }],
-    ['kapitel_abw', 'kapitel', 'Kapitel komplett: Abwehr', undefined, kap((k) => k.spieler?.position === 'ABW' && k.typ === 'spieler'), { karten: 1 }],
-    ['kapitel_moment', 'kapitel', 'Kapitel komplett: Momente', undefined, kap((k) => k.typ === 'moment'), { karten: 1 }],
-    ['meilenstein_25', 'meilenstein', '25 % gesammelt', undefined, [Math.min(prozent, 25), 25], { karten: 1, lose: 1 }],
-    ['meilenstein_50', 'meilenstein', 'Halbzeit: 50 %', undefined, [Math.min(prozent, 50), 50], { karten: 1, lose: 2 }],
-    ['meilenstein_75', 'meilenstein', '75 % gesammelt', undefined, [Math.min(prozent, 75), 75], { karten: 1, lose: 3 }],
-    ['dauerkarte', 'serie_checkin', 'Dauerkarte', '3 Heimspiele in Folge eingecheckt.', [2, 3], { karten: 1, minSeltenheit: 'gold' }],
-    ['tipp_serie', 'serie_tipp', 'Tipp-Serie', '4 Wochen in Folge getippt.', [4, 4], { karten: 1 }],
-    ['erster_tausch', 'sozial_tausch', 'Erster Tausch', 'Eine Karte mit einem Freund getauscht.', [1, 1], { karten: 1 }],
-    ['tipp_exakt', 'extern', 'Exakt getippt', 'Ergebnis exakt getippt.', [1, 1], { karten: 1, minSeltenheit: 'silber' }],
+  const ci = Math.min(s.checkins, 8)
+  // [schluessel, typ, titel, beschreibung, [f,b], belohnung, kategorie, periode?]
+  const roh: [string, string, string, string | undefined, readonly [number, number], Ziel['belohnung'], Ziel['kategorie'], string?][] = [
+    // Start (bestand)
+    ['karten_25', 'bestand', '25 im Schuber', '25 Karten gesammelt (inkl. Doppelte).', [Math.min(prozent, 100) > 0 ? 25 : 18, 25], { lose: 1 }, 'start'],
+    ['erste_silber', 'bestand', 'Silberstreif', 'Erste Silber-Karte im Album.', [1, 1], { lose: 1 }, 'start'],
+    ['erste_gold', 'bestand', 'Goldrichtig', 'Erste Gold-Karte im Album.', [1, 1], { lose: 1 }, 'start'],
+    ['erster_glanz', 'bestand', 'Glanzleistung', 'Erste Glanz-Variante gezogen.', [0, 1], { lose: 1 }, 'start'],
+    // Platz & Check-in
+    ['erster_checkin', 'bestand', 'Moin, Waldsportplatz', 'Erster Check-in der Saison.', [Math.min(ci, 1), 1], { kult: 1 }, 'platz'],
+    ['checkin_3', 'bestand', 'Stammplatz', '3 Check-ins in der Saison.', [Math.min(ci, 3), 3], { kult: 1, lose: 1 }, 'platz'],
+    ['checkin_5', 'bestand', 'Halbe Miete', '5 Check-ins in der Saison.', [Math.min(ci, 5), 5], { kult: 1, lose: 2 }, 'platz'],
+    ['dauerkarte', 'serie_checkin', 'Dauerkarte', '3 Heimspiele in Folge eingecheckt.', [2, 3], { karten: 1, minSeltenheit: 'gold' }, 'platz'],
+    // Woche & Monat (wiederholbar, offene Periode)
+    ['woche_tipp', 'woche', 'Tipp der Woche', 'Diese Woche in der Tipp-Liga getippt.', [0, 1], { lose: 1 }, 'woche', 'woche:2026-W41'],
+    ['monat_aktiv', 'monat', 'Monatsabschluss', 'Diesen Monat ein Pack geöffnet und getippt.', [1, 1], { lose: 2 }, 'monat', 'monat:2026-10'],
+    // Sammeln
+    ['meilenstein_25', 'meilenstein', '25 % gesammelt', undefined, [Math.min(prozent, 25), 25], { karten: 1, lose: 1 }, 'sammeln'],
+    ['meilenstein_50', 'meilenstein', 'Halbzeit: 50 %', undefined, [Math.min(prozent, 50), 50], { karten: 1, lose: 2 }, 'sammeln'],
+    ['meilenstein_75', 'meilenstein', '75 % gesammelt', undefined, [Math.min(prozent, 75), 75], { karten: 1, lose: 3 }, 'sammeln'],
+    ['glanz_5', 'bestand', 'Glanzstücke', '5 Glanz-Varianten gesammelt.', [2, 5], { karten: 1 }, 'sammeln'],
+    ['kapitel_tw', 'kapitel', 'Kapitel komplett: Torwart', undefined, kap((k) => k.spieler?.position === 'TW' && k.typ === 'spieler'), { karten: 1 }, 'sammeln'],
+    ['kapitel_abw', 'kapitel', 'Kapitel komplett: Abwehr', undefined, kap((k) => k.spieler?.position === 'ABW' && k.typ === 'spieler'), { karten: 1 }, 'sammeln'],
+    ['kapitel_moment', 'kapitel', 'Kapitel komplett: Momente', undefined, kap((k) => k.typ === 'moment'), { karten: 1 }, 'sammeln'],
+    // Sets & Familien
+    ['zwillinge', 'set', 'Die Zwillinge', 'Elias und Noah Pejas im Album.', set(['p-pejas-e', 'p-pejas-n']), { karten: 1 }, 'sets'],
+    ['neuber', 'set', 'Die Neuber-Brüder', 'Marcel und Dawid Neuber im Album.', set(['p-neuber-m', 'p-neuber-d']), { karten: 1 }, 'sets'],
+    ['rote_familie', 'set', 'Die Rote Familie', 'Drei Mann, drei Platzverweise – Brettschneider, Nauerz und Brünjes.', set(['p-brettschneider', 'p-nauerz', 'p-bruenjes']), { karten: 1, minSeltenheit: 'silber' }, 'sets'],
+    ['vater_sohn', 'set', 'Vater & Sohn', 'Adolf (Trainerstab) und Tino Ebeling im Album.', set(['s-ebeling-a', 'p-ebeling-t']), { karten: 1 }, 'sets'],
+    // Tipp-Liga
+    ['tipp_serie', 'serie_tipp', 'Tipp-Serie', '4 Wochen in Folge getippt.', [4, 4], { karten: 1 }, 'tipp'],
+    ['tipp_exakt', 'extern', 'Exakt getippt', 'Ergebnis exakt getippt.', [1, 1], { karten: 1, minSeltenheit: 'silber' }, 'tipp'],
+    ['tipp_hellseher', 'extern', 'Der Hellseher', 'Dreimal in der Saison exakt getippt.', [1, 3], { karten: 1, minSeltenheit: 'gold' }, 'tipp'],
+    // Sozial
+    ['erster_tausch', 'sozial_tausch', 'Erster Tausch', 'Eine Karte mit einem Freund getauscht.', [1, 1], { karten: 1 }, 'sozial'],
+    ['freunde_3', 'sozial_freund', 'Deine Kurve', '3 Freunde im Album.', [2, 3], { karten: 1, lose: 1 }, 'sozial'],
   ]
-  return roh.map(([schluessel, typ, titel, beschreibung, [f, b], belohnung], i) => ({
-    id: `vf-z-${i}`, schluessel, typ, titel, beschreibung, fortschritt: f, benoetigt: b, erreicht: f >= b,
+  return roh.map(([schluessel, typ, titel, beschreibung, [f, b], belohnung, kategorie, periode], i) => ({
+    id: `vf-z-${i}`, schluessel, typ, titel, beschreibung, kategorie, periode,
+    wiederholbar: typ === 'woche' || typ === 'monat' || undefined,
+    fortschritt: f, benoetigt: b, erreicht: f >= b,
     erreichtAt: f >= b ? tage(i + 1) : undefined, belohnung,
   }))
 }
@@ -293,7 +317,11 @@ function mein(): Mein {
     starterOffen: false,
     advent: null,
     ziele: zl,
-    naechstesZiel: zl.find((x) => !x.erreicht && x.typ !== 'extern') ?? null,
+    geheimZiele: [
+      { id: 'vf-g-nacht', hinweis: 'Wenn das Flutlicht angeht …', erreicht: false },
+      { id: 'vf-g-frueh', hinweis: 'Wer zuerst kommt, klebt zuerst.', erreicht: false },
+    ],
+    naechstesZiel: zl.find((x) => !x.erreicht && x.typ !== 'extern' && x.typ !== 'woche' && x.typ !== 'monat') ?? null,
     lose: s.lose,
     loseVerlauf: [
       { anzahl: 1, quelle: 'checkin', at: tage(3) },

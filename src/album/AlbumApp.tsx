@@ -36,6 +36,7 @@ import { KarteBuehne, KarteDetail } from './KarteDetail'
 import type { KartenDaten } from '../karten/typen'
 import { GEHEIM_EREIGNIS, fundErledigt, fundMelden, gesteRichtung, istGeheimToken, offeneFunde, type GeheimFund } from './geheim/ei'
 import { CodeEinloesen, NaechstesZiel, SammelSeite, Advent, type PackNeu } from './Sammeln'
+import { ZieleSeite } from './Ziele'
 import { TauschDialog } from './Tausch'
 import { SvaKarte } from '../karten/SvaKarte'
 import { kartenDaten } from './kartenDaten'
@@ -847,6 +848,7 @@ export function AlbumApp() {
                 </div>
               }
               sammeln={<SammelSeite katalog={katalog} mein={mein} ps={ps} besitz={besitz} onPack={packNeu} onNeu={() => void neuLaden()} />}
+              ziele={<ZieleSeite ziele={mein.ziele ?? []} geheimZiele={mein.geheimZiele} />}
             />
             {wartende.length > 0 && !packs.length && (
               <button type="button" className={`al-fach${fussNah ? ' is-weg' : ''}`} onClick={packsOeffnen}>
