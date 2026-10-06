@@ -213,3 +213,34 @@ export function useTippEinstellungenSpeichern() {
     },
   })
 }
+
+// ── v21-T: Kader für „Deine Elf“ (Zweitposition, nicht verfügbar) ──
+export interface TippKaderZeile {
+  id: string
+  name: string
+  nummer?: number
+  position: 'TW' | 'ABW' | 'MIT' | 'ANG'
+  fotoUrl?: string
+  cutoutUrl?: string
+  zweitposition?: 'TW' | 'ABW' | 'MIT' | 'ANG' | null
+  nichtVerfuegbar: boolean
+  hinweis?: string | null
+}
+
+export function useTippKader() {
+  return useQuery({ queryKey: ['tipp_admin_kader'], queryFn: () => rpc<TippKaderZeile[]>('tipp_admin_kader'), retry: false })
+}
+
+export function useTippSpielerSpeichern() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (v: { spieler: string; zweitposition: string | null; nichtVerfuegbar: boolean; hinweis?: string | null }) =>
+      rpc<{ ok: true }>('tipp_admin_spieler_speichern', {
+        p_spieler: v.spieler,
+        p_zweitposition: v.zweitposition,
+        p_nicht_verfuegbar: v.nichtVerfuegbar,
+        p_hinweis: v.hinweis ?? null,
+      }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ['tipp_admin_kader'] }),
+  })
+}

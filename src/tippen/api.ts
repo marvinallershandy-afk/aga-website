@@ -5,10 +5,14 @@
 // Alle Daten kommen aus RPCs (supabase/migrations/20261012100000_sva_tippliga.sql);
 // Punkte rechnet ausschließlich die Datenbank.
 // ─────────────────────────────────────────────────────────────
-import { albumKonfiguriert, supabase } from '../album/api'
+import { albumKonfiguriert, supabase, type Katalog, type Mein } from '../album/api'
+import { VORFUEHRUNG } from '../live/vorfuehrung'
 
 export { supabase, albumKonfiguriert as tippKonfiguriert }
 export { aktuelleSitzung, abmelden, codeBestaetigen } from '../album/api'
+
+/** v21: /tippen?vorfuehrung=1 — rein clientseitige Simulation, KEINE Datenbank. */
+export const IST_VORFUEHRUNG = VORFUEHRUNG
 
 export type Position = 'TW' | 'ABW' | 'MIT' | 'ANG'
 export type BonusKey = 'gelb' | 'rot' | 'tor20' | 'tore_hz1' | 'elfmeter' | 'zuschauer' | 'erstes_tor'
@@ -18,6 +22,11 @@ export interface KaderSpieler {
   name: string
   nummer?: number
   position: Position
+  /** v21: darf auch auf diese Position (Admin pflegt), z. B. offensiver MIT → ANG */
+  zweitposition?: Position
+  /** v21: verletzt/abwesend — ausgegraut, nicht wählbar */
+  nichtVerfuegbar?: boolean
+  hinweis?: string
   fotoUrl?: string
   cutoutUrl?: string
   kapitaen?: boolean
@@ -75,6 +84,36 @@ export interface MeinePunkte {
   details: PunkteDetails
 }
 
+/** v21: Live-Daten während des Spiels (Vorführung: simuliert; echt: aus dem Spielstand). */
+export interface LiveEreignis {
+  minute: number
+  typ: 'anpfiff' | 'tor' | 'gegentor' | 'gelb' | 'gelbrot' | 'rot' | 'wechsel' | 'halbzeit' | 'wiederanpfiff' | 'abpfiff' | 'elfmeter'
+  spieler?: string
+  spieler2?: string
+  text?: string
+  stand?: [number, number]
+}
+
+export interface LiveHochrechnung {
+  tipp: number
+  elf: number
+  gesamt: number
+  /** Teil A je Baustein (wie PunkteDetails.tipp), vorläufig */
+  teile: { k: 'ergebnis' | 'torschuetze' | 'bonus' | 'joker'; label: string; p: number; offen?: boolean }[]
+  /** Elf je Spieler, vorläufig */
+  elfSpieler: { id: string; p: number; kapitaen: boolean; posten: SpielerPosten[] }[]
+}
+
+export interface LiveDaten {
+  minute: number
+  nachspielzeit?: number
+  ereignisse: LiveEreignis[]
+  ich?: LiveHochrechnung
+  rangliste?: RangEintrag[]
+  /** Fans vs. Kabine im Spiel (Ø live) */
+  duell?: { fans: number; kabine: number }
+}
+
 export interface TippSpiel {
   id: string
   gegner: string
@@ -98,6 +137,8 @@ export interface TippSpiel {
   meinTipp?: MeinTipp
   meineElf?: MeineElf
   meinePunkte?: MeinePunkte
+  /** v21: nur während des Spiels */
+  live?: LiveDaten
 }
 
 export interface PartnerInfo {
@@ -146,6 +187,8 @@ export interface RangEintrag {
   neu?: boolean
   kabine?: boolean
   ich?: boolean
+  /** v21: Live-Hochrechnung: Punkte vor dem letzten Ereignis (für Zähler) */
+  vorher?: number
 }
 
 export type RangArt = 'spieltag' | 'monat' | 'saison' | 'winter'
@@ -180,8 +223,11 @@ export interface Verteilung {
 export interface Liga {
   id: string
   name: string
-  code: string
+  /** System-Ligen (Kabine) haben keinen Code */
+  code?: string
   gruender: boolean
+  /** v21: 'kabine' = feste Kabinen-Liga (automatisch, kein Verlassen) */
+  system?: 'kabine'
   mitglieder: number
   meinPlatz?: number
   fuehrender?: string
@@ -237,7 +283,11 @@ export function fehlerText(code: string): string {
     case 'album_ungueltig:initial':
       return 'Bitte den ersten Buchstaben deines Nachnamens.'
     case 'tipp_ungueltig:positionen':
-      return 'Deine Elf: hinten TW/Abwehr, dann zwei Mittelfeld, vorne zwei Angreifer — oder „Frei aufstellen“ wählen.'
+      return 'Deine Elf: Torwart, Abwehr, zwei Mittelfeld, ein Angreifer — oder „Frei aufstellen“ wählen.'
+    case 'tipp_ungueltig:nicht_verfuegbar':
+      return 'Ein Spieler deiner Elf ist gerade nicht verfügbar. Bitte tausch ihn aus.'
+    case 'tipp_liga_system':
+      return 'Die Kabinen-Liga gehört automatisch zu jedem Spieler-Konto.'
     case 'tipp_ungueltig:elf':
       return 'Deine Elf braucht fünf verschiedene Spieler.'
     case 'tipp_ungueltig:kapitaen':
@@ -273,6 +323,11 @@ function alsFehler(e: unknown): TippFehler {
 }
 
 async function rpc<T>(fn: string, args?: Record<string, unknown>): Promise<T> {
+  // Vorführung: alles aus der Simulation im Browser — nie ins Netz, nie in die DB
+  if (IST_VORFUEHRUNG) {
+    const sim = await import('./vorfuehrung/backend')
+    return sim.simRpc(fn, args ?? {}) as T
+  }
   if (!albumKonfiguriert) throw new TippFehler('nicht-verfuegbar', fehlerText('nicht-verfuegbar'))
   let res
   try {
@@ -290,6 +345,7 @@ export const ladeRangliste = (art: RangArt, bezug?: string | null, liga?: string
   rpc<Rangliste>('tipp_rangliste', { p_art: art, p_bezug: bezug ?? null, p_liga: liga ?? null })
 export const ladeDuell = () => rpc<Duell>('tipp_duell')
 export const ladeVerteilung = (spiel: string) => rpc<Verteilung>('tipp_verteilung', { p_spiel: spiel })
+export const ladeKabinenLiga = () => rpc<{ id: string; name: string; system: 'kabine'; mitglieder: number } | null>('tipp_kabinen_liga')
 export const ligaVorschau = (code: string) => rpc<{ name: string; code: string; mitglieder: number } | null>('tipp_liga_vorschau', { p_code: code })
 
 // ── Eingeloggt ──────────────────────────────────────────────
@@ -320,6 +376,28 @@ export const ligaBeitreten = (code: string) => rpc<{ id: string; name: string; c
 export const ligaVerlassen = (id: string) => rpc<{ ok: true }>('tipp_liga_verlassen', { p_liga: id })
 export const meineLigen = () => rpc<Liga[]>('tipp_meine_ligen')
 export const ligaTipps = (liga: string, spiel: string) => rpc<LigaTipp[]>('tipp_liga_tipps', { p_liga: liga, p_spiel: spiel })
+
+// ── Album-Stand (für den Umschalter „Tipp-Liga | Album“) ────
+export interface AlbumStand {
+  belegt: number
+  gesamt: number
+  /** ungeöffnete Tütchen */
+  tuetchen: number
+}
+export async function ladeAlbumStand(): Promise<AlbumStand | null> {
+  if (IST_VORFUEHRUNG) return rpc<AlbumStand>('album_stand')
+  if (!albumKonfiguriert) return null
+  try {
+    const [{ data: katalog }, { data: mein }] = await Promise.all([supabase.rpc('album_katalog'), supabase.rpc('album_mein')])
+    if (!katalog) return null
+    const { plaetze, besitzMap, fortschritt } = await import('../album/model')
+    const f = fortschritt(plaetze(katalog as Katalog, besitzMap((mein as Mein | null) ?? null)))
+    const tuetchen = ((mein as Mein | null)?.packs ?? []).reduce((a, p) => a + (p.anzahl ?? 1), 0)
+    return { belegt: f.belegt, gesamt: f.gesamt, tuetchen }
+  } catch {
+    return null
+  }
+}
 
 // ── Login (gemeinsam mit dem Album, Rücksprung nach /tippen) ─
 export async function loginLinkSenden(email: string, rueck: string): Promise<void> {

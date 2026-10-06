@@ -10,15 +10,22 @@ const KADER_ROH = [
   ['p-kalwa', 'Justin Kalwa', 13, 'MIT', 'justin-kalwa', 8, 1], ['p-pejas-n', 'Noah Pejas', 20, 'MIT', 'noah-pejas', 7, 0],
   ['p-pejas-e', 'Elias Pejas', 22, 'MIT', 'elias-pejas', 5, 0], ['p-helck', 'Tobias Helck', 24, 'MIT', 'tobias-helck', 11, 4],
   ['p-bruenjes', 'Janek Brünjes', 33, 'MIT', 'janek-bruenjes', 3, 0], ['p-warkehr-a', 'Aaron Warkehr', 6, 'ANG', 'aaron-warkehr', 11, 7],
-  ['p-biedermann', 'Marc Kevin Biedermann', 37, 'ANG', 'marc-kevin-biedermann', 10, 9],
+  ['p-biedermann', 'Marc Kevin Biedermann', 37, 'ANG', 'marc-kevin-biedermann', 10, 9], ['p-viedts', 'Lennox Viedts', 10, 'ANG', null, 3, 2],
 ]
+// v21: Zweitposition (Admin pflegt) + „nicht verfügbar“ — wie die Vorführung (src/tippen/vorfuehrung/sim.ts)
+const ZUSATZ = {
+  'p-pejas-n': { zweitposition: 'ANG' }, 'p-pejas-e': { zweitposition: 'ANG' }, 'p-bruenjes': { zweitposition: 'ANG' },
+  'p-viedts': { nichtVerfuegbar: true, hinweis: 'Muskelfaserriss · zurück Ende Oktober' },
+}
 export const KADER = KADER_ROH.map(([id, name, nummer, position, foto, spiele, tore]) => ({
-  id, name, nummer, position, fotoUrl: `/players/${foto}.webp`, cutoutUrl: `/players/cutout/${foto}.webp`, spiele, tore, ...(id === 'p-helck' ? { kapitaen: true } : {}),
+  id, name, nummer, position, ...(foto ? { fotoUrl: `/players/${foto}.webp`, cutoutUrl: `/players/cutout/${foto}.webp` } : {}), spiele, tore,
+  ...(id === 'p-helck' ? { kapitaen: true } : {}), ...(ZUSATZ[id] ?? {}),
 }))
 
 const LOGO = `data:image/svg+xml;utf8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="420" height="120" viewBox="0 0 420 120"><rect x="6" y="10" width="100" height="100" rx="18" fill="#c2410c"/><text x="56" y="82" font-family="Arial" font-size="58" font-weight="900" fill="#fff" text-anchor="middle">D</text><text x="124" y="80" font-family="Arial" font-size="50" font-weight="900" fill="#f4f2ef">Mr. Döner</text></svg>')}`
 const iso = (stundenAbJetzt) => new Date(Date.now() + stundenAbJetzt * 3600e3).toISOString()
-const ELF = { spieler: ['p-pils', 'p-helck', 'p-paruzel', 'p-warkehr-a', 'p-biedermann'], kapitaen: 'p-biedermann', frei: false }
+// v21: Formation 1 TW · 1 ABW · 2 MIT · 1 ANG
+const ELF = { spieler: ['p-pils', 'p-huettry', 'p-helck', 'p-paruzel', 'p-biedermann'], kapitaen: 'p-biedermann', frei: false }
 
 export function spielOffen(extra = {}) {
   const anstoss = iso(2 * 24 + 3.2)
@@ -109,6 +116,14 @@ export function lageFixture(zustand) {
       return { ...base, gesperrt: spielLive(), offen: spielOffen({ anstoss: iso(24 * 7 + 2), schluss: iso(24 * 7 + 2), anzahlTipps: 3, id: 'sp-naechstes', gegner: 'SG Lühe' }), gewertet: spielGewertet(8), ich: ICH() }
     case 'aufloesung':
       return { ...base, offen: spielOffen({ anstoss: iso(24 * 6), schluss: iso(24 * 6), anzahlTipps: 4, gegner: 'FC Mulsum/Kutenholz' }), gewertet: spielGewertet(0.8), ich: ICH() }
+    case 'nachspiel':
+      // wie live am 06.10.: letztes Spiel beendet, noch nicht gewertet; nächstes offen + schon getippt
+      return {
+        ...base,
+        gesperrt: spielLive({ status: 'beendet', toreSva: 2, toreGegner: 2, anstoss: iso(-44), schluss: iso(-44), meinTipp: undefined, meineElf: undefined, anzahlTipps: 0 }),
+        offen: spielOffen({ meinTipp: { toreSva: 2, toreGegner: 1, ersterTorschuetze: 'p-biedermann', joker: false, bonus: { gelb: '1-2', tor20: 'ja', zuschauer: 'ueber' } }, meineElf: ELF, anzahlTipps: 1 }),
+        ich: ICH(),
+      }
     case 'winter':
       return { ...base, gewertet: spielGewertet(20), ich: ICH() }
     case 'frisch-gast':
@@ -118,7 +133,7 @@ export function lageFixture(zustand) {
   }
 }
 
-const NAMEN = ['Lena K.', 'Tobias H.', 'Ole M.', 'Dodo R.', 'Jannik S.', 'Mia B.', 'Paul W.', 'Finn T.', 'Svenja L.', 'Kai P.', 'Henrik D.', 'Lara F.', 'Ben O.', 'Nele G.', 'Tim A.']
+const NAMEN = ['Lena K.', 'Tobias H.', 'Ole M.', 'Svenja L.', 'Jannik S.', 'Mia B.', 'Paul W.', 'Finn T.', 'Svenja L.', 'Kai P.', 'Henrik D.', 'Lara F.', 'Ben O.', 'Nele G.', 'Tim A.']
 export function ranglisteFixture(art, liga = false) {
   const anzahl = liga ? 7 : NAMEN.length
   const eintraege = NAMEN.slice(0, anzahl).map((name, i) => ({
@@ -153,13 +168,13 @@ export const VERTEILUNG = {
 }
 
 export const LIGEN = [
-  { id: 'liga-1', name: 'Dodos Raum', code: 'DODO26', gruender: true, mitglieder: 7, meinPlatz: 3, fuehrender: 'Lena K.' },
+  { id: 'liga-1', name: 'Stammtisch-Liga', code: 'STAMM7', gruender: true, mitglieder: 7, meinPlatz: 3, fuehrender: 'Lena K.' },
   { id: 'liga-2', name: 'Feuerwehr Agathenburg', code: 'FW112X', gruender: false, mitglieder: 14, meinPlatz: 6, fuehrender: 'Henrik D.' },
 ]
 
 export const LIGA_TIPPS = [
   { name: 'Lena K.', toreSva: 2, toreGegner: 1, joker: true, kapitaen: 'p-biedermann', punkte: 41 },
-  { name: 'Dodo R.', toreSva: 3, toreGegner: 0, kapitaen: 'p-warkehr-a', punkte: 33 },
+  { name: 'Svenja L.', toreSva: 3, toreGegner: 0, kapitaen: 'p-warkehr-a', punkte: 33 },
   { name: 'Ole M.', ich: true, toreSva: 1, toreGegner: 1, kapitaen: 'p-helck', punkte: 22 },
   { name: 'Mia B.', toreSva: 2, toreGegner: 2, kapitaen: 'p-biedermann', punkte: 17 },
 ]

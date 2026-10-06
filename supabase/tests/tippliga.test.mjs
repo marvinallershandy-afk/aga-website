@@ -42,6 +42,9 @@ for (const f of files) {
 }
 await defaults()
 await run(NEU) // zweiter Lauf: idempotent + entzieht Default-Rechte wieder
+// v21: spätere Migrationen (z. B. 20261013100000_sva_tippliga_v21.sql) definieren
+// Tipp-Funktionen neu → nach dem zweiten Lauf wieder in Reihenfolge darüberlegen
+for (const f of files.filter((x) => x > NEU)) await run(f)
 
 const claims = (uid, email) => JSON.stringify({ sub: uid, email, role: 'authenticated' })
 const as = async (uid, email, sql, params) => {
@@ -231,9 +234,13 @@ ok(sicht.length === 1 && sicht[0].user_id === F2, 'RLS vor Anpfiff: Fan sieht nu
 await expectErr(asAnon(`select tipp_verteilung($1)`, [S1]), 'Verteilung vor Anpfiff gesperrt', /tipp_noch_offen/)
 
 // ── 9. Deine Elf ────────────────────────────────────────────────────────────
-const elfKlassisch = [TW.slug, MIT1.slug, MIT2.slug, ANG1.slug, ANG2.slug]
-await fan1(`select tipp_elf_speichern($1, $2, $3, false)`, [S1, elfKlassisch, ANG1.slug])
-await expectErr(fan2(`select tipp_elf_speichern($1, $2, $3, false)`, [S1, [ANG1.slug, MIT1.slug, MIT2.slug, ANG2.slug, TW.slug], ANG1.slug]), 'klassisch: Stürmer auf TW/ABW-Platz → abgelehnt', /tipp_ungueltig:positionen/)
+// v21: Formation 1 TW · 1 ABW · 2 MIT · 1 ANG (Details: tippliga_v21.test.mjs).
+// Fan 1 stellt frei auf (TW, 2 MIT, 2 ANG) — die Punkte-Prüfungen unten bleiben gleich.
+const elfFan1 = [TW.slug, MIT1.slug, MIT2.slug, ANG1.slug, ANG2.slug]
+const elfKlassisch = [TW.slug, ABW.slug, MIT1.slug, MIT2.slug, ANG1.slug]
+await expectErr(fan1(`select tipp_elf_speichern($1, $2, $3, false)`, [S1, elfFan1, ANG1.slug]), 'v21: zwei Stürmer ohne „frei“ → abgelehnt', /tipp_ungueltig:positionen/)
+await fan1(`select tipp_elf_speichern($1, $2, $3, true)`, [S1, elfFan1, ANG1.slug])
+await expectErr(fan2(`select tipp_elf_speichern($1, $2, $3, false)`, [S1, [ANG1.slug, ABW.slug, MIT1.slug, MIT2.slug, TW.slug], ANG1.slug]), 'klassisch: Stürmer auf TW-Platz → abgelehnt', /tipp_ungueltig:positionen/)
 await fan2(`select tipp_elf_speichern($1, $2, $3, true)`, [S1, [ANG1.slug, MIT1.slug, MIT2.slug, ANG2.slug, ABW.slug], MIT1.slug])
 ok((await val(`select frei from sva_tipp_elf where user_id = $1`, [F2])) === true, 'freie Elf erlaubt (Standard)')
 await expectErr(fan2(`select tipp_elf_speichern($1, $2, $3, true)`, [S1, [ANG1.slug, MIT1.slug, MIT2.slug, ANG2.slug], MIT1.slug]), 'nur 4 Spieler → abgelehnt', /tipp_ungueltig:elf/)
@@ -252,7 +259,7 @@ await db.query(`insert into sva_ticker (spiel_id, typ, minute, zeitpunkt) values
 ok((await val(`select status v from sm_spiele where id = $1`, [S1])) === 'live', 'Ticker-Anpfiff (vor geplantem Anstoß) → live')
 ok((await val(`select public.sva_tipp_offen($1) v`, [S1])) === false, 'früherer Ticker-Anpfiff schließt die Abgabe')
 await expectErr(fan1(`select tipp_abgeben($1, 4, 0)`, [S1]), 'nach Anpfiff: Tipp-RPC abgelehnt', /tipp_geschlossen/)
-await expectErr(fan1(`select tipp_elf_speichern($1, $2, $3, false)`, [S1, elfKlassisch, MIT1.slug]), 'nach Anpfiff: Elf-RPC abgelehnt', /tipp_geschlossen/)
+await expectErr(fan1(`select tipp_elf_speichern($1, $2, $3, true)`, [S1, elfFan1, MIT1.slug]), 'nach Anpfiff: Elf-RPC abgelehnt', /tipp_geschlossen/)
 await expectErr(db.query(`update sva_tipp_tipps set tore_sva = 5 where spiel_id = $1`, [S1]), 'nach Anpfiff: Trigger sperrt auch direkte Updates (Superuser)', /tipp_geschlossen/)
 await expectErr(db.query(`insert into sva_tipp_tipps (user_id, spiel_id, tore_sva, tore_gegner) values ($1, $2, 1, 1)`, [F4, S1]), 'nach Anpfiff: Trigger sperrt Nachtrag', /tipp_geschlossen|duplicate/)
 // Anstoß vorbei ohne Ticker → ebenfalls zu

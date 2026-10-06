@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Presentation, Play, Flag, Trash2, Copy, ExternalLink, Radio, Loader2, Map as MapIcon } from 'lucide-react'
+import { Presentation, Play, Flag, Trash2, Copy, ExternalLink, Radio, Loader2, Map as MapIcon, Trophy } from 'lucide-react'
 import { Card, CardContent } from './ui/card'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
@@ -167,6 +167,12 @@ export function VorfuehrungKarte({ className }: { className?: string }) {
               <Button asChild size="sm" variant="ghost" className="h-10">
                 <a href={vorfuehrungsLink(window.location.origin, 'karte')} target="_blank" rel="noreferrer">
                   <MapIcon className="h-4 w-4" /> Auf der Karte
+                </a>
+              </Button>
+              {/* v21-T: Tipp-Liga als Simulation (Phasen per Knopf, nichts wird gespeichert) */}
+              <Button asChild size="sm" variant="outline" className="h-10" data-testid="vf-tippliga">
+                <a href="/tippen?vorfuehrung=1" target="_blank" rel="noreferrer">
+                  <Trophy className="h-4 w-4" /> Tipp-Liga-Vorführung öffnen
                 </a>
               </Button>
             </div>

@@ -5,7 +5,7 @@
 //   BASE=http://localhost:5193 OUT=./shots-v20-tipp node scripts/tippliga-admin-audit.mjs
 import { chromium } from 'playwright'
 import fs from 'node:fs'
-import { STORY, TEILNEHMER, adminSpieltage, berichtFixture } from './tippen-fixtures.mjs'
+import { KADER, STORY, TEILNEHMER, adminSpieltage, berichtFixture, lageFixture } from './tippen-fixtures.mjs'
 
 const BASE = process.env.BASE || 'http://localhost:5193'
 const OUT = process.env.OUT || './shots-v20-tipp'
@@ -38,6 +38,9 @@ async function seite(label, v, rolle = 'admin') {
       if (n === 'tipp_admin_spieltag_speichern') return json(route, { ok: true })
       if (n === 'tipp_admin_story') return json(route, STORY)
       if (n === 'tipp_admin_teilnehmer') return json(route, TEILNEHMER)
+      if (n === 'tipp_admin_kader') return json(route, KADER.map((k) => ({ ...k, nichtVerfuegbar: !!k.nichtVerfuegbar })))
+      if (n === 'tipp_admin_spieler_speichern') return json(route, { ok: true })
+      if (n === 'tipp_lage') return json(route, lageFixture('neu'))
       if (n === 'tipp_admin_kabine') return json(route, { ok: true })
       return json(route, null)
     }
@@ -91,6 +94,15 @@ for (const v of ['m', 'd']) {
     await page.waitForTimeout(4500)
     await shot(page, `33-admin-story-${v}`, true)
     check((await page.locator('figure img').count()) === 5, `[${v}] 5 Story-Grafiken erzeugt`)
+    // v21: Kader (Zweitposition, nicht verfügbar) + Vorführungs-Knopf
+    await page.goto(`${BASE}/admin/tippliga/kader?preview`, { waitUntil: 'networkidle' })
+    await page.waitForTimeout(900)
+    await shot(page, `35-admin-kader-${v}`, true)
+    check((await page.getByTestId('tipp-vorfuehrung').getAttribute('href')) === '/tippen?vorfuehrung=1', `[${v}] Knopf „Tipp-Liga-Vorführung öffnen“`)
+    check(await page.locator('p', { hasText: 'Mittelfeld · auch Angriff' }).first().isVisible(), `[${v}] Kader zeigt Zweitposition („auch Angriff“)`)
+    await page.selectOption('#zw-p-kalwa', 'ANG')
+    await page.waitForTimeout(400)
+    check(log.some((l) => l[0] === 'tipp_admin_spieler_speichern' && l[1].p_spieler === 'p-kalwa' && l[1].p_zweitposition === 'ANG'), `[${v}] Zweitposition gespeichert`)
     await page.goto(`${BASE}/admin/tippliga/kabine?preview`, { waitUntil: 'networkidle' })
     await page.waitForTimeout(900)
     await shot(page, `34-admin-kabine-${v}`, true)
