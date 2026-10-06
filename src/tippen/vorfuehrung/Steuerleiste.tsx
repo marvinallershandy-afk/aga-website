@@ -45,6 +45,7 @@ export default function Steuerleiste() {
   const kompakt = useKompakt()
   const minute = Math.min(90, Math.floor(z.minute))
   const nachspiel = z.minute > 90 ? Math.ceil(z.minute - 90) : 0
+  const [packsAuf, setPacksAuf] = useState(false)
   return (
     <section className={`tp-steuer${kompakt ? ' is-kompakt' : ''}`} aria-label="Vorführung steuern">
       <div className="tp-steuer__kopf">
@@ -52,6 +53,9 @@ export default function Steuerleiste() {
           <i aria-hidden="true" /> Vorführung
         </span>
         <span className="tp-steuer__info">Simulierte Daten · nichts wird gespeichert</span>
+        <button type="button" className={`tp-steuer__packs-knopf${packsAuf ? ' is-an' : ''}`} onClick={() => setPacksAuf((x) => !x)} aria-expanded={packsAuf} aria-controls="tp-steuer-packs">
+          Packs
+        </button>
       </div>
       <div className="tp-steuer__phasen" role="tablist" aria-label="Phase">
         {PHASEN.map((p) => (
@@ -70,27 +74,29 @@ export default function Steuerleiste() {
           </button>
         ))}
       </div>
-      <div className="tp-steuer__packs" role="group" aria-label="Pack-Typen vorführen">
-        <span className="tp-steuer__packs-label">Packs</span>
-        {PACK_TYPEN_STANDARD.map((t) => (
-          <button key={t.typ} type="button" className={`tp-steuer__pack tp-steuer__pack--${t.optik}`} onClick={() => packVorfuehren(t.typ)} title={`${t.titel} · ${kartenWort(t.karten)} — im Album öffnen`}>
-            <i aria-hidden="true" />
-            {t.titel.replace(/-?Pack$/, '')}
+      {packsAuf && (
+        <div className="tp-steuer__packs" id="tp-steuer-packs" role="group" aria-label="Pack-Typen vorführen">
+          <span className="tp-steuer__packs-label">Pack-Typ im Album öffnen</span>
+          {PACK_TYPEN_STANDARD.map((t) => (
+            <button key={t.typ} type="button" className={`tp-steuer__pack tp-steuer__pack--${t.optik}`} onClick={() => packVorfuehren(t.typ)} title={`${t.titel} · ${kartenWort(t.karten)} — im Album öffnen`}>
+              <i aria-hidden="true" />
+              {t.titel.replace(/-?Pack$/, '')}
+            </button>
+          ))}
+          <button
+            type="button"
+            className="tp-steuer__pack tp-steuer__pack--neu"
+            onClick={() => {
+              simVergessen()
+              uebergabeLeeren()
+              window.location.assign('/tippen?vorfuehrung=1')
+            }}
+            title="Vorführung von vorn (Tipp, Ligen, Packs)"
+          >
+            <RotateCcw size={13} strokeWidth={2} aria-hidden="true" /> Neu
           </button>
-        ))}
-        <button
-          type="button"
-          className="tp-steuer__pack tp-steuer__pack--neu"
-          onClick={() => {
-            simVergessen()
-            uebergabeLeeren()
-            window.location.assign('/tippen?vorfuehrung=1')
-          }}
-          title="Vorführung von vorn (Tipp, Ligen, Packs)"
-        >
-          <RotateCcw size={13} strokeWidth={2} aria-hidden="true" /> Neu
-        </button>
-      </div>
+        </div>
+      )}
       {z.phase === 'live' && (
         <div className="tp-steuer__live">
           <button type="button" className="tp-steuer__knopf" onClick={() => simSetzen({ laeuft: !z.laeuft })} aria-label={z.laeuft ? 'Anhalten' : 'Weiterlaufen lassen'} disabled={z.minute >= ENDE_MINUTE}>

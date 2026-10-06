@@ -62,10 +62,10 @@ function schrittFuer(lage: Lage, now: number, angemeldet: boolean): Schritt | nu
   if (offen?.offen) {
     const ms = new Date(offen.schluss).getTime() - now
     if (!angemeldet && !offen.meinTipp) {
-      return { key: 'gast', ton: 'rot', icon: Clock, stark: `Noch ${dauer(ms)}`, text: `kostenlos tippen — jeder Spieltag bringt ein ${tippPackText(lage)} fürs Album`, ziel: 'tippschein', knopf: 'Tippen' }
+      return { key: 'gast', ton: 'rot', icon: Clock, stark: `Noch ${dauer(ms)}`, text: `kostenlos tippen — je Spieltag ein ${tippPackText(lage)}`, ziel: 'tippschein', knopf: 'Tippen' }
     }
     if (!offen.meinTipp) {
-      return { key: 'offen', ton: 'rot', icon: Clock, stark: `Noch ${dauer(ms)}`, text: `tippe jetzt für dein ${tippPackText(lage)}`, ziel: 'tippschein', knopf: 'Tippen' }
+      return { key: 'offen', ton: 'rot', icon: Clock, stark: `Noch ${dauer(ms)}`, text: `tippe jetzt: ${tippPackText(lage)}`, ziel: 'tippschein', knopf: 'Tippen' }
     }
     const elfFehlt = !offen.meineElf
     return {
