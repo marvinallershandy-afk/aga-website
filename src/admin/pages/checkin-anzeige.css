@@ -182,20 +182,19 @@
 /* Szene 2: Team-Wand */
 .ca-wall { position: absolute; inset: 0; display: grid; place-items: center; padding-top: clamp(24px, 3.4vmin, 44px); }
 .ca-wall__grid {
-  display: grid; grid-template-columns: repeat(var(--cols, 5), minmax(0, 1fr)); grid-auto-rows: 1fr;
+  display: grid; grid-template-columns: repeat(var(--cols, 5), minmax(0, 1fr));
   gap: clamp(5px, .9vmin, 13px); width: 100%; height: 100%; align-content: center; justify-items: center;
 }
-/* Höhen-getriebene Kacheln → ganzer Kader passt sauber in max. 3 Reihen (bleibt edel) */
-.ca-wall__card { height: 100%; min-height: 0; display: grid; place-items: center;
+/* Breiten-getriebene Kacheln (Spalte = Breite, Höhe aus dem Seitenverhältnis)
+   → ganzer Kader passt sauber in max. 3 Reihen, bleibt edel (kein Überlauf). */
+.ca-wall__card { width: 100%; min-width: 0; filter: drop-shadow(0 8px 18px rgba(0,0,0,.5)); transition: filter .7s ease;
   animation: ca-wall-ein .5s cubic-bezier(.16,1,.3,1) calc(var(--i) * 42ms) both, ca-wall-dim .7s ease 4.2s forwards; }
-.ca-wall__card .sk { width: auto; height: 100%; filter: drop-shadow(0 8px 18px rgba(0,0,0,.5)); transition: filter .7s ease; }
 @keyframes ca-wall-ein { from { opacity: 0; transform: translateY(14px) scale(.84); } to { opacity: 1; transform: none; } }
-@keyframes ca-wall-dim { to { opacity: .32; filter: brightness(.55) saturate(.9); } }
+@keyframes ca-wall-dim { to { opacity: .32; filter: drop-shadow(0 6px 14px rgba(0,0,0,.5)) brightness(.55) saturate(.9); } }
 /* … und der Held zoomt heraus */
 .ca-wall__card.is-held { z-index: 5;
   animation: ca-wall-ein .5s cubic-bezier(.16,1,.3,1) calc(var(--i) * 42ms) both, ca-wall-pop .9s cubic-bezier(.16,1,.3,1) 4.2s forwards; }
-.ca-wall__card.is-held .sk { filter: drop-shadow(0 22px 40px rgba(0,0,0,.65)); }
-@keyframes ca-wall-pop { to { transform: scale(2.2); } }
+@keyframes ca-wall-pop { to { transform: scale(2.1); filter: drop-shadow(0 22px 40px rgba(0,0,0,.65)); } }
 
 /* Szene 3: Heute */
 .ca-heute { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: clamp(12px, 2vmin, 24px); padding: clamp(28px, 4vmin, 52px); text-align: center; }
