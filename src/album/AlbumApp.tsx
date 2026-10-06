@@ -476,15 +476,6 @@ export function AlbumApp() {
               start={
                 <div className="hb-startseite">
                   <Gesamtstand fs={fs} name={mein.profil?.anzeigename} />
-                  {wartende.length > 0 && (
-                    <button type="button" className="hf-tuetchen" onClick={packsOeffnen}>
-                      <span className="hf-tuetchen__bild" aria-hidden="true" />
-                      <span>
-                        <b>{wartende.length === 1 ? '1 Pack wartet' : `${wartende.length} Packs warten`}</b>
-                        <small>{wartende.some((w) => w.art === 'heimsieg') ? 'Heimsieg-Bonus! Jetzt aufreißen' : 'Jetzt aufreißen'}</small>
-                      </span>
-                    </button>
-                  )}
                   {mein.advent ? (
                     <Advent tage={mein.advent} onPack={packNeu} onNeu={() => void neuLaden()} />
                   ) : (

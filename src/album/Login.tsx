@@ -75,17 +75,17 @@ export function Login({ katalog, checkinWartet }: Props) {
     <section className="al-login al-panel" id="login" aria-labelledby="h-login">
       <p className="al-kicker">{checkinWartet ? 'Check-in · fast geschafft' : `Saison ${katalog?.saison ?? ''}`}</p>
       <h1 className="al-h1 al-h1--klein" id="h-login">
-        Dein <em>Stickerheft</em>
+        Dein <em>Sammelalbum</em>
       </h1>
       {checkinWartet ? (
         <p className="al-lead">
           Du hast den QR-Code gescannt. Melde dich einmal mit deiner E-Mail an — danach wird dein Check-in gutgeschrieben und du
-          reißt dein erstes Tütchen auf.
+          öffnest dein erstes Pack.
         </p>
       ) : (
         <p className="al-lead">
-          Bei jedem Heimspiel am Eingang den QR-Code scannen, Sticker-Tütchen aufreißen, Heft vollkleben.
-          {anzahl > 0 && <> {anzahl} Sticker warten auf dich.</>}
+          Anmelden, Starter-Pack öffnen, Album füllen: bei jedem Heimspiel am Eingang den QR-Code scannen, unter der Woche tippen und Story-Codes einlösen.
+          {anzahl > 0 && <> {anzahl} Karten warten auf dich.</>}
           {belohnung?.checkins && (
             <>
               {' '}
@@ -113,7 +113,7 @@ export function Login({ katalog, checkinWartet }: Props) {
             <input type="checkbox" checked={ok} onChange={(e) => setOk(e.target.checked)} />
             <span>
               Ich bin einverstanden, dass der SV Agathenburg-Dollern meine E-Mail-Adresse, meinen Vornamen mit Initial sowie meine
-              Check-ins, Sticker und Gutscheine für das Sammelalbum speichert. Keine Weitergabe, kein Newsletter ohne extra Häkchen.
+              Check-ins, Karten und Gutscheine für das Sammelalbum speichert. Keine Weitergabe, kein Newsletter ohne extra Häkchen.
               Widerruf jederzeit über „Konto löschen“. <a href="/datenschutz#album">Datenschutz</a>
             </span>
           </label>
