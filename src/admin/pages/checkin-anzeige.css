@@ -124,11 +124,15 @@
 .ca-score__team--gast { flex-direction: row-reverse; }
 .ca-score__wappen { width: clamp(42px, 5.2vmin, 66px); height: auto; object-fit: contain; filter: drop-shadow(0 3px 10px rgba(0,0,0,.5)); }
 .ca-score__kuerzel {
-  display: grid; place-items: center; width: clamp(42px, 5.2vmin, 66px); height: clamp(42px, 5.2vmin, 66px);
-  border-radius: 14px; background: linear-gradient(150deg, #2a2320, #15110f);
-  box-shadow: inset 0 0 0 2px rgba(232,193,90,.5), 0 3px 10px rgba(0,0,0,.5);
+  display: grid; place-items: center; width: clamp(42px, 5.2vmin, 64px); height: clamp(46px, 5.7vmin, 70px);
+  clip-path: polygon(50% 0, 100% 16%, 100% 66%, 50% 100%, 0 66%, 0 16%);
+  background: linear-gradient(155deg, #3a2f26, #15110f);
+  box-shadow: 0 3px 10px rgba(0,0,0,.5);
+  position: relative;
   font-family: 'Anton', 'Archivo', sans-serif; font-size: clamp(22px, 3vmin, 38px); color: var(--gold);
+  text-shadow: 0 1px 4px rgba(0,0,0,.6);
 }
+.ca-score__kuerzel::before { content: ''; position: absolute; inset: 2px; clip-path: inherit; box-shadow: inset 0 0 0 2px rgba(232,193,90,.55); pointer-events: none; }
 .ca-score__team b {
   font-family: 'Anton', 'Archivo', sans-serif; font-weight: 400; letter-spacing: .02em; text-transform: uppercase;
   font-size: clamp(22px, 3.4vmin, 44px); line-height: 1; text-shadow: 0 2px 12px rgba(0,0,0,.5);
@@ -279,6 +283,10 @@
   .ca-score__zahl, .ca-score__anstoss b { font-size: clamp(42px, 9vmin, 92px); }
   .ca-score__stand i { font-size: clamp(30px, 6.4vmin, 60px); }
   .ca-wall__grid { grid-template-columns: repeat(4, 1fr); }
+  /* Karten etwas kleiner → volle Karte sichtbar, etwas Luft nach unten */
+  .ca-show__card--focus, .ca-shiny__card, .ca-scorer__card { height: min(78%, 44vh); }
+  .ca-show__card--links, .ca-show__card--rechts { height: min(60%, 34vh); }
+  .ca-szene { padding-bottom: clamp(6px, 1.4vmin, 16px); }
 }
 
 /* ── Ruhe-Modus ─────────────────────────────────────────────── */
