@@ -1,4 +1,4 @@
-# SVA-Sammelkarten (v20-K)
+# SVA-Sammelkarten (v20-K · v22-A)
 
 Ein Kartensystem für alles: das Sammelalbum (`/album`), die Spielerkarten der Website (Galerie,
 Modal, 3D-Rundgang, Story-Teilen), Instagram-Content und — über einen eigenen Adapter — die
@@ -8,6 +8,44 @@ für Rückennummer, Kapitän und Meister, Anton + Archivo).
 > **Grundsatz:** Seltenheit bewertet nie einen Spieler. Jeder Spieler hat eine Basis-Karte
 > („Kader“), Gold-Basis nur für objektive Rollen (Kapitän, Trainerstab). Silber-Glanz sind
 > Varianten (Sammelstücke), Spezial sind Momente und limitierte Karten. Keine Ratings.
+
+## 0. Das Karten-Konzept (v22) — was zählt und warum
+
+Fünf Arten von „selten“, jede mit genau einer Aufgabe. Nur die erste entscheidet, ob ein Album voll ist.
+
+| Ebene | Was ist das? | Zählt fürs Album? | Warum so? |
+|---|---|---|---|
+| **Basis** („Kader“, Bronze; Gold nur Kapitän + Trainerstab) | eine Karte je Person, Moment, Kurve-Karte, Partner = **ein Album-Platz** | **ja** — nur sie | **Fairness/Vollständigkeit:** Jeder kann das Album mit Dabeisein füllen. Die erste Karte jedes Zufalls-Packs fehlt garantiert noch (Smart-Pack), dazu Doppelten-Bremse, Tausch, Wunschkarte. |
+| **Glanz** (Silber-Glanz-Variante) | die schönere Fassung **derselben Person** | nein (Zusatz-Sammelstück am selben Platz) | **Seltenheit bewertet nie einen Spieler:** Niemand ist „Gold wert“ und ein anderer „Bronze“ — selten ist nur die Fassung, nie der Mensch. |
+| **Spezial** (Momente, limitierte Karten: Spieler des Spiels, Derby, Weihnachten) | Momente der Saison bzw. zeitlich begrenzte Karten | Momente ja (Platz); **limitierte** nein (Bonus-Seite) | **Momente & Aktualität:** Gründe, diese Woche vorbeizuschauen — ohne dass jemand, der eine Woche fehlt, sein Album nie voll bekommt. |
+| **Shiny** (v22) | extrem seltene Schwarz-Gold-Fassung einer Spieler-/Trainer-Karte, **1 : 250 je gezogener Karte** | **nein** — eigene Shiny-Vitrine | **Reines Sammler-Glück:** kein Vorteil, kein Druck, nichts zu kaufen — nur ein Moment zum Herzeigen. Wer eine Person als Erste(r) findet, wird verewigt („Erstfund von Lena B. am 12.10.2026“). |
+| **Geheimkarten** (v22) | 4 Karten, die man **nur durch Entdecken** bekommt (Easter Eggs) | **nein** — Geheime Seite mit „???“ + Rätsel | **Entdecken & Content:** Gesprächsstoff in der Kurve und auf Instagram („Hat schon wer den Platzwart?“), belohnt Neugier auf Website und Rundgang. |
+
+**Wahrscheinlichkeiten (Standard, alles im Admin einstellbar):**
+
+| Ereignis | Chance |
+|---|---|
+| Seltenheit je Karte | Kader 70 % · Silber 22 % · Gold 7 % · Spezial 1 % (nur Stufen mit ziehbaren Karten, Rest neu verteilt) |
+| Shiny je gezogener Spieler-/Trainer-Karte | 1 : 250 = 0,4 % (Momente/Kurve/Partner/limitierte Karten: nie) |
+| Shiny je Check-in-Pack (3 Karten, ~⅔ davon Personen) | ≈ 0,8 % |
+| Mind. 1 Shiny in der Restsaison | Gelegenheits-Follower 8 % · typischer Follower 10 % · Stammfan 18 % |
+| Shinys je 100 aktive Fans (50 / 35 / 15 % Mix) | ≈ 11 pro Saison — bei 27 Personen ist fast jeder Fund ein Erstfund |
+| Geheimkarten | nie gezogen; je Fan genau einmal, nur über das jeweilige Easter Egg |
+
+**Simulationsergebnis** (`node scripts/karten-simulation.mjs`, 10 000 Läufe je Persona, Restsaison ab 06.10.2026,
+44 Album-Plätze; v22 rechnet Shiny mit und ändert an der Ziehung nichts — die Album-Werte sind dieselben wie in v20):
+
+| Persona | Ø Karten | Ø Album % | komplett | Ø Personenkarten | Shiny ≥ 1 | Ø Shinys |
+|---|---|---|---|---|---|---|
+| Gelegenheits-Follower | 31,5 | 59,4 | 0,3 % | 20,9 | 8,1 % | 0,085 |
+| Typischer Follower | 38,9 | 69,4 | 3,0 % | 26,1 | 9,7 % | 0,103 |
+| Stammfan | 75,3 | 99,0 | 90,0 % (Ø April) | 48,6 | 17,7 % | 0,194 |
+
+Gestaltung Shiny: Schwarz-Gold-Inversion (tiefschwarzer Körper, Guilloche in Gold, Freisteller gold getont wie
+eine Statue), Sternenstaub, langsamer Goldschimmer, „SHINY“-Prägung senkrecht am Rand; auf der Rückseite der
+Erstfund. Bewusste Ausnahme von „Gold nur für Rückennummer/Kapitän/Meister“ (docs/DESIGN.md §8): Shiny ist die
+einzige Karte, die ganz golden sein darf. Geheimkarten: typografisch (Graphit + Goldfaden, „GEHEIMKARTE“), der
+Platzwart mit der Nacht-Luftbild-Illustration des Waldsportplatzes (`/album/karten/geheim-platzwart.webp`).
 
 ## 1. Bausteine (`src/karten/`)
 
@@ -432,3 +470,76 @@ Das Ergebnis einer Verlosung setzt nur die Ziehungs-RPC.
   1 Tütchen wartet“ (`src/album/fanStand.ts`, ohne Supabase-Bundle).
 - **Login bleibt:** siehe docs/ALBUM.md → „Angemeldet bleiben“.
 - Audit/Screenshots: `scripts/album-v21-audit.mjs` (Mocks, Handy + Desktop).
+
+## v22-A: Shiny, Geheimkarten, Vorführung, Kartenlabor
+
+Migration `supabase/migrations/20261014100000_sva_album_v22.sql` (nach `20261013200000_sva_album_v21.sql`,
+additiv + idempotent, Sammlungen bleiben unverändert). Test: `supabase/tests/album_v22.test.mjs` (PGlite, 69 Prüfungen).
+
+### Shiny (serverseitig)
+
+- Trigger `sva_album_pack_shiny` auf `sva_album_packs` (BEFORE INSERT): je Karte `shiny[i] = random() * shiny_chance < 1`,
+  nur für Spieler/Trainer mit Kaderbezug, nicht limitiert, nie in Geheim-Packs. Gilt für **jede** Pack-Quelle
+  (Check-in, Heimsieg, Freund, Tipp, Story, Ziele, Kapitel, Wunschkarte …). Der Browser hat keinen Einfluss.
+- `album_pack_oeffnen`: Besitz wie bisher (die gezogene Karte zählt ganz normal), **zusätzlich** Eintrag in
+  `sva_album_shiny` (je Fan + Person + Saison, ×n) und — wenn noch keiner — `sva_album_shiny_erstfund`.
+  Antwort je Karte `shiny`, `erstfund {name, at, ich}`.
+- `album_mein`: `shiny[{karteId (Basis der Person), gezogen, anzahl, at, erstfund}]`,
+  `shinyErstfunde[{karteId, name, at, ich}]` (für alle sichtbar: „entdeckt von …“ in der Vitrine).
+- `album_katalog().regeln.shinyChance`. Einstellung `sva_album_einstellungen.shiny_chance` (Standard 250, 0 = aus).
+- Konto löschen: Shiny-Funde weg, Erstfund bleibt anonym („Ein SVA-Fan“).
+- Admin: `album_admin_shiny()` → Admin → Album → **Shiny & Geheim**: Funde mit Erstfund-Markierung und je Fund
+  **Story-Grafik „SHINY gezogen!“** (PNG 1080×1920, `storyShiny()` in `src/karten/export/bild.ts`).
+
+### Geheimkarten / Easter Eggs
+
+| Ei | Wo | Karte | Rätsel (Geheime Seite) |
+|---|---|---|---|
+| `wappen` | Startseite: 7× schnell aufs Wappen oben links | Der Platzwart | „Sieben Mal klopft, wer den Platzwart sprechen will.“ |
+| `ball` | Rundgang, Station Anzeigetafel: kleiner Ball unter „In den Kalender“ | Der verlorene Ball | „Einer ging nie ins Tor. …“ |
+| `geburtstag` | Album am Vereins-Geburtstag: drei Kerzen auf der Startseite | Seit 1949 | „Nur an einem Tag im Jahr brennen die Kerzen.“ |
+| `geste` | Album: Wischen/Pfeiltasten hoch, hoch, runter, runter, links, rechts, links, rechts | Die Geheimtaktik | „Hoch, hoch, runter, runter … wer die Alten kennt, kennt den Rest.“ |
+
+- **Sicherheit:** Ein Ei prüft nichts im Klartext und kennt keine Karte. Es rechnet zur Laufzeit ein Token
+  `G-` + 32 Hex aus SHA-256(`sva-geheim|<Auslöser>`) (`src/album/geheim/ei.ts`), merkt es sich und das Album löst es über
+  die vorhandene Code-RPC `album_code_einloesen` ein (gleiches Rate-Limit wie Story-Codes). In der DB liegt nur
+  SHA-256(Token) (`sva_album_geheim.token_hash`), Fans können die Tabelle nicht lesen. Die Wisch-Geste vergleicht der
+  Browser nur als Hash. Geburtstag: der Server prüft zusätzlich das Datum (Europe/Berlin).
+  Grenze: Wer das Bundle zerlegt, kann Wappen/Ball/Kerzen-Token nachrechnen — wie bei jedem Easter Egg; er bekommt
+  dafür eine Bonus-Karte, die nicht fürs Album zählt. Die Vorführung (nur mit `?vorfuehrung=1` geladen) enthält die
+  Gesten-Folge, weil sie sie vorspielt.
+- Geheimkarten: `sva_album_karten.geheim = true` (immer limitiert, nie ziehbar — Constraint), **nicht** im
+  öffentlichen Katalog; `album_mein().geheim[{nr, raetsel, gefunden, karte?}]` (Karte erst nach dem Fund, kein Ort/Schlüssel).
+  Pack-Art `geheim`, je Fan und Ei einmal (`quelle = 'geheim:<ei>'`).
+- Admin → Album → **Shiny & Geheim**: Eier an/aus, Rätseltext, Funde je Karte, „Geheimkarten anlegen“
+  (`album_admin_geheim_standard()`; die Migration legt sie in einer DB mit Katalog selbst an).
+  **Vereins-Geburtstag** unter Regeln eintragen (Gründungsjahr 1949, der Tag ist in den Vereinsdaten nicht
+  hinterlegt) — bis dahin schläft das Kerzen-Ei.
+
+### So siehst du dir alles an (ohne echte Daten)
+
+| Was | Wo | Was passiert |
+|---|---|---|
+| **Album-Vorführung** | `/album?vorfuehrung=1` · Admin → Album → „Album-Vorführung öffnen“ (oben rechts) · Admin → Übersicht → Vorführ-Spiel → „Album-Vorführung öffnen“ | Demo-Fan „Lena B.“ mit halb vollem Album, 2 ungeöffnete Tütchen (eins mit Gold-Walkout, eins mit Shiny-Erstfund), Ziele/Medaillen, Lose, Verlosungen, Shiny-Vitrine, Geheime Seite (1 von 4). Rotes Band „Vorführung“. **Keine** Datenbank-, Login- oder Netzaufrufe — alles im Speicher des Tabs (`src/album/vorfuehrung/*`); neu laden = zurücksetzen. Der Umschalter „Album | Tipp-Liga“ führt zur Tipp-Liga-Vorführung. |
+| **Steuerleiste** (Knopf „Vorführung steuern“ unten rechts) | in der Vorführung | **Normales Pack** · **Gold-Pack** (Walkout) · **Shiny-Pack** · **Test-Pack: alle Karten** (Kader, Silber-Glanz, Gold, Spezial-Moment, MOTM limitiert, Partner, Kurve, Shiny, Geheimkarte — jede mit ihrer echten Reveal-Animation, danach Einkleben) · **Geheimkarte finden** (spielt nacheinander die echte Wisch-Geste, den Ball, 7× Wappen ab) · **Kartenlabor** · Zurücksetzen |
+| **Kartenlabor** | Vorführung → Steuerleiste · Admin → Album → **Labor** (echter Katalog, nur gelesen) | alle Karten in allen Fassungen nebeneinander (Filter Spieler/Glanz/Trainer/Momente/Kurve/Partner/Limitiert/Shiny/Geheim), Rückseiten-Schalter, Antippen = groß mit Holo-Neigung und Rückseite |
+| Easter Eggs live testen | Startseite `/?vorfuehrung=1` (Wappen), Rundgang (Ball) | Der Hinweis „Im Album abholen“ führt in die Vorführung (`&vorfuehrung=1`) |
+
+### Einführung für neue Fans (v22-A)
+
+Nach dem ersten Aufschlagen erklärt „So funktioniert’s“ in 6 Schritten: Sammeln, was bekomme ich wann, Tütchen
+öffnen, Kapitel/Ziele/Doppelte, Lose & Belohnungen, Glanz/Shiny/Geheimkarten (Zahlen aus den Regeln). Auf der
+Start-Seite steht „So kommst du an Karten“ (Heimspiel, Tipp, Story, Ziele) mit Link zur Einführung; am Desktop
+zusätzlich das Fragezeichen im Kopf. Gemerkt in `localStorage['sva-album-einfuehrung']`.
+
+### Prüfen (v22-A)
+
+- `node scripts/album-v22-shots.mjs [start,einfuehrung,packs,alle,geheim,labor,wappen,desktop]` (Vite auf 5197,
+  `MOTOR=webkit|chromium`) → `shots-v22-album/` inkl. Videos; meldet jede Anfrage an Supabase (Soll: keine).
+- `node scripts/album-v22-admin-shots.mjs` (Vite mit `VITE_SUPABASE_URL=https://audit.supabase.co`, Mocks, `?preview`).
+- `node scripts/album-v22-perf.mjs` (Handy 390×844, DPR 2, 4× CPU-Drossel): Gold-Walkout, Shiny-Reveal, Vitrine,
+  Kartenlabor je 60 fps, p95 ≤ 18,4 ms, keine Frames > 34 ms; Startseite 3D neu vs. v14-premium: 60 vs. 55–57 fps
+  Leerlauf (alt hatte einzelne lange Frames beim Kompilieren), Scroll in den Rundgang beide 60 fps.
+- WebKit-Fix: Safari zeichnete die abgewandte Kartenseite trotz `backface-visibility` (gespiegelter Kartenrücken über
+  der Vorderseite nach dem Aufdecken bzw. in Detail/Labor). Jetzt blenden Karte und Pack-Bühne die abgewandte Seite
+  zur Mitte der Drehung aus (`karten.css`, `pack.css`).
