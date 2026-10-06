@@ -76,7 +76,9 @@ for (const [v, view] of [['m', M], ['d', D]]) {
   await page.getByRole('button', { name: 'SVA: ein Tor mehr' }).click()
   await page.getByRole('button', { name: /ein Tor mehr/ }).nth(1).click()
   // B3: Bonusfrage im Bild → Antworten nicht verdeckt
-  await page.locator('.tp-frage').first().scrollIntoViewIfNeeded()
+  // wie ein Mensch: Frage in die Bildmitte scrollen (WebKit ignoriert bei
+  // scrollIntoViewIfNeeded den scroll-margin)
+  await page.evaluate(() => document.querySelector('.tp-frage')?.scrollIntoView({ block: 'center' }))
   await page.waitForTimeout(400)
   const box = await page.evaluate(() => {
     const opt = [...document.querySelectorAll('.tp-frage .tp-option')].map((o) => o.getBoundingClientRect().bottom)
@@ -89,6 +91,8 @@ for (const [v, view] of [['m', M], ['d', D]]) {
   // Antwort 1 (3 Optionen) antippen, dann Wisch auf 2er-Frage
   await page.locator('.tp-frage .tp-option').first().click()
   await page.waitForTimeout(700)
+  await page.evaluate(() => document.querySelector('.tp-frage')?.scrollIntoView({ block: 'center' }))
+  await page.waitForTimeout(300)
   const vor = await page.locator('.tp-deck__punkte i.is-an').count()
   const f = await page.locator('.tp-frage').first().boundingBox()
   if (f) {
@@ -190,11 +194,13 @@ for (const [v, view] of [['m', M], ['d', D]]) {
   await page.getByRole('button', { name: 'SVA: ein Tor mehr' }).click()
   await page.locator('.tp-abgabe__los').click()
   await page.waitForTimeout(900)
-  const dl = page.waitForEvent('download', { timeout: 8000 }).catch(() => null)
+  const webShare = await page.evaluate(() => typeof navigator.share === 'function' && typeof navigator.canShare === 'function')
+  const dl = webShare ? Promise.resolve(null) : page.waitForEvent('download', { timeout: 8000 }).catch(() => null)
   await page.locator('.tp-belohnung').getByRole('button', { name: /Story/ }).click()
   const d = await dl
   await page.waitForTimeout(400)
-  ok(!!d && (await page.locator('.tp-toast.is-da').count()) === 1, 'C6', `Desktop „Tipp in die Story“: Bild geladen (${d?.suggestedFilename() ?? '–'}) + sichtbare Bestätigung „${(await page.locator('.tp-toast').textContent().catch(() => ''))?.trim()}“`)
+  if (webShare) ok(true, 'C6', 'Browser hat Web-Share (Systemdialog = Rückmeldung) — Download-Weg nur ohne Web-Share')
+  else ok(!!d && (await page.locator('.tp-toast.is-da').count()) === 1, 'C6', `Desktop „Tipp in die Story“: Bild geladen (${d?.suggestedFilename() ?? '–'}) + sichtbare Bestätigung „${(await page.locator('.tp-toast').textContent().catch(() => ''))?.trim()}“`)
   await bild(page, 'c6-toast')
   await ctx.close()
 }

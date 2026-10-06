@@ -1084,7 +1084,7 @@ img { display: block; max-width: 100%; }
   .tp-abgabe__lang { display: none; }
   /* Inhalt lässt sich über den Sticky-Stapel hinaus scrollen; Sprünge landen darüber */
   .tp-offen, .tp-gesperrt { padding-bottom: var(--s-6); }
-  .tp-abschnitt { scroll-margin-bottom: 190px; }
+  .tp-abschnitt, .tp-formular :is(.tp-deck, .tp-frage, .tp-bonusliste, .tp-elf, .tp-stepper, .tp-joker) { scroll-margin-bottom: 190px; }
 }
 
 /* ═══════════════ v22-T ═══════════════ */
