@@ -26,6 +26,7 @@ export function tabelleBerechnen(spiele, { abzug = {}, svaSlug = null, datum = n
   return jetzt.map((r) => ({
     ...r,
     live: liveSlugs.has(r.slug),
+    self: svaSlug != null && r.slug === svaSlug,
     trend: vorSpieltag && vorSpieltag.has(r.slug) ? vorSpieltag.get(r.slug) - r.platz : 0,
   }))
 }
