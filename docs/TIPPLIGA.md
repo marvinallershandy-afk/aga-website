@@ -1,6 +1,9 @@
 # SVA Tipp-Liga + „Deine Elf“ (`/tippen`)
 
-Stand v20-T (06.10.2026). Umsetzung von SVA_KONZEPT_FANERLEBNIS.md, Abschnitt 3 + Update B/C/D.
+Stand v21-T (06.10.2026, nach dem ersten echten Test). Umsetzung von SVA_KONZEPT_FANERLEBNIS.md, Abschnitt 3 + Update B/C/D.
+Neu in v21: Formation 1-1-2-1 mit Zweitposition, Kapitän ausdrücklich wählen, „nicht verfügbar“,
+Kabinen-Liga, **Vorführung** (`/tippen?vorfuehrung=1`), Live-Hochrechnung, „Nächster Schritt“,
+3-Schritt-Einführung, neue Navigation (Abschnitt 8), neues Design (TV-Grafik).
 Kostenloses Tippspiel für alle Fans, Kickbase-Gefühl im SVA-Designsystem, in 20 Sekunden
 gespielt. **Gleiches Konto wie das Sammelalbum** (ein Login für Album + Tipp-Liga).
 Haupt-Aufhänger für Instagram (@svagathenburg).
@@ -27,8 +30,15 @@ Gelbe Karten SVA (0 / 1–2 / 3+) · Rote Karte im Spiel (ja/nein, inkl. Gelb-Ro
 oder im Admin gesetzt) · Wer trifft zuerst (SVA / Gegner / niemand).
 
 ### „Deine Elf“ (Teil B)
-5 SVA-Spieler: hinten TW/ABW, 2× MIT, 2× ANG — oder **frei** (Admin-Schalter, Standard an).
-Einer trägt die Kapitänsbinde (zählt doppelt). Kein Geld, kein Transfermarkt.
+v21: 5 SVA-Spieler **1 TW · 1 ABW · 2 MIT · 1 ANG** — oder **frei** (Admin-Schalter, Standard an).
+Jeder Platz nimmt Spieler mit passender **Haupt- ODER Zweitposition** (Admin → Tipp-Liga → Kader;
+Startwerte: Noah Pejas, Elias Pejas, Janek Brünjes auch Angriff). **Nicht verfügbare** Spieler
+(verletzt/abwesend, mit Hinweis) stehen ausgegraut in der Auswahl und können nicht aufgestellt werden.
+Die **Kapitänsbinde wählt man selbst** (Binde „C“ an der Karte antippen, keine Automatik) — der
+Kapitän zählt doppelt; ohne Kapitän zählt nur der Ergebnis-Tipp. „Freie Plätze füllen“ besetzt leere
+Plätze mit den treffsichersten verfügbaren Spielern. Kein Geld, kein Transfermarkt.
+Bestehende Elfen: gewertete bleiben unverändert; Elfen offener Spiele hat die Migration in die neue
+Reihenfolge gebracht (passte die alte 1-2-2 nicht, gelten sie als „frei“ weiter).
 
 | Ereignis (je Spieler) | Punkte |
 |---|---|
@@ -54,6 +64,12 @@ Einer trägt die Kapitänsbinde (zählt doppelt). Kein Geld, kein Transfermarkt.
 - **Stammtisch-Ligen** per 6-stelligem Code / Link `/tippen?liga=CODE` (max. 5 eigene, 300 Mitglieder).
 - **Fans vs. Kabine**: Spieler-Konten markiert der Admin als „Kabine“; Duell = Ø Punkte pro
   Spieltag-Teilnahme. Kabine ist von Preisen ausgeschlossen (Teilnahmebedingungen).
+  v21: Kabine-Konten stehen mit dezentem „Kabine“-Abzeichen in den Ranglisten (Markieren schaltet
+  „öffentlich zeigen“ an, im Profil abschaltbar) und landen automatisch in der festen
+  **Kabinen-Liga** (System-Liga: kein Code, kein Verlassen; Tabelle für alle lesbar, Nicht-Mitglieder
+  sehen nur öffentliche Namen).
+- **Belohnungen** (Album, steht auch in der Einführung): jeder getippte Spieltag +1 Karte · exakt
+  +1 Karte (mind. Silber) · Kapitän trifft +1 Karte · 4 Wochen am Stück +1 Karte · Spieltagssieg 2 Lose.
 - **Abzeichen**: Anstoß (erster Tipp) · Hellseher (3× exakt) · Treuer Tipper (10 Spieltage am Stück) ·
   Kartenexperte (5 Karten-Bonusfragen) · Kapitänsgriff (Kapitän ≥ 10 P.) · Volltreffer (exakt + 3/3 Bonus) ·
   Jokerkönig (Joker auf exakt) · Torriecher (3× erster Torschütze) · Spieltagssieger · Stammtisch (Liga mit 5+).
@@ -96,6 +112,19 @@ Karte → Spieltag-Panel („Tipp-Liga · Jetzt tippen“), `/live` (vor Anpfiff
 (Startseite + Fußzeile), Fußzeilen (Karte/Rundgang, /live), Instagram-Zeile („Tipp-Sieger“).
 Kurz-Link: **aga-erste.de/tipp** → `/tippen?utm_source=instagram&utm_medium=story`.
 
+## 4b. Vorführung (für Marvin, Vorstand, Spieler)
+
+**Öffnen:** Admin → Tipp-Liga → Knopf **„Tipp-Liga-Vorführung öffnen“** (oben rechts), oder auf der
+Vorführ-Spiel-Karte (Übersicht/Live) derselbe Knopf, oder direkt `/tippen?vorfuehrung=1`.
+Rein im Browser (`src/tippen/vorfuehrung/*`): 15 erfundene Tipper (Vorname + Initial, 5 davon Kabine),
+echter Kader mit Fotos, Stammtisch-Liga, Feuerwehr-Liga, Kabinen-Liga. **Nichts geht ins Netz oder
+in die Datenbank** (keine RPCs, keine Statistik), deutlich als „Vorführung“ markiert.
+Steuerleiste oben: **Vor Anpfiff** (Countdown, Tipp abgeben → +1 Karte) · **Live** (Minute läuft,
+Pause/Weiter, „Nächstes Ereignis“, Tempo ×3; Tore/Karten, Live-Hochrechnung, Live-Rangliste mit
+Auf/Ab, Fans vs. Kabine live) · **Abpfiff** (Auflösung zählt hoch) · **Montag** (MOTM eingetragen,
+Spieltagssieger, neue Abzeichen). Direkt-Links: `&phase=live&minute=60`, `&phase=montag`.
+Ein in der Vorführung abgegebener Tipp wird in Live/Abpfiff/Montag weiterverwendet.
+
 ## 5. Technik
 
 - Seite: `tippen.html` → `src/tippen/*` (eigenes Bundle, kein three.js; statischer Vorab-Inhalt
@@ -117,10 +146,26 @@ Kurz-Link: **aga-erste.de/tipp** → `/tippen?utm_source=instagram&utm_medium=st
 - Konto löschen (auf /album) löscht per Fremdschlüssel auch alle Tipp-Liga-Daten.
 - Recht: `public/teilnahmebedingungen.html` (/teilnahmebedingungen), Datenschutz Abschnitt **7c** (`/datenschutz#tippliga`).
 
+## 8. Navigation & Führung (v21)
+- Bereiche bleiben erhalten (Eingaben, gewählte Wertung, Scroll-Position); Wechsel sofort mit
+  gerichtetem Einblenden (rechts/links), am Handy **seitlich wischen**. Deep-Links `/tippen#rangliste`,
+  `#ligen`, `#profil` (alt `?tab=` geht weiter), **Browser-Zurück** springt zum vorigen Bereich.
+- **Ursache des Bugs „Ligen/Profil öffnen nichts“** (v20): Der Wechsel hing an
+  `AnimatePresence mode="wait"` — der neue Bereich erschien erst, wenn der alte fertig
+  ausgeblendet war. Blieb dieses Ende aus, kam kein Tab mehr. In Chromium/WebKit headless nicht
+  nachstellbar; jetzt ohne diese Abhängigkeit + echte Links + `scripts/tippen-nav-test.mjs`.
+- Kopf: `Album | Tipp-Liga` wie im Album (gleicher Aufbau, Fortschritt + Tütchen-Zahl).
+- **Nächster Schritt**-Zeile (immer sichtbar): was ansteht, was man tun muss, was es gibt.
+- **Einführung** (3 Schritte) beim ersten Besuch, danach über „?“, Profil und Fuß („So funktioniert’s“).
+- Bewegung: `src/tippen/bewegung.ts` (DESIGN.md: ease-out, 200/300/400 ms, gedämpfte Feder).
+
 ## 6. Scharf schalten (Marvin)
 
 1. Migration `20261012100000_sva_tippliga.sql` anwenden (nach `20261011110000_sva_am_platz.sql`).
    Lokal getestet: `supabase/tests/tippliga.test.mjs` (PGlite, 180 Prüfungen).
+   **v21:** zusätzlich `20261013100000_sva_tippliga_v21.sql` (idempotent; Test:
+   `supabase/tests/tippliga_v21.test.mjs`). Ohne sie zeigt Admin → Kader einen Hinweis, /tippen
+   funktioniert weiter (Zweitposition/Kabinen-Liga erscheinen erst danach).
 2. Supabase → Authentication → **Redirect URLs**: `https://<domain>/tippen*` ergänzen (wie `/album*`).
 3. Netlify deployen (Redirects `/tippen`, `/teilnahmebedingungen`, Kurz-Link `/tipp`).
 4. Admin → Tipp-Liga → Kabine & Regeln: Partner „präsentiert von“ und Preise (optional) setzen,
@@ -135,6 +180,13 @@ Kurz-Link: **aga-erste.de/tipp** → `/tippen?utm_source=instagram&utm_medium=st
 - `supabase/tests/tippliga.test.mjs` — Punkte (viele Fälle), Sperre nach Anpfiff (RPC + Trigger),
   RLS, Joker-Limit, Liga-Codes, Demo-/Testspiel-Ausschluss, Bericht aus Ticker, Werten + Neuberechnung,
   Ranglisten mit Trend, Fans vs. Kabine, Abzeichen, Album-Karte/-Missionen (gekapselt), Konto löschen.
+- `supabase/tests/tippliga_v21.test.mjs` — Formation 1-1-2-1, Zweitposition, nicht verfügbar,
+  Migration alter Elfen, Punkte unverändert, Kabinen-Liga, Rechte.
+- `scripts/tippen-nav-test.mjs` — jeder Tab mehrfach hin und her (Handy/Desktop, Chromium oder
+  `ENG=webkit`), Browser-Zurück, Zustand bleibt, Wischen, Deep-Links, Vorführung.
+- `scripts/tippen-vorfuehrung-shots.mjs` — Vorführung: alle Phasen, Tabs, Live-Serie, Elf, Einführung.
+- `scripts/tippen-nutzer-video.mjs` — Handy-Session eines neuen Fans als Video.
+- `scripts/tippen-perf.mjs` — Bildrate am Handy-Profil (4× CPU-Drosselung).
 - `scripts/tippen-audit.mjs` — `/tippen` in allen Zuständen (Gast, vorbelegt, Bonus-Wisch, Elf-Auswahl,
   Belohnung, gesperrt/live, Auflösung animiert + reduced-motion, Ranglisten, Ligen, Profil,
   Winterpause, Teilen-Bilder). `scripts/tippliga-admin-audit.mjs` — Admin (Spielbericht als Team,
