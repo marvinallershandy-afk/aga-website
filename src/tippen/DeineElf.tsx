@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Ban, Crown, Plus, Repeat2, UserMinus } from 'lucide-react'
+import { Ban, Crown, Plus, Repeat2, UserMinus, Wand2 } from 'lucide-react'
 import type { KaderSpieler } from './api'
 import { PLAETZE, POS_LANG, haptik, nachname, passt, verfuegbar } from './model'
 import { SpielerGesicht, SpielerKarte } from './SpielerKarte'
@@ -58,6 +58,24 @@ export function DeineElf({
     if (gesperrt) return
     onChange({ ...stand, kapitaen: id })
     haptik([10, 40, 14])
+    try {
+      localStorage.setItem('sva-tipp-binde-gesehen', '1')
+    } catch {
+      /* egal */
+    }
+  }
+
+  // leere Plätze mit den treffsichersten verfügbaren Spielern füllen (Kapitän bleibt deine Wahl)
+  const auffuellen = () => {
+    const elf = [...stand.elf]
+    const nach = [...kader.values()].filter(verfuegbar).sort((a, b) => b.tore - a.tore || b.spiele - a.spiele || (a.nummer ?? 99) - (b.nummer ?? 99))
+    elf.forEach((id, i) => {
+      if (id) return
+      const k = nach.find((x) => !elf.includes(x.id) && (stand.frei || x.position === PLAETZE[i].pos)) ?? nach.find((x) => !elf.includes(x.id) && passt(i, x, stand.frei))
+      if (k) elf[i] = k.id
+    })
+    onChange({ ...stand, elf })
+    haptik([6, 30, 6, 30, 6])
   }
 
   const freiUmschalten = () => {
@@ -68,6 +86,16 @@ export function DeineElf({
   }
 
   const voll = stand.elf.filter(Boolean).length
+  // Hinweis zur Binde nur, solange noch nie ein Kapitän gewählt wurde
+  const bindeHinweis = (() => {
+    if (gesperrt || stand.kapitaen || voll === 0) return false
+    try {
+      return localStorage.getItem('sva-tipp-binde-gesehen') !== '1'
+    } catch {
+      return true
+    }
+  })()
+  const ersterSlot = REIHEN.flat().find((i) => !!stand.elf[i])
   const wahlSlot = wahl ?? 0
   const soll = PLAETZE[wahlSlot].pos
   const kandidaten = [...kader.values()]
@@ -124,6 +152,11 @@ export function DeineElf({
                           C
                         </button>
                       )}
+                      {bindeHinweis && slot === ersterSlot && (
+                        <motion.span className="tp-binde-tipp" role="note" initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}>
+                          Tippe auf „C“, um deinen Kapitän zu wählen
+                        </motion.span>
+                      )}
                       {kap && (
                         <motion.span className="tp-slot__kap" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}>
                           <Crown size={12} strokeWidth={2} aria-hidden="true" /> Kapitän ×2
@@ -153,6 +186,11 @@ export function DeineElf({
                 ? 'Jetzt deinen Kapitän wählen: Binde „C“ antippen — er zählt doppelt.'
                 : `Kapitän: ${nachname(kader.get(stand.kapitaen)?.name ?? '')} · Binde woanders antippen zum Wechseln.`}
           </p>
+          {voll < 5 && (
+            <button type="button" className="tp-btn tp-btn--line tp-btn--sm" onClick={auffuellen}>
+              <Wand2 size={16} strokeWidth={1.5} aria-hidden="true" /> Freie Plätze füllen
+            </button>
+          )}
           {freiErlaubt && (
             <label className="tp-umschalter">
               <input type="checkbox" checked={stand.frei} onChange={freiUmschalten} />
