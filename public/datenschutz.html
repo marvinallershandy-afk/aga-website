@@ -365,6 +365,48 @@
       </p>
       <p><span class="todo">TODO-JURIST: Einwilligungstext auf /album, Mindestalter (Kinder unter 16: Einwilligung der Eltern, Art. 8 DSGVO) und eine automatische Löschung inaktiver Konten prüfen</span></p>
 
+      <!-- ═══ v20-T: Abschnitt 7c Tipp-Liga — eigenständiger Block (Merge: nur diesen Block übernehmen) ═══ -->
+      <h2 id="tippliga">7c. Tipp-Liga (Seite /tippen)</h2>
+      <!-- Verifiziert am Code (v20-T): src/tippen/api.ts (gleicher Client und Speicherschlüssel
+           sva-album-auth wie /album), RPCs in supabase/migrations/20261012100000_sva_tippliga.sql
+           (tipp_*; Konto löschen über album_konto_loeschen entfernt per Fremdschlüssel auch alle
+           Tipp-Liga-Daten). -->
+      <p>
+        Auf <a href="/tippen">/tippen</a> können Sie freiwillig an der kostenlosen Tipp-Liga des Vereins teilnehmen. Sie nutzen dafür
+        <strong>dasselbe Konto wie für das Sammelalbum</strong> (Abschnitt 7b: Login per E-Mail-Link bzw. Code, Vorname und Initial).
+        Zusätzlich verarbeiten wir:
+      </p>
+      <ul>
+        <li>Ihre <strong>Tipps</strong> je Spiel (Ergebnis, Bonusfragen, erster Torschütze, Spieler des Spiels, Joker) und Ihre Aufstellung <strong>„Deine Elf“</strong> mit Zeitpunkt;</li>
+        <li>die daraus berechneten <strong>Punkte, Ranglistenplätze und Abzeichen</strong>;</li>
+        <li><strong>Stammtisch-Ligen</strong>, die Sie gründen oder denen Sie per Code beitreten (Liga-Name, Mitgliedschaft);</li>
+        <li>die Zustimmung zu den <a href="/teilnahmebedingungen">Teilnahmebedingungen</a> (Zeitpunkt) und Ihre Einstellung, ob Ihr Name öffentlich in Ranglisten erscheint;</li>
+        <li>bei Spielerinnen und Spielern des Vereins die Kennzeichnung <strong>„Kabine“</strong> (setzt der Verein, nur für das Duell „Fans vs. Kabine“).</li>
+      </ul>
+      <p>
+        <strong>Wer sieht was?</strong> Öffentlich erscheinen in Ranglisten nur Teilnehmende, die das ausdrücklich eingeschaltet haben — und dann nur
+        als „Vorname I.“ mit Punkten. Mitglieder einer Stammtisch-Liga sehen sich gegenseitig mit „Vorname I.“; die Tipps der anderen sind erst
+        <strong>nach dem Anpfiff</strong> sichtbar. Für Instagram-Grafiken (z. B. „Tipp-Sieger des Spieltags“, „Top 5“) verwenden wir nur Namen
+        öffentlich sichtbarer Teilnehmender; das Duell „Fans vs. Kabine“ zeigt nur Durchschnittswerte. Teilen Sie selbst ein Bild Ihres Tipps,
+        entsteht es auf Ihrem Gerät. Für jeden abgegebenen Tipp schreiben wir Ihrem Sammelalbum eine Karte gut. Partner, die die Tipp-Liga
+        „präsentieren“ oder Preise stiften, erhalten <strong>keine</strong> Daten von Ihnen; Gewinner benachrichtigen wir selbst.
+      </p>
+      <p>
+        Bis Sie sich anmelden, merkt sich Ihr Browser einen angefangenen Tipp im lokalen Speicher (Schlüssel <code>sva-tipp-entwurf</code>),
+        außerdem, welche Auflösung Sie schon gesehen haben (<code>sva-tipp-gesehen-…</code>). Das ist für den von Ihnen gewünschten Dienst
+        technisch erforderlich (§ 25 Abs. 2 Nr. 2 TDDDG). Die Daten liegen bei <strong>Supabase</strong> (Frankfurt am Main, EU; Abschnitt 6a).
+      </p>
+      <p>
+        <strong>Zweck:</strong> Betrieb der Tipp-Liga (Tipps, Wertung, Ranglisten, Ligen, Abzeichen).<br />
+        <strong>Rechtsgrundlage:</strong> Ihre Einwilligung (Art. 6 Abs. 1 lit. a DSGVO) beim Anmelden bzw. Mitmachen; die öffentliche Anzeige
+        Ihres Namens ist eine eigene, freiwillige Einwilligung.<br />
+        <strong>Speicherdauer:</strong> bis Sie Ihr Konto löschen oder die Einwilligung widerrufen; endet die Tipp-Liga, löschen wir alle Tipp-Liga-Daten.<br />
+        <strong>Löschung &amp; Widerruf:</strong> über „Konto löschen“ auf /album — dabei werden auch alle Tipps, Punkte, Ligen-Mitgliedschaften und
+        Abzeichen gelöscht. Die öffentliche Anzeige schalten Sie im Profil auf /tippen ab.
+      </p>
+      <p><span class="todo">TODO-JURIST: Abschnitt 7c und Teilnahmebedingungen (Preise von Partnern, Mindestalter wie 7b) prüfen</span></p>
+      <!-- ═══ Ende v20-T Abschnitt 7c ═══ -->
+
       <h2>8. Fotos auf dieser Website</h2>
       <!-- TODO-MARVIN: Auf den Fanblock-/Kaderfotos sind Personen erkennbar.
            Dafür braucht es eine Rechtsgrundlage (i. d. R. Einwilligung nach
