@@ -1,6 +1,6 @@
 import { memo, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import './karten.css'
-import { FENSTER, INNEN, LAYOUT, UMRISS, clipPolygon, einruecken, nachnameGroesse, svgPunkte } from './geometrie'
+import { FENSTER, FIGUR_KONVENTION, INNEN, LAYOUT, UMRISS, clipPolygon, einruecken, nachnameGroesse, svgPunkte } from './geometrie'
 import { figurMassBekannt, figurMessen, hevcZuerst, ruhigeBewegung, type FigurMass } from './medien'
 import { gyroAnfragen, gyroFolgen, gyroWert, gyroZustand } from './gyro'
 import { muster, SYMBOL_PFAD } from './muster'
@@ -137,15 +137,16 @@ function Rahmen({ s, id }: { s: Seltenheit; id: string }) {
   )
 }
 
-function Figur({ d, lebend, eager }: { d: KartenDaten; lebend: boolean; eager?: boolean }) {
-  const src = d.figur!
+function Figur({ d, lebend, eager, klein }: { d: KartenDaten; lebend: boolean; eager?: boolean; klein?: boolean }) {
+  // Raster: 640er-Freisteller statt HD (gleiche Geometrie, ¼ der Pixel)
+  const src = klein ? d.figur!.replace('/players/cutout/hd/', '/players/cutout/') : d.figur!
   const [mass, setMass] = useState<FigurMass | null>(() => figurMassBekannt(src))
   const [videoKaputt, setVideoKaputt] = useState(false)
   const kopfZiel = d.art === 'trainer' ? LAYOUT.figurKopfStab : LAYOUT.figurKopf
   const B = LAYOUT.figurBreite
   const video = lebend && d.loop && !videoKaputt && !ruhigeBewegung() ? d.loop : null
   // Lage: Standbild nach Messung; Video nach Loop-Geometrie (Scheitel headY)
-  let top: number | null = null
+  let top: number
   let hoehe = B * (mass?.ratio ?? 1.5)
   let breite = B
   if (video && d.loopGeo) {
@@ -154,22 +155,23 @@ function Figur({ d, lebend, eager }: { d: KartenDaten; lebend: boolean; eager?: 
     breite = B * 1.32
     hoehe = breite * (d.loopGeo.h / d.loopGeo.w)
     top = kopfZiel - d.loopGeo.headY * hoehe
-  } else if (mass) {
-    top = kopfZiel - mass.kopf * hoehe
+  } else {
+    // bis zur Messung: Konvention (Scheitel 18,5 %) — unsichtbar, aber mit
+    // Größe, damit loading="lazy" greift
+    top = kopfZiel - (mass?.kopf ?? FIGUR_KONVENTION.kopf) * hoehe
   }
-  const fadeVon = (LAYOUT.figurAusVon * 140 - (top ?? 0)) / hoehe
-  const fadeBis = (LAYOUT.figurAusBis * 140 - (top ?? 0)) / hoehe
+  const fadeVon = (LAYOUT.figurAusVon * 140 - top) / hoehe
+  const fadeBis = (LAYOUT.figurAusBis * 140 - top) / hoehe
   const maske = `linear-gradient(180deg, #000 ${(fadeVon * 100).toFixed(1)}%, transparent ${(fadeBis * 100).toFixed(1)}%)`
-  const stil: React.CSSProperties =
-    top == null
-      ? { opacity: 0 }
-      : {
-          top: `${top.toFixed(2)}cqw`,
-          left: `${((100 - breite) / 2 + LAYOUT.figurVersatz).toFixed(2)}cqw`,
-          width: `${breite.toFixed(2)}cqw`,
-          WebkitMaskImage: maske,
-          maskImage: maske,
-        }
+  const stil: React.CSSProperties = {
+    top: `${top.toFixed(2)}cqw`,
+    left: `${((100 - breite) / 2 + LAYOUT.figurVersatz).toFixed(2)}cqw`,
+    width: `${breite.toFixed(2)}cqw`,
+    aspectRatio: video ? undefined : `1 / ${mass?.ratio ?? FIGUR_KONVENTION.ratio}`,
+    WebkitMaskImage: maske,
+    maskImage: maske,
+    opacity: video || mass ? undefined : 0,
+  }
   return (
     <div className="sk__figur" aria-hidden="true">
       {video ? (
@@ -265,7 +267,7 @@ function Vorderseite({ d, id, stufe, lebend, eager }: { d: KartenDaten; id: stri
         {!klein && d.seltenheit === 'spezial' && <div className="sk__funken" style={{ WebkitMaskImage: `url("${m.funkeln}")`, maskImage: `url("${m.funkeln}")` }} />}
       </div>
 
-      {mitFigur && <Figur d={d} lebend={lebend && !klein} eager={eager} />}
+      {mitFigur && <Figur d={d} lebend={lebend && !klein} eager={eager} klein={klein} />}
 
       <div className="sk__inhalt" aria-hidden="true">
         {person ? (

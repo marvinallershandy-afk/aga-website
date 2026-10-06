@@ -30,7 +30,8 @@
 /* ── Buch ───────────────────────────────────────────────────── */
 .hb { padding-top: var(--s-3); }
 .hf-reiter__b.is-komplett small { color: var(--c-accent); }
-.hb-buch { position: relative; margin-top: var(--s-4); perspective: 2200px; touch-action: pan-y; }
+.hb-buch { position: relative; margin-top: var(--s-4); perspective: 2200px; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+.hb-buch input, .hb-buch textarea { user-select: text; -webkit-user-select: text; }
 .hb-lage { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; }
 .hb-buch--doppel .hb-lage { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 .hb-seite { min-width: 0; }
