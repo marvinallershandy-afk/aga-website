@@ -206,7 +206,7 @@ export function DeineElf({
           {voll === 0 && vorschlag && vorschlag.spieler.some((x) => x && kader.has(x)) ? (
             <div className="tp-elf__vorschlag">
               <button type="button" className="tp-btn tp-btn--sm" onClick={vorschlagUebernehmen}>
-                <Sparkles size={16} strokeWidth={1.5} aria-hidden="true" /> Vorschlag übernehmen
+                <Sparkles size={16} strokeWidth={1.5} aria-hidden="true" /> Startelf übernehmen
               </button>
               <small>
                 {vorschlag.quelle ? `${vorschlag.quelle} — ` : 'Letzte Startelf — '}Spieler austauschen und Kapitän wählen kannst du danach.

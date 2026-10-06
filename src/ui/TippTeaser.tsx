@@ -46,14 +46,14 @@ function darstellung(stand: TippStand | null, now: number): Darstellung {
   // offenes Spiel schon getippt (Abgleich über den Anpfiff aus den Build-Daten)
   const getipptFuerNaechstes = stand?.getippt && (!k || !stand.offenAnstoss || sameDay(new Date(stand.offenAnstoss).getTime(), k.getTime()))
   if (getipptFuerNaechstes) {
-    return { kicker: 'Tipp-Liga', titel: 'Tipp abgegeben ✓', zeile: kein ? 'Änderbar bis Anpfiff' : 'Änderbar bis Anpfiff · Auflösung am Abend', ton: 'gruen', icon: Check }
+    return { kicker: 'Tipp-Liga', titel: 'Tipp abgegeben ✓', zeile: 'Änderbar bis Anpfiff', ton: 'gruen', icon: Check }
   }
   // Standard: jetzt tippen (mit Countdown, wenn ein Anstoß bekannt ist)
   const rest = k ? restText(k.getTime() - now) : null
   return {
     kicker: 'Tipp-Liga · kostenlos',
     titel: 'Jetzt tippen',
-    zeile: rest ? `${rest} bis Anpfiff · +1 Karte fürs Album` : 'Tipp den Sonntag · +1 Karte fürs Album',
+    zeile: rest ? `${rest} · +1 Karte` : 'Kostenlos · +1 Karte',
     ton: 'rot',
     icon: Target,
   }

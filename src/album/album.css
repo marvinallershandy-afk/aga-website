@@ -179,13 +179,6 @@ em { font-style: normal; color: var(--c-red); }
 .al-schalter small { display: block; color: var(--c-text-3); font-size: var(--t-small); }
 .al-login { padding-top: var(--s-5); }
 
-/* v21-UX (Befund 15): „So funktioniert’s“ — Belohnungslogik vor dem Login */
-.al-wie { list-style: none; display: grid; gap: var(--s-2); margin: var(--s-4) 0 var(--s-2); max-width: 44rem; }
-.al-wie li { padding: var(--s-3); border: var(--border); border-radius: var(--r-l); background: var(--c-ink); }
-.al-wie b { display: block; font: 400 1.0625rem/1.1 var(--f-display); text-transform: uppercase; letter-spacing: .01em; }
-.al-wie small { display: block; margin-top: 4px; font-size: var(--t-small); line-height: 1.4; color: var(--c-text-2); }
-@media (min-width: 720px) { .al-wie { grid-template-columns: repeat(3, 1fr); gap: var(--s-3); } }
-
 /* ── Start: das Cover (Einstieg) ─────────────────────────── */
 .al-start { position: relative; display: flex; flex-direction: column; align-items: center; padding-top: var(--s-6); }
 .al-cover {

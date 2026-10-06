@@ -100,7 +100,8 @@ export function TippFormular({
   const [teilt, setTeilt] = useState(false)
   // v21-UX (Befund 3): Ergebnis erst nach bewusster Wahl gültig; unberührtes 0:0 → Rückfrage.
   const [beruehrt, setBeruehrt] = useState(() => startBeruehrt(spiel))
-  const [frage00, setFrage00] = useState(false)
+  const [frage, setFrage] = useState(false)
+  const gefragt = useRef(false)
   const autoGesendet = useRef(false)
 
   const kaderListe = useMemo(() => [...kader.values()], [kader])
@@ -108,6 +109,14 @@ export function TippFormular({
   const bonusZahl = spiel.fragen.filter((f) => s.bonus[f.key]).length
   const geaendert = !gespeichert || !gleich(s, gespeichert)
   const jokerGesperrt = lage.ich?.jokerFrei === false && !spiel.meinTipp?.joker
+  // v21-UX (Befund 8): für welches Spiel getippt wird — steht im Abgabe-Knopf
+  const fuer = `für ${datumKurz(spiel.anstoss)} ${uhrzeit(spiel.anstoss)} · ${spiel.heim ? 'gegen' : 'bei'} ${kuerzel(spiel.gegner)}`
+  // v22-T: was fehlt noch? (Rückfrage statt stillem 0:0 / halber Elf)
+  const fehlt: { text: string; ziel: string; knopf: string }[] = []
+  if (!beruehrt) fehlt.push({ text: 'Ergebnis', ziel: 'tp-h-ergebnis', knopf: 'Ergebnis wählen' })
+  if (bonusZahl < spiel.fragen.length) fehlt.push({ text: `${spiel.fragen.length - bonusZahl} ${spiel.fragen.length - bonusZahl === 1 ? 'Bonusfrage' : 'Bonusfragen'}`, ziel: 'tp-h-bonus', knopf: 'Bonusfragen' })
+  if (!s.elf.elf.every(Boolean)) fehlt.push({ text: `Elf ${s.elf.elf.filter(Boolean).length}/5`, ziel: 'tp-h-elf', knopf: 'Elf aufstellen' })
+  else if (!s.elf.kapitaen) fehlt.push({ text: 'Kapitän', ziel: 'tp-h-elf', knopf: 'Kapitän wählen' })
 
   // Entwurf mitschreiben (falls die Seite zugeht, bevor man sich anmeldet)
   useEffect(() => {
@@ -229,7 +238,7 @@ export function TippFormular({
           beruehrt={beruehrt}
           onChange={(a, b) => {
             setBeruehrt(true)
-            setFrage00(false)
+            setFrage(false)
             setS((x) => ({ ...x, toreSva: a, toreGegner: b }))
           }}
         />
@@ -301,11 +310,8 @@ export function TippFormular({
       </section>
 
       <div className="tp-abgabe" role="region" aria-label="Tipp abgeben">
-        <p className="tp-abgabe__fuer">
-          Tipp für {datumKurz(spiel.anstoss)} {uhrzeit(spiel.anstoss)} · {spiel.heim ? 'gegen' : 'bei'} {kuerzel(spiel.gegner)}
-        </p>
         <ol className="tp-abgabe__status" aria-live="polite">
-          <li className={beruehrt ? 'is-ok' : ''}>
+          <li className={beruehrt ? 'is-ok' : 'is-offen'}>
             {beruehrt ? <Check size={12} strokeWidth={2.5} aria-hidden="true" /> : null} {beruehrt ? (spiel.heim ? `${s.toreSva}:${s.toreGegner}` : `${s.toreGegner}:${s.toreSva}`) : '– : –'}
           </li>
           <li className={bonusZahl === spiel.fragen.length ? 'is-ok' : ''}>
@@ -314,8 +320,9 @@ export function TippFormular({
           <li className={s.elf.elf.every(Boolean) ? 'is-ok' : ''}>
             {s.elf.elf.every(Boolean) && <Check size={12} strokeWidth={2.5} aria-hidden="true" />} Elf {s.elf.elf.filter(Boolean).length}/5
           </li>
-          <li className={s.elf.kapitaen ? 'is-ok is-gold' : ''}>
-            {s.elf.kapitaen ? <Crown size={12} strokeWidth={2} aria-hidden="true" /> : null} Kapitän
+          <li className={s.elf.kapitaen ? 'is-ok is-gold' : ''} aria-label={s.elf.kapitaen ? 'Kapitän gewählt' : 'Kapitän fehlt'}>
+            <Crown size={12} strokeWidth={2} aria-hidden="true" />
+            <span className="tp-abgabe__lang">Kapitän</span>
           </li>
           {s.joker && <li className="is-joker">Joker</li>}
         </ol>
@@ -324,33 +331,35 @@ export function TippFormular({
             {fehler}
           </p>
         )}
-        {frage00 ? (
-          <div className="tp-abgabe__frage" role="group" aria-label="Ergebnis bestätigen">
+        {frage ? (
+          <div className="tp-abgabe__frage" role="group" aria-label="Was noch fehlt">
             <p>
-              Du hast das Ergebnis noch nicht getippt. Wirklich <b>0:0</b> abgeben?
+              Noch offen: <b>{fehlt.map((f) => f.text).join(' · ')}</b>
+              <small>{!beruehrt ? 'Ohne Ergebnis würdest du 0:0 tippen.' : !elfVoll ? 'Ohne volle Elf mit Kapitän zählt nur dein Ergebnis-Tipp.' : 'Offene Bonusfragen bringen keine Punkte.'}</small>
             </p>
             <div className="tp-abgabe__knoepfe">
               <button
                 type="button"
                 className="tp-btn tp-btn--line tp-btn--sm"
                 onClick={() => {
-                  setFrage00(false)
-                  document.getElementById('tp-h-ergebnis')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                  setFrage(false)
+                  document.getElementById(fehlt[0]?.ziel ?? 'tp-h-ergebnis')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
                 }}
               >
-                Ergebnis wählen
+                {fehlt[0]?.knopf ?? 'Ergänzen'}
               </button>
               <button
                 type="button"
                 className="tp-btn tp-btn--sm"
                 onClick={() => {
-                  setBeruehrt(true)
-                  setFrage00(false)
-                  void abgeben({ ...s, toreSva: 0, toreGegner: 0 })
+                  setFrage(false)
+                  gefragt.current = true
+                  if (!beruehrt) setBeruehrt(true)
+                  void abgeben(beruehrt ? s : { ...s, toreSva: 0, toreGegner: 0 })
                 }}
                 disabled={laeuft}
               >
-                Ja, 0:0 tippen
+                {beruehrt ? 'Trotzdem abgeben' : 'Ja, 0:0 tippen'}
               </button>
             </div>
           </div>
@@ -359,7 +368,11 @@ export function TippFormular({
             {gespeichert && !geaendert ? (
               <>
                 <span className="tp-abgabe__ok">
-                  <Check size={18} strokeWidth={2} aria-hidden="true" /> Gespeichert · änderbar bis Anpfiff
+                  <Check size={18} strokeWidth={2} aria-hidden="true" />
+                  <span>
+                    Gespeichert · änderbar bis Anpfiff
+                    <small>{fuer}</small>
+                  </span>
                 </span>
                 <button type="button" className="tp-btn tp-btn--line tp-btn--sm" onClick={() => void teilenTipp()} disabled={teilt}>
                   <Share2 size={16} strokeWidth={1.5} aria-hidden="true" /> Teilen
@@ -368,10 +381,11 @@ export function TippFormular({
             ) : (
               <button
                 type="button"
-                className="tp-btn tp-btn--gross"
+                className="tp-btn tp-btn--gross tp-abgabe__los"
                 onClick={() => {
-                  if (!beruehrt) {
-                    setFrage00(true)
+                  // v22-T: Rückfrage, was fehlt — bei fehlendem Ergebnis immer, sonst einmal
+                  if (fehlt.length > 0 && (!beruehrt || !gefragt.current)) {
+                    setFrage(true)
                     haptik(10)
                     return
                   }
@@ -379,7 +393,8 @@ export function TippFormular({
                 }}
                 disabled={laeuft}
               >
-                {laeuft ? 'Wird gespeichert …' : gespeichert ? 'Änderungen speichern' : 'Tipp abgeben'}
+                <span>{laeuft ? 'Wird gespeichert …' : gespeichert ? 'Änderungen speichern' : 'Tipp abgeben'}</span>
+                <small className="tp-abgabe__fuer">{fuer}</small>
               </button>
             )}
           </div>

@@ -1024,14 +1024,18 @@ img { display: block; max-width: 100%; }
 }
 
 /* Befund 2/3: neutraler Ergebnis-Zustand „– : –“ */
-.tp-stepper__zahl.is-neutral b { position: static; color: var(--c-text-3); font-size: 96px; }
+.tp-stepper__zahl.is-neutral b { position: static; display: block; width: 56px; height: 10px; border-radius: 2px; background: var(--c-text-3); opacity: .55; font-size: 0; }
 
-/* Befund 8: welches Spiel wird getippt (Kontext im Sticky-Panel) */
-.tp-abgabe__fuer { margin: 0 0 var(--s-2); font: 800 .625rem/1.2 var(--f-body); font-stretch: 112%; letter-spacing: .1em; text-transform: uppercase; color: var(--c-text-3); }
+/* Befund 8: welches Spiel wird getippt — zweite Zeile im Abgabe-Knopf */
+.tp-abgabe__los { flex-direction: column; gap: 3px; }
+.tp-abgabe__fuer { font: 700 .5625rem/1.1 var(--f-body); font-stretch: 112%; letter-spacing: .12em; text-transform: uppercase; opacity: .78; }
+.tp-abgabe__ok small { display: block; margin-top: 2px; font: 700 .5625rem/1.1 var(--f-body); letter-spacing: .1em; text-transform: uppercase; color: var(--c-text-3); }
+.tp-abgabe__status li.is-offen { border-style: dashed; }
 
-/* Befund 3: Rückfrage „Wirklich 0:0 tippen?“ */
+/* v22-T: Rückfrage „Was fehlt noch?“ */
 .tp-abgabe__frage p { margin: 0 0 var(--s-2); font-size: var(--t-small); color: var(--c-text-2); }
 .tp-abgabe__frage b { color: var(--c-white); }
+.tp-abgabe__frage small { display: block; margin-top: 2px; font-size: var(--t-micro); color: var(--c-text-3); }
 
 /* Befund 10/11: Fußnoten am Ort des Geschehens */
 .tp-fussnote { margin-top: var(--s-3); font-size: var(--t-micro); letter-spacing: .02em; color: var(--c-text-3); }
@@ -1070,13 +1074,15 @@ img { display: block; max-width: 100%; }
   .tp-steuer.is-kompakt { padding-top: var(--s-2); padding-bottom: var(--s-2); }
 }
 
-/* Befund 4: Fußstapel (Status + Abgabe) mobil kompakter, nichts wird verdeckt */
+/* Befund 4 (v22-T): Fußstapel mobil ≤ 20 % der Höhe — eine Chip-Zeile +
+   Abgabe-Knopf (Kontext steht IM Knopf). 844 px: Abgabe ~92 + Tabs ~65 px. */
 @media (max-width: 1023px) {
-  .tp-abgabe { padding-top: var(--s-2); padding-bottom: var(--s-2); }
-  .tp-abgabe__status { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-bottom: var(--s-1); }
-  .tp-abgabe__status::-webkit-scrollbar { display: none; }
-  .tp-abgabe__fuer { margin-bottom: 4px; }
+  .tp-abgabe { padding: 8px var(--s-4); box-shadow: 0 -12px 20px rgba(11, 10, 11, .9); }
+  .tp-abgabe__status { flex-wrap: nowrap; overflow: hidden; gap: 4px; margin-bottom: 6px; }
+  .tp-abgabe__status li { flex: none; padding: 3px 6px; }
+  .tp-abgabe .tp-btn--gross { min-height: 50px; }
+  .tp-abgabe__lang { display: none; }
   /* Inhalt lässt sich über den Sticky-Stapel hinaus scrollen; Sprünge landen darüber */
   .tp-offen, .tp-gesperrt { padding-bottom: var(--s-6); }
-  .tp-abschnitt { scroll-margin-bottom: 300px; }
+  .tp-abschnitt { scroll-margin-bottom: 190px; }
 }
