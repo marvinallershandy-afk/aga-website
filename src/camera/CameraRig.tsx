@@ -334,7 +334,7 @@ function tourFrame(r: Rig, state: FrameState, delta: number) {
   const wantShift = aspect >= 1 ? TEAM_VIEW_SHIFT * wMann + SPONSOR_VIEW_SHIFT * wSp + KONTAKT_VIEW_SHIFT * wKon : 0
   // v19-F (Punkt 1/2, Handy): an Bande und Tür das Bild nach oben schieben →
   // Motiv sitzt im oberen Bilddrittel statt unter viel schwarzem Himmel.
-  const wantShiftY = aspect < 1 ? (phone ? -0.06 : 0.13) * wMann + (phone ? -0.13 : -0.08) * wSp + (phone ? -0.16 : -0.1) * wDoor : 0
+  const wantShiftY = aspect < 1 ? (phone ? -0.06 : 0.13) * wMann + (phone ? -0.13 : -0.08) * wSp + (phone ? -0.1 : -0.08) * wDoor : 0
   if (Math.abs(wantShift) + Math.abs(wantShiftY) > 0.0005) {
     const w = state.size.width
     const h = state.size.height

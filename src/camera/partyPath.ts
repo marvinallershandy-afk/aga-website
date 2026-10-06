@@ -87,8 +87,8 @@ export const DOOR_STAND = {
   // die Tür — vorher füllte ein schwarzes Dachband/Nachthimmel die obere
   // Bildhälfte. Jetzt sitzt die Tür-Bühne (Schild, Leuchte, Bank, Kisten,
   // Foto) warm in der Bildmitte, das Vordach bleibt nur schmaler Rand oben.
-  pos: new THREE.Vector3(5.45, 0.6, -2.5),
-  look: new THREE.Vector3(6.46, 0.12, -2.47),
+  pos: new THREE.Vector3(5.52, 0.67, -2.5),
+  look: new THREE.Vector3(6.46, 0.07, -2.47),
 } as const
 
 const approachPos = new THREE.CatmullRomCurve3(
