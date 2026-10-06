@@ -339,6 +339,11 @@ export function AlbumApp() {
     unterCover = (
       <div className="al-start__info">
         <p className="al-start__hint">Tippen zum Aufschlagen</p>
+        {/* v20-T: gemeinsames Konto — jeder Tipp in der Tipp-Liga bringt eine Karte */}
+        <a className="al-tipp" href="/tippen">
+          <b>Tipp-Liga</b>
+          <span>Jeder Tipp = 1 Karte fürs Heft · gleiches Konto</span>
+        </a>
         {wartende.length > 0 && (
           <button type="button" className="hf-tuetchen hf-tuetchen--dunkel" onClick={packsOeffnen}>
             <span className="hf-tuetchen__bild" aria-hidden="true" />
@@ -426,7 +431,7 @@ export function AlbumApp() {
 
       <footer className="al-fuss">
         <span className="al-fuss__links">
-          <a href="/">Vereinsseite</a> · <a href="/live">Live-Ticker</a> · <a href="/datenschutz#album">Datenschutz</a> · <a href="/impressum">Impressum</a>
+          <a href="/">Vereinsseite</a> · <a href="/live">Live-Ticker</a> · <a href="/tippen">Tipp-Liga</a> · <a href="/datenschutz#album">Datenschutz</a> · <a href="/impressum">Impressum</a>
         </span>
         <InstagramZeile className="ig-zeile--fuss" />
       </footer>

@@ -35,6 +35,8 @@ Aufruf an die RPC `web_zaehlen(pfad, quelle, geraet)`. Die Datenbank erhöht nur
 | `probetraining` | Spieler | „In WhatsApp öffnen“ / „Per E-Mail senden“ getippt |
 | `partner-anfrage` | Sponsoren | Anfrage auf `/partner` erfolgreich abgeschickt |
 | `instagram` | Instagram | irgendein Link zu instagram.com getippt |
+| `tipp-abgegeben` · `elf-gespeichert` | Zuschauer | `/tippen`: Tipp bzw. „Deine Elf“ gespeichert (v20-T) |
+| `liga-gegruendet` · `liga-beigetreten` · `tipp-teilen` | Instagram/Reichweite | `/tippen`: Stammtisch-Liga gegründet/beigetreten, Story-Bild geteilt |
 
 **Quelle** = `utm_source`/`utm_medium` aus der Adresse; sonst grob aus `document.referrer`
 (instagram/facebook/google/whatsapp, eigene Seite = `intern`, Rest `sonstige`); ohne Referrer
@@ -66,6 +68,7 @@ Netlify leitet um (302, `netlify.toml`):
 | **aga-erste.de/sonntag** | `/live?utm_source=instagram&utm_medium=story` | Spieltags-**Story** → Live-Seite (Zuschauer) |
 | **aga-erste.de/kicken** | `/probetraining?utm_source=instagram&utm_medium=bio` | **Bio** → Probetraining-Assistent (Spieler) |
 | **aga-erste.de/bande** | `/partner?utm_source=instagram&utm_medium=bio` | **Bio** → Partner/Bande (Sponsoren) |
+| **aga-erste.de/tipp** | `/tippen?utm_source=instagram&utm_medium=story` | Fr/Sa-**Story** „Jetzt tippen“ → Tipp-Liga (v20-T) |
 
 Die drei Ziel-Kurz-Links (v19-K) trennen die drei Vereinsziele sauber in der
 Statistik: `/sonntag` = Zuschauer am Spieltag, `/kicken` = Spieler-Gewinnung,

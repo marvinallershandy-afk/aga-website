@@ -18,6 +18,7 @@ import { FanGallery } from '../ui/FanGallery'
 import { FanChantToggle } from '../ui/FanChantToggle'
 import { MusicSectionPlayer } from '../ui/MusicSection'
 import { AlbumTeaser } from '../ui/AlbumTeaser'
+import { TIPP_LINK } from '../data/club'
 import { SponsorPitch } from '../ui/SponsorsStrip'
 import { PlatzFinden } from '../ui/PlatzFinden'
 import { WaIcon, IgIcon, MailIcon } from '../ui/Icons'
@@ -93,6 +94,14 @@ function SpieltagBody() {
         <span>
           <b>{ms.state === 'live' ? ms.line : 'Live-Ticker & Spieltag'}</b>
           <small>{ms.state === 'live' ? 'Jetzt mitfiebern' : ms.long}</small>
+        </span>
+        <ArrowRight size={20} strokeWidth={1.5} aria-hidden="true" />
+      </a>
+      {/* v20-T: Einstieg Tipp-Liga */}
+      <a className="kp-cta" href={TIPP_LINK.href}>
+        <span>
+          <b>{ms.state === 'live' ? 'Tipp-Liga: Wie hast du getippt?' : `Tipp-Liga · ${TIPP_LINK.titel}`}</b>
+          <small>{TIPP_LINK.nutzen}</small>
         </span>
         <ArrowRight size={20} strokeWidth={1.5} aria-hidden="true" />
       </a>

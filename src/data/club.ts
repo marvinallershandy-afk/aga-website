@@ -253,6 +253,16 @@ export const ALBUM_LINK = {
   bild: '/album/teaser.webp',
 } as const
 
+// ── v20-T: Tipp-Liga (/tippen) — Texte für alle Einstiege ──
+export const TIPP_LINK = {
+  href: '/tippen',
+  label: 'Tipp-Liga',
+  titel: 'Jetzt tippen',
+  nutzen: 'Ergebnis, 3 Bonusfragen, deine Elf — in 20 Sekunden. Tippschluss mit dem Anpfiff.',
+  aufloesung: 'Tipp-Liga: Auflösung & Rangliste',
+  live: 'Wie hast du getippt? Punkte nach dem Abpfiff',
+} as const
+
 // ── v17-D: Offizielle Vereinsfotografin ──────────────────────
 // Von Marvin bestätigt (05.10.2026; aus Neles Unterlagen:
 // instagram.com/pictureby.nele). Steuert alle „Fotos: picture by Nele"-Credits.

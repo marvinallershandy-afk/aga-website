@@ -8,6 +8,10 @@ export function AlltagFuss() {
     <nav className="al-fuss" aria-label="Termine und Mitspielen">
       <KalenderKnopf variante="link" adresse={CONTACT.address} label="Heimspiele in den Kalender" />
       <ProbetrainingKnopf className="al-link" label="Probetraining anfragen" icon={false} />
+      {/* v20-T */}
+      <a className="al-link" href="/tippen">
+        Tipp-Liga
+      </a>
     </nav>
   )
 }

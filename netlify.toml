@@ -75,6 +75,24 @@
   to = "/galerie.html"
   status = 200
 
+# v20-T: Tipp-Liga als eigene HTML-Datei (gemeinsames Konto mit /album).
+# Einladungslinks /tippen?liga=CODE behalten den Query-String (200-Rewrite).
+[[redirects]]
+  from = "/tippen"
+  to = "/tippen.html"
+  status = 200
+
+[[redirects]]
+  from = "/tippen/"
+  to = "/tippen.html"
+  status = 200
+
+# v20-T: Teilnahmebedingungen der Tipp-Liga (statisch wie Impressum/Datenschutz)
+[[redirects]]
+  from = "/teilnahmebedingungen"
+  to = "/teilnahmebedingungen.html"
+  status = 200
+
 # v18-A: Kalender-Abo → Supabase Edge Function `kalender` (Proxy, Adresse
 # bleibt /kalender.ics → später https://aga-erste.de/kalender.ics).
 # Query-Strings (?spiel=…, ?anstoss=…) reicht Netlify beim Proxy durch.
@@ -134,6 +152,14 @@
 [[redirects]]
   from = "/bande"
   to = "/partner?utm_source=instagram&utm_medium=bio"
+  status = 302
+  force = true
+
+# v20-T: Kurz-Link für die Freitags-/Samstags-Story („Jetzt tippen“, Link-Sticker)
+#   /tipp → Tipp-Liga (Story)   ·   /tippen?utm_… geht natürlich auch direkt
+[[redirects]]
+  from = "/tipp"
+  to = "/tippen?utm_source=instagram&utm_medium=story"
   status = 302
   force = true
 
@@ -303,6 +329,14 @@
   [headers.values]
     Cache-Control = "public, max-age=0, must-revalidate"
 [[headers]]
+  for = "/tippen"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+[[headers]]
+  for = "/teilnahmebedingungen"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+[[headers]]
   for = "/impressum"
   [headers.values]
     Cache-Control = "public, max-age=0, must-revalidate"
@@ -341,6 +375,11 @@
 
 [[headers]]
   for = "/galerie.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/tippen.html"
   [headers.values]
     Cache-Control = "public, max-age=0, must-revalidate"
 

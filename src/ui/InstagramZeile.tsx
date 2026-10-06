@@ -13,7 +13,7 @@ import './instagram-zeile.css'
 // stellt die Zählung auch ohne den globalen Listener sicher.
 // ─────────────────────────────────────────────────────────────
 
-export const IG_STANDARD = '@svagathenburg folgen – Wochenplan, MOTM, Gewinnspiele.'
+export const IG_STANDARD = '@svagathenburg folgen – Wochenplan, MOTM, Tipp-Sieger, Gewinnspiele.'
 
 export function InstagramZeile({ text = IG_STANDARD, className }: { text?: string; className?: string }) {
   return (

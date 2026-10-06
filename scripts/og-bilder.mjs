@@ -72,4 +72,12 @@ await bauen(
   'Countdown, Aufstellung und Liveticker — Spieltag für Spieltag.',
   'public/og/live.jpg',
 )
+// v20-T: Tipp-Liga /tippen
+await bauen(
+  'public/fans/meister.webp',
+  'SVA Tipp-Liga · kostenlos',
+  ['Tippst du', 'besser?'],
+  'Ergebnis, Bonusfragen, deine Elf — in 20 Sekunden getippt.',
+  'public/og/tippen.jpg',
+)
 console.log('fertig.')
