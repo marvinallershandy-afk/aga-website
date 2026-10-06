@@ -1,4 +1,4 @@
-# SVA-Sammelkarten (v20-K · v22-A)
+# SVA-Sammelkarten (v20-K · v22-A · v24-P)
 
 Ein Kartensystem für alles: das Sammelalbum (`/album`), die Spielerkarten der Website (Galerie,
 Modal, 3D-Rundgang, Story-Teilen), Instagram-Content und — über einen eigenen Adapter — die
@@ -262,6 +262,12 @@ Partner sind bewusst Bronze: so kleben sie früh im Album, und der Sponsor ist s
 
 ### Kartenquellen und Packgrößen
 
+> **v24-P:** Tipp, Check-in, Heimsieg, Starter, Kapitel und Event-Codes ziehen jetzt nach
+> **Pack-Typ** (`sva_album_pack_typen`, Abschnitt „v24-P: Pack-Typen“ unten). Die Spalten
+> `karten_tipp`, `karten_heimsieg`, `karten_starter`, `starter_min_silber`, `karten_kapitel` gelten
+> nur noch als Rückfall; `karten_pro_pack` nur für Packs ohne Typ (Geschenk). Die Tabelle hier ist
+> der Stand v20.
+
 | Quelle | Pack-Art | Karten (Einstellung) | Hinweis |
 |---|---|---|---|
 | Starter (einmalig) | `starter` | 5 (`karten_starter`) | mind. 1 × Silber oder besser (`starter_min_silber`); Client ruft `album_starter_holen()` nach dem Profil |
@@ -362,6 +368,9 @@ bleibt bei 70 / 22 / 7 / 1.
   `service_role` ausführen.
 
 ### Beispielrechnung je Persona (`node scripts/karten-simulation.mjs`)
+
+> Stand v20 (heute: `ALT=1 node scripts/karten-simulation.mjs`). Die aktuelle v24-Rechnung steht
+> unten im Abschnitt „v24-P: Pack-Typen“.
 
 10 000 Läufe je Persona, Restsaison ab 06.10.2026: 17 Spieltage, 8 Heimspiele, Winterpause Dezember
 bis Februar, Adventskalender im Dezember, Story-Codes etwa 1× pro Woche (nicht im Dezember),
@@ -543,3 +552,108 @@ zusätzlich das Fragezeichen im Kopf. Gemerkt in `localStorage['sva-album-einfue
 - WebKit-Fix: Safari zeichnete die abgewandte Kartenseite trotz `backface-visibility` (gespiegelter Kartenrücken über
   der Vorderseite nach dem Aufdecken bzw. in Detail/Labor). Jetzt blenden Karte und Pack-Bühne die abgewandte Seite
   zur Mitte der Drehung aus (`karten.css`, `pack.css`).
+
+## v24-P: Pack-Typen, Wochen-Slot, Pack-Kontrolle
+
+Migration `supabase/migrations/20261017100000_sva_album_packs_v24.sql` (additiv, idempotent; Besitz und Packs der
+Fans bleiben unverändert — alte ungeöffnete Packs bekommen ihren Typ nur in der Anzeige). Tests:
+`supabase/tests/packs_v24.test.mjs` (70 Prüfungen) und `supabase/tests/packs_last.test.mjs` (50 Fans, siehe unten).
+Simulation: `node scripts/karten-simulation.mjs` (v24; `ALT=1` = Vergleich mit v20).
+
+### Pack-Typen (`sva_album_pack_typen`, Admin → Album → Regeln → „Pack-Typen“)
+
+| Typ | Quelle | Karten | Garantie | Wochen-Slot | Optik · Reveal |
+|---|---|---|---|---|---|
+| Tipp-Pack | erster Tipp eines Spieltags (`tipp_abgeben`) | 2 | – | 8 % | klein (rot) · 1 ruhig |
+| Spieltags-Pack | Check-in am Platz | 4 | mind. 1 Silber | 30 % | groß (Anthrazit, Silberband) · 2 |
+| Sieg-Pack | Heimsieg — **alle, die getippt ODER eingecheckt haben** | 2 | mind. 1 Gold | 30 % | Goldfolie · 3 groß |
+| Starter-Pack | einmal zur Anmeldung | 5 | mind. 1 Silber | 0 % | weiß/rot · 2 |
+| Ziel-Pack | Kapitel komplett (Ziele behalten ihre eigene Kartenzahl/Garantie) | 1 | – | 0 % | schwarz/gold · 2 |
+| Event-Pack | Event-Codes (Admin → Codes → „Event-Pack“, z. B. Derby- oder MOTM-Woche) und Check-in beim Derby (Größe/Garantie wie Spieltag) | 3 | – | 60 % | Holo · 3 groß |
+
+Alle Werte sind einstellbar (Karten 0 = Typ aus, Garantie, Wochen-Slot %, Optik, Reveal 1–3, Smart-Pack je Typ).
+Ziehung `sva_album_pack_ziehen_v24`: Smart-Karte zuerst (fehlende Album-Karte), dann nach Gewicht 70/22/7/1,
+Garantie ersetzt die letzte Karte. **Smart-Pack nur noch in Packs ab `smart_ab_karten` = 2 Karten**: Story-, Advent-
+und Freund-Einzelkarten sind reine Zufallskarten (das hält die Ökonomie trotz größerer Packs im Ziel).
+
+**Wochen-Slot (limitierte Wochenkarten):** Spieler des Spiels (Ziehfenster Mo–So) und die Derby-Karte des Spiels
+kommen **nicht mehr über die normale Spezial-Ziehung**, sondern nur über den Slot: Jedes Pack würfelt beim Erzeugen
+**einmal** (nicht je Karte) mit der Chance seines Typs; bei Treffer ersetzt die Wochenkarte die letzte Karte — nur,
+wenn der Fan sie noch nicht hat (Besitz oder ungeöffnetes Pack). Je Fan kommt sie also höchstens einmal.
+Event-Codes können ihre Event-Karte vorgeben (`karte_id`, dann mit der Event-Chance statt fest).
+
+**Sieg-Pack:** beim Eintragen des Heimsieg-Ergebnisses (Trigger auf `sm_spiele`) und noch einmal bei der Wertung der
+Tipp-Liga (`sva_tipp_spieltage.gewertet_at`) — je Fan und Spiel genau eins (Unique-Index Fan+Spiel+Art). Es liegt
+bereit, auch wenn der Fan erst Tage später online kommt; Packs verfallen nicht.
+
+**Ökonomie** (mehr Karten je Pack → per Simulation kalibriert): `doppelte_bremse` 25 → 5 %, `wunsch_kosten` 3 → 5,
+`smart_ab_karten` = 2, Wochen-Slot 8/30/30/60 %. Die bestehende Zeile wird nur angepasst, wenn sie noch auf den alten
+Standardwerten steht.
+
+### Rechnung v24 (10 000 Läufe je Persona, sonst wie oben)
+
+| Persona | Ø Karten | Ø Album % | Median | P10 | P90 | komplett | Ø fertig | Ø Doppelte | Ø Lose |
+|---|---|---|---|---|---|---|---|---|---|
+| Gelegenheits-Follower | 41,3 | 58,3 | 59,1 | 40,9 | 75,0 | 0,0 % | – | 8,9 | 5,0 |
+| Typischer Follower | 50,5 | 67,4 | 68,2 | 50,0 | 84,1 | 0,5 % | Mai | 12,7 | 6,8 |
+| Stammfan | 98,6 | 99,5 | 100 | 100 | 100 | 93,5 % | April | 21,4 | 22,3 |
+
+v20 zum Vergleich (`ALT=1`): 31,2 / 38,4 / 75,4 Karten → 58,3 / 67,9 / 98,9 % Album, Stammfan zu 89,6 % im April fertig.
+Ohne `smart_ab_karten` (alle Packs smart) lägen Gelegenheit/typisch bei 70 / 80 % und Stammfans schon im März fertig.
+
+**MOTM-Karte der Woche** (Anteil der Fans, die sie in ihrer Woche bekommen): tippt + checkt ein **48,9 %** (mit
+Heimsieg 56,3 %), nur Check-in 44,0 %, **nur Tipp 15,3 %** (ohne Sieg-Pack 11,8 %), inaktiv 2,3 %.
+
+**Ziehwahrscheinlichkeiten je Pack** (Fan mit halbem Album, MOTM der Woche ziehbar und noch nicht im Besitz;
+Gold+ zählt Gold und Spezial, also auch die MOTM-Karte; Shiny 1 : 250 je Spieler-/Trainerkarte):
+
+| Pack | Karten | 1. Karte neu | ≥ 1 Silber+ | ≥ 1 Gold+ | Gold+ je Karte | ≥ 1 Spezial | MOTM der Woche | ≥ 1 Shiny |
+|---|---|---|---|---|---|---|---|---|
+| Tipp-Pack | 2 | 100 % | 54,0 % | 22,0 % | 11,6 % | 9,4 % | 7,8 % | 0,6 % |
+| Spieltags-Pack | 4 | 100 % | 100 % | 54,1 % | 15,9 % | 33,0 % | 30,0 % | 1,0 % |
+| Sieg-Pack | 2 | 100 % | 100 % | 100 % | 51,4 % | 38,6 % | 29,6 % | 0,4 % |
+| Starter-Pack | 5 | 100 % | 100 % | 38,9 % | 9,0 % | 5,3 % | 0 % | 1,4 % |
+| Ziel-Pack | 1 | 42,4 % (nicht smart) | 30,1 % | 8,1 % | 8,1 % | 1,0 % | 0 % | 0,3 % |
+| Event-Pack | 3 | 100 % | 86,4 % | 69,4 % | 26,7 % | 61,6 % | 60,4 % | 0,6 % |
+
+### Pack-Kontrolle (Admin → Album → Woche, auch unter Regeln)
+
+`sva_admin_pack_kontrolle()` rechnet je Anlass der laufenden Saison **Soll** (wem ein Pack zusteht) gegen **Ist**:
+`spiel:<id>:tipp` (Tipper mit Album-Profil), `spiel:<id>:checkin`, `spiel:<id>:sieg` (Heimsieg: Tipper ∪
+Eingecheckte), `starter` (Profile älter als 10 min), `ziel:<id>` (erreichte Ziele mit Karten). Die Karte zeigt
+„alles zugestellt ✓“ bzw. „n Packs fehlen“ mit Namen; `album_admin_pack_nachliefern('alle' | anlass)` stellt nur die
+fehlenden zu — idempotent über dieselben Unique-Schlüssel (Fan+Spiel+Art bzw. Fan+Art+Quelle), ein zweiter Klick
+liefert nichts doppelt.
+
+`supabase/tests/packs_last.test.mjs`: 50 Fans holen den Starter (teils doppelt), 40 tippen (15 schicken denselben Tipp
+zweimal, 10 ändern ihn), 30 checken ein (10 versuchen es doppelt), der Heimsieg wird eingetragen, korrigiert,
+nochmal ausgelöst und gewertet, 20 lösen einen Event-Code zweimal ein, 25 öffnen alle Packs (Meilensteine, Kapitel,
+„Exakt getippt“). Geprüft wird exakt je Fan: genau 1 Starter-, Tipp-, Spieltags-, Sieg-, Event-Pack, genau 1
+Ziel-Pack je erreichtem Ziel, kein Doppel je Fan+Anlass, MOTM-Karte je Fan höchstens einmal, Kontrolle „alles
+zugestellt“ (Soll 256 = Ist 256); dann 4 Packs „verloren“ → Kontrolle meldet sie, Nachliefern stellt genau 4 zu,
+der zweite Lauf 0.
+
+### Tipp → Album (Bug-Fix v24-P)
+
+Befund: Nach dem Tipp führte „Ins Album“ ins Album, aber dort passierte nichts — und in der Vorführung war der Tipp
+danach weg. Ursache: (1) Vorführung — Tipp-Stand und Album lebten nur im Speicher der jeweiligen Seite; `/tippen`
+und `/album` sind eigene Seiten, der Wechsel verwarf beides. (2) Echtbetrieb — der Tipp war gespeichert, aber das
+Album landete auf dem geschlossenen Heft, das gutgeschriebene Pack öffnete nicht.
+
+Jetzt: `tipp_abgeben` liefert `packId` + `pack {id, typ, titel, karten}`; die Belohnung zeigt „Tipp-Pack · 2 Karten“,
+der Knopf „Tipp-Pack öffnen“ wartet auf die bestätigte Abgabe (inkl. Elf) und springt zu `/album?oeffnen=<packId>`
+(ohne ID: `/album#tuetchen` = alle wartenden). Das Album öffnet genau dieses Pack, sobald Profil und Katalog geladen
+sind (notfalls nach einmaligem Nachladen) und nimmt den Parameter aus der Adresse. Vorführung: Tipp-Stand
+(`sessionStorage['sva-tipp-vf']`), Pack-Übergabe (`sessionStorage['sva-vf-packs']`, `src/album/vorfuehrung/uebergabe.ts`)
+und Album-Stand (`sessionStorage['sva-album-vf']`) überleben den Wechsel; die Album-Vorführung zieht das übergebene
+Pack nach Pack-Typ. Beide Steuerleisten haben Knöpfe für alle Pack-Typen („Packs“ in der Tipp-Liga öffnet das Pack
+direkt im Album).
+
+### Prüfen (v24-P)
+
+- `BASE=… node scripts/tippen-pack-ablauf-test.mjs` (Chromium; `ENG=webkit`) — Vorführung + Echtbetrieb (gemockt) +
+  „Weiter“, Handy 390×844 und Desktop. `SHOTS=shots-v24-packs/ablauf VIDEO=1` für Bilder/Videos.
+- `node scripts/packs-v24-shots.mjs` (`ENG=webkit`, `VIEW=d`, `VIDEO=1`) — jedes Pack-Typ-Reveal als Frames + Frametimes.
+  Chromium (Metal-GPU, Handy): p95 16,9–17,7 ms (60 fps). WebKit headless läuft ohne GPU: p95 22–26 ms, das alte
+  Pack auf demselben Stand 21 ms.
+- `node scripts/packs-v24-admin-shots.mjs` — Admin „Pack-Typen“ und „Pack-Kontrolle“ (gemockt, `?preview`).

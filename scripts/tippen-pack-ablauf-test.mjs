@@ -92,6 +92,7 @@ for (const [v, view] of [['m', M], ['d', D]]) {
     await tippen(page)
     const text = (await page.locator('.tp-belohnung').textContent()) ?? ''
     log(/Tipp-Pack/.test(text) && /2 Karten/.test(text), `A1-${v} Vorführung: Belohnung „Tipp-Pack · 2 Karten“`)
+    if (SHOTS) await page.waitForTimeout(1400) // Einblenden + Tütchen-Dreh abwarten
     await bild(page, `a-belohnung-vf-${v}`)
     await albumKnopf(page).click()
     await page.waitForURL(/\/album\?/, { timeout: 8000 })
@@ -191,6 +192,7 @@ for (const [v, view] of [['m', M], ['d', D]]) {
     await tippen(page)
     const text = (await page.locator('.tp-belohnung').textContent()) ?? ''
     log(spur.abgabe === 1 && /Tipp-Pack/.test(text) && /2 Karten/.test(text), `B1-${v} Echt: Belohnung erst nach Server-Antwort, „Tipp-Pack · 2 Karten“`)
+    if (SHOTS) await page.waitForTimeout(1400) // Einblenden + Tütchen-Dreh abwarten
     await bild(page, `a-belohnung-echt-${v}`)
     await albumKnopf(page).click()
     await page.waitForURL(/\/album/, { timeout: 8000 })
