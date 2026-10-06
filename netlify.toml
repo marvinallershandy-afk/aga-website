@@ -286,6 +286,14 @@
   status = 200
   force = true
 
+# v25-C5: öffentlicher Live-Endpunkt mit CDN-Cache (web_live über Anon-Key) –
+# vor dem 404-Catch-all, sonst greift die Funktions-Route /api/live nicht.
+[[redirects]]
+  from = "/api/live"
+  to = "/.netlify/functions/live"
+  status = 200
+  force = true
+
 [[redirects]]
   from = "/*"
   to = "/404.html"
