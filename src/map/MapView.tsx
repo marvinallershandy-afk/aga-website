@@ -8,9 +8,10 @@ import { openPlace, closePlace, startTour } from './nav'
 import { PlaceIcon } from './MarkerIcons'
 import { useMatchStatus, heimspielFenster } from './matchStatus'
 import { PLACE_SEO } from './panelText'
-import { ArrowRight, Map as MapIcon } from 'lucide-react'
+import { ArrowRight, Map as MapIcon, Target } from 'lucide-react'
 import { useMapScrollToTour } from './intro'
 import { AlbumTeaser } from '../ui/AlbumTeaser'
+import { TippTeaser } from '../ui/TippTeaser'
 import { InstagramZeile } from '../ui/InstagramZeile'
 import { HeimspielHinweis } from '../ui/HeimspielHinweis'
 // map.css kommt direkt aus index.html (vor dem JS verfügbar, s. dort)
@@ -173,6 +174,11 @@ function MapDock() {
         <PlaceIcon id="spieltag" size={18} />
         Live
       </button>
+      {/* v21-UX (Befund 1): Tipp-Liga als vierter Einstieg in der Daumenzone */}
+      <a className="kdock__btn" href="/tippen">
+        <Target size={18} strokeWidth={1.5} aria-hidden="true" />
+        Tippen
+      </a>
       <button className="kdock__btn kdock__btn--cta" data-active={place === 'training'} onClick={() => openPlace('training')}>
         <PlaceIcon id="training" size={18} />
         Mitspielen
@@ -266,10 +272,14 @@ export function MapView() {
       </p>
       <MapLoader />
       <MapDock />
-      {/* v19-K: Heimspiel-Hinweis ab 72 h (verdrängt den Album-Teaser-Slot) */}
+      {/* v19-K: Heimspiel-Hinweis ab 72 h (rechts, verdrängt mobil den Teaser-Stapel) */}
       {heimKickoff && <HeimspielHinweis kickoff={heimKickoff} />}
-      {/* v18-P: ruhiger Einstieg ins Sammelalbum (nach dem Intro sichtbar) */}
-      <AlbumTeaser variante="karte" />
+      {/* v21-UX (Befund 1) + v18-P: Einstiege Tipp-Liga + Sammelalbum, gestapelt
+          unten links, gleicher Stil, ohne Überlappung. */}
+      <div className="kmap__ecke">
+        <TippTeaser />
+        <AlbumTeaser variante="karte" />
+      </div>
       <footer className="kmap__foot">
         <InstagramZeile className="ig-zeile--karte" />
         <span className="kmap__foot-links">

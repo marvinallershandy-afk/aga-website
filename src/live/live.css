@@ -52,6 +52,13 @@ img { display: block; }
   flex: 1;
   font-size: .66rem; font-weight: 800; letter-spacing: .24em; text-transform: uppercase; color: var(--mut);
 }
+.lv-top__pill {
+  display: inline-flex; align-items: center; min-height: 32px; padding: 0 12px; border-radius: 4px;
+  border: 1px solid var(--line); text-decoration: none; color: var(--fg, #f4f2ef);
+  font-size: .66rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase;
+  -webkit-tap-highlight-color: transparent;
+}
+.lv-top__pill:hover { border-color: rgba(255,255,255,.4); }
 .lv-iconbtn {
   display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%;
   background: rgba(255,255,255,.06); border: 1px solid var(--line); cursor: pointer;
@@ -371,3 +378,6 @@ a.lv-partner:hover .lv-partner__label { color: var(--fg); }
 .lv-album span { flex: 1; display: grid; gap: 3px; min-width: 0; }
 .lv-album b { font-family: var(--font-display); font-weight: 400; font-size: 1.05rem; text-transform: uppercase; letter-spacing: .02em; }
 .lv-album small { font-size: .8rem; line-height: 1.4; color: var(--mut); }
+
+/* v22-T: Platz für die Live-Leiste (src/ui/tor) am unteren Rand */
+.lv--live { padding-bottom: calc(84px + env(safe-area-inset-bottom)); }

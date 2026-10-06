@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { AnimatePresence, LayoutGroup, motion } from 'framer-motion'
 import { ArrowDown, ArrowUp, Radio, Repeat2 } from 'lucide-react'
 import type { KaderSpieler, LiveEreignis, LiveHochrechnung, RangEintrag, TippSpiel } from './api'
-import { BONUS, bonusLabel, haptik, kuerzel, nachname } from './model'
+import { BONUS, bonusLabel, nachname } from './model'
 import { bonusStand, hochrechnen } from './punkte'
 import { SpieltagKarte } from './SpieltagKarte'
 import { ElfReihe } from './DeineElf'
@@ -37,27 +37,8 @@ export function LiveBlock({ spiel, kader }: { spiel: TippSpiel; kader: Map<strin
   )
   const minute = live ? minuteText(live.minute, live.nachspielzeit) : undefined
 
-  // „TOR!“-Einblendung bei neuem Treffer (nur wenn sich der Stand ändert)
-  const [tor, setTor] = useState<null | { sva: boolean; text: string; n: number }>(null)
-  const alt = useRef<string>(`${s0}:${s1}`)
-  const ereignisse = live?.ereignisse
-  useEffect(() => {
-    const neu = `${s0}:${s1}`
-    if (neu === alt.current) return
-    const [a0, b0] = alt.current.split(':').map(Number)
-    alt.current = neu
-    const sva = s0 > a0
-    if (!sva && s1 <= b0) return
-    const e = [...(ereignisse ?? [])].reverse().find((x) => x.typ === 'tor' || x.typ === 'gegentor')
-    setTor({ sva, text: sva ? (e?.spieler ? nachname(kader.get(e.spieler)?.name ?? '') : 'SVA') : 'Gegentor', n: s0 + s1 })
-    haptik(sva ? [20, 60, 20, 60, 40] : 30)
-  }, [s0, s1, ereignisse, kader])
-  // eigener Zeitgeber: blendet sicher wieder aus (auch wenn die Seite jede Sekunde neu zeichnet)
-  useEffect(() => {
-    if (!tor) return
-    const t = window.setTimeout(() => setTor(null), 2200)
-    return () => window.clearTimeout(t)
-  }, [tor])
+  // v22-T: die TOR!-Einblendung kommt jetzt über allem aus TippApp
+  // (src/ui/tor/TorJubel — gemeinsam mit /live), nicht mehr hier im Kasten.
 
   const elfPunkte = useMemo(() => new Map((ich?.elfSpieler ?? []).map((e) => [e.id, e.p])), [ich])
 
@@ -71,26 +52,11 @@ export function LiveBlock({ spiel, kader }: { spiel: TippSpiel; kader: Map<strin
             </a>
           )}
         </SpieltagKarte>
-        <AnimatePresence>
-          {tor && (
-            <motion.div
-              className={`tp-torbanner${tor.sva ? '' : ' is-gegner'}`}
-              initial={{ opacity: 0, scaleX: 0.6 }}
-              animate={{ opacity: 1, scaleX: 1 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.36, ease: [0.22, 1, 0.36, 1] }}
-              role="status"
-            >
-              <b>{tor.sva ? 'Tor!' : 'Gegentor'}</b>
-              <span>{tor.sva ? tor.text : `${kuerzel(spiel.gegner)} trifft`}</span>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
 
       {ich && (
         <section className="tp-abschnitt tp-livepunkte" aria-labelledby="tp-h-livep">
-          <Kapitel id="tp-h-livep" titel="Deine Punkte · live" meta={ende ? 'vorläufig bis zum Spielbericht' : 'Hochrechnung, Stand jetzt'} />
+          <Kapitel id="tp-h-livep" titel={ende ? 'Deine Punkte · vorläufig' : 'Deine Punkte · live'} meta={ende ? 'vorläufig bis zum Spielbericht' : 'Hochrechnung, Stand jetzt'} />
           <div className="tp-livepunkte__kopf">
             <b className="tp-livepunkte__zahl" aria-live="polite">
               <Zaehler wert={ich.gesamt} dauer={0.9} start={false} />
@@ -148,23 +114,28 @@ export function LiveBlock({ spiel, kader }: { spiel: TippSpiel; kader: Map<strin
 
 function BonusLive({ spiel, ereignisse, minute, ende }: { spiel: TippSpiel; ereignisse: LiveEreignis[]; minute: number; ende: boolean }) {
   const b = bonusStand(ereignisse, minute, ende)
+  const offen = !ende && spiel.fragen.some((f) => !b[f.key]?.fest)
   return (
-    <ul className="tp-bonuslive">
-      {spiel.fragen.map((f) => {
-        const s = b[f.key]
-        const mein = spiel.meinTipp?.bonus?.[f.key]
-        const richtig = !!s && mein === s.wert
-        return (
-          <li key={f.key} className={`${richtig ? 'is-richtig' : 'is-falsch'}${s?.fest ? ' is-fest' : ''}`}>
-            <span>{BONUS[f.key].kurz}</span>
-            <small>
-              Du: {bonusLabel(f.key, mein)} · jetzt: {s ? bonusLabel(f.key, s.wert) : '–'}
-            </small>
-            <i>{s?.fest ? (richtig ? '+1' : '0') : richtig ? '+1?' : '0?'}</i>
-          </li>
-        )
-      })}
-    </ul>
+    <>
+      <ul className="tp-bonuslive">
+        {spiel.fragen.map((f) => {
+          const s = b[f.key]
+          const mein = spiel.meinTipp?.bonus?.[f.key]
+          const richtig = !!s && mein === s.wert
+          return (
+            <li key={f.key} className={`${richtig ? 'is-richtig' : 'is-falsch'}${s?.fest ? ' is-fest' : ''}`}>
+              <span>{BONUS[f.key].kurz}</span>
+              <small>
+                Du: {bonusLabel(f.key, mein)} · jetzt: {s ? bonusLabel(f.key, s.wert) : '–'}
+              </small>
+              <i>{s?.fest ? (richtig ? '+1' : '0') : richtig ? '+1?' : '0?'}</i>
+            </li>
+          )
+        })}
+      </ul>
+      {/* v21-UX (Befund 7): Mikro-Legende für die „?“-Punkte */}
+      {offen && <p className="tp-bonuslive__legende">? = läuft noch, zählt erst bei Abpfiff</p>}
+    </>
   )
 }
 

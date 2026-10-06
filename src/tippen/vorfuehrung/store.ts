@@ -32,7 +32,15 @@ export interface SimZustand {
   ligen: { id: string; name: string; code: string }[]
   /** zählt jeden Phasenwechsel (Ansichten neu aufbauen) */
   runde: number
+  /** v22-T: Abpfiff — false = „Wertung folgt“ (Spielbericht fehlt noch), true = gewertet */
+  gewertet: boolean
+  /** v22-T: Tipp/Elf fürs nächste Spiel (SG Lühe), nach der Wertung */
+  naechsterTipp?: MeinTipp
+  naechsteElf?: MeineElf
 }
+
+/** Wie lange die Vorführung nach dem Abpfiff „Wertung folgt“ zeigt (ms). */
+export const WERTUNG_NACH_MS = 6000
 
 function startPhase(): Phase {
   try {
@@ -62,6 +70,14 @@ let z: SimZustand = {
   t0: Date.now(),
   ligen: [],
   runde: 0,
+  // Direkt-Link &phase=abpfiff zeigt die Auflösung; &wertung=folgt den Zwischenstand
+  gewertet: (() => {
+    try {
+      return new URLSearchParams(window.location.search).get('wertung') !== 'folgt'
+    } catch {
+      return true
+    }
+  })(),
 }
 if (z.phase === 'live') z.laeuft = z.minute < ENDE_MINUTE && !new URLSearchParams(window.location.search).has('minute')
 
@@ -82,8 +98,18 @@ export function simSetzen(teil: Partial<SimZustand>) {
   melden()
 }
 
+let wertungTimer = 0
+/** v22-T: Spielbericht „eintragen“ → Auflösung, nächstes Spiel öffnet. */
+export function wertungAusloesen() {
+  window.clearTimeout(wertungTimer)
+  if (z.phase !== 'abpfiff' || z.gewertet) return
+  simSetzen({ gewertet: true, runde: z.runde + 1 })
+}
+
 export function phaseSetzen(p: Phase) {
-  const teil: Partial<SimZustand> = { phase: p, runde: z.runde + 1 }
+  const teil: Partial<SimZustand> = { phase: p, runde: z.runde + 1, gewertet: p !== 'abpfiff' ? true : false }
+  window.clearTimeout(wertungTimer)
+  if (p === 'abpfiff') wertungTimer = window.setTimeout(wertungAusloesen, WERTUNG_NACH_MS)
   if (p === 'live') {
     teil.minute = z.phase === 'live' ? z.minute : 0
     teil.laeuft = true

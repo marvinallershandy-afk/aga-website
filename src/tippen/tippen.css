@@ -1010,3 +1010,111 @@ img { display: block; max-width: 100%; }
 
 /* Druckzustände für die übrigen Bedienelemente */
 .tp-link:active, .tp-mini-seg button:active, .tp-segment button:active, .tp-abz__teilen:active, .tp-fuss__hilfe:active { transform: scale(.96); }
+
+/* ═══════════════ v21-UX (UX_PRUEFUNG_V21) ═══════════════ */
+
+/* Befund 5: keine blaue Tap-Selektion / kein Tap-Highlight auf Bedienflächen */
+.tp-bonusliste button, .tp-bonusliste__frage, .tp-chip, .tp-abgabe__status li,
+.tp-rund, .tp-tabs a, .tp-slot__leer, .tp-slot__pos, .tp-binde-knopf,
+.tp-steuer__phasen button, .tp-segment button, .tp-mini-seg button, .tp-option,
+.tp-stepper__label, .tp-stepper__dp, .tp-stepper__zahl {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Befund 2/3: neutraler Ergebnis-Zustand „– : –“ */
+.tp-stepper__zahl.is-neutral b { position: static; display: block; width: 56px; height: 10px; border-radius: 2px; background: var(--c-text-3); opacity: .55; font-size: 0; }
+
+/* Befund 8: welches Spiel wird getippt — zweite Zeile im Abgabe-Knopf */
+.tp-abgabe__los { flex-direction: column; gap: 3px; }
+.tp-abgabe__fuer { font: 700 .5625rem/1.1 var(--f-body); font-stretch: 112%; letter-spacing: .12em; text-transform: uppercase; opacity: .78; }
+.tp-abgabe__ok small { display: block; margin-top: 2px; font: 700 .5625rem/1.1 var(--f-body); letter-spacing: .1em; text-transform: uppercase; color: var(--c-text-3); }
+.tp-abgabe__status li.is-offen { border-style: dashed; }
+
+/* v22-T: Rückfrage „Was fehlt noch?“ */
+.tp-abgabe__frage p { margin: 0 0 var(--s-2); font-size: var(--t-small); color: var(--c-text-2); }
+.tp-abgabe__frage b { color: var(--c-white); }
+.tp-abgabe__frage small { display: block; margin-top: 2px; font-size: var(--t-micro); color: var(--c-text-3); }
+
+/* Befund 10/11: Fußnoten am Ort des Geschehens */
+.tp-fussnote { margin-top: var(--s-3); font-size: var(--t-micro); letter-spacing: .02em; color: var(--c-text-3); }
+
+/* Befund 7: Legende der „?“-Live-Punkte */
+.tp-bonuslive__legende { margin-top: var(--s-2); font-size: var(--t-micro); color: var(--c-text-3); }
+
+/* Vorschlag-Elf übernehmen (Requirement 7) */
+.tp-elf__vorschlag { display: grid; gap: 6px; }
+.tp-elf__vorschlag small { font-size: var(--t-micro); line-height: 1.4; color: var(--c-text-3); }
+
+/* Requirement 7: Vorschau des eigenen Ranglisten-Eintrags (Opt-in greifbar machen) */
+.tp-vorschau { margin-top: var(--s-2); padding: var(--s-3); border: 1px dashed var(--c-line-strong); border-radius: var(--r-l); }
+.tp-vorschau.is-an { border-style: solid; }
+.tp-vorschau__label { display: block; font-size: var(--t-micro); color: var(--c-text-3); margin-bottom: 6px; }
+.tp-vorschau__zeile { display: flex; align-items: center; gap: var(--s-2); }
+.tp-vorschau__zeile b { font-weight: 800; font-size: var(--t-small); }
+.tp-vorschau__zeile small { margin-left: auto; font-size: var(--t-micro); color: var(--c-text-3); }
+.tp-vorschau__platz { font-family: var(--f-display); color: var(--c-text-3); min-width: 1.6ch; }
+.tp-vorschau:not(.is-an) .tp-vorschau__zeile { opacity: .6; }
+
+/* Befund 12: Teilen-Rückmeldung (Download-Fallback, Desktop) */
+.tp-toast {
+  position: fixed; left: 50%; bottom: calc(80px + env(safe-area-inset-bottom)); transform: translate(-50%, 12px); z-index: 90;
+  max-width: min(92vw, 420px); padding: var(--s-3) var(--s-4); border-radius: var(--r-l);
+  background: var(--c-ink-2); border: 1px solid var(--c-line-strong); color: var(--c-white);
+  font-size: var(--t-small); box-shadow: var(--shadow-float); opacity: 0; pointer-events: none;
+  transition: opacity var(--d-2) var(--ease), transform var(--d-2) var(--ease);
+}
+.tp-toast.is-da { opacity: 1; transform: translate(-50%, 0); }
+@media (min-width: 1024px) { .tp-toast { bottom: var(--s-6); } }
+
+/* Befund 6: Steuerleiste der Vorführung klappt beim Scrollen ein (mobil) */
+@media (max-width: 1023px) {
+  .tp-steuer.is-kompakt .tp-steuer__kopf { display: none; }
+  .tp-steuer.is-kompakt { padding-top: var(--s-2); padding-bottom: var(--s-2); }
+}
+
+/* Befund 4 (v22-T): Fußstapel mobil ≤ 20 % der Höhe — eine Chip-Zeile +
+   Abgabe-Knopf (Kontext steht IM Knopf). 844 px: Abgabe ~92 + Tabs ~65 px. */
+@media (max-width: 1023px) {
+  .tp-abgabe { padding: 8px var(--s-4); box-shadow: 0 -12px 20px rgba(11, 10, 11, .9); }
+  .tp-abgabe__status { flex-wrap: nowrap; overflow: hidden; gap: 4px; margin-bottom: 6px; }
+  .tp-abgabe__status li { flex: none; padding: 3px 6px; }
+  .tp-abgabe .tp-btn--gross { min-height: 50px; }
+  .tp-abgabe__lang { display: none; }
+  /* Inhalt lässt sich über den Sticky-Stapel hinaus scrollen; Sprünge landen darüber */
+  .tp-offen, .tp-gesperrt { padding-bottom: var(--s-6); }
+  .tp-abschnitt, .tp-formular :is(.tp-deck, .tp-frage, .tp-bonusliste, .tp-elf, .tp-stepper, .tp-joker) { scroll-margin-bottom: 190px; }
+}
+
+/* ═══════════════ v22-T ═══════════════ */
+
+/* Ein Fokus: Vorschau des nächsten Spieltags (noch nicht tippbar) */
+.tp-vorschau-spiel {
+  display: flex; align-items: center; gap: var(--s-3); margin-top: var(--s-6); padding: var(--s-3) var(--s-4);
+  border: 1px dashed var(--c-line-strong); border-radius: var(--r-l); color: var(--c-text-2);
+}
+.tp-vorschau-spiel__icon { flex: none; color: var(--c-text-3); }
+.tp-vorschau-spiel__text { display: grid; gap: 2px; min-width: 0; }
+.tp-vorschau-spiel small { font: 800 .5625rem/1.2 var(--f-body); font-stretch: 125%; letter-spacing: .12em; text-transform: uppercase; color: var(--c-text-3); }
+.tp-vorschau-spiel b { font-weight: 800; font-size: .9375rem; color: var(--c-white); }
+.tp-vorschau-spiel span > span { font-size: var(--t-micro); color: var(--c-text-3); }
+
+/* Abpfiff · Wertung folgt */
+.tp-wertungfolgt {
+  display: flex; align-items: center; gap: var(--s-3); margin-bottom: var(--s-4); padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-l); border: 1px solid rgba(232, 193, 90, .45); background: linear-gradient(90deg, rgba(232, 193, 90, .12), rgba(232, 193, 90, .02));
+}
+.tp-wertungfolgt b { display: block; font-weight: 800; font-size: .9375rem; }
+.tp-wertungfolgt small { display: block; margin-top: 2px; font-size: var(--t-micro); line-height: 1.4; color: var(--c-text-2); }
+.tp-wertungfolgt__puls { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--tp-gold); animation: tp-puls 1.4s var(--ease) infinite; }
+@media (min-width: 1024px) { .tp-gesperrt > .tp-wertungfolgt { max-width: 440px; } }
+
+/* Live-Leiste (src/ui/tor): am Handy über der Tab-Leiste, am Desktop unten mittig */
+.tp .ll { --ll-unten: calc(58px + max(env(safe-area-inset-bottom), 6px) + 8px); }
+@media (min-width: 1024px) { .tp .ll { --ll-unten: 16px; } }
+.tp--live { padding-bottom: calc(104px + 68px + env(safe-area-inset-bottom)); }
+@media (min-width: 1024px) { .tp--live { padding-bottom: calc(var(--s-7) + 72px); } }
+.tp-steuer__wertung { flex: 1; display: inline-flex; align-items: center; gap: 8px; font-size: .6875rem; color: var(--c-text-2); }
+.tp-steuer__wertung i { width: 8px; height: 8px; border-radius: 50%; background: var(--tp-gold); animation: tp-puls 1.4s var(--ease) infinite; }
+.tp-steuer__wertung + .tp-steuer__knopf--text { flex: none; padding: 0 var(--s-3); }

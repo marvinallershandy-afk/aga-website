@@ -4,7 +4,7 @@
 // ─────────────────────────────────────────────────────────────
 import type { MeineElf, MeinTipp } from '../api'
 import { TippFehler, fehlerText } from '../api'
-import { duell, lage, ligaTipps, meineLigen, rangliste, verteilung } from './sim'
+import { NAECHSTES_SPIEL_ID, duell, istGewertet, lage, ligaTipps, meineLigen, rangliste, verteilung } from './sim'
 import { simLesen, simSetzen } from './store'
 
 const kurz = () => new Promise((r) => window.setTimeout(r, 90))
@@ -32,9 +32,12 @@ export async function simRpc(fn: string, a: Record<string, unknown>): Promise<un
     case 'tipp_liga_vorschau':
       return String(a.p_code ?? '').toUpperCase() === 'STAMM7' ? { name: 'Stammtisch-Liga', code: 'STAMM7', mitglieder: 6 } : null
     case 'tipp_abgeben': {
-      if (p !== 'vor') throw new TippFehler('tipp_geschlossen', fehlerText('tipp_geschlossen'))
+      // v22-T: ein Fokus — SG Lühe erst nach der Wertung des Fischbek-Spiels
+      const naechstes = a.p_spiel === NAECHSTES_SPIEL_ID
+      if (naechstes && !istGewertet(p)) throw new TippFehler('tipp_noch_nicht_offen', fehlerText('tipp_noch_nicht_offen'))
+      if (!naechstes && p !== 'vor') throw new TippFehler('tipp_geschlossen', fehlerText('tipp_geschlossen'))
       await kurz()
-      const neu = !z.meinTipp
+      const neu = naechstes ? !z.naechsterTipp : !z.meinTipp
       const t: MeinTipp = {
         toreSva: Number(a.p_tore_sva),
         toreGegner: Number(a.p_tore_gegner),
@@ -43,12 +46,12 @@ export async function simRpc(fn: string, a: Record<string, unknown>): Promise<un
         joker: !!a.p_joker,
         bonus: (a.p_bonus as MeinTipp['bonus']) ?? {},
       }
-      simSetzen({ meinTipp: t })
+      simSetzen(naechstes ? { naechsterTipp: t } : { meinTipp: t })
       return { ok: true, neu, karte: neu, abzeichen: [], anzahlTipps: 16 }
     }
     case 'tipp_elf_speichern': {
       const e: MeineElf = { spieler: a.p_spieler as string[], kapitaen: String(a.p_kapitaen), frei: !!a.p_frei }
-      simSetzen({ meineElf: e })
+      simSetzen(a.p_spiel === NAECHSTES_SPIEL_ID ? { naechsteElf: e } : { meineElf: e })
       return { ok: true }
     }
     case 'tipp_liga_gruenden': {

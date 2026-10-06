@@ -253,6 +253,14 @@ await admin(`update sva_tipp_einstellungen set elf_frei = true where id = 1`)
 lage = await rpc(fan1, `select tipp_lage() j`)
 ok(lage.offen.meineElf.kapitaen === ANG1.slug && lage.offen.meineElf.spieler.length === 5, 'Lage: eigene Elf mit Kapitän')
 
+// Anstoß vorbei ohne Ticker → ebenfalls zu
+const SV = await spiel('SV Vergessen', true, `now() + interval '2 days'`)
+await fan4(`select tipp_abgeben($1, 1, 0)`, [SV])
+await db.query(`update sm_spiele set anstoss = now() - interval '1 minute' where id = $1`, [SV])
+await expectErr(fan4(`select tipp_abgeben($1, 2, 0)`, [SV]), 'Anstoßzeit erreicht (ohne Ticker) → geschlossen', /tipp_geschlossen/)
+// v22: ein ungewertetes, angepfiffenes Spiel sperrt die folgenden (ein Fokus) — aufräumen
+await db.query(`delete from sm_spiele where id = $1`, [SV])
+
 // ── 10. Anpfiff: Sperre (RPC + Trigger), RLS danach offen ───────────────────
 await db.query(`update sm_spiele set anstoss = now() + interval '1 hour' where id = $1`, [S1])
 await db.query(`insert into sva_ticker (spiel_id, typ, minute, zeitpunkt) values ($1, 'anpfiff', 1, now() - interval '100 minutes')`, [S1])
@@ -262,18 +270,13 @@ await expectErr(fan1(`select tipp_abgeben($1, 4, 0)`, [S1]), 'nach Anpfiff: Tipp
 await expectErr(fan1(`select tipp_elf_speichern($1, $2, $3, true)`, [S1, elfFan1, MIT1.slug]), 'nach Anpfiff: Elf-RPC abgelehnt', /tipp_geschlossen/)
 await expectErr(db.query(`update sva_tipp_tipps set tore_sva = 5 where spiel_id = $1`, [S1]), 'nach Anpfiff: Trigger sperrt auch direkte Updates (Superuser)', /tipp_geschlossen/)
 await expectErr(db.query(`insert into sva_tipp_tipps (user_id, spiel_id, tore_sva, tore_gegner) values ($1, $2, 1, 1)`, [F4, S1]), 'nach Anpfiff: Trigger sperrt Nachtrag', /tipp_geschlossen|duplicate/)
-// Anstoß vorbei ohne Ticker → ebenfalls zu
-const SV = await spiel('SV Vergessen', true, `now() + interval '2 days'`)
-await fan4(`select tipp_abgeben($1, 1, 0)`, [SV])
-await db.query(`update sm_spiele set anstoss = now() - interval '1 minute' where id = $1`, [SV])
-await expectErr(fan4(`select tipp_abgeben($1, 2, 0)`, [SV]), 'Anstoßzeit erreicht (ohne Ticker) → geschlossen', /tipp_geschlossen/)
 sicht = (await fan2(`select user_id from sva_tipp_tipps where spiel_id = $1`, [S1])).rows
 ok(sicht.length === 4, `RLS nach Anpfiff: alle Tipps des Spiels sichtbar (${sicht.length})`)
 ok((await fan2(`select count(*)::int n from sva_tipp_tipps where spiel_id = $1`, [S2])).rows[0].n === 0, 'RLS: fremde Tipps für noch offenes S2 weiter unsichtbar')
 const vert = await rpc(asAnon, `select tipp_verteilung($1) j`, [S1])
 ok(vert.n === 4 && vert.ergebnisse.length > 0 && vert.tendenz.sieg + vert.tendenz.remis + vert.tendenz.niederlage >= 99, 'Verteilung nach Anpfiff: ' + JSON.stringify(vert.tendenz))
 lage = await rpc(fan1, `select tipp_lage() j`)
-ok(lage.gesperrt && lage.gesperrt.id === S1 && lage.offen.id !== S1, 'Lage: S1 jetzt „gesperrt“, nächstes offenes Spiel rückt nach')
+ok(lage.gesperrt && lage.gesperrt.id === S1 && !lage.offen && lage.naechstes && lage.naechstes.id !== S1, 'Lage: S1 jetzt „gesperrt“, nächstes Spiel nur als Vorschau (v22: ein Fokus bis zur Wertung)')
 
 // ── 11. Spiel mit Ticker: Tore, Karten, Wechsel, Abpfiff ────────────────────
 const tick = (typ, min, minAgo, r1 = null, r2 = null, text = null) =>

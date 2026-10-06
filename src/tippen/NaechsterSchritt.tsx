@@ -31,7 +31,7 @@ function dauer(ms: number): string {
 function schrittFuer(lage: Lage, now: number, angemeldet: boolean): Schritt | null {
   const { offen, gesperrt, gewertet } = lage
   // 1. frische Auflösung, noch nicht angesehen
-  if (gewertet?.meinePunkte && now - new Date(gewertet.anstoss).getTime() < 4 * 86400_000 && !aufloesungGesehen(gewertet.id) && !gesperrt) {
+  if (gewertet?.meinePunkte && now - new Date(gewertet.anstoss).getTime() < 4 * 86400_000 && !aufloesungGesehen(`${gewertet.id}:${gewertet.meinePunkte.gesamt}`) && !gesperrt) {
     return { key: `aufl-${gewertet.id}-${gewertet.motm ?? ''}`, ton: 'gold', icon: Sparkles, stark: `Neue Punkte! +${gewertet.meinePunkte.gesamt}`, text: 'sieh dir die Auflösung an', ziel: 'aufloesung', knopf: 'Ansehen' }
   }
   // 2. Spiel läuft
@@ -49,7 +49,14 @@ function schrittFuer(lage: Lage, now: number, angemeldet: boolean): Schritt | nu
     }
   }
   if (gesperrt && gesperrt.status === 'beendet') {
-    return { key: 'nach', ton: 'ruhig', icon: Clock, stark: 'Abpfiff', text: 'die Auflösung kommt nach dem Spielbericht, meist am selben Abend', ziel: 'live' }
+    return {
+      key: 'nach',
+      ton: 'ruhig',
+      icon: Clock,
+      stark: 'Abpfiff · Wertung folgt',
+      text: lage.naechstes ? `danach öffnet der nächste Spieltag (${lage.naechstes.heim ? 'gegen' : 'bei'} ${lage.naechstes.gegner})` : 'die Auflösung kommt mit dem Spielbericht, meist am selben Abend',
+      ziel: 'live',
+    }
   }
   // 3. Tipp offen
   if (offen?.offen) {

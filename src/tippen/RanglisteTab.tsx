@@ -5,6 +5,7 @@ import { ladeDuell, ladeRangliste, TippFehler, type Duell, type Lage, type RangA
 import { haptik, monatName } from './model'
 import { DuellBalken } from './LiveBlock'
 import { Avatar, Kapitel, Zaehler } from './teile'
+import { PreisTreppe } from './Preise'
 
 // ─────────────────────────────────────────────────────────────
 // v20-T/v21: Ranglisten Spieltag · Monat · Saison (+ Winterwertung).
@@ -120,6 +121,8 @@ export function RanglisteTab({ lage, angemeldet, onAnmelden }: { lage: Lage; ang
             )}
           </ol>
         )}
+        {/* v21-UX (Befund 11): „K“-Plakette am Ort erklären */}
+        {r?.eintraege.some((e) => e.kabine) && <p className="tp-fussnote">K = Kabine (Spieler-Konto) · von Preisen ausgeschlossen</p>}
         {!angemeldet && (
           <p className="tp-hilfe">
             Du willst hier stehen?{' '}
@@ -131,6 +134,8 @@ export function RanglisteTab({ lage, angemeldet, onAnmelden }: { lage: Lage; ang
         {angemeldet && lage.ich?.teilnehmer && !lage.ich.teilnehmer.sichtbar && (
           <p className="tp-hilfe">Du erscheinst öffentlich noch ohne Namen — nur du siehst dich hier. Ändern im Profil.</p>
         )}
+        {/* v22-T: Preise (Saison + Monat), leer = unsichtbar */}
+        {(art === 'saison' || art === 'monat') && <PreisTreppe preise={lage.preise} fokus={art} />}
       </div>
 
       {duell && <DuellKarte duell={duell} />}

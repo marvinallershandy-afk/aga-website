@@ -1,0 +1,193 @@
+/* ═══ v22-T: Einführung als Trailer (5 Szenen à 3,6 s) — src/tippen/Einfuehrung.tsx ═══
+   Nur transform/opacity; Szene startet beim Einblenden neu (key). Container-
+   Einheiten (cqw/cqh) halten die Flugbahn der Karte auf jeder Breite. */
+.ti__balken { display: flex; gap: 4px; margin-bottom: var(--s-3); }
+.ti__balken i { position: relative; flex: 1; height: 3px; border-radius: 2px; background: rgba(244, 242, 239, .18); overflow: hidden; }
+.ti__balken i b { position: absolute; inset: 0; background: var(--c-white); transform: scaleX(0); transform-origin: left; }
+.ti__balken i.is-war b { transform: none; }
+.ti__balken i.is-an b { animation: ti-balken linear both; }
+@keyframes ti-balken { to { transform: none; } }
+.ti__buehne {
+  position: relative; height: 252px; margin: var(--s-2) 0 var(--s-4); border-radius: var(--r-l); overflow: hidden; border: var(--border);
+  background: radial-gradient(90% 80% at 50% 0%, rgba(233, 29, 41, .24), rgba(233, 29, 41, 0) 70%), #120f10;
+  container-type: size; touch-action: pan-y; cursor: pointer; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent;
+}
+.ti__text { min-height: 128px; }
+.ti__text .tp-titel { margin-bottom: var(--s-1); }
+.ti__ende { padding-top: var(--s-2); }
+.ti-s { position: absolute; inset: 0; }
+/* reduzierte Bewegung: Endbild sofort */
+.ti__buehne.is-ruhig * { animation-duration: .01s !important; animation-delay: 0s !important; }
+
+/* 1 · Tipp */
+.ti-tipp__stepper { position: absolute; left: 0; right: 0; top: 14%; display: flex; align-items: center; justify-content: center; gap: 14px; }
+.ti-tipp__team { font: 800 .75rem/1 var(--f-body); font-stretch: 125%; letter-spacing: .14em; color: var(--c-text-2); }
+.ti-tipp__zahl { display: block; height: 84px; overflow: hidden; font: 400 84px/84px var(--f-display); }
+.ti-roll { display: flex; flex-direction: column; font-style: normal; }
+.ti-roll b { height: 84px; font-weight: 400; text-align: center; }
+.ti-roll b:first-child { color: var(--c-text-3); }
+.ti-roll--a { animation: ti-roll-a 3.6s cubic-bezier(.22, 1, .36, 1) both; }
+.ti-roll--b { animation: ti-roll-b 3.6s cubic-bezier(.22, 1, .36, 1) both; }
+@keyframes ti-roll-a { 0%, 12% { transform: translateY(0); } 18%, 28% { transform: translateY(-84px); } 34%, 100% { transform: translateY(-168px); } }
+@keyframes ti-roll-b { 0%, 40% { transform: translateY(0); } 46%, 100% { transform: translateY(-84px); } }
+.ti-tipp__dp { font: 400 64px/1 var(--f-display); color: var(--c-red); }
+.ti-finger {
+  position: absolute; left: 0; top: 0; width: 34px; height: 34px; margin: -17px; border-radius: 50%;
+  background: rgba(244, 242, 239, .9); box-shadow: 0 0 0 8px rgba(244, 242, 239, .18); opacity: 0;
+}
+.ti-finger--a { animation: ti-finger 3.6s cubic-bezier(.22, 1, .36, 1) both; }
+@keyframes ti-finger {
+  0% { transform: translate(50cqw, 96cqh) scale(1); opacity: 0; }
+  8% { transform: translate(38cqw, 30cqh) scale(1); opacity: 1; }
+  12% { transform: translate(38cqw, 30cqh) scale(.75); }
+  16% { transform: translate(38cqw, 30cqh) scale(1); }
+  22% { transform: translate(38cqw, 30cqh) scale(.75); }
+  26% { transform: translate(38cqw, 30cqh) scale(1); }
+  36% { transform: translate(62cqw, 30cqh) scale(1); }
+  42% { transform: translate(62cqw, 30cqh) scale(.75); }
+  46% { transform: translate(62cqw, 30cqh) scale(1); }
+  70% { transform: translate(50cqw, 87cqh) scale(1); }
+  76% { transform: translate(50cqw, 87cqh) scale(.8); }
+  82% { transform: translate(50cqw, 87cqh) scale(1); opacity: 1; }
+  100% { transform: translate(50cqw, 87cqh) scale(1); opacity: 0; }
+}
+.ti-plus { display: none; }
+.ti-tipp__chips { position: absolute; left: 0; right: 0; top: 58%; display: flex; justify-content: center; gap: 6px; }
+.ti-chip {
+  display: inline-flex; align-items: center; gap: 4px; padding: 5px 8px; border-radius: var(--r-s); border: 1px solid var(--c-line-strong);
+  font: 800 .5625rem/1 var(--f-body); font-stretch: 125%; letter-spacing: .08em; text-transform: uppercase; opacity: 0; transform: translateY(8px);
+  animation: ti-auf .4s cubic-bezier(.22, 1, .36, 1) both;
+}
+.ti-chip--1 { animation-delay: 1.75s; }
+.ti-chip--2 { animation-delay: 2s; }
+.ti-chip--3 { animation-delay: 2.25s; color: var(--tp-gold); border-color: rgba(232, 193, 90, .6); }
+@keyframes ti-auf { to { opacity: 1; transform: none; } }
+.ti-knopf {
+  position: absolute; left: 50%; bottom: 7%; padding: 10px 22px; border-radius: var(--r-s); background: var(--c-red);
+  font: 800 .625rem/1 var(--f-body); font-stretch: 125%; letter-spacing: .16em; text-transform: uppercase; white-space: nowrap;
+  transform: translateX(-50%); animation: ti-knopf 3.6s ease both;
+}
+@keyframes ti-knopf {
+  0%, 74% { transform: translateX(-50%) scale(1); }
+  78% { transform: translateX(-50%) scale(.92); }
+  86%, 100% { transform: translateX(-50%) scale(1); box-shadow: 0 0 0 6px rgba(61, 220, 132, .25); background: #1f9c55; }
+}
+
+/* 2 · Karte fliegt ins Album */
+.ti-album__seite {
+  position: absolute; left: 50%; top: 10%; width: 44%; height: 80%; display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(2, 1fr); gap: 5px;
+  padding: 8px; border-radius: 8px; background: linear-gradient(160deg, #1d1819, #141112); border: 1px solid var(--c-line-strong);
+}
+.ti-album__seite i { border-radius: 3px; border: 1px dashed rgba(244, 242, 239, .2); }
+.ti-album__seite i.is-voll { border-style: solid; background: linear-gradient(150deg, #5a1218, #2a070a); }
+.ti-album__seite i.is-ziel { animation: ti-ziel 3.6s ease both; }
+@keyframes ti-ziel { 0%, 52% { box-shadow: none; } 58% { box-shadow: 0 0 0 3px var(--tp-gold), 0 0 24px rgba(232, 193, 90, .8); } 100% { box-shadow: 0 0 0 2px var(--tp-gold); } }
+.ti-album__karte {
+  position: absolute; left: 0; top: 0; width: 30cqw; height: 76cqh; border-radius: 8px; overflow: hidden;
+  background: linear-gradient(150deg, #3a0a0f 0%, #8e0f17 45%, #2a070a 100%); border: 2px solid #ff5560; box-shadow: var(--shadow-float);
+  transform-origin: 0 0; animation: ti-flieg 3.6s cubic-bezier(.65, 0, .35, 1) both;
+}
+.ti-album__karte img { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 92%; object-fit: cover; object-position: top; }
+.ti-album__karte img.is-logo { width: 56%; height: auto; left: 22%; bottom: 30%; object-fit: contain; }
+.ti-album__karte span { position: absolute; top: 6px; left: 8px; font: 400 1.5rem/1 var(--f-display); text-shadow: 0 2px 6px rgba(0, 0, 0, .6); }
+.ti-album__karte::after {
+  content: ""; position: absolute; inset: -40%; background: linear-gradient(115deg, rgba(255, 255, 255, 0) 40%, rgba(255, 255, 255, .35) 50%, rgba(255, 255, 255, 0) 60%);
+  animation: ti-glanz 1.2s ease .2s both;
+}
+@keyframes ti-glanz { from { transform: translateX(-60%); } to { transform: translateX(60%); } }
+/* Ziel-Platz (Reihe 2, Spalte 2): Seite links 50cqw + 8px Rand, Spalte ≈ 9,3cqw; oben 10cqh + 8px + halbe Höhe */
+@keyframes ti-flieg {
+  0% { transform: translate(10cqw, 40cqh) scale(.9); opacity: 0; }
+  14% { transform: translate(10cqw, 12cqh) scale(1.04) rotate(-5deg); opacity: 1; }
+  34% { transform: translate(10cqw, 12cqh) scale(1) rotate(-5deg); }
+  56%, 100% { transform: translate(calc(61cqw + 5px), calc(50cqh + 2px)) scale(.33, .5) rotate(0deg); }
+}
+.ti-album__plus {
+  position: absolute; left: 50%; bottom: 3%; opacity: 0; padding: 6px 12px; border-radius: var(--r-s); background: var(--tp-gold); color: #1b1406;
+  font: 800 .625rem/1 var(--f-body); font-stretch: 125%; letter-spacing: .14em; text-transform: uppercase; white-space: nowrap;
+  transform: translate(-50%, 10px); animation: ti-plus-auf .45s cubic-bezier(.2, 1.4, .4, 1) 2.1s both;
+}
+@keyframes ti-plus-auf { to { transform: translate(-50%, 0); opacity: 1; } }
+
+/* 3 · Punkte live */
+.ti-punkte__bug { position: absolute; left: 8%; top: 14%; display: flex; flex-direction: column; gap: 6px; }
+.ti-punkte__bug i {
+  width: max-content; padding: 4px 8px; border-radius: var(--r-s); border: 1px solid var(--c-red); background: rgba(233, 29, 41, .2);
+  font: 800 .5625rem/1 var(--f-body); font-style: normal; letter-spacing: .12em; text-transform: uppercase; color: #ff6a72;
+}
+.ti-punkte__bug b { font: 400 3.5rem/1 var(--f-display); }
+.ti-punkte__bug em { font-style: normal; color: var(--c-red); }
+.ti-punkte__zahl { position: absolute; right: 8%; top: 12%; display: flex; flex-direction: column; align-items: flex-end; }
+.ti-punkte__zahl span { font: 400 7rem/.85 var(--f-display); font-variant-numeric: tabular-nums; }
+.ti-punkte__zahl small { font: 800 .5625rem/1 var(--f-body); font-stretch: 125%; letter-spacing: .14em; text-transform: uppercase; color: var(--c-text-3); }
+.ti-pop {
+  position: absolute; left: 8%; padding: 5px 9px; border-radius: var(--r-s); background: rgba(61, 220, 132, .14); border: 1px solid rgba(61, 220, 132, .45); color: #3ddc84;
+  font: 800 .625rem/1 var(--f-body); font-stretch: 125%; letter-spacing: .1em; text-transform: uppercase; opacity: 0; transform: translateY(14px);
+  animation: ti-auf .45s cubic-bezier(.2, 1.4, .4, 1) both;
+}
+.ti-pop--1 { bottom: 34%; animation-delay: .7s; }
+.ti-pop--2 { bottom: 21%; animation-delay: 1.3s; color: var(--tp-gold); border-color: rgba(232, 193, 90, .5); background: rgba(232, 193, 90, .12); }
+.ti-pop--3 { bottom: 8%; animation-delay: 1.9s; }
+
+/* 4 · Rangliste steigt */
+.ti-rang__zeile {
+  position: absolute; left: 6%; right: 6%; height: 40px; display: flex; align-items: center; gap: 12px; padding: 0 12px;
+  border-bottom: var(--border); font-size: .875rem; font-weight: 700;
+}
+.ti-rang__zeile b { margin-left: auto; font: 400 1.375rem/1 var(--f-display); }
+.ti-rang__platz { position: relative; width: 1.6ch; font: 400 1.125rem/1 var(--f-display); color: var(--c-text-3); }
+.ti-rang__zeile--0 { top: 12px; }
+.ti-rang__zeile--1 { top: 58px; animation: ti-runter 3.6s cubic-bezier(.65, 0, .35, 1) both; }
+.ti-rang__zeile--2 { top: 104px; animation: ti-runter 3.6s cubic-bezier(.65, 0, .35, 1) both; }
+.ti-rang__zeile--3 { top: 150px; animation: ti-runter 3.6s cubic-bezier(.65, 0, .35, 1) both; }
+@keyframes ti-runter { 0%, 22% { transform: none; } 48%, 100% { transform: translateY(46px); } }
+.ti-rang__ich {
+  top: 196px; z-index: 2; border-radius: var(--r-s); border: 1px solid rgba(233, 29, 41, .7);
+  background: linear-gradient(90deg, rgba(233, 29, 41, .35), rgba(233, 29, 41, .1)), #1a1214;
+  animation: ti-hoch 3.6s cubic-bezier(.65, 0, .35, 1) both;
+}
+@keyframes ti-hoch {
+  0%, 22% { transform: none; box-shadow: none; }
+  48% { transform: translateY(-138px) scale(1.03); box-shadow: 0 12px 30px rgba(0, 0, 0, .6); }
+  60%, 100% { transform: translateY(-138px); box-shadow: 0 8px 20px rgba(0, 0, 0, .4); }
+}
+.ti-rang__alt, .ti-rang__neu { position: absolute; inset: 0; }
+.ti-rang__alt { animation: ti-weg 3.6s ease both; }
+.ti-rang__neu { color: var(--c-white); opacity: 0; animation: ti-da 3.6s ease both; }
+@keyframes ti-weg { 0%, 40% { opacity: 1; } 48%, 100% { opacity: 0; } }
+@keyframes ti-da { 0%, 44% { opacity: 0; } 52%, 100% { opacity: 1; } }
+.ti-rang__neu.is-grau { color: var(--c-text-3); }
+.ti-rang__pfeil { font: 800 .625rem/1 var(--f-body); color: #3ddc84; opacity: 0; animation: ti-da 3.6s ease both; }
+
+/* 5 · Preis winkt */
+.ti-preis__licht {
+  position: absolute; left: 50%; top: 40%; width: 180cqw; height: 180cqw; margin: -90cqw 0 0 -90cqw;
+  background: repeating-conic-gradient(rgba(232, 193, 90, .14) 0deg 4deg, rgba(232, 193, 90, 0) 4deg 16deg);
+  -webkit-mask: radial-gradient(closest-side, #000 10%, transparent 60%);
+  mask: radial-gradient(closest-side, #000 10%, transparent 60%);
+  animation: ti-dreh 8s linear both;
+}
+@keyframes ti-dreh { to { transform: rotate(40deg); } }
+.ti-preis__podest { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); display: flex; align-items: flex-end; gap: 6px; }
+.ti-preis__stufe {
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 4px; width: 72px; padding-top: 8px; border-radius: 6px 6px 0 0;
+  font: 400 1.5rem/1 var(--f-display); background: linear-gradient(180deg, #2b2526, #161314); border: 1px solid var(--c-line-strong); border-bottom: 0;
+  transform-origin: bottom; transform: scaleY(0); animation: ti-stufe .7s cubic-bezier(.2, 1.2, .4, 1) both;
+}
+.ti-preis__stufe--1 { height: 120px; animation-delay: .35s; color: var(--tp-gold); border-color: rgba(232, 193, 90, .6); background: linear-gradient(180deg, #3a3018, #171309); }
+.ti-preis__stufe--2 { height: 84px; animation-delay: .15s; }
+.ti-preis__stufe--3 { height: 64px; animation-delay: .25s; }
+.ti-preis__stufe svg { filter: drop-shadow(0 0 10px rgba(232, 193, 90, .9)); }
+@keyframes ti-stufe { to { transform: none; } }
+.ti-preis__karte {
+  position: absolute; left: 50%; top: 9%; opacity: 0; display: grid; gap: 3px; min-width: 64%; padding: 10px 14px; text-align: center;
+  border-radius: var(--r-s); background: rgba(11, 10, 11, .92); border: 1px solid rgba(232, 193, 90, .6); box-shadow: 0 10px 30px rgba(0, 0, 0, .5);
+  transform: translate(-50%, -12px); animation: ti-karte-auf .55s cubic-bezier(.2, 1.3, .4, 1) 1.1s both;
+}
+@keyframes ti-karte-auf { to { transform: translate(-50%, 0); opacity: 1; } }
+.ti-preis__karte small { font: 800 .5625rem/1 var(--f-body); font-stretch: 125%; letter-spacing: .14em; text-transform: uppercase; color: var(--tp-gold); }
+.ti-preis__karte b { font-weight: 800; font-size: 1rem; }
+.ti-preis__karte span { font-size: var(--t-micro); color: var(--c-text-3); }
+@media (max-width: 380px) {
+  .ti__buehne { height: 236px; }
+}

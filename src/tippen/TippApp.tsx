@@ -2,8 +2,16 @@ import { lazy, memo, Suspense, useCallback, useEffect, useLayoutEffect, useMemo,
 import type { Session } from '@supabase/supabase-js'
 import { animate, motion, MotionConfig } from 'framer-motion'
 import { CalendarClock, ListOrdered, UserRound, Users } from 'lucide-react'
-import { aktuelleSitzung, IST_VORFUEHRUNG, ladeLage, supabase, TippFehler, type KaderSpieler, type Lage } from './api'
-import { einfuehrungGesehen, einfuehrungMerken, entwurfLesen, haptik, reduzierteBewegung } from './model'
+import { aktuelleSitzung, IST_VORFUEHRUNG, ladeLage, supabase, TippFehler, type KaderSpieler, type Lage, ALBUM_HREF } from './api'
+import { einfuehrungGesehen, einfuehrungMerken, entwurfLesen, haptik, kuerzel, nachname, reduzierteBewegung } from './model'
+import { hochrechnen } from './punkte'
+import { useLiveTicker } from './liveTicker'
+import { laufendeMinute, minuteLabel } from '../live/model'
+import { playerMedia } from '../data/playerMedia'
+import { TorMelder, type TorDaten } from '../ui/tor/TorJubel'
+import { LiveLeiste } from '../ui/tor/LiveLeiste'
+import { vorladen } from '../ui/tor/useTor'
+import { tippStandSchreiben } from './tippStand'
 import { SpieltagTab } from './SpieltagTab'
 import { RanglisteTab } from './RanglisteTab'
 import { LigenTab } from './LigenTab'
@@ -150,6 +158,17 @@ export function TippApp() {
     setLage(l)
     setNow(Date.now() + versatz.current)
     setFehler('')
+    // v21-UX (Befund 1): kompakten Stand für die Startseiten-Kachel ablegen
+    // (die Karte liest ihn ohne Supabase-Bundle). Nicht in der Vorführung.
+    if (!IST_VORFUEHRUNG) {
+      tippStandSchreiben({
+        offenAnstoss: l.offen?.anstoss,
+        getippt: !!l.offen?.meinTipp,
+        letztePunkte: l.gewertet?.meinePunkte?.gesamt,
+        letzteAnstoss: l.gewertet?.anstoss,
+        at: Date.now(),
+      })
+    }
   }, [])
 
   const neuLaden = useCallback(async () => {
@@ -234,11 +253,12 @@ export function TippApp() {
     return () => window.clearInterval(id)
   }, [])
 
-  // Während ein Spiel läuft (gesperrt, nicht gewertet): Stand alle 60 s
+  // Während ein Spiel läuft (gesperrt, nicht gewertet): Stand alle 30 s
+  // (Minute + Tore kommen zusätzlich alle 20 s aus dem Live-Ticker, s. unten)
   const laeuft = !IST_VORFUEHRUNG && lage?.gesperrt && (lage.gesperrt.status === 'live' || lage.gesperrt.status === 'halbzeit')
   useEffect(() => {
     if (!laeuft) return
-    const id = window.setInterval(() => document.visibilityState === 'visible' && void neuLaden(), 60_000)
+    const id = window.setInterval(() => document.visibilityState === 'visible' && void neuLaden(), 30_000)
     return () => window.clearInterval(id)
   }, [laeuft, neuLaden])
 
@@ -262,6 +282,59 @@ export function TippApp() {
     for (const k of lage?.kader ?? []) m.set(k.id, k)
     return m
   }, [lage])
+
+  // ── v22-T: Live — Leiste (immer sichtbar) + TOR!-Einblendung über allem ──
+  const sp = lage?.gesperrt
+  const spLaeuft = !!sp && (sp.status === 'live' || sp.status === 'halbzeit')
+  const ticker = useLiveTicker(spLaeuft && !IST_VORFUEHRUNG)
+  const tm = ticker?.match && ticker.match.id === sp?.id ? ticker.match : null
+  const toreSva = tm ? tm.goalsFor : sp?.toreSva
+  const toreGeg = tm ? tm.goalsAgainst : sp?.toreGegner
+  const liveMinute = sp?.live
+    ? `${sp.live.minute}${sp.live.nachspielzeit ? `+${sp.live.nachspielzeit}` : ''}′`
+    : tm
+      ? laufendeMinute(tm.status, tm.anpfiffAt, tm.wiederanpfiffAt, now)?.label.replace("'", '′')
+      : undefined
+  const livePunkte = useMemo(() => {
+    if (!sp || !spLaeuft) return undefined
+    if (sp.live?.ich) return sp.live.ich.gesamt
+    if (!sp.meinTipp) return undefined
+    return hochrechnen({ spiel: sp, tipp: sp.meinTipp, stand: [toreSva ?? 0, toreGeg ?? 0], ereignisse: [], minute: 0, ende: false, startelf: [], position: (id) => kader.get(id)?.position ?? 'MIT' }).gesamt
+  }, [sp, spLaeuft, toreSva, toreGeg, kader])
+  const torBauen = async (sva: boolean): Promise<TorDaten | null> => {
+    if (!sp) return null
+    const e = [...(sp.live?.ereignisse ?? [])].reverse().find((x) => x.typ === (sva ? 'tor' : 'gegentor'))
+    const t = !e && ticker ? [...ticker.events].filter((x) => x.type === (sva ? 'tor' : 'gegentor')).sort((x, y) => x.at.localeCompare(y.at)).pop() : undefined
+    const sid = e?.spieler ?? t?.player
+    const vid = e?.spieler2 ?? t?.player2
+    const k = sid ? kader.get(sid) : undefined
+    const m = sid ? playerMedia(sid, { cutoutUrl: k?.cutoutUrl, photoUrl: k?.fotoUrl }) : null
+    const a = toreSva ?? 0
+    const b = toreGeg ?? 0
+    if (sva) await vorladen(m?.figure ?? m?.bild)
+    return {
+      key: `${sp.id}-${a}-${b}`,
+      art: sva ? 'tor' : 'gegentor',
+      name: k?.name,
+      nummer: k?.nummer,
+      vorlage: vid ? nachname(kader.get(vid)?.name ?? '') || undefined : undefined,
+      minute: e ? `${e.minute}′` : t ? minuteLabel(t.minute, t.extra).replace("'", '′') : liveMinute,
+      heim: sp.heim ? 'SVA' : kuerzel(sp.gegner),
+      gast: sp.heim ? kuerzel(sp.gegner) : 'SVA',
+      toreHeim: sp.heim ? a : b,
+      toreGast: sp.heim ? b : a,
+      heimTrifft: sva === sp.heim,
+      figur: m?.figure ?? m?.bild ?? null,
+      video: m?.jubel ?? m?.loop ?? null,
+      gegner: sp.gegner,
+    }
+  }
+
+  // Einführung: ein echter Spieler auf der Karte, die ins Album fliegt
+  const einfFigur = useMemo(() => {
+    const k = (lage?.kader ?? []).find((x) => x.cutoutUrl && x.kapitaen) ?? (lage?.kader ?? []).find((x) => x.cutoutUrl)
+    return k ? (playerMedia(k.id, { cutoutUrl: k.cutoutUrl, photoUrl: k.fotoUrl }).figure ?? undefined) : undefined
+  }, [lage?.kader])
 
   const istTeilnehmer = !!lage?.ich?.teilnehmer
   const anmelden = (grund: 'tipp' | 'allgemein' | 'liga' = 'allgemein') => setLogin(grund)
@@ -369,7 +442,7 @@ export function TippApp() {
 
   return (
     <MotionConfig reducedMotion="user">
-      <div className={`tp${IST_VORFUEHRUNG ? ' tp--vorfuehrung' : ''}`}>
+      <div className={`tp${IST_VORFUEHRUNG ? ' tp--vorfuehrung' : ''}${spLaeuft ? ' tp--live' : ''}`}>
         <header className="tp-top">
           <a className="tp-brand" href="/" aria-label="Zur Vereinsseite">
             <img src="/brand/aga-logo.png" alt="" width="28" height="33" />
@@ -440,7 +513,7 @@ export function TippApp() {
             <button type="button" className="tp-fuss__hilfe" onClick={() => setEinf(true)}>
               So funktioniert’s
             </button>{' '}
-            · <a href="/">Vereinsseite</a> · <a href="/live">Live-Ticker</a> · <a href="/album">Sammelalbum</a> · <a href="/teilnahmebedingungen">Teilnahmebedingungen</a> ·{' '}
+            · <a href="/">Vereinsseite</a> · <a href="/live">Live-Ticker</a> · <a href={ALBUM_HREF}>Sammelalbum</a> · <a href="/teilnahmebedingungen">Teilnahmebedingungen</a> ·{' '}
             <a href="/datenschutz#tippliga">Datenschutz</a> · <a href="/impressum">Impressum</a>
           </span>
           <InstagramZeile className="ig-zeile--fuss" text="Jeden Freitag: „Jetzt tippen“ in der Story · @svagathenburg" />
@@ -451,8 +524,26 @@ export function TippApp() {
           {nav(true)}
         </nav>
 
+        {sp && spLaeuft && (
+          <LiveLeiste
+            daten={{
+              status: sp.status === 'halbzeit' ? 'halbzeit' : 'live',
+              minute: liveMinute,
+              heim: sp.heim ? 'SVA' : kuerzel(sp.gegner),
+              gast: sp.heim ? kuerzel(sp.gegner) : 'SVA',
+              toreHeim: sp.heim ? (toreSva ?? 0) : (toreGeg ?? 0),
+              toreGast: sp.heim ? (toreGeg ?? 0) : (toreSva ?? 0),
+              punkte: livePunkte,
+            }}
+            onTippen={() => zumZiel('live')}
+          />
+        )}
+        <TorMelder spielKey={spLaeuft && sp ? sp.id : null} toreSva={toreSva} toreGegner={toreGeg} bauen={torBauen} />
+
         <Einfuehrung
           offen={einf}
+          preise={lage?.preise}
+          figur={einfFigur}
           onZu={() => {
             setEinf(false)
             einfuehrungMerken()

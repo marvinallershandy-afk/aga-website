@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowRight, Share2, Snowflake } from 'lucide-react'
-import { ladeDuell, ladeRangliste, ladeVerteilung, type Duell, type KaderSpieler, type Lage, type Rangliste, type TippSpiel, type Verteilung } from './api'
-import { ABZEICHEN, BONUS, bonusLabel, datumKurz, nachname, paarung } from './model'
+import { ArrowRight, Lock, Share2, Snowflake } from 'lucide-react'
+import { ladeDuell, ladeRangliste, ladeVerteilung, type Duell, type KaderSpieler, type Lage, type NaechstesSpiel, type Rangliste, type TippSpiel, type Verteilung } from './api'
+import { ABZEICHEN, BONUS, bonusLabel, datumKurz, nachname, paarung, uhrzeit } from './model'
 import { SpieltagKarte } from './SpieltagKarte'
 import { TippFormular } from './TippFormular'
 import { Aufloesung } from './Aufloesung'
@@ -20,6 +20,12 @@ import type { Tab } from './TippApp'
 // letzten Spieltags (Punkte zählen hoch, Spieltagssieger, Fans vs. Kabine,
 // neue Abzeichen). Winterpause mit Saisonstand.
 // ─────────────────────────────────────────────────────────────
+
+/** v21-UX (Befund 10): Gibt es in der Spitze punktgleiche Tipper (unterschiedlicher Platz)? */
+function gleichstandOben(eintraege: { punkte: number }[]): boolean {
+  const top = eintraege.slice(0, 6)
+  return top.some((e, i) => i > 0 && e.punkte === top[i - 1].punkte)
+}
 
 export function SpieltagTab({
   lage,
@@ -55,17 +61,26 @@ export function SpieltagTab({
     )
   }
 
+  // v22-T: EIN Fokus pro Zeitpunkt. Live → nur das Live-Spiel. Nach Abpfiff bis
+  // zur Wertung → „Wertung folgt“. Das nächste Spiel nur als dezente Vorschau,
+  // bis der Server es freigibt (Wertung, spätestens 24 h nach Abpfiff).
+  const live = !!gesperrt && (gesperrt.status === 'live' || gesperrt.status === 'halbzeit')
+  const wartet = !!gesperrt && gesperrt.status === 'beendet'
+  const vorschau: NaechstesSpiel | undefined = lage.naechstes ?? (live && offen ? { id: offen.id, gegner: offen.gegner, heim: offen.heim, anstoss: offen.anstoss, spieltag: offen.spieltag } : undefined)
+
   return (
-    <div className="tp-spieltag">
-      {!angemeldet && <Intro onAnmelden={() => onAnmelden('allgemein')} />}
+    <div className={`tp-spieltag${live ? ' is-live' : ''}`}>
+      {!angemeldet && !live && <Intro onAnmelden={() => onAnmelden('allgemein')} />}
 
       {gesperrt && <GesperrtBlock spiel={gesperrt} kader={kader} angemeldet={angemeldet} />}
 
+      {(live || (wartet && !offen)) && vorschau && <Vorschau n={vorschau} live={live} />}
+
       {frisch && !gesperrt && gewertet && <AufloesungBlock spiel={gewertet} kader={kader} now={now} lage={lage} angemeldet={angemeldet} onTab={onTab} />}
 
-      {offen ? (
+      {offen && !live ? (
         <div className="tp-offen">
-          <SpieltagKarte spiel={offen} now={now} kicker={gesperrt ? 'Nächster Spieltag' : undefined} kompakt={!!gesperrt}>
+          <SpieltagKarte spiel={offen} now={now} kicker={gesperrt ? 'Nächster Spieltag' : frisch && gewertet ? 'Jetzt offen · nächster Spieltag' : undefined} kompakt={!!gesperrt}>
             <p className="tp-match__zahl">
               {offen.anzahlTipps > 0 ? (
                 <>
@@ -78,10 +93,11 @@ export function SpieltagTab({
           </SpieltagKarte>
           <TippFormular key={offen.id} spiel={offen} lage={lage} kader={kader} angemeldet={angemeldet} teilnehmer={teilnehmer} onAnmelden={onAnmelden} onNeu={onNeu} />
         </div>
-      ) : winter ? (
+      ) : winter && !gesperrt ? (
         <Winterpause bis={einstellungen.winterpause.bis} onTab={onTab} />
       ) : (
-        !gesperrt && (
+        !gesperrt &&
+        !vorschau && (
           <div className="tp-leer">
             <p className="tp-kicker">Nächster Spieltag</p>
             <h2 className="tp-titel">Der Spielplan kommt gleich</h2>
@@ -90,8 +106,31 @@ export function SpieltagTab({
         )
       )}
 
-      {gewertet && (!frisch || gesperrt) && <AufloesungBlock spiel={gewertet} kader={kader} now={now} lage={lage} angemeldet={angemeldet} onTab={onTab} kompakt />}
+      {gewertet && !gesperrt && !frisch && <AufloesungBlock spiel={gewertet} kader={kader} now={now} lage={lage} angemeldet={angemeldet} onTab={onTab} kompakt />}
     </div>
+  )
+}
+
+/** v22-T: dezente Vorschau des nächsten Spieltags (noch nicht tippbar). */
+function Vorschau({ n }: { n: NaechstesSpiel; live?: boolean }) {
+  const ab = n.oeffnetAb ? new Date(n.oeffnetAb) : null
+  const spaetestens = ab
+    ? ab.toLocaleString('de-DE', { weekday: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Berlin' }).replace(',', '')
+    : null
+  return (
+    <aside className="tp-vorschau-spiel" aria-label="Nächster Spieltag">
+      <Lock className="tp-vorschau-spiel__icon" size={16} strokeWidth={1.75} aria-hidden="true" />
+      <span className="tp-vorschau-spiel__text">
+        <small>Nächster Spieltag{n.spieltag ? ` · ${n.spieltag}.` : ''} · {datumKurz(n.anstoss)} {uhrzeit(n.anstoss)}</small>
+        <b>
+          {n.heim ? 'gegen' : 'bei'} {n.gegner}
+        </b>
+        <span>
+          öffnet nach der Auflösung
+          {spaetestens ? ` · spätestens ${spaetestens} Uhr` : ''}
+        </span>
+      </span>
+    </aside>
   )
 }
 
@@ -130,6 +169,15 @@ function GesperrtBlock({ spiel, kader, angemeldet }: { spiel: TippSpiel; kader: 
   const t = spiel.meinTipp
   return (
     <div className="tp-gesperrt">
+      {spiel.status === 'beendet' && !spiel.gewertetAt && (
+        <div className="tp-wertungfolgt" role="status">
+          <span className="tp-wertungfolgt__puls" aria-hidden="true" />
+          <span>
+            <b>Abpfiff · Wertung folgt</b>
+            <small>Deine Punkte kommen mit dem Spielbericht — meist am selben Abend. Danach öffnet der nächste Spieltag.</small>
+          </span>
+        </div>
+      )}
       <LiveBlock spiel={spiel} kader={kader} />
       {!spiel.live && (
         <section className="tp-abschnitt" aria-labelledby="tp-h-meintipp">
@@ -336,6 +384,8 @@ function AufloesungBlock({
               </li>
             ))}
           </ol>
+          {/* v21-UX (Befund 10): Tiebreak am Ort des Geschehens erklären */}
+          {gleichstandOben(rl.eintraege) && <p className="tp-fussnote">Bei Punktgleichheit liegt vorne, wer mehr Ergebnisse exakt getippt hat.</p>}
           <div className="tp-zeile-knoepfe">
             <button type="button" className="tp-btn tp-btn--line tp-btn--sm" onClick={() => onTab('rangliste')}>
               Ganze Rangliste <ArrowRight size={16} strokeWidth={1.5} aria-hidden="true" />

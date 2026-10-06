@@ -463,12 +463,23 @@ html.is-map body {
     bottom: 0;
     z-index: 22;
     display: grid;
-    grid-template-columns: 1fr 1fr 1.3fr;
-    gap: var(--s-2);
-    padding: var(--s-2) var(--s-3) max(var(--s-2), env(safe-area-inset-bottom));
+    /* v21-UX (Befund 1): vier Einstiege (Karte · Live · Tippen · Mitspielen) */
+    grid-template-columns: 1fr 1fr 1fr 1.25fr;
+    gap: var(--s-1);
+    padding: var(--s-2) var(--s-2) max(var(--s-2), env(safe-area-inset-bottom));
     background: rgba(11, 10, 11, .94);
     border-top: var(--border);
     transition: transform var(--d-3) var(--ease), opacity var(--d-2) var(--ease);
+  }
+  /* bei vier Einträgen: Icon über Label, damit auch „Mitspielen“ passt */
+  .kdock__btn {
+    flex-direction: column;
+    gap: 3px;
+    min-height: 50px;
+    padding: 0 var(--s-1);
+    font-size: .625rem;
+    letter-spacing: .06em;
+    text-decoration: none;
   }
   .kmap[data-open] .kdock,
   .kmap[data-intro] .kdock { transform: translateY(110%); opacity: 0; pointer-events: none; }
@@ -897,8 +908,50 @@ html.is-map body {
     bottom: calc(68px + env(safe-area-inset-bottom) + var(--s-3) + 60px);
   }
   /* Mobil ist unten nur Platz für EINE Karte — der Heimspiel-Hinweis hat im
-     72-h-Fenster Vorrang, der Album-Teaser weicht. */
-  .kmap[data-heimspiel] .alb-t--karte { display: none; }
+     72-h-Fenster Vorrang, der Teaser-Stapel weicht. */
+  .kmap[data-heimspiel] .kmap__ecke { display: none; }
+}
+
+/* ── v21-UX/v22-T (Befund 1): Einstiege unten links NEBENEINANDER ──
+   Tipp-Liga + Sammelalbum als eine Reihe (gleiche Höhe wie früher der
+   Album-Teaser allein) — so verdecken sie weder Pins noch die Fußzeile. */
+.kmap__ecke {
+  position: fixed; left: var(--gutter); bottom: calc(var(--s-5) + 46px); z-index: 21;
+  display: grid; grid-template-columns: repeat(2, minmax(0, 330px)); align-items: stretch; gap: var(--s-2);
+  transition: opacity var(--d-2) var(--ease);
+}
+.kmap__ecke .alb-t--karte { position: static; left: auto; bottom: auto; max-width: none; min-width: 0; }
+.kmap__ecke .alb-t--karte small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kmap[data-open] .kmap__ecke,
+.kmap[data-intro] .kmap__ecke { opacity: 0; pointer-events: none; }
+@media (max-width: 759px), (max-aspect-ratio: 1/1) {
+  .kmap__ecke {
+    left: var(--gutter); right: var(--gutter); grid-template-columns: 1fr 1fr;
+    /* über die 2-zeilige Fußzeile gehoben (wie zuvor der Album-Teaser) */
+    bottom: calc(68px + env(safe-area-inset-bottom) + var(--s-3) + 60px);
+  }
+  .kmap__ecke .alb-t--karte { gap: var(--s-2); padding: 4px 8px 4px 4px; }
+  .kmap__ecke .alb-t--karte > svg { display: none; }
+  .kmap__ecke .alb-t--karte img { width: 38px; }
+  .kmap__ecke .alb-t--karte b { font-size: .875rem; line-height: 1.02; }
+  .kmap__ecke .alb-t--karte .alb-t__kicker { display: none; }
+  .kmap__ecke .alb-t--karte small { font-size: .6875rem; }
+  .kmap__ecke .alb-t--karte:not(.tip-t) small:not(.alb-t__stand) { display: none; }
+}
+
+/* Tipp-Liga-Kachel: gleiche Form wie der Album-Teaser, Icon-Kachel statt Foto */
+.tip-t__icon {
+  flex: none; display: grid; place-items: center; width: 64px; height: 50px;
+  border-radius: var(--r-s); border: 1px solid var(--c-line-strong); color: var(--c-white);
+}
+.tip-t--rot .tip-t__icon { background: var(--c-red); border-color: var(--c-red); color: var(--c-white); }
+.tip-t--gruen .tip-t__icon { color: #3ddc84; border-color: rgba(61, 220, 132, .5); }
+.tip-t--gold .tip-t__icon { color: var(--c-accent); border-color: rgba(232, 193, 90, .5); }
+.tip-t .alb-t__kicker { color: var(--c-red); }
+.tip-t--gruen .alb-t__kicker { color: #3ddc84; }
+.tip-t--gold .alb-t__kicker { color: var(--c-accent); }
+@media (max-width: 759px), (max-aspect-ratio: 1/1) {
+  .tip-t__icon { width: 38px; height: 38px; }
 }
 
 /* ── v19-K (Audit B §2.2): „Was dich am Platz erwartet" + Mini-Spielplan ──

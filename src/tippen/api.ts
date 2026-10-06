@@ -14,6 +14,10 @@ export { aktuelleSitzung, abmelden, codeBestaetigen } from '../album/api'
 /** v21: /tippen?vorfuehrung=1 — rein clientseitige Simulation, KEINE Datenbank. */
 export const IST_VORFUEHRUNG = VORFUEHRUNG
 
+/** v22-T: Album-Ziel — in der Vorführung der Album-Vorführmodus (kein Login),
+ *  sonst das echte Album (gleiches Konto, 'sva-album-auth'). */
+export const ALBUM_HREF = IST_VORFUEHRUNG ? '/album?vorfuehrung=1' : '/album'
+
 export type Position = 'TW' | 'ABW' | 'MIT' | 'ANG'
 export type BonusKey = 'gelb' | 'rot' | 'tor20' | 'tore_hz1' | 'elfmeter' | 'zuschauer' | 'erstes_tor'
 
@@ -159,6 +163,36 @@ export interface Ich {
   ligen: number
 }
 
+/** v21-UX (Vorschlag): zuletzt aufgestellte Startelf des Vereins — als „Vorschlag
+ *  übernehmen“ für neue Tipper ohne eigene letzte Elf (nie automatisch abgegeben). */
+export interface VorschlagElf extends MeineElf {
+  /** Woher der Vorschlag kommt (z. B. „Aufstellung Horneburg“) — für den Hinweis. */
+  quelle?: string
+}
+
+/** v22-T: das nächste Spiel, solange es noch gesperrt ist (ein Fokus) — nur Vorschau. */
+export interface NaechstesSpiel {
+  id: string
+  gegner: string
+  heim: boolean
+  anstoss: string
+  wettbewerb?: string
+  spieltag?: number
+  /** spätestens ab dann tippbar (Abpfiff des laufenden Spiels + 24 h); früher, sobald gewertet */
+  oeffnetAb?: string
+}
+
+/** v22-T: Preis (Admin pflegt; leer = Bereich unsichtbar). */
+export interface Preis {
+  wertung: 'saison' | 'monat'
+  platz: number
+  titel: string
+  beschreibung?: string
+  abAlter?: 16 | 18
+  alternative?: string
+  partner?: PartnerInfo
+}
+
 export interface Lage {
   version: number
   serverNow: string
@@ -170,11 +204,18 @@ export interface Lage {
     elfFrei: boolean
     winterpause: { aktiv: boolean; bis: string; von: string }
   }
+  /** JETZT tippbar (v22: nur, wenn kein früheres Spiel noch auf die Wertung wartet) */
   offen?: TippSpiel
+  /** v22-T: gesperrtes nächstes Spiel als dezente Vorschau */
+  naechstes?: NaechstesSpiel
   gesperrt?: TippSpiel
   gewertet?: TippSpiel
   kader: KaderSpieler[]
   ich?: Ich
+  /** v21-UX: Vorschlags-Elf (letzte Vereins-Startelf) für neue Tipper. */
+  vorschlagElf?: VorschlagElf
+  /** v22-T: Preise (Saison Platz 1–5, Monat) */
+  preise?: Preis[]
 }
 
 export interface RangEintrag {
@@ -264,6 +305,8 @@ export function fehlerText(code: string): string {
   switch (code) {
     case 'tipp_geschlossen':
       return 'Tippschluss — der Ball rollt schon. Beim nächsten Spieltag bist du wieder dabei.'
+    case 'tipp_noch_nicht_offen':
+      return 'Dieser Spieltag öffnet erst nach der Auflösung des laufenden Spiels.'
     case 'tipp_nicht_tippbar':
       return 'Für dieses Spiel gibt es keine Tipp-Runde.'
     case 'tipp_kein_teilnehmer':

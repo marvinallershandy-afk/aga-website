@@ -3,6 +3,7 @@ import type { Session } from '@supabase/supabase-js'
 import { Sheet } from '../alltag/Sheet'
 import { beitreten, codeBestaetigen, loginLinkSenden, TippFehler, type Lage } from './api'
 import { EINWILLIGUNG_KEY } from '../album/Login'
+import { RanglistenVorschau } from './ProfilTab'
 
 // ─────────────────────────────────────────────────────────────
 // v20-T: Einmal anmelden — dasselbe Konto wie das Sammelalbum.
@@ -185,9 +186,10 @@ function ProfilSchritt({ lage, onFertig }: { lage: Lage | null; onFertig: () => 
         <input type="checkbox" checked={sichtbar} onChange={(e) => setSichtbar(e.target.checked)} />
         <span>
           <b>In öffentlichen Ranglisten zeigen</b>
-          <small>Freiwillig, jederzeit änderbar. Sonst siehst nur du dich — in deinen Ligen kennen dich die Mitglieder ohnehin.</small>
+          <small>Feier deine Siege sichtbar mit — oder bleib privat. Freiwillig, jederzeit änderbar; in deinen Ligen kennen dich die Mitglieder ohnehin.</small>
         </span>
       </label>
+      <RanglistenVorschau sichtbar={sichtbar} vorname={vorname || profil?.vorname || ''} initial={initial || profil?.initial || ''} />
       <label className="tp-check">
         <input type="checkbox" checked={bed} onChange={(e) => setBed(e.target.checked)} />
         <span>

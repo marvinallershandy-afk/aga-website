@@ -27,6 +27,11 @@ import { VORFUEHRUNG } from './vorfuehrung'
 import { VorfuehrungsHinweis } from './VorfuehrungsHinweis'
 import { InstagramZeile } from '../ui/InstagramZeile'
 import { CONTACT } from '../data/content'
+// v22-T: gemeinsame TOR!-Einblendung + Live-Leiste (wie /tippen)
+import { playerMedia } from '../data/playerMedia'
+import { TorMelder, type TorDaten } from '../ui/tor/TorJubel'
+import { LiveLeiste } from '../ui/tor/LiveLeiste'
+import { teamKurz, vorladen } from '../ui/tor/useTor'
 
 // ─────────────────────────────────────────────────────────────
 // v15-L: Öffentliche Live-Seite /live — der Spieltag lebt hier, nicht im
@@ -59,6 +64,44 @@ export function LiveApp() {
   const d = live.data
   const m = d?.match ?? null
   const players = useMemo(() => new Map((d?.players ?? []).map((p) => [p.id, p])), [d?.players])
+
+  // v22-T: Tor fällt → große Einblendung über allem; Live-Leiste, sobald der
+  // Kopf mit dem Spielstand aus dem Bild gescrollt ist
+  const laeuft = !!m && (m.status === 'live' || m.status === 'halbzeit')
+  const torBauen = async (sva: boolean): Promise<TorDaten | null> => {
+    if (!m || !d) return null
+    const e = d.events.filter((x) => x.type === (sva ? 'tor' : 'gegentor')).sort((a, b) => a.at.localeCompare(b.at)).pop()
+    const sp = e?.player ? players.get(e.player) : undefined
+    const vor = e?.player2 ? players.get(e.player2) : undefined
+    const md = sp ? playerMedia(sp.id, sp) : null
+    const p = paarung(m)
+    if (sva) await vorladen(md?.figure ?? md?.bild)
+    return {
+      key: `${m.id}-${m.goalsFor}-${m.goalsAgainst}`,
+      art: sva ? 'tor' : 'gegentor',
+      name: sp?.name,
+      nummer: sp?.number ?? undefined,
+      vorlage: vor ? vor.name.split(' ').slice(-1)[0] : undefined,
+      minute: e ? minuteLabel(e.minute, e.extra).replace("'", '′') : undefined,
+      heim: teamKurz(p.heim),
+      gast: teamKurz(p.gast),
+      toreHeim: p.toreHeim,
+      toreGast: p.toreGast,
+      heimTrifft: sva === p.svaHeim,
+      figur: md?.figure ?? md?.bild ?? null,
+      video: md?.jubel ?? md?.loop ?? null,
+      gegner: m.opponent,
+    }
+  }
+  const [kopfWeg, setKopfWeg] = useState(false)
+  useEffect(() => {
+    if (!laeuft) return
+    const el = document.querySelector('.lv-hero')
+    if (!el || typeof IntersectionObserver === 'undefined') return
+    const io = new IntersectionObserver(([x]) => setKopfWeg(!x.isIntersecting), { rootMargin: '-40px 0px 0px 0px' })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [laeuft, m?.id])
 
   // Tab-Titel mit Spielstand (hilft beim Zurückwechseln in den Tab)
   useEffect(() => {
@@ -98,7 +141,7 @@ export function LiveApp() {
   }
 
   return (
-    <div className="lv">
+    <div className={`lv${laeuft ? ' lv--live' : ''}`}>
       <header className="lv-top">
         <a className="lv-brand" href="/" aria-label="Zur Vereinsseite">
           <img src="/brand/wappen.png" alt="" width="34" height="34" />
@@ -107,6 +150,8 @@ export function LiveApp() {
           </span>
         </a>
         <span className="lv-top__tag">Spieltag</span>
+        {/* v21-UX (Befund 14): sichtbarer Rückweg in die Produktfamilie */}
+        <a className="lv-top__pill" href="/tippen">Tipp-Liga</a>
         <button type="button" className="lv-iconbtn" onClick={() => void teilen()} aria-label="Live-Ticker teilen">
           <Icon name="teilen" />
         </button>
@@ -196,6 +241,22 @@ export function LiveApp() {
         <span>Eigener Liveticker des Vereins · ohne Gewähr</span>
         <InstagramZeile className="ig-zeile--fuss" text="Tore, Interviews, MOTM auch in der Story: @svagathenburg" />
       </footer>
+      {m && laeuft && (
+        <LiveLeiste
+          sichtbar={kopfWeg}
+          label="Nach oben zum Spielstand"
+          onTippen={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          daten={{
+            status: m.status === 'halbzeit' ? 'halbzeit' : 'live',
+            minute: laufendeMinute(m.status, m.anpfiffAt, m.wiederanpfiffAt, now)?.label.replace("'", '′'),
+            heim: teamKurz(paarung(m).heim),
+            gast: teamKurz(paarung(m).gast),
+            toreHeim: paarung(m).toreHeim,
+            toreGast: paarung(m).toreGast,
+          }}
+        />
+      )}
+      <TorMelder spielKey={laeuft && m ? m.id : null} toreSva={m?.goalsFor} toreGegner={m?.goalsAgainst} bauen={torBauen} />
       {toast && (
         <div className="lv-toast" role="status">
           {toast}

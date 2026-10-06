@@ -19,6 +19,7 @@ import type {
   MeinePunkte,
   MeinTipp,
   Position,
+  Preis,
   RangArt,
   RangEintrag,
   Rangliste,
@@ -127,6 +128,9 @@ function ich(): Tipper {
   return { ...basis, tipp: z.meinTipp ?? basis.tipp, elf: z.meineElf ?? basis.elf }
 }
 const alle = (): Tipper[] => [ich(), ...TIPPER.slice(1)]
+
+/** v22-T: Ist das Fischbek-Spiel schon gewertet? (Abpfiff zeigt erst „Wertung folgt“) */
+export const istGewertet = (phase: Phase) => phase === 'montag' || (phase === 'abpfiff' && simLesen().gewertet)
 
 // ── Zeit ─────────────────────────────────────────────────────
 const TAG = 86400_000
@@ -237,6 +241,10 @@ function spielFischbek(phase: Phase): TippSpiel {
     const halbzeit = minute >= 45 && minute < 46
     return { ...mit, status: minute >= ENDE_MINUTE ? 'beendet' : halbzeit ? 'halbzeit' : 'live', live: liveDaten(minute) }
   }
+  if (!istGewertet(phase)) {
+    // v22-T: Abpfiff, Spielbericht fehlt noch → „Wertung folgt“ (vorläufige Punkte)
+    return { ...mit, status: 'beendet', live: liveDaten(ENDE_MINUTE) }
+  }
   const motm = phase === 'montag' ? MOTM : undefined
   return {
     ...mit,
@@ -331,18 +339,32 @@ function spielHorneburg(): TippSpiel {
   }
 }
 
+export const NAECHSTES_SPIEL_ID = NAECHSTES_ID
 function spielLuehe(): TippSpiel {
   const a = anstoss() + 7 * TAG
+  const z = simLesen()
   return {
     id: NAECHSTES_ID, gegner: 'SG Lühe', heim: false, anstoss: iso(a), schluss: iso(a), offen: true, wettbewerb: 'Kreisliga Stade', spieltag: 11,
-    status: 'geplant', wertung: 'saison', fragen: [{ key: 'rot' }, { key: 'erstes_tor' }, { key: 'tore_hz1' }], anzahlTipps: 3,
+    status: 'geplant', wertung: 'saison', fragen: [{ key: 'rot' }, { key: 'erstes_tor' }, { key: 'tore_hz1' }], anzahlTipps: 3 + (z.naechsterTipp ? 1 : 0),
+    meinTipp: z.naechsterTipp, meineElf: z.naechsteElf,
   }
 }
+
+// ── Preise (Beispiel, v22-T) ─────────────────────────────────
+const BEISPIEL_PARTNER = { name: 'Partner (Beispiel)' }
+const PREISE: Preis[] = [
+  { wertung: 'saison', platz: 1, titel: 'Trikot nach Wahl', beschreibung: 'Übergabe beim letzten Heimspiel', partner: BEISPIEL_PARTNER },
+  { wertung: 'saison', platz: 2, titel: 'Vereinsschal + Mütze' },
+  { wertung: 'saison', platz: 3, titel: 'Getränkegutschein Vereinsheim', abAlter: 18, alternative: 'Softdrink-Variante', partner: BEISPIEL_PARTNER },
+  { wertung: 'saison', platz: 4, titel: 'Bratwurst-Gutschein für 2' },
+  { wertung: 'saison', platz: 5, titel: 'Sammelalbum-Paket (5 Tütchen)' },
+  { wertung: 'monat', platz: 1, titel: 'Kiste Getränke', abAlter: 18, alternative: 'Kiste Limo', partner: BEISPIEL_PARTNER },
+]
 
 // ── Lage ─────────────────────────────────────────────────────
 export function lage(phase: Phase): Lage {
   const i = ich()
-  const gewertet = phase === 'abpfiff' || phase === 'montag'
+  const gewertet = istGewertet(phase)
   const fisch = spielFischbek(phase)
   const neu = gewertet ? [{ key: 'torriecher', at: iso(simJetzt(phase) - 3600_000) }, ...(phase === 'montag' && istSpieltagssieger() ? [{ key: 'spieltagssieger', at: iso(simJetzt(phase) - 600_000) }] : [])] : []
   const saison = saisonPunkte(i, phase)
@@ -356,9 +378,16 @@ export function lage(phase: Phase): Lage {
       preise: 'Spieltagssieger: ein Getränk am Vereinsheim · Monatssieger: Trikot-Verlosung',
       winterpause: { aktiv: false, bis: '2027-03-14', von: '11-15' },
     },
-    offen: phase === 'vor' ? fisch : spielLuehe(),
-    gesperrt: phase === 'live' ? fisch : undefined,
+    // v22-T: EIN Fokus — vor Anpfiff Fischbek; live und bis zur Wertung nur
+    // das Spiel (SG Lühe als Vorschau); nach der Wertung öffnet SG Lühe.
+    offen: phase === 'vor' ? fisch : gewertet ? spielLuehe() : undefined,
+    naechstes:
+      phase === 'live' || (phase === 'abpfiff' && !gewertet)
+        ? { id: NAECHSTES_ID, gegner: 'SG Lühe', heim: false, anstoss: iso(anstoss() + 7 * TAG), wettbewerb: 'Kreisliga Stade', spieltag: 11, oeffnetAb: iso(anstoss() + 110 * 60_000 + TAG) }
+        : undefined,
+    gesperrt: phase === 'live' || (phase === 'abpfiff' && !gewertet) ? fisch : undefined,
     gewertet: gewertet ? fisch : spielHorneburg(),
+    preise: PREISE,
     kader: KADER,
     ich: {
       email: 'vorfuehrung@sva.example',
@@ -374,15 +403,19 @@ export function lage(phase: Phase): Lage {
       ],
       statistik: { punkte: saison, spieltage: i.historie.filter((x) => x != null).length + (gewertet ? 1 : 0), exakt: 3, beste: Math.max(41, gewertet ? meinePunkte(i, phase === 'montag' ? MOTM : undefined).gesamt : 0) },
       tippsGesamt: 9,
-      letzteElf: ICH_ELF_STANDARD,
+      // v21-UX (Befund 2): Vorführung startet mit LEERER Elf, damit die
+      // Kernmechanik (Spieler wählen, Zweitposition, nicht verfügbar, Kapitän)
+      // erlebbar ist. Statt Auto-Füllung gibt es den „Vorschlag übernehmen“.
+      letzteElf: undefined,
       ligen: 2 + simLesen().ligen.length,
     },
+    vorschlagElf: { ...ICH_ELF_STANDARD, kapitaen: '', quelle: 'Letzte Startelf gegen Horneburg' },
   }
 }
 
 function saisonPunkte(t: Tipper, phase: Phase): number {
   const h = t.historie.reduce<number>((a, x) => a + (x ?? 0), 0)
-  if (phase === 'abpfiff' || phase === 'montag') return h + meinePunkteVon(t, phase)
+  if (istGewertet(phase)) return h + meinePunkteVon(t, phase)
   return h
 }
 function meinePunkteVon(t: Tipper, phase: Phase): number {
@@ -434,7 +467,7 @@ function liste(zeilen: Zeile[], art: RangArt, liga?: string | null): Rangliste {
 }
 
 function rangSpieltag(phase: Phase): Rangliste {
-  const gewertet = phase === 'abpfiff' || phase === 'montag'
+  const gewertet = istGewertet(phase)
   const zeilen: Zeile[] = alle()
     .map((t) => {
       const p = gewertet ? meinePunkteVon(t, phase) : (t.historie[8] ?? null)
@@ -456,7 +489,7 @@ export function rangliste(art: RangArt, phase: Phase, liga?: string | null): Ran
     const r = rangSpieltag(phase)
     return liga ? { ...r, ...liste(r.eintraege.map((e) => ({ t: alle().find((t) => t.name === e.name)!, jetzt: e.punkte, vorher: e.punkte, exakt: e.exakt, spiele: 1 })), 'spieltag', liga) } : r
   }
-  const gewertet = phase === 'abpfiff' || phase === 'montag'
+  const gewertet = istGewertet(phase)
   const ab = art === 'monat' ? 7 : 0 // Monat Oktober: Spieltage 8, 9 (+ 10)
   const zeilen: Zeile[] = alle().map((t) => {
     const h = t.historie.slice(ab)
@@ -530,7 +563,7 @@ export function meineLigen(phase: Phase): Liga[] {
 }
 
 export function ligaTipps(liga: string, phase: Phase): LigaTipp[] {
-  const gewertet = phase === 'abpfiff' || phase === 'montag'
+  const gewertet = istGewertet(phase)
   const l = alle().filter((t) => (liga === 'vf-kabine' ? t.kabine : t.liga))
   if (phase === 'vor') {
     // Tipps zum letzten Spieltag (2:2 in Horneburg) — die neuen sind bis zum Anpfiff geheim

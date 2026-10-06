@@ -267,6 +267,8 @@ export interface Entwurf {
   absenden?: boolean
   /** v21: Formation der gespeicherten Elf (alte Entwürfe ohne → neu einordnen) */
   formation?: 'v21'
+  /** v21-UX (Befund 3): wurde das Ergebnis bewusst gewählt? (sonst neutral „– : –“) */
+  ergBeruehrt?: boolean
 }
 export function entwurfLesen(): Entwurf | null {
   try {
