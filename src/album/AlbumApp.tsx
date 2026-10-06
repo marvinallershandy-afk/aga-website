@@ -1,5 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Book } from 'lucide-react'
+import { Book, CircleHelp } from 'lucide-react'
+import { Einfuehrung, KartenQuellen } from './Einfuehrung'
+import { einfuehrungGesehen } from './einfuehrung-logik'
 import type { Session } from '@supabase/supabase-js'
 import {
   AlbumFehler,
@@ -199,6 +201,7 @@ export function AlbumApp() {
   const [meldung, setMeldung] = useState<{ text: string; n: number } | null>(null)
   const [buehne, setBuehne] = useState<{ daten: KartenDaten; titel: string; text: string } | null>(null)
   const [labor, setLabor] = useState(false)
+  const [einf, setEinf] = useState(false)
   const [geheimUrl] = useState<string | null>(() => geheimAusUrl())
 
   useEffect(() => {
@@ -422,6 +425,13 @@ export function AlbumApp() {
     window.addEventListener(VF_PACK_EREIGNIS, f)
     return () => window.removeEventListener(VF_PACK_EREIGNIS, f)
   }, [])
+  // v22-A: Einführung einmal nach dem ersten Aufschlagen (nicht während Pack/Einkleben)
+  const heftOffen = bereitHeft(offen, mein, katalog)
+  useEffect(() => {
+    if (!heftOffen || packs.length || kleben.length || einfuehrungGesehen()) return
+    const t = window.setTimeout(() => setEinf(true), 900)
+    return () => window.clearTimeout(t)
+  }, [heftOffen, packs.length, kleben.length])
   const geburtstag = !!katalog?.regeln.vereinsGeburtstag && katalog.regeln.vereinsGeburtstag === heuteMMTT()
 
   // Meilensteine: kurze Meldung beim Überschreiten (10/25/50/75/100 %)
@@ -618,6 +628,11 @@ export function AlbumApp() {
             <i className="al-tuete-badge__puls" aria-hidden="true" />
           </button>
         )}
+        {bereit && (
+          <button type="button" className="al-iconbtn al-hilfe" onClick={() => setEinf(true)} aria-label="So funktioniert das Album" title="So funktioniert’s">
+            <CircleHelp size={18} strokeWidth={1.5} aria-hidden="true" />
+          </button>
+        )}
         {zeigeHeft && (
           <button type="button" className="al-iconbtn al-zu" onClick={heftZu} aria-label="Album zuklappen" title="Album zuklappen">
             <Book size={18} strokeWidth={1.5} aria-hidden="true" />
@@ -682,6 +697,7 @@ export function AlbumApp() {
                     </button>
                   )}
                   <Gesamtstand fs={fs} name={mein.profil?.anzeigename} onKapitel={kapitelAufschlagen} />
+                  <KartenQuellen katalog={katalog} onMehr={() => setEinf(true)} />
                   {mein.advent ? (
                     <Advent tage={mein.advent} onPack={packNeu} onNeu={() => void neuLaden()} />
                   ) : (
@@ -756,6 +772,7 @@ export function AlbumApp() {
           onFertig={packFertig}
         />
       )}
+      {einf && katalog && <Einfuehrung katalog={katalog} onZu={() => setEinf(false)} />}
       {buehne && <KarteBuehne daten={buehne.daten} titel={buehne.titel} text={buehne.text} onSchliessen={() => setBuehne(null)} />}
       {ALBUM_VORFUEHRUNG && (
         <Suspense fallback={null}>
@@ -808,6 +825,10 @@ export function AlbumApp() {
       )}
     </div>
   )
+}
+
+function bereitHeft(offen: boolean, mein: Mein | null, katalog: Katalog | null): boolean {
+  return offen && !!mein?.profil && !!katalog
 }
 
 /** v20-K: Die neue Karte fliegt aus der Bildschirmmitte in ihren Platz (leichte

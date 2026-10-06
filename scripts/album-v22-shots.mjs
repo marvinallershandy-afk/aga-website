@@ -15,7 +15,7 @@ const soll = (t) => !NUR.length || NUR.includes(t)
 const fehler = []
 const warte = (p, ms) => p.waitForTimeout(ms)
 
-async function kontext(motor, { video = false, desktop = false } = {}) {
+async function kontext(motor, { video = false, desktop = false, einf = false } = {}) {
   const b = await (motor === 'webkit' ? webkit : chromium).launch(motor === 'chromium' ? { args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] } : {})
   const geraet = desktop ? { viewport: { width: 1280, height: 860 }, deviceScaleFactor: 1 } : motor === 'webkit' ? { ...devices['iPhone 13'] } : { ...devices['Pixel 7'], viewport: { width: 390, height: 844 } }
   const ctx = await b.newContext({ ...geraet, ...(video ? { recordVideo: { dir: `${OUT}/video-tmp`, size: desktop ? { width: 1280, height: 860 } : { width: 390, height: 844 } } } : {}) })
@@ -24,6 +24,8 @@ async function kontext(motor, { video = false, desktop = false } = {}) {
     const u = r.url()
     if (!u.startsWith(BASE) && /supabase|\/rest\/v1|\/auth\/v1/.test(u)) fehler.push(`[${motor}] DB-Anfrage in der Vorführung: ${u}`)
   })
+  // Einführung („So funktioniert’s“) nur im eigenen Teil zeigen
+  if (!einf) await ctx.addInitScript(() => { try { localStorage.setItem('sva-album-einfuehrung', '1') } catch { /* */ } })
   const page = await ctx.newPage()
   page.on('pageerror', (e) => fehler.push(`[${motor}] pageerror ${e.message}`))
   page.on('console', (m) => { if (m.type() === 'error') fehler.push(`[${motor}] console ${m.text().slice(0, 200)}`) })
@@ -102,6 +104,18 @@ for (const motor of MOTOREN) {
       await reiter(page, r)
       await page.screenshot({ path: `${OUT}/${k}-03-${n}.png`, fullPage: true })
     }
+    await b.close()
+  }
+  if (soll('einfuehrung')) {
+    const { b, page } = await kontext(motor, { einf: true })
+    await heftAuf(page)
+    await warte(page, 1200)
+    for (let i = 0; i < 6; i++) {
+      await page.screenshot({ path: `${OUT}/${k}-05-einfuehrung-${i + 1}.png` })
+      await page.locator('.ef__fuss .al-btn').last().click()
+      await warte(page, 600)
+    }
+    await page.screenshot({ path: `${OUT}/${k}-06-start-quellen.png`, fullPage: true })
     await b.close()
   }
   if (soll('packs')) {

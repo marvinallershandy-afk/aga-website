@@ -282,3 +282,14 @@
 .po-tuete[data-selt="shiny"] .po-tuete__spalt { --tc: 240, 200, 98; background: linear-gradient(90deg, #a87a22, #fff6d6, #a87a22); }
 .po-tuete[data-selt="geheim"] .po-tuete__spalt { --tc: 214, 217, 222; }
 .po--ruhig .po__staub, .po--ruhig .po__raunen { display: none; }
+
+/* v22-A: WebKit (Safari/iOS) ignoriert backface-visibility, sobald Ebenen mit Blend/Maske im 3D-Kontext liegen —
+   dann lag der (gespiegelte) Kartenrücken nach dem Aufdecken über der Vorderseite. Rücken deshalb in der
+   Mitte der Drehung per Deckkraft weg- und die Vorderseite einblenden; nach dem Aufdecken ist der Rücken aus. */
+.po__karte.is-dreh .po__seite--hinten { animation: po-halb-weg .75s step-end both; }
+.po__karte.is-dreh .po__seite--vorne { animation: po-halb-da .75s step-end both; }
+.po__karte.is-auf .po__seite--hinten { opacity: 0; visibility: hidden; }
+.po__karte.is-rein .po__seite--vorne, .po__karte.is-dunkel .po__seite--vorne, .po__karte.is-stille .po__seite--vorne, .po__karte.is-hinweis .po__seite--vorne { opacity: 0; }
+.po__karte--shiny.is-kamera .po__seite--vorne { opacity: 0; }
+@keyframes po-halb-weg { 0% { opacity: 1; } 50%, 100% { opacity: 0; } }
+@keyframes po-halb-da { 0% { opacity: 0; } 50%, 100% { opacity: 1; } }
