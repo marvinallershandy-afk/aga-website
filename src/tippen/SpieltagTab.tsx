@@ -296,6 +296,7 @@ function AufloesungBlock({
   kompakt?: boolean
 }) {
   const [rl, setRl] = useState<Rangliste | null>(null)
+  const [saison, setSaison] = useState<Rangliste | null>(null)
   const [duell, setDuell] = useState<Duell | null>(null)
   const [teilt, setTeilt] = useState(false)
   useEffect(() => {
@@ -303,10 +304,15 @@ function AufloesungBlock({
     ladeRangliste('spieltag', spiel.id)
       .then((x) => aktiv && setRl(x))
       .catch(() => {})
-    if (!kompakt)
+    if (!kompakt) {
       ladeDuell()
         .then((d) => aktiv && setDuell(d))
         .catch(() => {})
+      // Idee S „Rang-Film“: Saison-Delta (Platz-Sprung + Abstand zu Platz 3)
+      ladeRangliste('saison')
+        .then((x) => aktiv && setSaison(x))
+        .catch(() => {})
+    }
     return () => {
       aktiv = false
     }
@@ -337,7 +343,10 @@ function AufloesungBlock({
     <div className={`tp-auflblock${kompakt ? ' is-kompakt' : ''}`}>
       <SpieltagKarte spiel={spiel} now={now} kicker={kompakt ? `Letzter Spieltag · ${datumKurz(spiel.anstoss)}` : 'Auflösung'} kompakt={kompakt} />
       {spiel.meinePunkte ? (
-        <Aufloesung spiel={spiel} kader={kader} platz={ich ? { platz: ich.platz, von: rl!.teilnehmer } : undefined} kompakt={kompakt} />
+        <>
+          <Aufloesung spiel={spiel} kader={kader} platz={ich ? { platz: ich.platz, von: rl!.teilnehmer } : undefined} kompakt={kompakt} />
+          {!kompakt && saison?.ich && <RangFilm rl={saison} />}
+        </>
       ) : (
         <p className="tp-lead tp-auflblock__leer">{angemeldet ? 'Bei diesem Spieltag warst du nicht dabei.' : 'Melde dich an und tipp beim nächsten Spieltag mit.'}</p>
       )}
@@ -432,6 +441,43 @@ function AufloesungBlock({
         </section>
       )}
     </div>
+  )
+}
+
+/** Idee S „Rang-Film“: nach der Wertung die Saison-Bewegung zeigen —
+ *  „Platz 9 → 6 (+3) · noch 21 bis Platz 3“. Delta aus dem Saison-Trend. */
+function RangFilm({ rl }: { rl: Rangliste }) {
+  const ich = rl.ich
+  if (!ich) return null
+  const trend = ich.trend ?? 0
+  const vorher = ich.platz + trend // Trend > 0 = hochgeklettert
+  const platz3 = rl.eintraege.find((e) => e.platz === 3)
+  const bis3 = ich.platz > 3 && platz3 ? platz3.punkte - ich.punkte : null
+  return (
+    <motion.div
+      className={`tp-rangfilm is-${trend > 0 ? 'hoch' : trend < 0 ? 'runter' : 'halt'}`}
+      initial={{ opacity: 0, y: 10 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+      role="status"
+    >
+      <span className="tp-rangfilm__kicker">Saisontabelle</span>
+      <b className="tp-rangfilm__zeile">
+        {trend !== 0 ? (
+          <>
+            Platz {vorher} <ArrowRight size={16} strokeWidth={2.5} aria-hidden="true" /> {ich.platz}
+            <span className="tp-rangfilm__delta">{trend > 0 ? `+${trend}` : trend}</span>
+          </>
+        ) : (
+          <>Platz {ich.platz} gehalten</>
+        )}
+      </b>
+      {bis3 != null && bis3 > 0 && (
+        <small className="tp-rangfilm__bis">noch {bis3} {bis3 === 1 ? 'Punkt' : 'Punkte'} bis Platz 3</small>
+      )}
+      {ich.platz <= 3 && <small className="tp-rangfilm__bis">Du stehst auf dem Podest — halten!</small>}
+    </motion.div>
   )
 }
 

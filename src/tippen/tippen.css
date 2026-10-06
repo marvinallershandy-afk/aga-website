@@ -725,6 +725,15 @@ img { display: block; max-width: 100%; }
 /* v25 Befund 11: Kapitän-Verdopplung „+13 ×2 = +26“ */
 .tp-aufl__kapmath { display: inline-flex; align-items: baseline; gap: 4px; white-space: nowrap; }
 .tp-aufl__kapmath small { font-family: var(--f-text, inherit); font-size: .72rem; font-weight: 700; color: var(--tp-gold); letter-spacing: .01em; }
+/* Idee S „Rang-Film“: Saison-Bewegung nach der Wertung */
+.tp-rangfilm { display: flex; flex-direction: column; align-items: center; gap: 4px; margin: var(--s-5) 0 0; padding: var(--s-4); border-radius: var(--r-l); border: var(--border); background: linear-gradient(160deg, #181516, #111010); text-align: center; }
+.tp-rangfilm__kicker { font-size: var(--t-label); letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--c-text-3); }
+.tp-rangfilm__zeile { display: inline-flex; align-items: center; gap: 8px; font-family: var(--f-display); font-weight: 400; font-size: 1.5rem; }
+.tp-rangfilm__zeile svg { color: var(--c-text-2); }
+.tp-rangfilm.is-hoch .tp-rangfilm__delta { color: var(--tp-gruen); }
+.tp-rangfilm.is-runter .tp-rangfilm__delta { color: var(--c-red); }
+.tp-rangfilm__delta { font-size: 1rem; font-weight: 800; font-family: var(--f-body); }
+.tp-rangfilm__bis { font-size: var(--t-small); color: var(--c-text-2); }
 .tp-aufl__zeile.is-ja .tp-aufl__p { color: var(--c-white); }
 .tp-aufl__zeile.is-nein .tp-aufl__p, .tp-aufl__zeile.is-offen .tp-aufl__p { color: var(--c-text-3); }
 .tp-aufl__zeile.is-kapitaen .tp-gesicht { box-shadow: 0 0 0 2px var(--tp-gold); }

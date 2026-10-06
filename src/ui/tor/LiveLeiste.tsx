@@ -16,6 +16,8 @@ export interface LiveLeisteDaten {
   toreGast: number
   /** /tippen: deine Live-Punkte (Hochrechnung) */
   punkte?: number
+  /** /tippen: Joker gesetzt → „×2 aktiv“ an der Punktezahl (Idee S) */
+  joker?: boolean
   /** kurzer Zusatz rechts (z. B. letztes Ereignis auf /live) */
   extra?: string
 }
@@ -84,7 +86,7 @@ export function LiveLeiste({
       {daten.punkte != null ? (
         <span className={`ll__pkt${np ? ' is-hoch' : ''}`} aria-hidden="true">
           <b>{daten.punkte}</b>
-          <small>Deine Punkte</small>
+          <small>{daten.joker ? <span className="ll__joker">×2 aktiv</span> : 'Deine Punkte'}</small>
         </span>
       ) : (
         daten.extra && (

@@ -553,6 +553,7 @@ export function TippApp() {
               toreHeim: sp.heim ? (toreSva ?? 0) : (toreGeg ?? 0),
               toreGast: sp.heim ? (toreGeg ?? 0) : (toreSva ?? 0),
               punkte: livePunkte,
+              joker: sp.meinTipp?.joker,
             }}
             onTippen={() => zumZiel('live')}
           />
