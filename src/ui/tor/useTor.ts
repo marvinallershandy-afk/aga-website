@@ -54,3 +54,12 @@ export function teamKurz(name: string): string {
   if (woerter.length === 1) return woerter[0].slice(0, 3).toUpperCase()
   return woerter.map((w) => w[0]).join('').slice(0, 3).toUpperCase()
 }
+
+/** Bild vorab dekodieren (max. 350 ms warten), damit die Einblendung nicht ruckelt. */
+export async function vorladen(url?: string | null): Promise<void> {
+  if (!url || typeof Image === 'undefined') return
+  const img = new Image()
+  img.decoding = 'async'
+  img.src = url
+  await Promise.race([img.decode().catch(() => {}), new Promise((r) => window.setTimeout(r, 350))])
+}

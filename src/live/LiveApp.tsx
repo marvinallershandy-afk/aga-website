@@ -29,9 +29,9 @@ import { InstagramZeile } from '../ui/InstagramZeile'
 import { CONTACT } from '../data/content'
 // v22-T: gemeinsame TOR!-Einblendung + Live-Leiste (wie /tippen)
 import { playerMedia } from '../data/playerMedia'
-import { TorJubel } from '../ui/tor/TorJubel'
+import { TorMelder, type TorDaten } from '../ui/tor/TorJubel'
 import { LiveLeiste } from '../ui/tor/LiveLeiste'
-import { teamKurz, useTorErkennung } from '../ui/tor/useTor'
+import { teamKurz, vorladen } from '../ui/tor/useTor'
 
 // ─────────────────────────────────────────────────────────────
 // v15-L: Öffentliche Live-Seite /live — der Spieltag lebt hier, nicht im
@@ -68,13 +68,14 @@ export function LiveApp() {
   // v22-T: Tor fällt → große Einblendung über allem; Live-Leiste, sobald der
   // Kopf mit dem Spielstand aus dem Bild gescrollt ist
   const laeuft = !!m && (m.status === 'live' || m.status === 'halbzeit')
-  const [tor, torZu] = useTorErkennung(laeuft && m ? m.id : null, m?.goalsFor, m?.goalsAgainst, (sva) => {
+  const torBauen = async (sva: boolean): Promise<TorDaten | null> => {
     if (!m || !d) return null
     const e = d.events.filter((x) => x.type === (sva ? 'tor' : 'gegentor')).sort((a, b) => a.at.localeCompare(b.at)).pop()
     const sp = e?.player ? players.get(e.player) : undefined
     const vor = e?.player2 ? players.get(e.player2) : undefined
     const md = sp ? playerMedia(sp.id, sp) : null
     const p = paarung(m)
+    if (sva) await vorladen(md?.figure ?? md?.bild)
     return {
       key: `${m.id}-${m.goalsFor}-${m.goalsAgainst}`,
       art: sva ? 'tor' : 'gegentor',
@@ -91,7 +92,7 @@ export function LiveApp() {
       video: md?.jubel ?? md?.loop ?? null,
       gegner: m.opponent,
     }
-  })
+  }
   const [kopfWeg, setKopfWeg] = useState(false)
   useEffect(() => {
     if (!laeuft) return
@@ -255,7 +256,7 @@ export function LiveApp() {
           }}
         />
       )}
-      <TorJubel daten={tor} onZu={torZu} />
+      <TorMelder spielKey={laeuft && m ? m.id : null} toreSva={m?.goalsFor} toreGegner={m?.goalsAgainst} bauen={torBauen} />
       {toast && (
         <div className="lv-toast" role="status">
           {toast}

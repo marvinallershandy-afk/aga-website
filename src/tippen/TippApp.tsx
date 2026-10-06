@@ -8,9 +8,9 @@ import { hochrechnen } from './punkte'
 import { useLiveTicker } from './liveTicker'
 import { laufendeMinute, minuteLabel } from '../live/model'
 import { playerMedia } from '../data/playerMedia'
-import { TorJubel } from '../ui/tor/TorJubel'
+import { TorMelder, type TorDaten } from '../ui/tor/TorJubel'
 import { LiveLeiste } from '../ui/tor/LiveLeiste'
-import { useTorErkennung } from '../ui/tor/useTor'
+import { vorladen } from '../ui/tor/useTor'
 import { tippStandSchreiben } from './tippStand'
 import { SpieltagTab } from './SpieltagTab'
 import { RanglisteTab } from './RanglisteTab'
@@ -301,7 +301,7 @@ export function TippApp() {
     if (!sp.meinTipp) return undefined
     return hochrechnen({ spiel: sp, tipp: sp.meinTipp, stand: [toreSva ?? 0, toreGeg ?? 0], ereignisse: [], minute: 0, ende: false, startelf: [], position: (id) => kader.get(id)?.position ?? 'MIT' }).gesamt
   }, [sp, spLaeuft, toreSva, toreGeg, kader])
-  const [tor, torZu] = useTorErkennung(spLaeuft && sp ? sp.id : null, toreSva, toreGeg, (sva) => {
+  const torBauen = async (sva: boolean): Promise<TorDaten | null> => {
     if (!sp) return null
     const e = [...(sp.live?.ereignisse ?? [])].reverse().find((x) => x.typ === (sva ? 'tor' : 'gegentor'))
     const t = !e && ticker ? [...ticker.events].filter((x) => x.type === (sva ? 'tor' : 'gegentor')).sort((x, y) => x.at.localeCompare(y.at)).pop() : undefined
@@ -311,6 +311,7 @@ export function TippApp() {
     const m = sid ? playerMedia(sid, { cutoutUrl: k?.cutoutUrl, photoUrl: k?.fotoUrl }) : null
     const a = toreSva ?? 0
     const b = toreGeg ?? 0
+    if (sva) await vorladen(m?.figure ?? m?.bild)
     return {
       key: `${sp.id}-${a}-${b}`,
       art: sva ? 'tor' : 'gegentor',
@@ -327,7 +328,7 @@ export function TippApp() {
       video: m?.jubel ?? m?.loop ?? null,
       gegner: sp.gegner,
     }
-  })
+  }
 
   // Einführung: ein echter Spieler auf der Karte, die ins Album fliegt
   const einfFigur = useMemo(() => {
@@ -537,7 +538,7 @@ export function TippApp() {
             onTippen={() => zumZiel('live')}
           />
         )}
-        <TorJubel daten={tor} onZu={torZu} />
+        <TorMelder spielKey={spLaeuft && sp ? sp.id : null} toreSva={toreSva} toreGegner={toreGeg} bauen={torBauen} />
 
         <Einfuehrung
           offen={einf}

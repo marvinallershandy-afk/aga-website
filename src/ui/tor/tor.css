@@ -23,17 +23,17 @@
 }
 .tj--gegentor .tj__scrim { background: radial-gradient(80% 60% at 50% 50%, #2a2627, #0a0909 75%); }
 
-/* Lichtstrahlen (drehen langsam) */
+/* Lichtstrahlen: einmal gerastert, dann nur „atmen“ (Skalierung auf dem
+   Compositor) — kein Drehen einer riesigen maskierten Fläche (teuer am Handy) */
 .tj__strahlen {
-  position: absolute; left: 50%; top: 58%; width: 240vmax; height: 240vmax; margin: -120vmax 0 0 -120vmax;
+  position: absolute; left: 50%; top: 58%; width: 150vmax; height: 150vmax; margin: -75vmax 0 0 -75vmax;
   background: repeating-conic-gradient(from 0deg, rgba(255, 235, 220, .13) 0deg 3.5deg, rgba(255, 255, 255, 0) 3.5deg 13deg);
-  -webkit-mask: radial-gradient(closest-side, #000 8%, rgba(0, 0, 0, .55) 30%, transparent 62%);
-  mask: radial-gradient(closest-side, #000 8%, rgba(0, 0, 0, .55) 30%, transparent 62%);
-  animation: tj-dreh 7s linear both, tj-strahl-ein .6s ease-out both;
-  will-change: transform;
+  -webkit-mask: radial-gradient(closest-side, #000 8%, rgba(0, 0, 0, .55) 34%, transparent 70%);
+  mask: radial-gradient(closest-side, #000 8%, rgba(0, 0, 0, .55) 34%, transparent 70%);
+  animation: tj-atmen 2.8s cubic-bezier(.16, 1, .3, 1) both;
+  will-change: transform, opacity;
 }
-@keyframes tj-dreh { from { transform: rotate(0deg); } to { transform: rotate(40deg); } }
-@keyframes tj-strahl-ein { from { opacity: 0; } to { opacity: 1; } }
+@keyframes tj-atmen { 0% { opacity: 0; transform: scale(.85) rotate(-4deg); } 18% { opacity: 1; } 100% { opacity: 1; transform: scale(1.08) rotate(4deg); } }
 
 /* TV-Übergang: drei schräge Streifen fegen durchs Bild */
 .tj__streifen { position: absolute; inset: 0; pointer-events: none; }

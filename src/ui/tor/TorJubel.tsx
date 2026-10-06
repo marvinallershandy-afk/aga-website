@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { VideoSources } from '../../data/playerMedia'
+import { useTorErkennung } from './useTor'
 import './tor.css'
 
 // ─────────────────────────────────────────────────────────────
@@ -176,4 +177,21 @@ export function TorJubel({ daten, onZu }: { daten: TorDaten | null; onZu: () => 
       </span>
     </div>
   )
+}
+
+/** Erkennt neue Tore (am Spielstand) und blendet „TOR!“ ein — eigener
+ *  Zustand, damit beim Tor nicht die ganze Seite neu zeichnet. */
+export function TorMelder({
+  spielKey,
+  toreSva,
+  toreGegner,
+  bauen,
+}: {
+  spielKey: string | null
+  toreSva: number | null | undefined
+  toreGegner: number | null | undefined
+  bauen: (sva: boolean) => TorDaten | null | Promise<TorDaten | null>
+}) {
+  const [tor, zu] = useTorErkennung(spielKey, toreSva, toreGegner, bauen)
+  return <TorJubel daten={tor} onZu={zu} />
 }
