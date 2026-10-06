@@ -101,7 +101,6 @@ export function TippFormular({
   // v21-UX (Befund 3): Ergebnis erst nach bewusster Wahl gültig; unberührtes 0:0 → Rückfrage.
   const [beruehrt, setBeruehrt] = useState(() => startBeruehrt(spiel))
   const [frage, setFrage] = useState(false)
-  const gefragt = useRef(false)
   const autoGesendet = useRef(false)
 
   const kaderListe = useMemo(() => [...kader.values()], [kader])
@@ -335,7 +334,7 @@ export function TippFormular({
           <div className="tp-abgabe__frage" role="group" aria-label="Was noch fehlt">
             <p>
               Noch offen: <b>{fehlt.map((f) => f.text).join(' · ')}</b>
-              <small>{!beruehrt ? 'Ohne Ergebnis würdest du 0:0 tippen.' : !elfVoll ? 'Ohne volle Elf mit Kapitän zählt nur dein Ergebnis-Tipp.' : 'Offene Bonusfragen bringen keine Punkte.'}</small>
+              <small>Ohne Ergebnis würdest du 0:0 tippen.{!elfVoll ? ' Ohne volle Elf mit Kapitän zählt nur dein Ergebnis-Tipp.' : ''}</small>
             </p>
             <div className="tp-abgabe__knoepfe">
               <button
@@ -353,13 +352,12 @@ export function TippFormular({
                 className="tp-btn tp-btn--sm"
                 onClick={() => {
                   setFrage(false)
-                  gefragt.current = true
-                  if (!beruehrt) setBeruehrt(true)
-                  void abgeben(beruehrt ? s : { ...s, toreSva: 0, toreGegner: 0 })
+                  setBeruehrt(true)
+                  void abgeben({ ...s, toreSva: 0, toreGegner: 0 })
                 }}
                 disabled={laeuft}
               >
-                {beruehrt ? 'Trotzdem abgeben' : 'Ja, 0:0 tippen'}
+                Ja, 0:0 tippen
               </button>
             </div>
           </div>
@@ -383,8 +381,9 @@ export function TippFormular({
                 type="button"
                 className="tp-btn tp-btn--gross tp-abgabe__los"
                 onClick={() => {
-                  // v22-T: Rückfrage, was fehlt — bei fehlendem Ergebnis immer, sonst einmal
-                  if (fehlt.length > 0 && (!beruehrt || !gefragt.current)) {
+                  // v22-T: Rückfrage nur ohne bewusst gewähltes Ergebnis — sie nennt
+                  // dann alles, was noch fehlt. Mit Ergebnis geht es direkt durch.
+                  if (!beruehrt) {
                     setFrage(true)
                     haptik(10)
                     return

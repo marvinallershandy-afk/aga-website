@@ -44,7 +44,9 @@ function Zaehler({ ziel, start, dauer = 0.7, vorzeichen = false }: { ziel: numbe
       vorher.current = ziel
     }
   }, [ziel, start, dauer, ruhig, vorzeichen])
-  return <span ref={ref}>{vorzeichen && ziel > 0 ? '+' : ''}{start && !ruhig ? 0 : ziel}</span>
+  // EIN Textknoten (der Effekt schreibt textContent — zwei Knoten brächten React beim
+  // nächsten Update aus dem Tritt: „insertBefore … not a child“)
+  return <span ref={ref}>{`${vorzeichen && ziel > 0 ? '+' : ''}${start && !ruhig ? 0 : ziel}`}</span>
 }
 
 interface Zeile {
