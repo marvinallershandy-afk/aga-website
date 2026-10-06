@@ -43,6 +43,8 @@ await run(NEU) // zweiter Lauf: idempotent + entzieht die Default-Rechte wieder
 // v17-D: spätere Migrationen danach erneut (sonst stünde nach dem zweiten
 // Album-Lauf wieder die alte PIN-Funktion da — echte Reihenfolge herstellen)
 for (const f of fs.readdirSync(M).sort().filter((f) => f > NEU)) await run(f)
+// v25-D: Diese Tests prüfen den statischen Check-in → Rotation (Standard an) hier aus.
+await db.exec(`update public.sva_album_einstellungen set checkin_rotation = false where id = 1`).catch(() => {})
 
 const claims = (uid, email) => JSON.stringify({ sub: uid, email, role: 'authenticated' })
 const as = async (uid, email, sql, params) => {

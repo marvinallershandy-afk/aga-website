@@ -24,17 +24,23 @@ export function TvAufstellung({ data }: { data: LiveData }) {
       </div>
     )
   }
-  return <TvGrafik g={g} geplant={data.match?.status === 'geplant'} />
+  return <TvGrafik g={g} geplant={data.match?.status === 'geplant'} status={data.match?.status} />
 }
 
-export function TvGrafik({ g, geplant = false }: { g: AufstellungGrafik; geplant?: boolean }) {
+export function TvGrafik({ g, geplant = false, status }: { g: AufstellungGrafik; geplant?: boolean; status?: string }) {
   const paarung = g.kopf.gegner ? (g.kopf.heim ? `SVA – ${g.kopf.gegner}` : `${g.kopf.gegner} – SVA`) : 'SV Agathenburg-Dollern'
+  // v25 Befund 6: Label an den Spielstatus koppeln (TV-Grafik-Anspruch).
+  //   geplant → „Voraussichtliche Elf“ · ab Anpfiff → „Startelf“ ·
+  //   nach Wechseln → „Aufstellung · n Wechsel“.
+  const wechsel = g.bank.filter((b) => b.raus != null).length
+  const laeuft = status != null && status !== 'geplant'
+  const kicker = !laeuft ? (g.vorlaeufig ? 'Voraussichtliche Elf' : g.kopf.titel) : wechsel > 0 ? `Aufstellung · ${wechsel} Wechsel` : 'Startelf'
   return (
-    <figure className="tv" aria-label={`${g.kopf.titel} ${g.formation}`}>
+    <figure className="tv" aria-label={`${kicker} ${g.formation}`}>
       <header className="tv-kopf">
         <img className="tv-kopf__wappen" src="/brand/wappen.png" alt="" width="44" height="44" />
         <div className="tv-kopf__txt">
-          <span className="tv-kopf__kicker">{g.vorlaeufig ? 'Voraussichtliche Elf' : g.kopf.titel}</span>
+          <span className="tv-kopf__kicker">{kicker}</span>
           <b className="tv-kopf__titel">
             <span>{paarung}</span>
             {g.kopf.stand && <em>{g.kopf.stand}</em>}

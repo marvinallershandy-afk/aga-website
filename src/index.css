@@ -121,6 +121,13 @@ body {
      nur 1.5rem — Titel liefe unters Logo. Extra Kopf-Freiraum. */
   .section--snap-start { padding-top: 4.5rem; }
 }
+/* v25 Befund 15: Rundgang-Abschluss (Mitmachen) ist höher als der Viewport und
+   rastet am Anfang ein — die Karten-Titel „Spieler/Helfer & Fans/Sponsoren“
+   liefen unter die transparente Top-Nav bzw. den „← Karte“-Knopf. Extra
+   Kopf-Freiraum, damit der Finale-Inhalt die Navigation frei lässt (Desktop). */
+@media (min-width: 641px) {
+  .section--finale { padding-top: clamp(5rem, 10vh, 8rem); }
+}
 
 /* v14-D „Startelf-Flyover": Die Mannschaft ist im 3D-Pfad eine lange
    Strecke — der Text klebt (Sticky), die Kamera gleitet über die Elf.

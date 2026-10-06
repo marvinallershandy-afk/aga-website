@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { BookOpen, CalendarCheck, Download, ExternalLink, FlaskConical, KeyRound, ListChecks, MonitorPlay, QrCode, RefreshCw, Settings2, Sparkles, Star, Target, Ticket, Trophy, Users } from 'lucide-react'
 import { PageHeader } from './Placeholder'
 import { Button } from '../components/ui/button'
@@ -444,6 +444,7 @@ function GutscheineTab() {
 // ── Regeln ──────────────────────────────────────────────────
 function EinstellungenTab() {
   const toast = useToast()
+  const navigate = useNavigate()
   const q = useAlbumEinstellungen()
   const sponsoren = useSponsoren()
   const stat = useAlbumStatistik()
@@ -488,6 +489,29 @@ function EinstellungenTab() {
           Ohne PIN: Der Fan zeigt den Gutschein, tippt „Einlösen“ und bestätigt „Wirklich einlösen?“. Danach steht auf seinem Handy ein großer
           Haken mit Datum und Uhrzeit — der Gutschein ist verbraucht und lässt sich kein zweites Mal einlösen. Helfer achten nur auf den Haken.
         </p>
+      </section>
+
+      {/* v25-D: Check-in am Eingang — rotierender Code + iPad-Anzeige */}
+      <section className="space-y-4 rounded-lg border border-border p-4">
+        <h2 className="font-display text-xl">Check-in am Eingang</h2>
+        <Switch
+          checked={f.checkin_rotation !== false}
+          onChange={(v) => set({ checkin_rotation: v })}
+          label="Wechselnden Code nutzen (Fern-Check-in verhindern)"
+          hint="Der QR auf der Check-in-Anzeige wechselt regelmäßig — ein abfotografierter Code taugt dann nicht mehr für zu Hause. Der statische QR bleibt als Notfall-Fallback."
+        />
+        {f.checkin_rotation !== false && (
+          <div className="sm:max-w-[220px]">{zahl('checkin_rotation_minuten', 'Wechsel alle … Minuten', 1, 10, 'Standard 3')}</div>
+        )}
+        <div className="space-y-1.5">
+          <Button type="button" variant="outline" onClick={() => navigate('/checkin-anzeige')}>
+            <MonitorPlay className="h-4 w-4" /> Check-in-Anzeige öffnen (fürs iPad)
+          </Button>
+          <p className="text-xs text-muted-foreground">
+            Vollbild fürs Tablet am Eingang/an der Kasse: großer QR mit Countdown, Live-Zähler „heute eingecheckt“ und ruhig wechselnden Spielerkarten.
+            Bildschirm bleibt an; Ausstieg per langem Druck.
+          </p>
+        </div>
       </section>
 
       <section className="space-y-4 rounded-lg border border-border p-4">

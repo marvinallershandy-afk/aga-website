@@ -10,7 +10,11 @@
   display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border-radius: 999px;
   background: #f4f2ef; color: #141213; border: 0; font-size: 13px; font-weight: 800; cursor: pointer;
   box-shadow: 0 10px 30px rgba(0, 0, 0, .5), 0 0 0 3px rgba(233, 29, 41, .7);
+  transition: padding .2s var(--ease, ease), opacity .2s ease;
 }
+/* v25 Befund 18: beim Scrollen auf den Icon-Knopf einklappen (Wort verstecken) */
+.vf-leiste__knopf.is-kompakt { padding: 0; width: 44px; justify-content: center; opacity: .82; }
+.vf-leiste__knopf.is-kompakt .vf-leiste__wort { display: none; }
 .vf-leiste__panel {
   display: flex; flex-direction: column; gap: 4px; width: min(300px, calc(100vw - 32px)); padding: 10px; border-radius: 14px;
   background: #141213; border: 1px solid rgba(244, 242, 239, .14); box-shadow: 0 24px 60px rgba(0, 0, 0, .65);

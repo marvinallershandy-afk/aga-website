@@ -374,6 +374,8 @@ export function fehlerText(code: string, detail?: string): string {
       return 'Der Code gilt nur rund ums Spiel — dieses Spiel ist schon vorbei. Beim nächsten Heimspiel wieder!'
     case 'album_code_unbekannt':
       return 'Diesen Check-in-Code kennen wir nicht. Scanne bitte den QR-Code am Eingang noch einmal.'
+    case 'album_code_veraltet':
+      return 'Dieser QR-Code ist nicht mehr gültig. Scanne bitte den QR-Code auf dem Bildschirm am Eingang — der wechselt alle paar Minuten.'
     case 'album_schon_eingecheckt':
       return 'Du bist für dieses Spiel schon eingecheckt — dein Pack hast du bekommen. Viel Spaß beim Spiel!'
     case 'album_pausiert':
@@ -447,12 +449,21 @@ async function rpc<T>(fn: string, args?: Record<string, unknown>): Promise<T> {
 }
 
 // ── Öffentlich ──────────────────────────────────────────────
+// v25-D: Check-in nach QR-Scan für die E-Mail vormerken (anon; überlebt den Login
+// in einem anderen Browser). Nur mit gültigem Rotationscode.
+export const checkinVormerken = (spiel: string, email: string, code: string) =>
+  rpc<{ ok: true }>('album_checkin_vormerken', { p_spiel: spiel, p_email: email, p_code: code })
 export const ladeKatalog = () => rpc<Katalog>('album_katalog')
 export const ladeRangliste = () => rpc<RanglistenEintrag[]>('album_rangliste')
 
 // ── Eingeloggt ──────────────────────────────────────────────
 export const ladeMein = () => rpc<Mein>('album_mein')
+// v25-D: statischer QR gilt nur im Notfall-Modus (Rotation aus) — sonst album_code_veraltet
 export const checkin = (token: string) => rpc<CheckinErgebnis>('album_checkin', { p_token: token })
+// v25-D: Check-in per rotierendem Code (QR an der Check-in-Anzeige)
+export const checkinRot = (spiel: string, code: string) => rpc<CheckinErgebnis>('album_checkin_rot', { p_spiel: spiel, p_code: code })
+// v25-D: nach dem Login eine offene Vormerkung einlösen (Check-in überlebt „fremden Browser")
+export const checkinEinloesen = () => rpc<CheckinErgebnis & { ok: boolean; grund?: string }>('album_checkin_offen_einloesen')
 export const packOeffnen = (id: string) => rpc<PackInhalt>('album_pack_oeffnen', { p_pack: id })
 export const profilSpeichern = (p: { vorname: string; initial: string; rangliste: boolean; erinnerung: boolean; einwilligung: boolean }) =>
   rpc<{ ok: true }>('album_profil_speichern', {

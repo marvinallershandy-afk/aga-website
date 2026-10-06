@@ -38,6 +38,7 @@ import {
   useSponsoren,
   useTabelle,
 } from '../lib/queries'
+import { useWertungStatus } from '../lib/tippliga'
 import { isMissingSchema } from '../lib/db'
 import { useAnfragen, usePakete, usePartnerInfo } from '../lib/partner'
 import { formatAnstoss, relativZeit } from '../lib/format'
@@ -147,6 +148,7 @@ export function Uebersicht() {
     return (
       <>
         <PageHeader title="Übersicht" subtitle="Spieltag im Blick: Aufstellung, Live-Ticker, Ergebnis." />
+        <WertungMahnung />
         {spieltag && <SpieltagBanner spiel={spieltag} />}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <StatusKarte icon={CalendarDays} titel="Nächstes Spiel" to="/spiele" laden={spieleQ.isPending}>
@@ -178,6 +180,7 @@ export function Uebersicht() {
   return (
     <>
       <PageHeader title="Übersicht" subtitle="Alles, was die Website aktuell hält — auf einen Blick." />
+      <WertungMahnung />
       {spieltag && <SpieltagBanner spiel={spieltag} />}
 
       {schemaFehlt && <PflegeHinweis schema className="mb-4" />}
@@ -385,6 +388,55 @@ function StatusKarte({
         </Button>
       </CardContent>
     </Card>
+  )
+}
+
+/** v25-B: Mahnbanner — hängt ein Pflichtspiel ungewertet, oder steht eine
+ *  Wertung „vorläufig“ (MOTM fehlt)? Nutzt die Auto-Wertung nicht selbst, sondern
+ *  zeigt nur, wo Handarbeit nötig ist. Still, wenn nichts hängt. */
+function WertungMahnung() {
+  const q = useWertungStatus()
+  const st = q.data
+  if (!st) return null
+  const offen = st.offen ?? []
+  const vorl = st.vorlaeufig ?? []
+  if (offen.length === 0 && vorl.length === 0) return null
+  const paar = (s: { heim: boolean; gegner: string }) => (s.heim ? `SVA – ${s.gegner}` : `${s.gegner} – SVA`)
+  return (
+    <div className="mb-4 space-y-2">
+      {offen.map((s) => (
+        <Link
+          key={s.spielId}
+          to={`/spielbericht/${s.spielId}`}
+          className="flex min-h-[64px] items-center gap-3 rounded-lg border border-destructive bg-destructive/15 px-4 py-3"
+        >
+          <AlertCircle className="h-6 w-6 shrink-0 text-destructive" />
+          <span className="min-w-0 flex-1">
+            <span className="block text-xs font-semibold uppercase tracking-wider text-destructive">
+              {s.spieltag ? `${s.spieltag}. Spieltag` : 'Spieltag'} ungewertet{typeof s.stunden === 'number' ? ` seit ${s.stunden} Std` : ''}
+            </span>
+            <span className="block truncate font-medium">
+              {paar(s)} — jetzt werten{st.autoAktiv ? '' : ' (Auto-Wertung ist aus)'}
+            </span>
+          </span>
+          <span className="shrink-0 font-display text-lg tracking-wide text-destructive">Werten →</span>
+        </Link>
+      ))}
+      {vorl.map((s) => (
+        <Link
+          key={s.spielId}
+          to={`/spielbericht/${s.spielId}`}
+          className="flex min-h-[56px] items-center gap-3 rounded-lg border border-sva-gold/50 bg-sva-gold/10 px-4 py-2.5"
+        >
+          <AlertCircle className="h-5 w-5 shrink-0 text-sva-gold" />
+          <span className="min-w-0 flex-1">
+            <span className="block text-xs font-semibold uppercase tracking-wider text-sva-gold">Vorläufig — MOTM fehlt</span>
+            <span className="block truncate text-sm text-muted-foreground">{paar(s)} · Spieler des Spiels eintragen → wertet automatisch neu</span>
+          </span>
+          <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+        </Link>
+      ))}
+    </div>
   )
 }
 

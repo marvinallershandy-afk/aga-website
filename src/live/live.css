@@ -37,10 +37,12 @@ img { display: block; }
 
 /* ── Kopfzeile ───────────────────────────────────────────── */
 .lv-top {
-  position: sticky; top: 0; z-index: 10;
+  position: sticky; top: 0; z-index: 30;
   display: flex; align-items: center; gap: 10px;
   margin: 0 -16px; padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
-  background: linear-gradient(180deg, rgba(14,13,13,.96), rgba(14,13,13,.86));
+  /* v25 Befund 4: opak — Spieler-Freisteller der Aufstellung dürfen nicht durch
+     Kopfzeile/Tabs scheinen (Text auf Text). Blur bleibt als Fallback. */
+  background: #0e0d0d;
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--line);
 }
@@ -190,10 +192,11 @@ img { display: block; }
 
 /* ── Tabs (nur mobil) ────────────────────────────────────── */
 .lv-tabs {
-  position: sticky; top: calc(65px + env(safe-area-inset-top)); z-index: 9;
+  position: sticky; top: calc(65px + env(safe-area-inset-top)); z-index: 29;
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px;
   margin: 0 0 14px; padding: 4px; border-radius: 14px;
-  background: rgba(23,21,22,.94); border: 1px solid var(--line); backdrop-filter: blur(8px);
+  /* v25 Befund 4: opak, damit Aufstellungs-Freisteller nicht durchscheinen */
+  background: #171516; border: 1px solid var(--line); backdrop-filter: blur(8px);
 }
 .lv-tabs button {
   min-height: 42px; border-radius: 10px; border: 0; background: none; cursor: pointer;
@@ -364,6 +367,11 @@ a.lv-partner:hover .lv-partner__label { color: var(--fg); }
 .lv-table tr.is-self td { background: rgba(233,29,41,.16); font-weight: 700; }
 .lv-table tr.is-self td:first-child { box-shadow: inset 3px 0 0 #e91d29; }
 .lv-table__quelle { margin: 10px 0 0; font-size: 12px; color: rgba(255,255,255,.45); }
+/* v25 Befund 20: „Stand vor diesem Spieltag“ + Link zur Live-Tabelle */
+.lv-table__badge { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; padding: 7px 12px; border-radius: 10px; background: rgba(255,255,255,.05); border: 1px solid var(--line); font-size: 13px; color: rgba(255,255,255,.72); }
+.lv-table__badge > span { flex: 1 1 auto; }
+.lv-table__livelink { flex: none; border: 0; background: var(--red); color: #fff; font-weight: 700; font-size: 12px; padding: 5px 11px; border-radius: 999px; cursor: pointer; }
+.lv-table__livelink:hover { filter: brightness(1.08); }
 
 /* v18-P: Heimspiel → am Eingang einchecken (Sammelalbum) */
 .lv-album {

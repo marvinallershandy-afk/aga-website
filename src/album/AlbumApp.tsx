@@ -9,6 +9,9 @@ import {
   aktuelleSitzung,
   albumKonfiguriert,
   checkin,
+  checkinRot,
+  checkinEinloesen,
+  type CheckinErgebnis,
   ladeKatalog,
   ladeMein,
   ladeRangliste,
@@ -84,8 +87,9 @@ const heuteMMTT = () => {
 
 const C_KEY = 'sva-album-c'
 const C_TS = 'sva-album-c-t'
+const RC_KEY = 'sva-album-rc' // v25-D: rotierender Check-in (ci+rc), überlebt den Login-Umweg (30 min)
 const OFFEN_KEY = 'sva-album-offen'
-const ENDGUELTIG = new Set(['album_code_zu_frueh', 'album_code_abgelaufen', 'album_code_unbekannt', 'album_schon_eingecheckt', 'album_pausiert'])
+const ENDGUELTIG = new Set(['album_code_zu_frueh', 'album_code_abgelaufen', 'album_code_unbekannt', 'album_code_veraltet', 'album_schon_eingecheckt', 'album_pausiert'])
 
 function speicher(fn: () => void) {
   try {
@@ -97,39 +101,62 @@ function speicher(fn: () => void) {
 /** ?c= aus der URL übernehmen (6 h gemerkt — überlebt den Login-Umweg) und aus
  *  der Adresszeile entfernen. `unlesbar` = es stand ein ?c= in der URL, war aber
  *  kein gültiger Code (Audit B §2.6: dann freundlichen Hinweis zeigen). */
-function tokenUebernehmen(): { token: string | null; unlesbar: boolean } {
+function tokenUebernehmen(): { token: string | null; rotSpiel: string | null; rotCode: string | null; unlesbar: boolean } {
   let neu: string | null = null
   let unlesbar = false
+  let rotSpiel: string | null = null
+  let rotCode: string | null = null
   try {
     const url = new URL(window.location.href)
     const c = url.searchParams.get('c')
+    // v25-D: rotierender Check-in /album?ci=<spiel>&rc=<CODE>
+    const ci = url.searchParams.get('ci')
+    const rc = url.searchParams.get('rc')
+    if (ci && rc && /^[0-9a-fA-F-]{20,40}$/.test(ci) && /^[0-9A-Fa-f]{6}$/.test(rc)) {
+      rotSpiel = ci
+      rotCode = rc.toUpperCase()
+    }
     if (c) {
       if (/^[A-Za-z0-9]{16,64}$/.test(c)) neu = c.toLowerCase()
       else unlesbar = true
     }
-    if (url.searchParams.has('c')) {
-      url.searchParams.delete('c')
-      window.history.replaceState(null, '', url.pathname + (url.search || '') + url.hash)
-    }
+    let dreckig = false
+    for (const k of ['c', 'ci', 'rc']) if (url.searchParams.has(k)) { url.searchParams.delete(k); dreckig = true }
+    if (dreckig) window.history.replaceState(null, '', url.pathname + (url.search || '') + url.hash)
   } catch {
     /* egal */
+  }
+  if (rotSpiel && rotCode) {
+    speicher(() => sessionStorage.setItem(RC_KEY, JSON.stringify({ spiel: rotSpiel, code: rotCode, ts: Date.now() })))
+  } else {
+    // Magic-Link-Rücksprung: Rot-Absicht aus der Sitzung holen (≤ 30 min)
+    try {
+      const raw = sessionStorage.getItem(RC_KEY)
+      if (raw) {
+        const o = JSON.parse(raw) as { spiel?: string; code?: string; ts?: number }
+        if (o?.spiel && o.code && Date.now() - (o.ts ?? 0) < 30 * 60_000) { rotSpiel = o.spiel; rotCode = o.code }
+        else sessionStorage.removeItem(RC_KEY)
+      }
+    } catch {
+      /* egal */
+    }
   }
   if (neu) {
     speicher(() => {
       localStorage.setItem(C_KEY, neu!)
       localStorage.setItem(C_TS, String(Date.now()))
     })
-    return { token: neu, unlesbar: false }
+    return { token: neu, rotSpiel, rotCode, unlesbar: false }
   }
   try {
     const t = localStorage.getItem(C_KEY)
     const ts = Number(localStorage.getItem(C_TS) || 0)
-    if (t && Date.now() - ts < 6 * 3600_000) return { token: t, unlesbar }
+    if (t && Date.now() - ts < 6 * 3600_000) return { token: t, rotSpiel, rotCode, unlesbar }
     localStorage.removeItem(C_KEY)
   } catch {
     /* egal */
   }
-  return { token: null, unlesbar }
+  return { token: null, rotSpiel, rotCode, unlesbar }
 }
 function tokenVergessen() {
   speicher(() => {
@@ -137,10 +164,13 @@ function tokenVergessen() {
     localStorage.removeItem(C_TS)
   })
 }
+function rotVergessen() {
+  speicher(() => sessionStorage.removeItem(RC_KEY))
+}
 
 type CheckinStatus =
   | { status: 'laeuft' }
-  | { status: 'ok'; gegner: string; checkins: number }
+  | { status: 'ok'; gegner: string; checkins: number; anstoss?: string }
   | { status: 'fehler'; text: string; nochmal: boolean }
 
 interface PackAuftrag {
@@ -175,6 +205,8 @@ export function AlbumApp() {
   const [meinFehler, setMeinFehler] = useState('')
   const start = useMemo(() => tokenUebernehmen(), [])
   const [token, setToken] = useState<string | null>(start.token)
+  const [rotSpiel] = useState<string | null>(start.rotSpiel)
+  const [rotCode] = useState<string | null>(start.rotCode)
   const [codeUnlesbar, setCodeUnlesbar] = useState(start.unlesbar)
   const [ci, setCi] = useState<CheckinStatus | null>(null)
   const [packs, setPacks] = useState<PackAuftrag[]>([])
@@ -191,6 +223,17 @@ export function AlbumApp() {
     }
   })
   const [aufschlagen, setAufschlagen] = useState(false)
+  // v25 Befund 18: das „Packs warten“-Sticky soll über der Fußzeile enden,
+  // nicht Impressum/Plätze überlagern.
+  const fussRef = useRef<HTMLElement>(null)
+  const [fussNah, setFussNah] = useState(false)
+  useEffect(() => {
+    const el = fussRef.current
+    if (!el || typeof IntersectionObserver === 'undefined') return
+    const io = new IntersectionObserver((eintraege) => setFussNah(eintraege[0]?.isIntersecting ?? false), { rootMargin: '0px 0px -40px 0px' })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
   // Einkleben: Warteschlange neuer Karten (bis zur Landung im Heft unsichtbar)
   const [kleben, setKleben] = useState<string[]>([])
   const [flug, setFlug] = useState<{ karte: Karte; platzKey: string; nr: number; rect: DOMRect } | null>(null)
@@ -261,20 +304,27 @@ export function AlbumApp() {
     }
   }, [uid, neuLaden])
 
+  // Gemeinsame Verbuchung eines Check-in-Ergebnisses (Token, Rotation, Vormerkung)
+  const verbucheCheckin = useCallback(
+    (r: CheckinErgebnis) => {
+      setCi({ status: 'ok', gegner: r.spiel.gegner, checkins: r.checkins, anstoss: r.spiel.anstoss })
+      const neu: PackAuftrag[] = []
+      if (r.packId) neu.push({ id: r.packId, art: 'checkin', gegner: r.spiel.gegner, partner: r.partner })
+      if (r.bonusPackId) neu.push({ id: r.bonusPackId, art: 'heimsieg', gegner: r.spiel.gegner, partner: r.partner })
+      if (r.freundPackId) neu.push({ id: r.freundPackId, art: 'freund', titel: r.freunde?.length ? `Freundes-Bonus · mit ${r.freunde.join(', ')}` : 'Freundes-Bonus' })
+      setPacks((p) => [...p, ...neu])
+      void neuLaden()
+    },
+    [neuLaden],
+  )
+
   const einchecken = useCallback(
     async (t: string) => {
       setCi({ status: 'laeuft' })
       try {
-        const r = await checkin(t)
+        verbucheCheckin(await checkin(t))
         tokenVergessen()
         setToken(null)
-        setCi({ status: 'ok', gegner: r.spiel.gegner, checkins: r.checkins })
-        const neu: PackAuftrag[] = []
-        if (r.packId) neu.push({ id: r.packId, art: 'checkin', gegner: r.spiel.gegner, partner: r.partner })
-        if (r.bonusPackId) neu.push({ id: r.bonusPackId, art: 'heimsieg', gegner: r.spiel.gegner, partner: r.partner })
-        if (r.freundPackId) neu.push({ id: r.freundPackId, art: 'freund', titel: r.freunde?.length ? `Freundes-Bonus · mit ${r.freunde.join(', ')}` : 'Freundes-Bonus' })
-        setPacks((p) => [...p, ...neu])
-        void neuLaden()
       } catch (e) {
         const f = e instanceof AlbumFehler ? e : new AlbumFehler('netz', 'Das hat nicht geklappt.')
         const endgueltig = ENDGUELTIG.has(f.code)
@@ -285,12 +335,46 @@ export function AlbumApp() {
         setCi({ status: 'fehler', text: f.message, nochmal: !endgueltig && f.code !== 'album_kein_profil' })
       }
     },
-    [neuLaden],
+    [neuLaden, verbucheCheckin],
+  )
+
+  // v25-D: Check-in per rotierendem Code (QR von der Check-in-Anzeige)
+  const eincheckenRot = useCallback(
+    async (spiel: string, code: string) => {
+      setCi({ status: 'laeuft' })
+      try {
+        verbucheCheckin(await checkinRot(spiel, code))
+        rotVergessen()
+      } catch (e) {
+        const f = e instanceof AlbumFehler ? e : new AlbumFehler('netz', 'Das hat nicht geklappt.')
+        if (ENDGUELTIG.has(f.code)) rotVergessen()
+        setCi({ status: 'fehler', text: f.message, nochmal: false })
+      }
+    },
+    [verbucheCheckin],
   )
 
   useEffect(() => {
-    if (token && mein?.profil && ci === null) queueMicrotask(() => void einchecken(token))
-  }, [token, mein, ci, einchecken])
+    if (ci !== null || !mein?.profil) return
+    if (token) queueMicrotask(() => void einchecken(token))
+    else if (rotSpiel && rotCode) queueMicrotask(() => void eincheckenRot(rotSpiel, rotCode))
+  }, [token, rotSpiel, rotCode, mein, ci, einchecken, eincheckenRot])
+
+  // v25-D: nach dem Login offene Vormerkung einlösen (Check-in überlebt „fremden
+  // Browser": Magic-Link öffnet oft einen anderen Browser ohne lokalen Zustand).
+  const einloeseVersucht = useRef(false)
+  useEffect(() => {
+    if (!mein?.profil || ci !== null || token || (rotSpiel && rotCode) || einloeseVersucht.current) return
+    einloeseVersucht.current = true
+    queueMicrotask(async () => {
+      try {
+        const r = await checkinEinloesen()
+        if (r && (r as CheckinErgebnis).packId) verbucheCheckin(r as CheckinErgebnis)
+      } catch {
+        /* keine offene Vormerkung → still */
+      }
+    })
+  }, [mein, ci, token, rotSpiel, rotCode, verbucheCheckin])
 
   const imHeft = !!mein?.profil
   useEffect(() => {
@@ -553,7 +637,7 @@ export function AlbumApp() {
             <b>Konto gelöscht.</b> Deine Karten, Gutscheine und dein Profil sind weg. Danke, dass du dabei warst — komm gern wieder!
           </p>
         )}
-        <Login katalog={katalog} checkinWartet={!!token} />
+        <Login katalog={katalog} checkinWartet={!!token || !!(rotSpiel && rotCode)} rotSpiel={rotSpiel} rotCode={rotCode} />
       </>
     )
   } else if (!mein) {
@@ -579,7 +663,10 @@ export function AlbumApp() {
   } else {
     unterCover = (
       <div className="al-start__info">
-        <p className="al-start__hint">Tippen zum Aufschlagen</p>
+        {/* v25 Befund 16: Hinweis selbst tippbar — gleicher onClick wie das Cover */}
+        <button type="button" className="al-start__hint al-start__hint--knopf" onClick={() => (bereit && katalog ? heftAuf() : undefined)}>
+          Tippen zum Aufschlagen
+        </button>
         {/* v20-T: gemeinsames Konto — jeder Tipp in der Tipp-Liga bringt eine Karte */}
         <a className="al-tipp" href="/tippen">
           <b>Tipp-Liga</b>
@@ -711,7 +798,7 @@ export function AlbumApp() {
               sammeln={<SammelSeite katalog={katalog} mein={mein} ps={ps} besitz={besitz} onPack={packNeu} onNeu={() => void neuLaden()} />}
             />
             {wartende.length > 0 && !packs.length && (
-              <button type="button" className="al-fach" onClick={packsOeffnen}>
+              <button type="button" className={`al-fach${fussNah ? ' is-weg' : ''}`} onClick={packsOeffnen}>
                 <span className="hf-tuetchen__bild" aria-hidden="true" />
                 <span>
                   <b>
@@ -748,7 +835,7 @@ export function AlbumApp() {
         )}
       </main>
 
-      <footer className="al-fuss">
+      <footer className="al-fuss" ref={fussRef}>
         <span className="al-fuss__links">
           <a href="/">Vereinsseite</a> · <a href="/live">Live-Ticker</a> · <a href="/tippen">Tipp-Liga</a> · <a href="/datenschutz#album">Datenschutz</a> · <a href="/impressum">Impressum</a>
         </span>
@@ -863,6 +950,59 @@ function Flug({ karte, nr, gesamt, saison, rect, onLanden }: { karte: Karte; nr:
   )
 }
 
+/** v25-D: nach dem Check-in der zum Moment passende nächste Schritt. */
+function CheckinNaechster({ anstoss }: { anstoss?: string }) {
+  const [jetzt] = useState(() => Date.now()) // einmal beim Mounten (reiner Render)
+  // Heuristik aus dem Anstoß als Startwert (kein synchrones setState im Effect)
+  const [status, setStatus] = useState<'vor' | 'live' | 'nach' | null>(() => {
+    if (!anstoss) return null
+    const a = new Date(anstoss).getTime()
+    const n = Date.now()
+    return n < a ? 'vor' : n < a + 2 * 3600_000 ? 'live' : 'nach'
+  })
+  useEffect(() => {
+    let aktiv = true
+    // echter Status aus /api/live (überschreibt die Heuristik, async → kein cascading render)
+    fetch('/api/live', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { match?: { status?: string } } | null) => {
+        if (!aktiv || !d?.match?.status) return
+        const s = d.match.status
+        if (s === 'live' || s === 'halbzeit') setStatus('live')
+        else if (s === 'beendet') setStatus('nach')
+        else if (s === 'geplant') setStatus('vor')
+      })
+      .catch(() => {})
+    return () => {
+      aktiv = false
+    }
+  }, [anstoss])
+  if (!status) return null
+  if (status === 'vor') {
+    const min = anstoss ? Math.round((new Date(anstoss).getTime() - jetzt) / 60000) : null
+    return (
+      <a className="al-ci__next" href="/tippen">
+        <b>Tipp fürs Spiel gleich abgeben</b>
+        <span>{min != null && min > 0 && min <= 180 ? `noch ${min} Min bis Anpfiff` : 'in der Tipp-Liga, 20 Sekunden'} →</span>
+      </a>
+    )
+  }
+  if (status === 'live') {
+    return (
+      <a className="al-ci__next" href="/live">
+        <b>Live mitverfolgen & mitjubeln</b>
+        <span>Ticker, Stand, Aufstellung →</span>
+      </a>
+    )
+  }
+  return (
+    <a className="al-ci__next" href="/tippen">
+      <b>Schau dir deine Ziele an</b>
+      <span>und tippe schon das nächste Spiel →</span>
+    </a>
+  )
+}
+
 function CheckinBanner({ ci, onNochmal, onWeg }: { ci: CheckinStatus; onNochmal: () => void; onWeg: () => void }) {
   if (ci.status === 'laeuft') {
     return (
@@ -876,6 +1016,7 @@ function CheckinBanner({ ci, onNochmal, onWeg }: { ci: CheckinStatus; onNochmal:
       <div className="al-ci al-ci--ok" role="status">
         <span>
           <b>Eingecheckt: SVA gegen {ci.gegner}.</b> Das ist dein {ci.checkins}. Heimspiel diese Saison.
+          <CheckinNaechster anstoss={ci.anstoss} />
         </span>
         <button type="button" className="al-ci__x" onClick={onWeg} aria-label="Hinweis schließen">
           ×

@@ -568,7 +568,10 @@ img { display: block; max-width: 100%; }
   background: rgba(11, 10, 11, .97); border-top: var(--border);
   box-shadow: 0 -18px 28px rgba(11, 10, 11, .92);
 }
-@media (min-width: 1024px) { .tp-abgabe { bottom: var(--s-3); margin: var(--s-6) 0 0; border: var(--border); border-radius: var(--r-l); } }
+/* v25 Befund 17: Am Desktop NICHT mehr über den Inhalt schweben (verdeckte
+   Bonusfrage/Elf), sondern am Fuß der rechten Spalte andocken — die Spalte ist
+   lang genug, die Abgabe steht sauber am Ende statt zu überlagern. */
+@media (min-width: 1024px) { .tp-abgabe { position: static; margin: var(--s-6) 0 0; border: var(--border); border-radius: var(--r-l); box-shadow: none; } }
 .tp-abgabe__status { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: var(--s-2); }
 .tp-abgabe__status li {
   display: inline-flex; align-items: center; gap: 4px; padding: 4px 7px; border-radius: var(--r-s); border: 1px solid var(--c-line);
@@ -719,6 +722,18 @@ img { display: block; max-width: 100%; }
 .tp-aufl__text b { display: block; font-weight: 700; }
 .tp-aufl__text small { display: block; font-size: var(--t-small); color: var(--c-text-3); }
 .tp-aufl__p { font-family: var(--f-display); font-size: 1.75rem; line-height: 1; min-width: 3ch; text-align: right; font-variant-numeric: tabular-nums; }
+/* v25 Befund 11: Kapitän-Verdopplung „+13 ×2 = +26“ */
+.tp-aufl__kapmath { display: inline-flex; align-items: baseline; gap: 4px; white-space: nowrap; }
+.tp-aufl__kapmath small { font-family: var(--f-text, inherit); font-size: .72rem; font-weight: 700; color: var(--tp-gold); letter-spacing: .01em; }
+/* Idee S „Rang-Film“: Saison-Bewegung nach der Wertung */
+.tp-rangfilm { display: flex; flex-direction: column; align-items: center; gap: 4px; margin: var(--s-5) 0 0; padding: var(--s-4); border-radius: var(--r-l); border: var(--border); background: linear-gradient(160deg, #181516, #111010); text-align: center; }
+.tp-rangfilm__kicker { font-size: var(--t-label); letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--c-text-3); }
+.tp-rangfilm__zeile { display: inline-flex; align-items: center; gap: 8px; font-family: var(--f-display); font-weight: 400; font-size: 1.5rem; }
+.tp-rangfilm__zeile svg { color: var(--c-text-2); }
+.tp-rangfilm.is-hoch .tp-rangfilm__delta { color: var(--tp-gruen); }
+.tp-rangfilm.is-runter .tp-rangfilm__delta { color: var(--c-red); }
+.tp-rangfilm__delta { font-size: 1rem; font-weight: 800; font-family: var(--f-body); }
+.tp-rangfilm__bis { font-size: var(--t-small); color: var(--c-text-2); }
 .tp-aufl__zeile.is-ja .tp-aufl__p { color: var(--c-white); }
 .tp-aufl__zeile.is-nein .tp-aufl__p, .tp-aufl__zeile.is-offen .tp-aufl__p { color: var(--c-text-3); }
 .tp-aufl__zeile.is-kapitaen .tp-gesicht { box-shadow: 0 0 0 2px var(--tp-gold); }
@@ -919,6 +934,9 @@ img { display: block; max-width: 100%; }
   .tp-rangliste > .tp-duell { margin-top: 0; position: sticky; top: 96px; padding: var(--s-5); border-radius: var(--r-l); border: var(--border); background: linear-gradient(160deg, #181516, #111010); }
   .tp-intro { padding: var(--s-6) 0 var(--s-7); }
   .tp-steuer { top: 61px; }
+  /* v25 Befund 17: im Live-Zustand unten Platz lassen, damit die fixierte
+     Live-Leiste die Spieler-Punktereihe nicht verdeckt. */
+  .tp-spieltag.is-live { padding-bottom: 96px; }
 }
 
 /* ── v21: Bereiche (bleiben erhalten), Nächster Schritt, Einführung ── */
@@ -1109,6 +1127,10 @@ img { display: block; max-width: 100%; }
 .tp-wertungfolgt small { display: block; margin-top: 2px; font-size: var(--t-micro); line-height: 1.4; color: var(--c-text-2); }
 .tp-wertungfolgt__puls { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--tp-gold); animation: tp-puls 1.4s var(--ease) infinite; }
 @media (min-width: 1024px) { .tp-gesperrt > .tp-wertungfolgt { max-width: 440px; } }
+/* v25 Befund 1: dezente Nebenzeile am alten Spiel, wenn der nächste Spieltag schon offen ist */
+.tp-gesperrt.is-neben { margin-top: var(--s-5); padding-top: var(--s-4); border-top: 1px solid var(--c-line); opacity: .92; }
+.tp-wertung-neben { display: flex; align-items: center; gap: var(--s-2); margin-bottom: var(--s-3); font-size: var(--t-micro); color: var(--c-text-2); }
+.tp-wertung-neben svg { flex: none; color: var(--tp-gold); }
 
 /* Live-Leiste (src/ui/tor): am Handy über der Tab-Leiste, am Desktop unten mittig */
 .tp .ll { --ll-unten: calc(58px + max(env(safe-area-inset-bottom), 6px) + 8px); }
