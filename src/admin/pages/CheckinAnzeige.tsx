@@ -257,7 +257,10 @@ export default function CheckinAnzeige() {
   const offline = codeQ.isError || (spieleQ.isError && !spieleQ.data)
   const stand = live?.match
   const liveLaeuft = stand?.status === 'live' || stand?.status === 'halbzeit'
-  const fortschritt = Math.min(100, (zeigeZahl / Math.max(1, schwelle)) * 100)
+  // „Stadion füllt sich": Fortschritt zur nächsten runden Marke (25er-Schritte)
+  const ziel = Math.max(25, Math.ceil((zeigeZahl + 1) / 25) * 25)
+  const fortschritt = Math.min(100, (zeigeZahl / ziel) * 100)
+  const fortText = zeigeZahl >= ziel ? `Starker Spieltag — schon ${zeigeZahl} dabei!` : `Noch ${ziel - zeigeZahl} bis ${ziel} Fans heute`
 
   return (
     <div className="ca" onPointerDown={druckStart} onPointerUp={druckEnde} onPointerLeave={druckEnde} onPointerCancel={druckEnde}>
@@ -316,9 +319,10 @@ export default function CheckinAnzeige() {
       <main className="ca-mitte">
         {/* Ebene 3: QR als Premium-Sammelkarte */}
         <div className="ca-karte-wrap">
-          <svg className="ca-ring" viewBox="0 0 100 100" aria-hidden="true">
-            <circle className="ca-ring__spur" cx="50" cy="50" r="48" />
-            <circle className="ca-ring__lauf" cx="50" cy="50" r="48" style={{ strokeDashoffset: 301.6 * (1 - ringPct) }} />
+          <div className="ca-karte-rahmen">
+          <svg className="ca-ring" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <rect className="ca-ring__spur" x="1.6" y="1.6" width="96.8" height="96.8" rx="7" pathLength={100} vectorEffect="non-scaling-stroke" />
+            <rect className="ca-ring__lauf" x="1.6" y="1.6" width="96.8" height="96.8" rx="7" pathLength={100} vectorEffect="non-scaling-stroke" style={{ strokeDashoffset: 100 * (1 - ringPct) }} />
           </svg>
           <div className={`ca-karte${wechsel ? ' is-wechsel' : ''}`}>
             <div className="ca-karte__innen">
@@ -336,6 +340,7 @@ export default function CheckinAnzeige() {
               <div className="ca-karte__fuss">Scannen · Pack holen · mitmachen</div>
             </div>
             <span className="ca-karte__glanz" aria-hidden="true" />
+          </div>
           </div>
           {rotation && url && (
             <span className="ca-karte__rest">
@@ -355,9 +360,7 @@ export default function CheckinAnzeige() {
           <div className="ca-fort" aria-hidden="true">
             <div className="ca-fort__balken" style={{ width: `${fortschritt}%` }} />
           </div>
-          <p className="ca-fort__text">
-            Beim {schwelle}. Besuch gibt’s {belohnung}.
-          </p>
+          <p className="ca-fort__text">{fortText}</p>
           <p className="ca-info" key={infoIdx}>
             {infos[infoIdx]}
           </p>

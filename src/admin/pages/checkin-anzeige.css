@@ -114,13 +114,14 @@
 }
 
 /* QR-Karte als Sammelkarte */
-.ca-karte-wrap { position: relative; display: grid; place-items: center; flex: none; width: min(52vh, 44vw, 560px); aspect-ratio: 1; }
-.ca-ring { position: absolute; inset: -4%; width: 108%; height: 108%; transform: rotate(-90deg); filter: drop-shadow(0 0 8px rgba(233,29,41,.3)); }
-.ca-ring__spur { fill: none; stroke: rgba(244,242,239,.1); stroke-width: 1.6; }
-.ca-ring__lauf { fill: none; stroke: var(--red); stroke-width: 2.4; stroke-linecap: round; stroke-dasharray: 301.6; transition: stroke-dashoffset .5s linear; }
+.ca-karte-wrap { position: relative; display: flex; flex-direction: column; align-items: center; gap: .9em; flex: none; width: min(44vw, 60vh, 540px); }
+.ca-karte-rahmen { position: relative; width: 100%; }
+.ca-ring { position: absolute; inset: -11px; width: auto; height: auto; filter: drop-shadow(0 0 7px rgba(233,29,41,.28)); pointer-events: none; }
+.ca-ring__spur { fill: none; stroke: rgba(232,193,90,.22); stroke-width: 2; }
+.ca-ring__lauf { fill: none; stroke: var(--red); stroke-width: 2.6; stroke-linecap: round; stroke-dasharray: 100; transition: stroke-dashoffset .5s linear; }
 
 .ca-karte {
-  position: relative; width: 94%; border-radius: clamp(20px, 2.4vmin, 30px);
+  position: relative; width: 100%; border-radius: clamp(20px, 2.4vmin, 30px);
   padding: clamp(8px, 1.1vmin, 14px);
   background: linear-gradient(140deg, #f4da82 0%, var(--gold-deep) 22%, #8f6a1f 42%, var(--red) 70%, var(--red-deep) 100%);
   box-shadow: 0 30px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.5);
@@ -156,7 +157,7 @@
 }
 .ca-karte.is-wechsel .ca-karte__glanz { animation: ca-glanz .9s ease; }
 @keyframes ca-glanz { 0% { opacity: 0; transform: translateX(-60%); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateX(60%); } }
-.ca-karte__rest { position: absolute; bottom: -2em; font-size: clamp(13px, 1.6vmin, 18px); color: rgba(244,242,239,.6); letter-spacing: .02em; white-space: nowrap; }
+.ca-karte__rest { font-size: clamp(13px, 1.6vmin, 18px); color: rgba(244,242,239,.6); letter-spacing: .02em; white-space: nowrap; }
 .ca-karte__rest b { color: var(--ink); font-weight: 700; font-variant-numeric: tabular-nums; }
 
 /* Panel: Claim + Zähler + Fortschritt + Info */
@@ -192,18 +193,19 @@
 .ca-start > small { font-size: clamp(14px, 1.7vw, 18px); color: rgba(244,242,239,.7); }
 .ca-exit-hinweis { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); z-index: 5; font-size: 12px; color: rgba(244,242,239,.24); letter-spacing: .04em; }
 
-/* ── Hochformat (iPad hoch): Held oben, Karte Mitte, Panel darunter ── */
+/* ── Hochformat (iPad hoch): Held oben hinter der Karte, Panel darunter ── */
 @media (orientation: portrait) {
-  .ca-held { inset: 0 0 auto 0; width: 100%; height: 56%; }
-  .ca-held__bild { background-position: center top; }
-  .ca-held__sockel { height: 46%; }
-  .ca-schild { right: auto; left: 50%; transform: translateX(-50%); top: calc(var(--rand) + 110px); bottom: auto; text-align: center; flex-direction: column; align-items: center; gap: 4px; }
-  .ca-schild__txt { align-items: center; }
+  .ca-held { inset: 0 0 auto 0; width: 100%; height: 54%; }
+  .ca-held__bild { background-size: cover; background-position: center 22%; }
+  .ca-held__sockel { height: 60%; background: linear-gradient(180deg, transparent, rgba(8,7,6,.55) 42%, rgba(8,7,6,.92) 74%, #0b0a09); }
+  /* Namensschild ins freie Dunkel rechts neben den Kopf (nicht aufs Gesicht) */
+  .ca-schild { left: auto; right: var(--rand); top: calc(var(--rand) + 84px); bottom: auto; transform: none; flex-direction: row; align-items: flex-end; text-align: right; }
+  .ca-schild__nr { font-size: clamp(48px, 13vw, 104px); }
   .ca-grund__vignette { background:
-    linear-gradient(180deg, rgba(8,7,6,.42) 0%, rgba(8,7,6,.1) 24%, rgba(8,7,6,.5) 50%, rgba(8,7,6,.92) 70%),
-    radial-gradient(120% 120% at 50% 40%, transparent 55%, rgba(6,5,5,.6) 100%); }
-  .ca-mitte { flex-direction: column; justify-content: flex-end; gap: clamp(16px, 3vh, 36px); padding-bottom: calc(var(--rand) + 10px); }
-  .ca-karte-wrap { width: min(62vw, 46vh, 520px); }
+    linear-gradient(180deg, rgba(8,7,6,.46) 0%, rgba(8,7,6,.08) 22%, rgba(8,7,6,.44) 46%, rgba(8,7,6,.92) 66%),
+    radial-gradient(120% 120% at 50% 38%, transparent 55%, rgba(6,5,5,.6) 100%); }
+  .ca-mitte { flex-direction: column; justify-content: flex-end; gap: clamp(14px, 2.6vh, 30px); padding-bottom: calc(var(--rand) + 6px); }
+  .ca-karte-wrap { width: min(54vw, 34vh, 410px); }
   .ca-panel { max-width: 34ch; text-align: center; align-items: center; }
   .ca-zaehler { justify-content: center; }
   .ca-zaehler__zahl { transform-origin: center; }
