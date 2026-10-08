@@ -111,8 +111,9 @@ Legende: **MVP** = erste Version · **P2** = nächster Schritt · **P3** = spät
 | 10 | Termin buchen | MVP | Kein Eigenbau: Google-Kalender-Terminbuchung (du hast Google-Kalender-Lesezugriff in marvin-os) oder Cal.com EU. Siehe Frage 6. |
 | 11 | Versicherungsmantel/Tarif-Erklärung (Anbieter, warum, wie funktioniert der Nettotarif) | P2 | Gleiches Template wie #7, andere Felder. |
 | 12 | Weitere Rechner: Rentenlücke, BU-Bedarf, Zinseszins, Inflation | P2 | Rentenlücke + BU-Bedarf öffentlich (Leadmagnet), Rest beides. |
-| 13 | Entnahmeplan, bAV-/Altersvorsorgedepot-Förderung | P2/P3 | Förderrechner erst, wenn Rechtslage final ist (siehe research.md). Entnahmeplan nur im Login, vorbelegt. |
-| 14 | Nachrichten (sicherer Kanal statt Mail/WhatsApp) | P2 | Rechtlich relevant (Aufzeichnung, siehe research.md). Zunächst „Nachricht an Marvin" einseitig, später Verlauf. |
+| 13 | **Altersvorsorgedepot-Rechner** (Zulagen + Kosten vs. 1,0 %-Deckel des Standarddepots) | **P2, vor 01.01.2027** | Gesetz ist verkündet (BGBl. I 2026 Nr. 156), Förderung startet 01.01.2027. Zeitfenster für einen starken Leadmagneten. Zulagenwerte vor Livegang am Gesetzestext prüfen. |
+| 13b | Entnahmeplan, bAV-Förderung | P2/P3 | Entnahmeplan nur im Login, vorbelegt. |
+| 14 | Nachrichten (sicherer Kanal statt Mail/WhatsApp) | P2 | §18a FinVermV (Taping) erfasst „sonstige elektronische Kommunikation" zu Finanzanlagen → Nachrichten unveränderbar (append-only, kein Edit/Delete) 10 Jahre archivieren. Vorher mit IHK Stade klären (Frage 9). |
 | 15 | Vertragsübersicht | P2 | **Nicht doppelt bauen**, siehe §4. Im MVP stehen Verträge als Bausteine im Plan. |
 | 16 | Haushaltsmitglieder (Partner/in mit eigenem Login, geteilte Sicht) | P2 | Datenmodell ist von Anfang an darauf ausgelegt. |
 | 17 | „Neu seit deinem letzten Besuch" + Jahresgespräch-Fragebogen | P2 | |
@@ -123,11 +124,18 @@ Legende: **MVP** = erste Version · **P2** = nächster Schritt · **P3** = spät
 
 ---
 
-## 4. Abgrenzung zu blau direkt
+## 4. Abgrenzung zu blau direkt (aus research.md §5)
 
-> Wird nach Abschluss der Recherche konkretisiert (research.md, Abschnitt „blau-direkt-Empfehlung").
+**Nicht nachbauen.** Die blau-direkt-Kunden-App heißt **simplr** (App + Web-App, in jeder Lizenz enthalten). Sie deckt ab: Vertragsübersicht per BiPRO, Versicherer-Dokumente, Upload, Schadenmeldung, Adress-/Bankänderung an alle Versicherer, Fremdverträge per Foto, Sach-Vergleichsrechner.
 
-Arbeitshypothese: Vertragsdaten, Schadenmeldung und Policen-Archiv bleiben in der Pool-Welt (Kunden-App von blau direkt), der Kundenbereich verlinkt dorthin. Dein Portal macht, was keine Pool-App kann: Begründung, Kosten in Euro, Evidenz, Gesprächshistorie, Gesamtkonzept.
+**Dein Portal macht, was simplr nicht macht:** Begründung („Warum"), Kosten in Euro, Evidenz, Gesprächshistorie, Gesamtkonzept über alle drei Säulen, Investment und Altersvorsorgedepot, Beratungsdokumentation, sichere Nachrichten, Jahresreview. Das ist laut Recherche auch die Marktlücke: Keine der geprüften deutschen Pool- oder Vertriebs-Apps erklärt erkennbar das Warum oder zeigt Kosten in Euro.
+
+**Integration in drei Stufen**
+1. **MVP:** Kachel „Meine Versicherungsverträge" → Deep-Link `login.simplr.de`. Keine Datenkopie, keine nachgebaute Login-Maske.
+2. **Klären** (Frage 7): Welche API-/Qonekto-Rechte stecken in deiner Lizenz, sind Depots abgebildet, kann das Pool-Logo weg, wer ist datenschutzrechtlich verantwortlich (du, Königswege, blau direkt)?
+3. **Erst wenn es sich rechnet:** Vertragsdaten über Qonekto ONE/Make (49–99 €/Monat) oder Enterprise-API/dailyUP (998 €/Monat) ins Portal spiegeln, damit Bausteine im Plan automatisch Vertragsnummer, Beitrag und Status zeigen.
+
+Terminbuchung: **meetergo** hat eine fertige AMEISE-Integration. Alternative ohne neues Tool ist die Google-Kalender-Terminbuchung (Frage 6).
 
 ---
 
@@ -286,16 +294,19 @@ create policy kunde_upload on dokumente for insert to authenticated
 
 ---
 
-## 6. Login und Sicherheit
+## 6. Login und Sicherheit (abgeglichen mit research.md §B5)
 
-- **Erster Faktor:** E-Mail-Code (6-stellig) **und** Magic Link in derselben Mail. Der Code ist wichtig, weil Outlook-/Firmen-Mailfilter Links vorab „anklicken" und sie damit entwerten.
-- **Zweiter Faktor:** TOTP (Supabase MFA). Pflicht für dich und Partner, für Kunden Pflicht erst beim Öffnen sensibler Dokumente. Passkeys als bequemer Login, sobald Supabase Auth sie stabil unterstützt (Stand prüfen, siehe research.md); bis dahin nicht als Eigenbau.
-- **Sessions:** kurze Access-Token (Supabase-Standard 1 h), Inaktivitäts-Logout nach 30 min im Kundenbereich.
+- **Erstanmeldung:** Einladungs-Mail mit Magic Link **und** 6-stelligem Code. Den Code braucht es, weil Firmen-Mailfilter Links vorab öffnen und damit entwerten.
+- **Danach Passkey einrichten** (Face ID/Fingerabdruck), RP-ID dauerhaft auf die Hauptdomain festlegen. Das BSI empfiehlt Passkeys; Codes per Mail gelten nicht als phishing-resistent. Supabase-Passkeys sind laut Doku noch **experimentell** → SDK-Version festschreiben, **TOTP-App als Fallback immer aktiv**.
+- **Zweiter Faktor (aal2) per RLS erzwungen** für: alle Team-Rollen (du, Partner, Mitarbeiter) immer; für Kunden beim Öffnen sensibler Dokumente (Gesundheitsdaten) und Nachrichten. Ein Code per Mail allein reicht nicht als Dauer-Login für Art.-9-Daten.
+- **Sessions:** Inaktivitäts-Logout nach 30 min, Hinweis-Mail bei neuem Gerät, Wiederherstellung nur über dich (z. B. kurzer Videocall), nie automatisch.
 - **Kein localStorage für Daten** (Regel aus marvin-os).
-- **Header:** CSP enforced (nicht nur Report-Only wie bei Nele), HSTS, X-Frame-Options DENY.
-- **E-Mails enthalten nie Inhalte**, nur „Es gibt Neues" + Link.
-- **Brute-Force:** Supabase-Rate-Limits + Turnstile auf öffentlichen Formularen.
-- **Datenexport + Löschung:** Kunde kann alles als ZIP exportieren; Löschung nach Mandatsende gemäß Fristen (§7.6).
+- **Header:** CSP enforced (bei Nele nur Report-Only), HSTS, X-Frame-Options DENY.
+- **E-Mails enthalten nie Inhalte**, nur „Es gibt Neues" + Link. Gesundheitsdaten per Mail bräuchten laut DSK-Orientierungshilfe in der Regel Ende-zu-Ende-Verschlüsselung.
+- **Hosting-Regeln:** Supabase-Projekt fest in eu-central-1, **Edge Functions auf Frankfurt pinnen** (laufen sonst nutzernah). **Netlify nur fürs statische Frontend**: keine Kundendaten durch Netlify Functions (Standard-Region Ohio) oder Netlify Forms.
+- **Gesundheitsdaten:** gesonderte ausdrückliche Einwilligung (Art. 9), zusätzliche anwendungsseitige Verschlüsselung der Datei (Schlüssel im Supabase Vault), Zugriff nur aal2.
+- **Datenexport + Löschung:** Kunde kann alles als ZIP exportieren; Löschung nach Fristen (§7 Nr. 9).
+- **Fristen** (research.md §B3): FinVermV-Unterlagen und Taping 10 Jahre, Beratungsdoku VVG empfohlen 10 Jahre (Haftung), danach löschen und Löschung protokollieren.
 
 ---
 
@@ -313,7 +324,7 @@ Aufteilung: **Supabase Edge Functions** für alles, was Daten zwischen den Proje
 | 6 | To-do offen | Erinnerung nach 3 und 7 Tagen, danach Aufgabe für dich. | n8n (täglich) |
 | 7 | 11 Monate nach letztem Gespräch | Jahresgespräch-Einladung + Fragebogen; Antworten → `lebensereignisse` in marvin-os. | n8n |
 | 8 | Lead aus Rechner | Double-Opt-in → Haushalt `status=lead` in marvin-os → Todoist. Ohne DOI nach 30 Tagen löschen. | portal Edge + n8n |
-| 9 | Täglich nachts | Löschkonzept: abgelaufene `aufbewahren_bis` markieren und dir zur Bestätigung vorlegen (kein Blind-DELETE, wie D6 in marvin-os). Backup (Muster `aga-website/netlify/functions/backup-taeglich.mts`). | n8n / Netlify Scheduled |
+| 9 | Täglich nachts | Löschkonzept: abgelaufene `aufbewahren_bis` markieren und dir zur Bestätigung vorlegen (kein Blind-DELETE, wie D6 in marvin-os). Backup (Logik aus `aga-website/supabase/functions/backup`, aber als Supabase-Cron in Frankfurt, nicht als Netlify Function). | Supabase pg_cron / n8n |
 | 10 | Optional: Google Drive | Wenn du Kundenordner in Drive pflegst: neuer PDF in `Kunden/<Name>/Kundenbereich/` → Dokument-Entwurf im Portal (Muster `drive-bridge`). Nur lesen, nie löschen. | Edge / n8n |
 
 ---
@@ -359,9 +370,10 @@ Hinweis: marvin-os nutzt aktuell **#7D1F2E**, du hast **#7D1C36** genannt. Siehe
 | Zinseszins | ✓ | ✓ | schwach (SEO) | P2 |
 | Inflation | ✓ | ✓ | schwach (SEO) | P2 |
 | Entnahmeplan | – | ✓ | – | P2 |
-| bAV-/Altersvorsorgedepot-Förderung | erst wenn Recht final | ✓ | mittel | P3 |
+| Altersvorsorgedepot (Zulagen + Kosten) | ✓ | ✓ | **stark, Timing 2027** | P2 |
+| bAV-Förderung | – | ✓ | – | P3 |
 
-Jeder Rechner: eine reine Rechenfunktion in TypeScript mit Unit-Tests (Rechenlogik versioniert, Stand-Datum sichtbar), Disclaimer gemäß research.md, keine Speicherung der Eingaben ohne Einwilligung.
+Jeder Rechner: eine reine Rechenfunktion in TypeScript mit Unit-Tests (Rechenlogik versioniert, Stand-Datum sichtbar), Disclaimer gemäß research.md §B8, keine Speicherung der Eingaben ohne Einwilligung. **Öffentliche Rechner nennen keine konkreten Produkte** (sonst Nähe zur Anlageberatung); frühere Wertentwicklung nur mit mind. 5 Jahren, Quelle und Warnhinweis.
 
 ---
 
@@ -375,3 +387,21 @@ Jeder Rechner: eine reine Rechenfunktion in TypeScript mit Unit-Tests (Rechenlog
 6. **Abnahme:** Sicherheitsreview, Lighthouse/Accessibility, Testkunde Max Mustermann, dann erste 3 echte Kunden als Pilot.
 
 Danach iterativ P2.
+
+---
+
+## 11. Offene Fragen an dich (in Abarbeitungsreihenfolge)
+
+1. **Repo deiner Website:** Ich habe kein Repo für marvinallers.de gefunden (nur marvin-os, picture-by-nele, aga-website). Prüf, ob es eins gibt, und schick mir Link oder Pfad. *Empfehlung:* Wenn keins existiert oder nur ein Entwurf, starte ich ein neues Repo `marvin-website`. Bitte Ja/Nein.
+2. **Domain:** marvin-os nutzt `marvinallers.de` (Mail `beratung@marvinallers.de`), in GATE_ENTSCHEIDUNGEN steht `marvin-allers.de`. Welche ist die Hauptdomain? *Empfehlung:* `marvinallers.de`, Kundenbereich unter `marvinallers.de/kunde`. Das ist wichtig, weil Passkeys fest an die Domain gebunden werden.
+3. **Bordeaux-Ton:** marvin-os nutzt #7D1F2E, du hast #7D1C36 genannt. Prüf, was in deinen PDFs und auf den Visitenkarten steht. *Empfehlung:* #7D1C36 überall, ich ziehe marvin-os nach.
+4. **Typografie:** Lora für Überschriften, Geist für Text, Geist Mono für Zahlen (im Prototyp so umgesetzt). *Empfehlung:* Ja.
+5. **Eigenes Supabase-Projekt „portal"** getrennt von marvin-os, ca. 10 $/Monat (Preis im Supabase-Dashboard prüfen). *Empfehlung:* Ja, aus Sicherheitsgründen (§1).
+6. **Terminbuchung:** meetergo (fertige AMEISE-Integration, eigene Lizenz) oder Google-Kalender-Terminbuchung (kein neues Tool). Prüf, ob du meetergo schon hast. *Empfehlung:* Google-Kalender, solange du kein meetergo hast.
+7. **blau direkt anschreiben:** Frag schriftlich nach den API- und Qonekto-Rechten deiner Lizenz, ob Depots abgebildet werden, ob das Pool-Logo in simplr weg kann und wer datenschutzrechtlich verantwortlich ist (du, Königswege, Pool). Antwort an mich weiterleiten. *Empfehlung:* Ja. Bis dahin baue ich nur den Deep-Link.
+8. **Google-Drive-Sync:** In Neles Repo gibt es keinen. Lebt er als n8n-Workflow auf deinem IONOS-VPS? Wenn ja, exportier den Workflow (JSON) und schick ihn mir. Und: Pflegst du Kundenordner in Drive, die ins Portal sollen? *Empfehlung:* Für den MVP ohne Drive, PDFs kommen direkt aus marvin-os.
+9. **IHK Stade (Taping):** Frag nach, ob Portal-Nachrichten und Videocalls zu Finanzanlagen unter §18a FinVermV fallen. *Empfehlung:* Bis zur Antwort archiviere ich Nachrichten unveränderbar 10 Jahre und lasse Videocalls außen vor.
+10. **Datenschutz:** Lass einen Datenschutzbeauftragten oder Anwalt die DSFA-Schwellwertprüfung, den Einwilligungstext für Gesundheitsdaten und den Rechner-Disclaimer prüfen (Entwürfe in research.md §B4 und §B8). *Empfehlung:* Ja, vor dem Livegang mit echten Kunden.
+11. **Zulassungen:** Bestätige, dass du §34d **und** §34f hältst und beide über dieselbe Person laufen (GmbH später). In marvin-os ist das Protokoll-Modul nur auf §34d ausgerichtet. *Empfehlung:* Ich lege in `rechtliches.ts` beide Erlaubnisse an.
+12. **Logo und Foto:** Im Projekt liegt kein sauberes Logo. Schick mir das Logo als SVG und ein Porträtfoto. *Empfehlung:* Bis dahin nutze ich die „M"-Marke aus dem Prototyp als Platzhalter.
+13. **Freigabe:** Ist der MVP-Umfang aus §3 + §10 so okay? *Empfehlung:* Ja. Danach starte ich Phase 3 mit Design-Tokens und Kostenrechner.
