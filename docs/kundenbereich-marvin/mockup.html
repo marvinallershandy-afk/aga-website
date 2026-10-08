@@ -1,0 +1,790 @@
+<title>Kundenbereich Marvin Allers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,500&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: App in einem Container (Handy 390px / Desktop voll). Container-Queries statt Viewport,
+   damit die Vorschau-Umschaltung echt umbricht. Desktop: Seitenleiste links, Inhalt in 12er-Raster.
+   Mobil: Tab-Leiste unten, eine Spalte. */
+:root{
+  --bordeaux:#7D1C36;      /* Marke, Flächen + Buttons */
+  --accent:#7D1C36;        /* Akzent für Text/Links */
+  --accent-soft:#F6ECEF;   /* zarte Bordeaux-Fläche */
+  --bg:#FFFFFF;
+  --surface:#F7F5F5;       /* Grau mit leichtem Rosé-Stich */
+  --line:#E8E3E4;
+  --ink:#232024;           /* Anthrazit */
+  --ink-2:#5D575A;
+  --ink-3:#8D8588;
+  --ok:#2E7550; --ok-soft:#E8F3EC;
+  --warn:#9A5F0E; --warn-soft:#FBF1E1;
+  --on-accent:#FFFFFF;
+  --shadow:0 1px 2px rgba(35,32,36,.06),0 8px 24px rgba(35,32,36,.06);
+  --serif:"Lora",Georgia,"Times New Roman",serif;
+  --sans:"Geist","Helvetica Neue",Helvetica,Arial,sans-serif;
+  --mono:"Geist Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --r-s:8px; --r-m:14px; --r-l:22px;
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px; --s8:72px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bordeaux:#9E2D4C; --accent:#EC94A9; --accent-soft:#2D1A21;
+  --bg:#141214; --surface:#1D1A1D; --line:#332D31;
+  --ink:#F3EFF0; --ink-2:#BFB6B9; --ink-3:#8F8589;
+  --ok:#7CC79C; --ok-soft:#18281F; --warn:#E3B061; --warn-soft:#2B2213;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bordeaux:#9E2D4C; --accent:#EC94A9; --accent-soft:#2D1A21;
+  --bg:#141214; --surface:#1D1A1D; --line:#332D31;
+  --ink:#F3EFF0; --ink-2:#BFB6B9; --ink-3:#8F8589;
+  --ok:#7CC79C; --ok-soft:#18281F; --warn:#E3B061; --warn-soft:#2B2213;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3); color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+.brand,.btn{white-space:nowrap}
+body{background:var(--surface);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55;padding-inline:16px;padding-block:16px 40px}
+h1,h2,h3{font-family:var(--serif);font-weight:600;text-wrap:balance;margin:0;letter-spacing:-.01em}
+p{margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.eyebrow{font-size:11.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3)}
+.muted{color:var(--ink-2)}
+.small{font-size:13px}
+
+/* ---------- Prototyp-Leiste (gehört nicht zum Produkt) ---------- */
+.proto{max-width:1240px;margin:0 auto var(--s4);display:flex;flex-wrap:wrap;gap:var(--s3);align-items:center;justify-content:space-between}
+.proto-title{display:flex;flex-direction:column;gap:2px}
+.proto-title strong{font-family:var(--serif);font-size:18px}
+.seg{display:inline-flex;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:3px;gap:2px}
+.seg button{border:0;background:none;padding:6px 12px;border-radius:999px;font-size:13px;color:var(--ink-2)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.proto-ctrls{display:flex;flex-wrap:wrap;gap:var(--s2)}
+
+/* ---------- Gerät ---------- */
+.stage{max-width:1240px;margin:0 auto;display:flex;justify-content:center}
+.device{container:app/inline-size;width:100%;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-l);overflow:hidden;box-shadow:var(--shadow);position:relative}
+.device.phone{max-width:392px;height:800px;border-radius:38px;border-width:8px;border-color:var(--ink)}
+.device.phone .app{height:100%}
+.app{display:grid;grid-template-columns:1fr;min-height:760px}
+.device.phone .app{min-height:0}
+.main{min-width:0;overflow:auto;display:flex;flex-direction:column}
+.device.phone .main{height:100%;padding-bottom:84px}
+
+/* Seitenleiste (Desktop) / Tab-Leiste (Mobil) */
+.side{display:none}
+.tabbar{position:absolute;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(5,1fr);background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:6px 4px calc(8px + env(safe-area-inset-bottom,0px))}
+.tabbar button{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;color:var(--ink-3);padding:6px 0;border-radius:10px}
+.tabbar button[aria-current="page"]{color:var(--accent)}
+.tabbar svg,.side svg{width:21px;height:21px}
+.device:not(.phone) .tabbar{position:sticky}
+
+.btn-termin{display:none}
+.top{display:flex;align-items:center;justify-content:space-between;padding:var(--s4) var(--s5);gap:var(--s3);border-bottom:1px solid var(--line);position:sticky;top:0;background:color-mix(in srgb,var(--bg) 94%,transparent);backdrop-filter:blur(10px);z-index:3}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:14px;letter-spacing:-.01em}
+.mark{width:30px;height:30px;border-radius:8px;background:var(--bordeaux);color:#fff;display:grid;place-items:center;font-family:var(--serif);font-size:15px;font-weight:600}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:600;font-size:13px;border:0}
+.content{padding:var(--s5);display:flex;flex-direction:column;gap:var(--s6);max-width:1080px;width:100%}
+.screen{display:flex;flex-direction:column;gap:var(--s6)}
+
+@container app (min-width: 880px){
+  .app{grid-template-columns:248px 1fr}
+  .side{display:flex;flex-direction:column;gap:var(--s1);padding:var(--s5) var(--s4);border-right:1px solid var(--line);background:var(--surface);position:sticky;top:0;height:100%;min-height:760px}
+  .side .brand{padding:0 var(--s2) var(--s5)}
+  .side nav{display:flex;flex-direction:column;gap:2px}
+  .side nav button{display:flex;align-items:center;gap:12px;border:0;background:none;padding:9px 10px;border-radius:10px;font-size:14px;color:var(--ink-2);text-align:left}
+  .side nav button:hover{background:var(--bg)}
+  .side nav button[aria-current="page"]{background:var(--bg);color:var(--ink);font-weight:500;box-shadow:var(--shadow)}
+  .side nav button[aria-current="page"] svg{color:var(--accent)}
+  .side .advisor{margin-top:auto;border-top:1px solid var(--line);padding:var(--s4) var(--s2) 0;display:flex;gap:10px;align-items:center}
+  .tabbar{display:none}
+  .top .brand{visibility:hidden}
+  .top .btn-termin{display:inline-flex}
+  .content{padding:var(--s6) var(--s7)}
+}
+
+/* ---------- Bausteine ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:999px;padding:11px 18px;font-weight:500;font-size:14px;border:1px solid transparent;text-decoration:none}
+.btn-primary{background:var(--bordeaux);color:var(--on-accent)}
+.btn-primary:hover{filter:brightness(1.08)}
+.btn-ghost{background:var(--bg);border-color:var(--line);color:var(--ink)}
+.btn-ghost:hover{border-color:var(--ink-3)}
+.link{background:none;border:0;padding:0;color:var(--accent);font-weight:500;font-size:14px;display:inline-flex;gap:6px;align-items:center}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.plan{background:var(--accent-soft);color:var(--accent)}
+.pill.neutral{background:var(--surface);color:var(--ink-2)}
+.panel{border:1px solid var(--line);border-radius:var(--r-m);background:var(--bg)}
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:var(--s3);flex-wrap:wrap}
+.sec-head h2{font-size:21px}
+.grid{display:grid;gap:var(--s4)}
+@container app (min-width: 880px){ .g-3{grid-template-columns:repeat(3,1fr)} .g-2{grid-template-columns:1fr 1fr} .g-main{grid-template-columns:1.55fr 1fr;align-items:start}}
+
+/* Hero Start */
+.hello h1{font-size:clamp(28px,6cqi,46px);line-height:1.08}
+.hello p{max-width:56ch;margin-top:var(--s3);color:var(--ink-2)}
+
+/* Drei Säulen */
+.pillar{padding:var(--s5);display:flex;flex-direction:column;gap:var(--s3);text-align:left;border:1px solid var(--line);border-radius:var(--r-m);background:var(--bg);transition:border-color .15s, transform .15s}
+.pillar:hover{border-color:var(--ink-3)}
+.pillar h3{font-size:20px}
+.pillar .row{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px;padding-block:7px;border-top:1px solid var(--line)}
+.pillar .row:first-of-type{border-top:0}
+.pillar .row span:first-child{min-width:0}
+.pillar-ix{font-family:var(--mono);font-size:12px;color:var(--ink-3)}
+
+/* To-dos */
+.todo{display:flex;gap:var(--s3);align-items:flex-start;padding:var(--s4);border-top:1px solid var(--line)}
+.todo:first-child{border-top:0}
+.check{flex:none;width:22px;height:22px;border-radius:7px;border:1.5px solid var(--ink-3);background:var(--bg);display:grid;place-items:center;margin-top:1px}
+.check[aria-checked="true"]{background:var(--ok);border-color:var(--ok);color:#fff}
+.todo-body{min-width:0;flex:1;display:flex;flex-direction:column;gap:3px}
+.todo-body strong{font-weight:500}
+.todo.done strong{text-decoration:line-through;color:var(--ink-3)}
+
+/* Nächster Termin */
+.appt{padding:var(--s5);display:flex;flex-direction:column;gap:var(--s3);background:var(--ink);color:var(--bg);border-radius:var(--r-m)}
+.appt .eyebrow{color:color-mix(in srgb,var(--bg) 60%,transparent)}
+.appt h3{font-size:22px}
+.appt .btn-ghost{background:transparent;color:var(--bg);border-color:color-mix(in srgb,var(--bg) 35%,transparent)}
+
+/* Timeline */
+.tl{position:relative;display:flex;flex-direction:column;gap:var(--s5);padding-left:28px}
+.tl::before{content:"";position:absolute;left:7px;top:6px;bottom:6px;width:1.5px;background:var(--line)}
+.tl-item{position:relative;display:flex;flex-direction:column;gap:var(--s3)}
+.tl-dot{position:absolute;left:-28px;top:4px;width:16px;height:16px;border-radius:50%;background:var(--bg);border:2px solid var(--accent)}
+.tl-item.next .tl-dot{border-style:dashed;border-color:var(--ink-3)}
+.tl-meta{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+.tl-item h3{font-size:19px}
+.tl-card{padding:var(--s4) var(--s5);display:grid;gap:var(--s4)}
+@container app (min-width: 880px){.tl-card{grid-template-columns:1fr 1fr}}
+.tl-card h4{margin:0 0 6px;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.tl-card ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
+.who{font-family:var(--mono);font-size:11.5px;color:var(--ink-3);margin-left:4px}
+.file-chip{display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border:1px solid var(--line);border-radius:10px;font-size:13px;background:var(--bg);color:var(--ink)}
+.file-chip svg{width:16px;height:16px;color:var(--accent)}
+
+/* Dokumente */
+.filters{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:6px 12px;font-size:13px;color:var(--ink-2)}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.doc{display:grid;grid-template-columns:36px 1fr auto;gap:var(--s3);align-items:center;padding:var(--s3) var(--s4);border-top:1px solid var(--line)}
+.doc:first-child{border-top:0}
+.doc-ic{width:36px;height:44px;border-radius:6px;background:var(--surface);border:1px solid var(--line);display:grid;place-items:end center;padding-bottom:5px;font-family:var(--mono);font-size:9px;color:var(--accent);font-weight:500}
+.doc-t{min-width:0}
+.doc-t strong{display:block;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dl{border:1px solid var(--line);background:var(--bg);width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:var(--ink-2)}
+.dl svg{width:17px;height:17px}
+.drop{border:1.5px dashed var(--line);border-radius:var(--r-m);padding:var(--s5);display:flex;flex-direction:column;align-items:center;gap:var(--s2);text-align:center;background:var(--surface)}
+.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.lock{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--ink-2)}
+.lock svg{flex:none;width:16px;height:16px;margin-top:2px;color:var(--ok)}
+
+/* Plan / Baustein */
+.bau{display:grid;grid-template-columns:auto 1fr auto;gap:var(--s3) var(--s4);align-items:center;padding:var(--s4) var(--s5);border-top:1px solid var(--line);text-align:left;background:none;border-left:0;border-right:0;border-bottom:0;width:100%}
+.bau:first-of-type{border-top:0}
+.bau:hover{background:var(--surface)}
+.bau-ix{font-family:var(--mono);font-size:12px;color:var(--ink-3);width:26px}
+.bau-t{min-width:0}
+.bau-t strong{display:block;font-weight:500}
+.why-hero{display:flex;flex-direction:column;gap:var(--s3)}
+.why-hero h1{font-size:clamp(26px,5cqi,40px);line-height:1.1}
+.facts{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r-m);overflow:hidden}
+@container app (min-width: 880px){.facts{grid-template-columns:repeat(4,1fr)}}
+.fact{background:var(--bg);padding:var(--s4);display:flex;flex-direction:column;gap:4px}
+.fact .v{font-family:var(--mono);font-size:22px;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.alloc{display:flex;height:12px;border-radius:999px;overflow:hidden;gap:2px}
+.alloc span{display:block}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--ink-2)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px;vertical-align:baseline}
+.prose{max-width:64ch;display:flex;flex-direction:column;gap:var(--s3);color:var(--ink)}
+.prose p{color:var(--ink-2)}
+.ev{padding:var(--s4) var(--s5);display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--line)}
+.ev:first-child{border-top:0}
+.ev-top{display:flex;justify-content:space-between;gap:var(--s3);align-items:baseline;flex-wrap:wrap}
+.ev-top strong{font-weight:500}
+.risk{display:grid;gap:0}
+.risk-row{display:grid;grid-template-columns:1fr;gap:var(--s2);padding:var(--s4) var(--s5);border-top:1px solid var(--line)}
+.risk-row:first-child{border-top:0}
+@container app (min-width: 880px){.risk-row{grid-template-columns:1fr 1fr;gap:var(--s5)}}
+.risk-row .lbl{font-size:11.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+.risk-row .r .lbl{color:var(--warn)}
+.risk-row .l .lbl{color:var(--ok)}
+.risk-row p{margin-top:4px}
+.costtbl{width:100%;border-collapse:collapse;font-size:14px}
+.costtbl td{padding:10px 0;border-top:1px solid var(--line)}
+.costtbl tr:first-child td{border-top:0}
+.costtbl td:last-child{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.costtbl tr.sum td{font-weight:600;border-top:1.5px solid var(--ink)}
+.back{align-self:flex-start}
+
+/* Rechner */
+.calc{display:grid;gap:var(--s5)}
+@container app (min-width: 880px){.calc{grid-template-columns:340px 1fr;align-items:start}}
+.inputs{padding:var(--s5);display:flex;flex-direction:column;gap:var(--s4)}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:13px;font-weight:500;display:flex;justify-content:space-between;gap:8px}
+.field output{font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--ink)}
+input[type=range]{width:100%;accent-color:var(--bordeaux)}
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:var(--s3)}
+.vs .field{padding:var(--s3);border-radius:var(--r-s);background:var(--surface)}
+.result{padding:var(--s5);display:flex;flex-direction:column;gap:var(--s4)}
+.big{font-family:var(--serif);font-weight:600;font-size:clamp(38px,8cqi,64px);line-height:1;letter-spacing:-.02em;color:var(--accent);font-variant-numeric:tabular-nums lining-nums}
+.chart{width:100%;height:auto;display:block}
+.chart text{fill:var(--ink-3);font-family:var(--mono);font-size:11px}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:var(--s3)}
+.split .fact{border:1px solid var(--line);border-radius:var(--r-s)}
+.disclaimer{font-size:12.5px;color:var(--ink-3);max-width:80ch;line-height:1.5}
+.cta{padding:var(--s5);background:var(--accent-soft);border-radius:var(--r-m);display:flex;flex-direction:column;gap:var(--s3)}
+.cta h3{font-size:20px}
+
+/* Login */
+.login{min-height:760px;display:grid;place-items:center;padding:var(--s5);background:var(--bg)}
+.device.phone .login{min-height:100%}
+.login-card{width:100%;max-width:380px;display:flex;flex-direction:column;gap:var(--s4)}
+.login-card h1{font-size:30px}
+.inp{width:100%;border:1px solid var(--line);border-radius:12px;padding:13px 14px;font:inherit;background:var(--bg);color:var(--ink)}
+.inp:focus{outline:2px solid var(--accent);outline-offset:0;border-color:transparent}
+.otp{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.otp .inp{text-align:center;font-family:var(--mono);font-size:20px;padding:12px 0}
+.divider{display:flex;align-items:center;gap:var(--s3);color:var(--ink-3);font-size:12px}
+.divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--line)}
+
+/* Öffentlich */
+.pub-top{display:flex;justify-content:space-between;align-items:center;padding:var(--s4) var(--s5);border-bottom:1px solid var(--line);gap:var(--s3)}
+.pub-hero{padding:var(--s6) var(--s5) 0;display:flex;flex-direction:column;gap:var(--s3);max-width:1080px}
+.pub-hero h1{font-size:clamp(30px,6.4cqi,58px);line-height:1.04;max-width:18ch}
+.pub-hero p{max-width:58ch;color:var(--ink-2)}
+@container app (min-width: 880px){.pub-hero{padding:var(--s8) var(--s7) 0}.pub .content{padding:var(--s6) var(--s7)}}
+.claim{font-family:var(--serif);font-style:italic;color:var(--accent)}
+
+.note{font-size:12px;color:var(--ink-3);text-align:center;max-width:1240px;margin:var(--s4) auto 0}
+.toast{position:absolute;left:50%;bottom:100px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:13px;box-shadow:var(--shadow);z-index:9}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="proto">
+  <div class="proto-title">
+    <span class="eyebrow">Klickbarer Prototyp · Beispieldaten</span>
+    <strong>Kundenbereich Marvin Allers</strong>
+  </div>
+  <div class="proto-ctrls">
+    <div class="seg" role="group" aria-label="Ansicht">
+      <button id="v-kunde" aria-pressed="true" data-view="kunde">Kunde</button>
+      <button id="v-login" aria-pressed="false" data-view="login">Login</button>
+      <button id="v-pub" aria-pressed="false" data-view="pub">Interessent</button>
+    </div>
+    <div class="seg" role="group" aria-label="Gerät">
+      <button id="d-phone" aria-pressed="false" data-device="phone">Handy</button>
+      <button id="d-desk" aria-pressed="true" data-device="desk">Desktop</button>
+    </div>
+  </div>
+</div>
+
+<div class="stage">
+<div class="device" id="device">
+
+  <!-- ================= KUNDE ================= -->
+  <div class="app" id="view-kunde">
+    <aside class="side">
+      <div class="brand"><span class="mark">M</span>Marvin Allers</div>
+      <nav aria-label="Hauptnavigation">
+        <button data-go="start" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Übersicht</button>
+        <button data-go="plan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Mein Plan</button>
+        <button data-go="gespraeche"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-5A8 8 0 1 1 21 12z"/></svg>Gespräche</button>
+        <button data-go="dokumente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>Dokumente</button>
+        <button data-go="rechner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/></svg>Rechner</button>
+      </nav>
+      <div class="advisor">
+        <span class="avatar" aria-hidden="true">MA</span>
+        <div class="small"><strong style="font-weight:500">Marvin Allers</strong><br><span class="muted">Dein Berater · Stade</span></div>
+      </div>
+    </aside>
+
+    <div class="main" id="main">
+      <header class="top">
+        <div class="brand"><span class="mark">M</span>Marvin Allers</div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <button class="btn btn-ghost small btn-termin" data-go="termin" style="padding:7px 14px">Termin buchen</button>
+          <button class="avatar" aria-label="Profil Max Mustermann">MM</button>
+        </div>
+      </header>
+
+      <div class="content">
+
+        <!-- START -->
+        <section class="screen" data-screen="start">
+          <div class="hello">
+            <span class="eyebrow">Mittwoch, 8. Oktober 2026</span>
+            <h1 style="margin-top:8px">Hi Max. Dein Plan steht.<br><span class="muted" style="font-weight:500">Zwei Kleinigkeiten fehlen noch.</span></h1>
+            <p>Hier liegt alles, was wir besprochen haben: was du hast, warum du es hast und was es kostet. Wenn etwas unklar ist, schreib mir.</p>
+          </div>
+
+          <div class="grid g-main">
+            <div class="panel">
+              <div class="sec-head" style="padding:var(--s4) var(--s5) 0"><h2 style="font-size:18px">Für dich zu tun</h2><span class="small muted num" id="todo-count">2 offen</span></div>
+              <div style="padding-top:var(--s2)">
+                <div class="todo" data-todo>
+                  <button class="check" role="checkbox" aria-checked="false" aria-label="Erledigt"></button>
+                  <div class="todo-body"><strong>Letzte Gehaltsabrechnung hochladen</strong><span class="small muted">Brauche ich für den bAV-Check bei deinem Arbeitgeber. Fällig bis 15.10.</span><span><button class="link" data-go="dokumente">Jetzt hochladen →</button></span></div>
+                </div>
+                <div class="todo" data-todo>
+                  <button class="check" role="checkbox" aria-checked="false" aria-label="Erledigt"></button>
+                  <div class="todo-body"><strong>Freistellungsauftrag im Depot setzen</strong><span class="small muted">1.000 € Sparerpauschbetrag. Dauert 2 Minuten, Anleitung liegt bei den Dokumenten.</span></div>
+                </div>
+                <div class="todo done" data-todo>
+                  <button class="check" role="checkbox" aria-checked="true" aria-label="Erledigt"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 12 5 5 9-10"/></svg></button>
+                  <div class="todo-body"><strong>Depot eröffnen</strong><span class="small muted">Erledigt am 06.10.</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="appt">
+              <span class="eyebrow">Nächstes Gespräch</span>
+              <h3>Jahresgespräch</h3>
+              <p style="opacity:.8">Einmal im Jahr schauen wir drauf: Hat sich bei dir was geändert? Passt der Plan noch? Ich schreib dir im August, dann suchst du dir einen Termin aus.</p>
+              <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-ghost" data-go="termin">Früher sprechen</button></div>
+            </div>
+          </div>
+
+          <div class="sec-head"><h2>Dein Plan auf einen Blick</h2><button class="link" data-go="plan">Alles im Detail →</button></div>
+          <div class="grid g-3">
+            <button class="pillar" data-go="plan">
+              <span class="pillar-ix">01 · Absicherung</span>
+              <h3>Was passiert, wenn was passiert</h3>
+              <div>
+                <div class="row"><span>Berufsunfähigkeit</span><span class="pill ok">Aktiv</span></div>
+                <div class="row"><span>Privathaftpflicht</span><span class="pill ok">Aktiv</span></div>
+                <div class="row"><span>Hausrat</span><span class="pill neutral">Bewusst nicht</span></div>
+              </div>
+            </button>
+            <button class="pillar" data-go="plan">
+              <span class="pillar-ix">02 · Vorsorge</span>
+              <h3>Geld fürs Alter</h3>
+              <div>
+                <div class="row"><span>Gesetzliche Rente</span><span class="pill neutral">Läuft</span></div>
+                <div class="row"><span>bAV über Arbeitgeber</span><span class="pill warn">In Prüfung</span></div>
+                <div class="row"><span>Fondsrente (Nettotarif)</span><span class="pill plan">Geplant</span></div>
+              </div>
+            </button>
+            <button class="pillar" data-go="baustein">
+              <span class="pillar-ix">03 · Vermögensaufbau</span>
+              <h3>Dein Depot</h3>
+              <div>
+                <div class="row"><span>Weltportfolio 80/20</span><span class="pill ok">Aktiv</span></div>
+                <div class="row"><span>Sparrate</span><span class="num">300 € / Monat</span></div>
+                <div class="row"><span>Laufende Kosten</span><span class="num">0,21 % p. a.</span></div>
+              </div>
+            </button>
+          </div>
+
+          <div class="sec-head"><h2>Zuletzt</h2><button class="link" data-go="gespraeche">Alle Gespräche →</button></div>
+          <div class="panel">
+            <div class="doc"><div class="doc-ic">PDF</div><div class="doc-t"><strong>Beratungsprotokoll Vermögensaufbau</strong><span class="small muted">Neu · 03.10.2026 · aus dem Gespräch „Umsetzung Depot"</span></div><button class="dl" aria-label="Herunterladen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 4v11m0 0 4.5-4.5M12 15l-4.5-4.5M5 20h14"/></svg></button></div>
+            <div class="doc"><div class="doc-ic">PDF</div><div class="doc-t"><strong>Geeignetheitserklärung</strong><span class="small muted">03.10.2026</span></div><button class="dl" aria-label="Herunterladen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 4v11m0 0 4.5-4.5M12 15l-4.5-4.5M5 20h14"/></svg></button></div>
+          </div>
+        </section>
+
+        <!-- PLAN -->
+        <section class="screen" data-screen="plan" hidden>
+          <div class="why-hero">
+            <span class="eyebrow">Mein Plan · Stand 03.10.2026</span>
+            <h1>Drei Bausteine. Jeder mit Begründung.</h1>
+            <p class="muted" style="max-width:60ch">Erst absichern, dann vorsorgen, dann Vermögen aufbauen. Bei jedem Baustein steht, warum genau dieser, was er kostet und was dagegen spricht.</p>
+          </div>
+          <div class="panel">
+            <div class="sec-head" style="padding:var(--s4) var(--s5)"><h2 style="font-size:18px">01 · Absicherung</h2><span class="small muted">2 aktiv · 1 bewusst nicht</span></div>
+            <button class="bau"><span class="bau-ix">1.1</span><span class="bau-t"><strong>Berufsunfähigkeit · 2.000 € Monatsrente</strong><span class="small muted">Versicherer A · bis 67 · warum dieser Tarif →</span></span><span class="pill ok">Aktiv</span></button>
+            <button class="bau"><span class="bau-ix">1.2</span><span class="bau-t"><strong>Privathaftpflicht · 50 Mio. €</strong><span class="small muted">Versicherer C · Single-Tarif</span></span><span class="pill ok">Aktiv</span></button>
+            <button class="bau"><span class="bau-ix">1.3</span><span class="bau-t"><strong>Hausrat</strong><span class="small muted">Wert der Einrichtung unter 15.000 €. Lohnt sich bei dir aktuell nicht.</span></span><span class="pill neutral">Bewusst nicht</span></button>
+          </div>
+          <div class="panel">
+            <div class="sec-head" style="padding:var(--s4) var(--s5)"><h2 style="font-size:18px">02 · Vorsorge</h2><span class="small muted">1 in Prüfung · 1 geplant</span></div>
+            <button class="bau"><span class="bau-ix">2.1</span><span class="bau-t"><strong>Betriebliche Altersvorsorge</strong><span class="small muted">Wartet auf deine Gehaltsabrechnung. Arbeitgeberzuschuss prüfen.</span></span><span class="pill warn">In Prüfung</span></button>
+            <button class="bau"><span class="bau-ix">2.2</span><span class="bau-t"><strong>Fondsrente als Nettotarif</strong><span class="small muted">Versicherer B · Mantel ohne Abschlussprovision · warum dieser Mantel →</span></span><span class="pill plan">Geplant</span></button>
+          </div>
+          <div class="panel">
+            <div class="sec-head" style="padding:var(--s4) var(--s5)"><h2 style="font-size:18px">03 · Vermögensaufbau</h2><span class="small muted">1 aktiv</span></div>
+            <button class="bau" data-go="baustein"><span class="bau-ix">3.1</span><span class="bau-t"><strong>Weltportfolio 80/20 · 300 € im Monat</strong><span class="small muted">ETF-Depot bei Depotbank D · warum dieses Investment →</span></span><span class="pill ok">Aktiv</span></button>
+          </div>
+        </section>
+
+        <!-- BAUSTEIN: WARUM DIESES INVESTMENT -->
+        <section class="screen" data-screen="baustein" hidden>
+          <button class="link back" data-go="plan">← Mein Plan</button>
+          <div class="why-hero">
+            <span class="eyebrow">Baustein 3.1 · Vermögensaufbau</span>
+            <h1>Weltportfolio 80/20.<br>Warum genau das.</h1>
+            <p class="muted" style="max-width:62ch">Du willst über 25+ Jahre Vermögen aufbauen, ohne Börsen-Timing und ohne teure Fonds. Also kaufen wir den ganzen Weltmarkt, breit gestreut und billig, und gewichten Firmen etwas über, die in der Forschung langfristig mehr Rendite gebracht haben.</p>
+          </div>
+
+          <div class="facts">
+            <div class="fact"><span class="eyebrow">Sparrate</span><span class="v">300 €</span><span class="small muted">pro Monat</span></div>
+            <div class="fact"><span class="eyebrow">Laufende Kosten</span><span class="v">0,21 %</span><span class="small muted">gewichtete TER</span></div>
+            <div class="fact"><span class="eyebrow">In Euro</span><span class="v">21 €</span><span class="small muted">pro Jahr je 10.000 €</span></div>
+            <div class="fact"><span class="eyebrow">Anlagehorizont</span><span class="v">25 J.</span><span class="small muted">bis zur Rente</span></div>
+          </div>
+
+          <div class="panel" style="padding:var(--s5);display:flex;flex-direction:column;gap:var(--s3)">
+            <div class="sec-head"><h2 style="font-size:18px">Woraus es besteht</h2><span class="small muted">Beispielwerte</span></div>
+            <div class="alloc" aria-hidden="true"><span style="flex:60;background:var(--bordeaux)"></span><span style="flex:20;background:color-mix(in srgb,var(--bordeaux) 55%,var(--bg))"></span><span style="flex:20;background:var(--ink-2)"></span></div>
+            <div class="legend"><span><i style="background:var(--bordeaux)"></i>60 % Industrieländer (MSCI World)</span><span><i style="background:color-mix(in srgb,var(--bordeaux) 55%,var(--bg))"></i>20 % Schwellenländer</span><span><i style="background:var(--ink-2)"></i>20 % Small Cap Value weltweit</span></div>
+          </div>
+
+          <div class="grid g-2">
+            <div class="panel">
+              <div style="padding:var(--s4) var(--s5) 0"><h2 style="font-size:18px">Was dahintersteht</h2><p class="small muted" style="margin-top:4px">Die Forschung hinter der Entscheidung, in zwei Sätzen je Punkt.</p></div>
+              <div style="padding-top:var(--s2)">
+                <div class="ev"><div class="ev-top"><strong>Aktive Fonds schlagen den Markt selten</strong><span class="pill neutral">SPIVA</span></div><p class="small muted">S&amp;P misst halbjährlich, wie viele aktive Fonds ihren Vergleichsindex verfehlen. Über lange Zeiträume ist es die große Mehrheit. Deshalb Indexfonds.</p><button class="link small">Zur Quelle →</button></div>
+                <div class="ev"><div class="ev-top"><strong>Kleine, günstig bewertete Firmen</strong><span class="pill neutral">Fama/French</span></div><p class="small muted">Size- und Value-Prämie aus dem Drei-Faktoren-Modell (1993). Lange Phasen ohne Mehrrendite sind normal, darum nur 20 % Beimischung.</p><button class="link small">Zur Quelle →</button></div>
+                <div class="ev"><div class="ev-top"><strong>Wir halten durch</strong><span class="pill neutral">Behavioral Finance</span></div><p class="small muted">Der größte Renditekiller ist meist das eigene Verhalten im Crash. Deshalb ein fester Sparplan und eine Regel für das Rebalancing.</p><button class="link small">Zur Quelle →</button></div>
+              </div>
+            </div>
+            <div class="panel" style="padding:var(--s4) var(--s5)">
+              <h2 style="font-size:18px">Was es kostet</h2>
+              <p class="small muted" style="margin:4px 0 var(--s3)">Pro Jahr, bei 10.000 € im Depot. Ex-ante-Kostenausweis liegt bei den Dokumenten.</p>
+              <table class="costtbl">
+                <tr><td>Produktkosten (TER)</td><td>21 €</td></tr>
+                <tr><td>Transaktionskosten im Fonds</td><td>≈ 4 €</td></tr>
+                <tr><td>Depot &amp; Sparplan</td><td>0 €</td></tr>
+                <tr><td>Meine Vergütung</td><td>laut Vereinbarung</td></tr>
+                <tr class="sum"><td>Produktkosten gesamt</td><td>≈ 25 €</td></tr>
+              </table>
+              <p class="small muted" style="margin-top:var(--s3)">Zum Vergleich: ein typischer aktiver Fonds mit 1,8 % kostet bei 10.000 € rund 180 € im Jahr.</p>
+              <button class="link" data-go="rechner" style="margin-top:var(--s3)">Selbst durchrechnen →</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div style="padding:var(--s4) var(--s5) 0"><h2 style="font-size:18px">Was schiefgehen kann. Und was wir dagegen tun.</h2></div>
+            <div class="risk" style="padding-top:var(--s2)">
+              <div class="risk-row"><div class="r"><span class="lbl">Risiko</span><p>Ein Crash von 30–50 % ist bei Aktien zwischendurch normal.</p></div><div class="l"><span class="lbl">Lösung</span><p class="muted">Notgroschen von 3 Netto-Monatsgehältern liegt separat auf dem Tagesgeld. Du musst nie im Tief verkaufen.</p></div></div>
+              <div class="risk-row"><div class="r"><span class="lbl">Risiko</span><p>Small Cap Value kann zehn Jahre schlechter laufen als der Gesamtmarkt.</p></div><div class="l"><span class="lbl">Lösung</span><p class="muted">Nur 20 % Anteil, jährliches Rebalancing zurück auf 80/20. Wir haben das im Gespräch am 18.09. vorher durchgespielt.</p></div></div>
+              <div class="risk-row"><div class="r"><span class="lbl">Risiko</span><p>Du brauchst das Geld früher als geplant.</p></div><div class="l"><span class="lbl">Lösung</span><p class="muted">Sparrate jederzeit änderbar oder pausierbar, Verkauf börsentäglich möglich. Kein Vertrag mit Laufzeit.</p></div></div>
+            </div>
+          </div>
+          <div class="panel" style="padding:var(--s4) var(--s5);display:flex;gap:var(--s3);flex-wrap:wrap;align-items:center;justify-content:space-between">
+            <div class="small muted">Besprochen am 18.09.2026 · umgesetzt am 03.10.2026</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap"><span class="file-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H6v18h12V8z"/><path d="M14 3v5h5"/></svg>Geeignetheitserklärung</span><span class="file-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H6v18h12V8z"/><path d="M14 3v5h5"/></svg>Kostenausweis</span></div>
+          </div>
+        </section>
+
+        <!-- GESPRÄCHE -->
+        <section class="screen" data-screen="gespraeche" hidden>
+          <div class="why-hero">
+            <span class="eyebrow">Gespräche</span>
+            <h1>Was wir besprochen haben.</h1>
+            <p class="muted" style="max-width:60ch">Nach jedem Termin schreibe ich hier rein, was rauskam und wer was als Nächstes macht. Das Protokoll liegt direkt dabei.</p>
+          </div>
+          <div class="tl">
+            <div class="tl-item next">
+              <span class="tl-dot"></span>
+              <div class="tl-meta"><span class="eyebrow">Herbst 2027</span><span class="pill neutral">Geplant</span></div>
+              <h3 class="muted">Jahresgespräch</h3>
+            </div>
+            <div class="tl-item">
+              <span class="tl-dot"></span>
+              <div class="tl-meta"><span class="eyebrow num">03.10.2026 · 30 Min. · Video</span><span class="pill ok">Umgesetzt</span></div>
+              <h3>Umsetzung Depot</h3>
+              <div class="panel tl-card">
+                <div><h4>Ergebnis</h4><p class="muted">Depot bei Depotbank D eröffnet, drei Sparpläne angelegt (60/20/20). Erste Ausführung am 15.10.</p></div>
+                <div><h4>Nächste Schritte</h4><ul><li>Freistellungsauftrag setzen <span class="who">DU</span></li><li>Gehaltsabrechnung für bAV-Check <span class="who">DU</span></li><li>bAV-Angebot beim Arbeitgeber anfragen <span class="who">MARVIN</span></li></ul></div>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap"><span class="file-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H6v18h12V8z"/><path d="M14 3v5h5"/></svg>Beratungsprotokoll · 4 S.</span></div>
+            </div>
+            <div class="tl-item">
+              <span class="tl-dot"></span>
+              <div class="tl-meta"><span class="eyebrow num">18.09.2026 · 75 Min. · Stade</span><span class="pill ok">Entschieden</span></div>
+              <h3>Beratung Vermögensaufbau</h3>
+              <div class="panel tl-card">
+                <div><h4>Ergebnis</h4><p class="muted">Weltportfolio 80/20 statt deiner zwei aktiven Fonds. Ersparnis bei den laufenden Kosten: rund 1,6 Prozentpunkte im Jahr. Risikoklasse und Crash-Szenario gemeinsam durchgespielt.</p></div>
+                <div><h4>Nächste Schritte</h4><ul><li>Depot eröffnen <span class="who">DU</span> ✓</li><li>Geeignetheitserklärung erstellen <span class="who">MARVIN</span> ✓</li></ul></div>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap"><span class="file-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H6v18h12V8z"/><path d="M14 3v5h5"/></svg>Geeignetheitserklärung</span><span class="file-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H6v18h12V8z"/><path d="M14 3v5h5"/></svg>Kostenvergleich alt/neu</span></div>
+            </div>
+            <div class="tl-item">
+              <span class="tl-dot"></span>
+              <div class="tl-meta"><span class="eyebrow num">28.08.2026 · 45 Min. · Video</span><span class="pill neutral">Erstgespräch</span></div>
+              <h3>Kennenlernen &amp; Bestandsaufnahme</h3>
+              <div class="panel tl-card">
+                <div><h4>Ergebnis</h4><p class="muted">Ziele: finanzielle Unabhängigkeit mit 60, Arbeitskraft absichern. Größte Lücke: keine BU. Zwei teure aktive Fonds im Bestand.</p></div>
+                <div><h4>Nächste Schritte</h4><ul><li>Gesundheitsfragen für BU-Voranfrage <span class="who">DU</span> ✓</li><li>Anonyme Voranfrage bei 4 Versicherern <span class="who">MARVIN</span> ✓</li></ul></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- DOKUMENTE -->
+        <section class="screen" data-screen="dokumente" hidden>
+          <div class="why-hero">
+            <span class="eyebrow">Dokumente</span>
+            <h1>Alles an einem Ort.</h1>
+          </div>
+          <div class="drop" id="drop">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" style="color:var(--accent)"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 20h14"/></svg>
+            <strong style="font-weight:500">Datei hierher ziehen oder auswählen</strong>
+            <span class="small muted">PDF, JPG oder PNG bis 20 MB. Ich bekomme eine Nachricht, sobald etwas da ist.</span>
+            <label class="btn btn-ghost small" for="file" style="margin-top:6px">Datei auswählen</label>
+            <input id="file" type="file" hidden>
+          </div>
+          <div class="filters" role="group" aria-label="Filter">
+            <button class="chip" aria-pressed="true" data-f="alle">Alle</button>
+            <button class="chip" aria-pressed="false" data-f="beratung">Beratung</button>
+            <button class="chip" aria-pressed="false" data-f="vertrag">Verträge</button>
+            <button class="chip" aria-pressed="false" data-f="pflicht">Pflichtinfos</button>
+            <button class="chip" aria-pressed="false" data-f="upload">Von dir</button>
+          </div>
+          <div class="panel" id="doclist">
+            <div class="doc" data-k="beratung"><div class="doc-ic">PDF</div><div class="doc-t"><strong>Beratungsprotokoll Vermögensaufbau</strong><span class="small muted">03.10.2026 · 4 Seiten</span></div><button class="dl" aria-label="Herunterladen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 4v11m0 0 4.5-4.5M12 15l-4.5-4.5M5 20h14"/></svg></button></div>
+            <div class="doc" data-k="beratung"><div class="doc-ic">PDF</div><div class="doc-t"><strong>Geeignetheitserklärung</strong><span class="small muted">03.10.2026 · 3 Seiten</span></div><button class="dl" aria-label="Herunterladen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 4v11m0 0 4.5-4.5M12 15l-4.5-4.5M5 20h14"/></svg></button></div>
+            <div class="doc" data-k="beratung"><div class="doc-ic">PDF</div><div class="doc-t"><strong>Kostenvergleich alt / neu</strong><span class="small muted">18.09.2026 · 2 Seiten</span></div><button class="dl" aria-label="Herunterladen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 4v11m0 0 4.5-4.5M12 15l-4.5-4.5M5 20h14"/></svg></button></div>
+            <div class="doc" data-k="vertrag"><div class="doc-ic">PDF</div><div class="doc-t"><strong>Police Berufsunfähigkeit</strong><span class="small muted">Versicherer A · 12.09.2026</span></div><button class="dl" aria-label="Herunterladen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 4v11m0 0 4.5-4.5M12 15l-4.5-4.5M5 20h14"/></svg></button></div>
+            <div class="doc" data-k="pflicht"><div class="doc-ic">PDF</div><div class="doc-t"><strong>Erstinformation &amp; Datenschutz</strong><span class="small muted">28.08.2026</span></div><button class="dl" aria-label="Herunterladen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 4v11m0 0 4.5-4.5M12 15l-4.5-4.5M5 20h14"/></svg></button></div>
+            <div class="doc" data-k="pflicht"><div class="doc-ic">PDF</div><div class="doc-t"><strong>Ex-ante-Kostenausweis Depot</strong><span class="small muted">03.10.2026</span></div><button class="dl" aria-label="Herunterladen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 4v11m0 0 4.5-4.5M12 15l-4.5-4.5M5 20h14"/></svg></button></div>
+            <div class="doc" data-k="upload"><div class="doc-ic">JPG</div><div class="doc-t"><strong>Gehaltsabrechnung 08-2026</strong><span class="small muted">Von dir · 30.08.2026</span></div><button class="dl" aria-label="Herunterladen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 4v11m0 0 4.5-4.5M12 15l-4.5-4.5M5 20h14"/></svg></button></div>
+          </div>
+          <div class="lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span>Deine Dateien liegen verschlüsselt auf Servern in Frankfurt. Download-Links gelten 60 Sekunden und jeder Abruf wird protokolliert.</span></div>
+        </section>
+
+        <!-- RECHNER (im Login) -->
+        <section class="screen" data-screen="rechner" hidden>
+          <div class="why-hero">
+            <span class="eyebrow">Kostenrechner</span>
+            <h1>Was dich ein Prozent wirklich kostet.</h1>
+            <p class="muted" style="max-width:60ch">Vorbelegt mit deinen Zahlen aus dem Gespräch am 18.09. Schieb an den Reglern, das Ergebnis rechnet live mit.</p>
+          </div>
+          <div class="calc-slot" data-calc="kunde"></div>
+        </section>
+
+        <!-- TERMIN -->
+        <section class="screen" data-screen="termin" hidden>
+          <div class="why-hero">
+            <span class="eyebrow">Termin</span>
+            <h1>Wann passt es dir?</h1>
+            <p class="muted" style="max-width:60ch">30 Minuten per Video oder 60 Minuten in Stade. Im Prototyp nur angedeutet. Im echten Portal kommt hier mein Kalender rein, ohne dass du dich irgendwo anmelden musst.</p>
+          </div>
+          <div class="grid g-3" id="slots"></div>
+        </section>
+
+      </div>
+    </div>
+
+    <nav class="tabbar" aria-label="Hauptnavigation mobil">
+      <button data-go="start" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Übersicht</button>
+      <button data-go="plan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Plan</button>
+      <button data-go="gespraeche"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-5A8 8 0 1 1 21 12z"/></svg>Gespräche</button>
+      <button data-go="dokumente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>Dokumente</button>
+      <button data-go="rechner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/></svg>Rechner</button>
+    </nav>
+  </div>
+
+  <!-- ================= LOGIN ================= -->
+  <div id="view-login" hidden>
+    <div class="login">
+      <div class="login-card" id="login-step1">
+        <div class="brand"><span class="mark">M</span>Marvin Allers</div>
+        <h1>Dein Kundenbereich</h1>
+        <p class="muted">Kein Passwort. Du bekommst einen Code per Mail.</p>
+        <label class="small" for="mail" style="font-weight:500">E-Mail</label>
+        <input class="inp" id="mail" type="email" value="max@mustermann.example" autocomplete="email">
+        <button class="btn btn-primary" id="send-code">Code schicken</button>
+        <div class="divider">oder</div>
+        <button class="btn btn-ghost" id="passkey">Mit Passkey anmelden</button>
+        <p class="small muted">Noch kein Zugang? Den bekommst du von mir nach dem ersten Gespräch. <button class="link small" data-view-go="pub">Erst mal reinschauen →</button></p>
+      </div>
+      <div class="login-card" id="login-step2" hidden>
+        <div class="brand"><span class="mark">M</span>Marvin Allers</div>
+        <h1>Code eingeben</h1>
+        <p class="muted">Wir haben dir einen 6-stelligen Code an <strong style="font-weight:500">max@mustermann.example</strong> geschickt. Oder tipp einfach auf den Link in der Mail.</p>
+        <div class="otp" aria-label="Code">
+          <input class="inp" id="o1" inputmode="numeric" maxlength="1" value="4" aria-label="Ziffer 1"><input class="inp" id="o2" inputmode="numeric" maxlength="1" value="8" aria-label="Ziffer 2"><input class="inp" id="o3" inputmode="numeric" maxlength="1" value="1" aria-label="Ziffer 3"><input class="inp" id="o4" inputmode="numeric" maxlength="1" value="9" aria-label="Ziffer 4"><input class="inp" id="o5" inputmode="numeric" maxlength="1" value="0" aria-label="Ziffer 5"><input class="inp" id="o6" inputmode="numeric" maxlength="1" value="" aria-label="Ziffer 6">
+        </div>
+        <button class="btn btn-primary" id="verify">Anmelden</button>
+        <p class="small muted">Für Dokumente mit Gesundheitsdaten fragen wir zusätzlich deinen zweiten Faktor ab (Authenticator-App oder Passkey).</p>
+        <button class="link small" id="back-login">← Andere E-Mail</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= INTERESSENT / ÖFFENTLICH ================= -->
+  <div id="view-pub" class="pub" hidden>
+    <div class="pub-top">
+      <div class="brand"><span class="mark">M</span>Marvin Allers</div>
+      <div style="display:flex;gap:8px;align-items:center"><button class="link small" data-view-go="login">Kunden-Login</button><button class="btn btn-primary small" style="padding:8px 14px" data-view-go="kunde-termin">Gespräch buchen</button></div>
+    </div>
+    <div class="pub-hero">
+      <span class="eyebrow">Kostenrechner · kostenlos, ohne Anmeldung</span>
+      <h1>Mehr Rendite, <span class="claim">weniger Bullshit.</span></h1>
+      <p>Die meisten Leute wissen nicht, was ihre Altersvorsorge oder ihr Fonds im Jahr kostet. Gib die Zahlen aus deinem Vertrag ein und sieh, was nach 30 Jahren davon übrig bleibt.</p>
+    </div>
+    <div class="content">
+      <div class="calc-slot" data-calc="pub"></div>
+      <div class="cta">
+        <span class="eyebrow">Und jetzt?</span>
+        <h3>Ich schau mir deinen Vertrag an. 30 Minuten, kostenlos.</h3>
+        <p class="muted">Du bekommst eine ehrliche Einschätzung, ob sich ein Wechsel lohnt. Manchmal ist die Antwort: Lass ihn laufen.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-primary" data-view-go="kunde-termin">Termin aussuchen</button><button class="btn btn-ghost" id="pdf-lead">Ergebnis als PDF per Mail</button></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+<p class="note">Prototyp mit erfundenen Beispieldaten (Max Mustermann, „Versicherer A"). Kein echter Login, keine echten Produkte, keine Anlageberatung.</p>
+
+<template id="calc-tpl">
+  <div class="calc">
+    <div class="panel inputs">
+      <div class="field"><label for="ID-start">Startbetrag <output id="ID-o-start"></output></label><input type="range" id="ID-start" min="0" max="100000" step="1000" value="10000"></div>
+      <div class="field"><label for="ID-rate">Sparrate im Monat <output id="ID-o-rate"></output></label><input type="range" id="ID-rate" min="0" max="2000" step="25" value="300"></div>
+      <div class="field"><label for="ID-years">Laufzeit <output id="ID-o-years"></output></label><input type="range" id="ID-years" min="5" max="45" step="1" value="30"></div>
+      <div class="field"><label for="ID-ret">Rendite vor Kosten p. a. <output id="ID-o-ret"></output></label><input type="range" id="ID-ret" min="1" max="9" step="0.25" value="6"></div>
+      <div class="vs">
+        <div class="field"><label for="ID-ca">Teuer <output id="ID-o-ca"></output></label><input type="range" id="ID-ca" min="0" max="4" step="0.05" value="2.4"><span class="small muted">z. B. Fondspolice, aktiver Fonds</span></div>
+        <div class="field"><label for="ID-cb">Günstig <output id="ID-o-cb"></output></label><input type="range" id="ID-cb" min="0" max="2" step="0.05" value="0.25"><span class="small muted">z. B. ETF-Depot</span></div>
+      </div>
+    </div>
+    <div class="panel result">
+      <div>
+        <span class="eyebrow">Differenz nach <span id="ID-yl"></span> Jahren</span>
+        <div class="big" id="ID-diff" style="margin-top:8px"></div>
+        <p class="muted small" style="margin-top:8px" id="ID-sent"></p>
+      </div>
+      <svg class="chart" id="ID-chart" viewBox="0 0 640 260" role="img" aria-label="Vermögensverlauf beider Varianten"></svg>
+      <div class="split">
+        <div class="fact"><span class="eyebrow" style="color:var(--accent)">Günstig</span><span class="v" id="ID-fb"></span></div>
+        <div class="fact"><span class="eyebrow">Teuer</span><span class="v" id="ID-fa"></span></div>
+      </div>
+      <p class="disclaimer">Modellrechnung mit konstanter Rendite und monatlicher Einzahlung. Keine Prognose und keine Anlageberatung. Echte Renditen schwanken, auch ins Minus. Steuern und Inflation sind nicht berücksichtigt. Effektivkosten findest du in deinem Basisinformationsblatt bzw. im Kostenausweis deines Vertrags. Stand der Rechenlogik: 10/2026.</p>
+    </div>
+  </div>
+</template>
+
+<script>
+(function(){
+  var device = document.getElementById('device');
+  var eur = new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0});
+  var pct = function(v){return v.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})+' %'};
+
+  /* ---------- Ansicht & Gerät ---------- */
+  function setView(v){
+    document.querySelectorAll('[data-view]').forEach(function(b){b.setAttribute('aria-pressed', String(b.dataset.view===v))});
+    document.getElementById('view-kunde').hidden = v!=='kunde';
+    document.getElementById('view-login').hidden = v!=='login';
+    document.getElementById('view-pub').hidden = v!=='pub';
+  }
+  document.querySelectorAll('[data-view]').forEach(function(b){b.addEventListener('click',function(){setView(b.dataset.view)})});
+  document.querySelectorAll('[data-view-go]').forEach(function(b){b.addEventListener('click',function(){
+    var t=b.dataset.viewGo; if(t==='kunde-termin'){setView('kunde');go('termin')} else setView(t);
+  })});
+  function setDevice(d){
+    document.querySelectorAll('[data-device]').forEach(function(b){b.setAttribute('aria-pressed', String(b.dataset.device===d))});
+    device.classList.toggle('phone', d==='phone');
+    try{localStorage.setItem('ma-proto-device',d)}catch(e){}
+  }
+  document.querySelectorAll('[data-device]').forEach(function(b){b.addEventListener('click',function(){setDevice(b.dataset.device)})});
+  try{var sd=localStorage.getItem('ma-proto-device'); if(sd) setDevice(sd); else if(window.innerWidth<700) setDevice('phone');}catch(e){ if(window.innerWidth<700) setDevice('phone'); }
+
+  /* ---------- Navigation im Kundenbereich ---------- */
+  var navMap={baustein:'plan',termin:'start'};
+  function go(s){
+    document.querySelectorAll('[data-screen]').forEach(function(el){el.hidden = el.dataset.screen!==s});
+    var key = navMap[s]||s;
+    document.querySelectorAll('.side [data-go], .tabbar [data-go]').forEach(function(b){
+      if(b.dataset.go===key) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current');
+    });
+    var m=document.getElementById('main'); if(m) m.scrollTop=0;
+    if(!device.classList.contains('phone')) device.scrollIntoView({block:'nearest'});
+  }
+  document.querySelectorAll('[data-go]').forEach(function(b){b.addEventListener('click',function(){go(b.dataset.go)})});
+
+  /* ---------- To-dos ---------- */
+  function countTodos(){
+    var open=document.querySelectorAll('[data-todo] .check[aria-checked="false"]').length;
+    document.getElementById('todo-count').textContent = open? open+' offen' : 'Alles erledigt';
+  }
+  document.querySelectorAll('[data-todo] .check').forEach(function(c){c.addEventListener('click',function(){
+    var on=c.getAttribute('aria-checked')!=='true';
+    c.setAttribute('aria-checked',String(on));
+    c.innerHTML = on? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 12 5 5 9-10"/></svg>' : '';
+    c.closest('[data-todo]').classList.toggle('done',on);
+    countTodos();
+  })});
+
+  /* ---------- Dokumente ---------- */
+  document.querySelectorAll('[data-f]').forEach(function(b){b.addEventListener('click',function(){
+    document.querySelectorAll('[data-f]').forEach(function(x){x.setAttribute('aria-pressed',String(x===b))});
+    document.querySelectorAll('#doclist .doc').forEach(function(d){d.hidden = !(b.dataset.f==='alle'||d.dataset.k===b.dataset.f)});
+  })});
+  var drop=document.getElementById('drop');
+  ['dragenter','dragover'].forEach(function(e){drop.addEventListener(e,function(ev){ev.preventDefault();drop.classList.add('over')})});
+  ['dragleave','drop'].forEach(function(e){drop.addEventListener(e,function(ev){ev.preventDefault();drop.classList.remove('over'); if(e==='drop') toast('Hochgeladen. Marvin ist informiert.')})});
+  document.getElementById('file').addEventListener('change',function(){toast('Hochgeladen. Marvin ist informiert.')});
+  document.querySelectorAll('.dl').forEach(function(b){b.addEventListener('click',function(){toast('Im echten Portal startet jetzt der Download.')})});
+
+  function toast(t){
+    var el=document.createElement('div'); el.className='toast'; el.textContent=t; device.appendChild(el);
+    setTimeout(function(){el.remove()},2600);
+  }
+
+  /* ---------- Login ---------- */
+  document.getElementById('send-code').addEventListener('click',function(){document.getElementById('login-step1').hidden=true;document.getElementById('login-step2').hidden=false;document.getElementById('o6').focus()});
+  document.getElementById('back-login').addEventListener('click',function(){document.getElementById('login-step1').hidden=false;document.getElementById('login-step2').hidden=true});
+  document.getElementById('verify').addEventListener('click',function(){setView('kunde');go('start')});
+  document.getElementById('passkey').addEventListener('click',function(){toast('Im echten Portal fragt jetzt dein Gerät nach Face ID / Fingerabdruck.')});
+  document.getElementById('pdf-lead').addEventListener('click',function(){toast('Im echten Portal: Mail-Adresse + Einwilligung, dann PDF.')});
+
+  /* ---------- Termin-Slots (Platzhalter) ---------- */
+  var slots=[['Do 16.10.','09:00 · Video'],['Do 16.10.','17:30 · Video'],['Mo 20.10.','10:00 · Stade']];
+  document.getElementById('slots').innerHTML = slots.map(function(s){return '<button class="pillar" style="gap:6px"><span class="eyebrow">'+s[0]+'</span><h3 class="num" style="font-family:var(--mono);font-weight:500;font-size:20px">'+s[1]+'</h3><span class="small muted">Antippen zum Buchen</span></button>'}).join('');
+  document.querySelectorAll('#slots button').forEach(function(b){b.addEventListener('click',function(){toast('Gebucht. Bestätigung kommt per Mail.')})});
+
+  /* ---------- Kostenrechner ---------- */
+  // Endvermögen bei monatlicher Einzahlung: FV = P0*(1+i)^n + s*((1+i)^n-1)/i, i = (1+r_netto)^(1/12)-1
+  function fv(p0,s,years,rNet){
+    var i=Math.pow(1+rNet,1/12)-1, n=years*12, out=[p0], v=p0;
+    for(var m=1;m<=n;m++){ v = v*(1+i)+s; if(m%12===0) out.push(v); }
+    return out;
+  }
+  function mountCalc(slot){
+    var id='c'+slot.dataset.calc;
+    var html=document.getElementById('calc-tpl').innerHTML.replace(/ID-/g,id+'-');
+    slot.innerHTML=html;
+    var $=function(k){return document.getElementById(id+'-'+k)};
+    var ins=['start','rate','years','ret','ca','cb'];
+    function upd(){
+      var p0=+$('start').value, s=+$('rate').value, y=+$('years').value, r=+$('ret').value/100, ca=+$('ca').value/100, cb=+$('cb').value/100;
+      $('o-start').textContent=eur.format(p0); $('o-rate').textContent=eur.format(s); $('o-years').textContent=y+' Jahre';
+      $('o-ret').textContent=pct(r*100); $('o-ca').textContent=pct(ca*100); $('o-cb').textContent=pct(cb*100);
+      var A=fv(p0,s,y,r-ca), B=fv(p0,s,y,r-cb), paid=p0+s*12*y;
+      var d=B[y]-A[y];
+      $('yl').textContent=y; $('diff').textContent=(d>=0?'':'−')+eur.format(Math.abs(d));
+      $('fa').textContent=eur.format(A[y]); $('fb').textContent=eur.format(B[y]);
+      $('sent').textContent = d>0 ? 'So viel mehr hast du mit der günstigen Variante. Eingezahlt hast du in beiden Fällen '+eur.format(paid)+'.' : 'Bei diesen Einstellungen gibt es keinen Kostenvorteil.';
+      draw($('chart'),A,B,y);
+    }
+    ins.forEach(function(k){$(k).addEventListener('input',upd)});
+    upd();
+  }
+  function niceMax(v){var e=Math.pow(10,Math.floor(Math.log10(v||1))); var f=v/e; var n=f<=1?1:f<=2?2:f<=2.5?2.5:f<=3?3:f<=4?4:f<=5?5:f<=6?6:f<=8?8:10; return n*e;}
+  function draw(svg,A,B,y){
+    var W=640,H=260,l=64,r=16,t=14,b=30, w=W-l-r, h=H-t-b;
+    var max=niceMax(Math.max.apply(null,B.concat(A)));
+    var X=function(i){return l+w*i/y}, Y=function(v){return t+h-h*v/max};
+    var g='';
+    for(var k=0;k<=4;k++){var v=max*k/4, yy=Y(v); g+='<line x1="'+l+'" x2="'+(W-r)+'" y1="'+yy+'" y2="'+yy+'" stroke="var(--line)" stroke-width="1"/><text x="'+(l-8)+'" y="'+(yy+4)+'" text-anchor="end">'+(v>=1e6?(v/1e6).toLocaleString('de-DE',{maximumFractionDigits:1})+' Mio':Math.round(v/1000)+' T')+'</text>';}
+    var step=y<=10?2:y<=25?5:10;
+    for(var j=0;j<=y;j+=step){g+='<text x="'+X(j)+'" y="'+(H-8)+'" text-anchor="middle">'+j+' J.</text>';}
+    function path(arr){return arr.map(function(v,i){return (i?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1)}).join(' ')}
+    var area='M'+X(0)+' '+Y(A[0])+' '+B.map(function(v,i){return 'L'+X(i).toFixed(1)+' '+Y(v).toFixed(1)}).join(' ')+' '+A.slice().reverse().map(function(v,i){return 'L'+X(y-i).toFixed(1)+' '+Y(v).toFixed(1)}).join(' ')+' Z';
+    g+='<path d="'+area+'" fill="var(--accent)" fill-opacity=".14"/>';
+    g+='<path d="'+path(A)+'" fill="none" stroke="var(--ink-3)" stroke-width="2" stroke-dasharray="5 4"/>';
+    g+='<path d="'+path(B)+'" fill="none" stroke="var(--accent)" stroke-width="2.5"/>';
+    g+='<circle cx="'+X(y)+'" cy="'+Y(B[y])+'" r="4.5" fill="var(--accent)"/><circle cx="'+X(y)+'" cy="'+Y(A[y])+'" r="4" fill="var(--ink-3)"/>';
+    svg.innerHTML=g;
+  }
+  document.querySelectorAll('.calc-slot').forEach(mountCalc);
+})();
+</script>
