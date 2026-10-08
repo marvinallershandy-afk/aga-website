@@ -1,0 +1,995 @@
+<title>Marvin Allers Prototyp</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=Public+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: eine App in einem Container (Handy 390 / Desktop voll), Container-Queries statt Viewport.
+   Website: redaktionell, viel Weiß, eine große interaktive Rechnung als Hero.
+   Kundenbereich: Seitenleiste (Desktop) bzw. Tab-Leiste (Handy).
+   Farben aus dem Logo des Designers: Bordeaux #7F1C31, Anthrazit #364445 (Petrol-Stich). */
+:root{
+  --bordeaux:#7F1C31;        /* Logo, Primär-Buttons */
+  --accent:#7F1C31;          /* Text-Akzent, Zahlen, Links */
+  --accent-soft:#F6ECEE;
+  --anthrazit:#364445;       /* Logo, Überschriften */
+  --bg:#FFFFFF;
+  --mist:#F3F5F5;            /* Fläche, Petrol-Neutral */
+  --line:#DCE3E3;
+  --ink:#1B2425;             /* Fließtext */
+  --ink-2:#4B5859;
+  --ink-3:#7A8788;
+  --ok:#2C7651; --ok-soft:#E7F2EC;
+  --warn:#975F12; --warn-soft:#FAF0E2;
+  --on-accent:#FFFFFF;
+  --serif:"Newsreader","Iowan Old Style",Georgia,serif;
+  --sans:"Public Sans","Helvetica Neue",Helvetica,Arial,sans-serif;
+  --r1:4px; --r2:8px; --r3:12px;
+  --shadow:0 1px 2px rgba(27,36,37,.05),0 6px 20px rgba(27,36,37,.06);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bordeaux:#9C2A44; --accent:#E38A9D; --accent-soft:#2A1A1F; --anthrazit:#C9D4D4;
+  --bg:#111718; --mist:#182021; --line:#2A3536; --ink:#ECF1F1; --ink-2:#B3C0C0; --ink-3:#7F8D8E;
+  --ok:#7CC69F; --ok-soft:#14261D; --warn:#E2B064; --warn-soft:#2A2113;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.35); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bordeaux:#9C2A44; --accent:#E38A9D; --accent-soft:#2A1A1F; --anthrazit:#C9D4D4;
+  --bg:#111718; --mist:#182021; --line:#2A3536; --ink:#ECF1F1; --ink-2:#B3C0C0; --ink-3:#7F8D8E;
+  --ok:#7CC69F; --ok-soft:#14261D; --warn:#E2B064; --warn-soft:#2A2113;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.35); color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--mist);color:var(--ink);font-family:var(--sans);font-size:15.5px;line-height:1.6;padding-inline:16px;padding-block:16px 40px;font-variant-numeric:tabular-nums}
+h1,h2,h3,h4{font-family:var(--serif);font-weight:500;margin:0;letter-spacing:-.012em;text-wrap:balance;color:var(--anthrazit)}
+p{margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
+.label{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.muted{color:var(--ink-2)} .faint{color:var(--ink-3)} .small{font-size:13.5px} .xs{font-size:12.5px}
+.num{font-variant-numeric:tabular-nums lining-nums}
+.big-num{font-family:var(--serif);font-weight:500;letter-spacing:-.02em;font-variant-numeric:lining-nums tabular-nums;color:var(--accent);line-height:1}
+.nowrap{white-space:nowrap}
+
+/* Prototyp-Leiste */
+.proto{max-width:1280px;margin:0 auto 14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.proto strong{font-family:var(--serif);font-weight:500;font-size:18px;color:var(--anthrazit)}
+.seg{display:inline-flex;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:3px;gap:2px}
+.seg button{border:0;background:none;padding:6px 12px;border-radius:999px;font-size:13px;color:var(--ink-2)}
+.seg button[aria-pressed="true"]{background:var(--anthrazit);color:var(--bg)}
+.ctrls{display:flex;flex-wrap:wrap;gap:8px}
+
+/* Gerät */
+.stage{max-width:1280px;margin:0 auto;display:flex;justify-content:center}
+.device{container:app/inline-size;width:100%;background:var(--bg);border:1px solid var(--line);border-radius:var(--r3);overflow:hidden;box-shadow:var(--shadow);position:relative}
+.device.phone{max-width:392px;height:820px;border-radius:36px;border:8px solid #1B2425}
+.view{min-height:780px}
+.device.phone .view{height:100%;overflow:auto;min-height:0}
+.device:not(.phone) .view{min-height:780px}
+
+/* Logo */
+.logo{display:inline-flex;align-items:center;gap:10px;text-decoration:none;color:var(--anthrazit)}
+.logo svg.mark{width:34px;height:auto}
+.logo svg.word{height:12px;width:auto}
+.mark .b{fill:#7F1C31}
+.mark .a, .word path{fill:var(--anthrazit)}
+
+/* Buttons & Elemente */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:var(--r2);padding:11px 18px;font-weight:500;font-size:14.5px;border:1px solid transparent;white-space:nowrap}
+.btn-primary{background:var(--bordeaux);color:var(--on-accent)}
+.btn-primary:hover{filter:brightness(1.1)}
+.btn-line{background:transparent;border-color:var(--line);color:var(--ink)}
+.btn-line:hover{border-color:var(--ink-3)}
+.link{background:none;border:0;padding:0;color:var(--accent);font-weight:500;font-size:14.5px;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:500;padding:2px 9px;border-radius:var(--r1);white-space:nowrap}
+.chip.ok{background:var(--ok-soft);color:var(--ok)} .chip.warn{background:var(--warn-soft);color:var(--warn)}
+.chip.plan{background:var(--accent-soft);color:var(--accent)} .chip.neutral{background:var(--mist);color:var(--ink-2)}
+.panel{border:1px solid var(--line);border-radius:var(--r3);background:var(--bg)}
+.pad{padding:20px}
+.rule{border:0;border-top:1px solid var(--line);margin:0}
+.stack{display:flex;flex-direction:column}
+.g4{gap:4px}.g8{gap:8px}.g12{gap:12px}.g16{gap:16px}.g24{gap:24px}.g32{gap:32px}.g48{gap:48px}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.between{justify-content:space-between}
+.grid{display:grid;gap:16px}
+.note-box{font-size:12.5px;color:var(--ink-3);line-height:1.5}
+.ph{background:repeating-linear-gradient(135deg,var(--mist) 0 10px,var(--bg) 10px 20px);border:1px dashed var(--line);border-radius:var(--r3);display:grid;place-items:center;color:var(--ink-3);font-size:13px;text-align:center;padding:16px}
+input[type=range]{width:100%;accent-color:var(--bordeaux)}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{display:flex;justify-content:space-between;gap:8px;font-size:13.5px;font-weight:500}
+.field output{font-variant-numeric:tabular-nums;color:var(--ink)}
+svg text{font-family:var(--sans);font-size:11px;fill:var(--ink-3)}
+.toast{position:absolute;left:50%;bottom:96px;transform:translateX(-50%);background:var(--anthrazit);color:var(--bg);padding:10px 16px;border-radius:var(--r2);font-size:13px;box-shadow:var(--shadow);z-index:20;max-width:90%;text-align:center}
+
+/* ================= WEBSITE ================= */
+.site-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:color-mix(in srgb,var(--bg) 94%,transparent);backdrop-filter:blur(8px);z-index:5}
+.site-nav{display:none;gap:24px;font-size:14.5px}
+.site-nav button{background:none;border:0;color:var(--ink-2);padding:0}
+.site-nav button:hover{color:var(--ink)}
+.site-main{display:flex;flex-direction:column}
+.sec{padding:48px 20px;display:flex;flex-direction:column;gap:24px;max-width:1160px;margin:0 auto;width:100%}
+.sec + .sec{border-top:1px solid var(--line)}
+.hero{display:grid;gap:28px;padding-top:36px}
+.hero h1{font-size:clamp(38px,9cqi,76px);line-height:1.02;letter-spacing:-.025em}
+.hero h1 em{font-style:italic;color:var(--accent)}
+.lede{font-size:18px;color:var(--ink-2);max-width:46ch;line-height:1.5}
+.tm{padding:22px;display:flex;flex-direction:column;gap:16px;background:var(--bg)}
+.tm .big-num{font-size:clamp(44px,9cqi,68px)}
+.tm-grid{display:grid;gap:14px}
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.vs .field{padding:10px 12px;border:1px solid var(--line);border-radius:var(--r2)}
+.vs .field.mine{border-color:color-mix(in srgb,var(--accent) 40%,var(--line))}
+.quote{font-family:var(--serif);font-size:clamp(26px,5cqi,40px);line-height:1.2;color:var(--anthrazit);max-width:30ch;letter-spacing:-.01em}
+.principles{display:grid;gap:0}
+.principle{display:grid;grid-template-columns:1fr;gap:6px;padding:18px 0;border-top:1px solid var(--line)}
+.principle h3{font-size:21px}
+.tools{display:grid;gap:0}
+.tool{display:grid;grid-template-columns:1fr auto;gap:6px 16px;align-items:center;padding:18px 0;border-top:1px solid var(--line);text-align:left;background:none;border-left:0;border-right:0;border-bottom:0;width:100%}
+.tool:last-child{border-bottom:1px solid var(--line)}
+.tool h3{font-size:22px}
+.tool:hover h3{color:var(--accent)}
+.tool .arrow{font-size:20px;color:var(--accent)}
+.steps{display:grid;gap:0;counter-reset:s}
+.step{display:grid;grid-template-columns:44px 1fr;gap:4px 12px;padding:16px 0;border-top:1px solid var(--line)}
+.step::before{counter-increment:s;content:counter(s);grid-row:span 2;font-family:var(--serif);font-size:28px;color:var(--accent);line-height:1}
+.step h3{font-size:19px}
+.fee{display:grid;gap:12px}
+.fee-row{display:grid;grid-template-columns:1fr auto;gap:12px;padding:12px 0;border-top:1px solid var(--line);font-size:14.5px}
+.about{display:grid;gap:20px}
+.cta-band{background:var(--anthrazit);color:var(--bg);border-radius:var(--r3);padding:28px;display:flex;flex-direction:column;gap:14px}
+.cta-band h2{color:var(--bg);font-size:clamp(26px,5cqi,38px)}
+.cta-band .btn-primary{align-self:flex-start}
+:root[data-theme="dark"] .cta-band, .cta-band{--x:0}
+.site-foot{padding:28px 20px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:12px;font-size:13px;color:var(--ink-3);max-width:1160px;margin:0 auto;width:100%}
+.site-foot .row{gap:16px}
+
+@container app (min-width: 900px){
+  .site-nav{display:flex}
+  .site-head{padding:18px 40px}
+  .sec{padding:72px 40px}
+  .hero{grid-template-columns:1.05fr 1fr;align-items:start;padding-top:64px}
+  .principles{grid-template-columns:repeat(3,1fr);gap:28px}
+  .principle{border-top:2px solid var(--anthrazit)}
+  .tool{grid-template-columns:1.2fr 2fr auto}
+  .steps{grid-template-columns:repeat(4,1fr);gap:24px}
+  .step{grid-template-columns:1fr;border-top:2px solid var(--anthrazit)}
+  .step::before{grid-row:auto}
+  .fee{grid-template-columns:1fr 1.3fr;gap:48px}
+  .about{grid-template-columns:1fr 1.4fr;gap:48px;align-items:center}
+  .cta-band{padding:44px;flex-direction:row;align-items:center;justify-content:space-between}
+  .site-foot{padding:32px 40px}
+}
+
+/* Tool-Seite */
+.tool-page{display:grid;gap:20px}
+.tool-inputs{display:flex;flex-direction:column;gap:14px;padding:20px}
+.tool-out{padding:20px;display:flex;flex-direction:column;gap:16px}
+.versus{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.versus .cell{border:1px solid var(--line);border-radius:var(--r2);padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.versus .cell.win{border-color:var(--accent);background:var(--accent-soft)}
+.versus .v{font-family:var(--serif);font-size:26px;color:var(--anthrazit)}
+.ass{font-size:12.5px;color:var(--ink-3);display:grid;grid-template-columns:1fr auto;gap:2px 12px}
+@container app (min-width: 900px){.tool-page{grid-template-columns:360px 1fr;align-items:start}}
+
+/* ================= KUNDENBEREICH ================= */
+.app{display:grid;grid-template-columns:1fr;min-height:780px}
+.device.phone .app{min-height:100%}
+.side{display:none}
+.tabbar{position:sticky;bottom:0;display:grid;grid-template-columns:repeat(5,1fr);background:color-mix(in srgb,var(--bg) 94%,transparent);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:6px 4px calc(8px + env(safe-area-inset-bottom,0px));z-index:6}
+.tabbar button{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;color:var(--ink-3);padding:5px 0}
+.tabbar button[aria-current="page"]{color:var(--accent)}
+.tabbar svg,.side svg{width:21px;height:21px}
+.k-main{min-width:0;display:flex;flex-direction:column}
+.k-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:color-mix(in srgb,var(--bg) 94%,transparent);backdrop-filter:blur(8px);z-index:5}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:600;font-size:12.5px;border:0}
+.k-content{padding:22px 18px 28px;display:flex;flex-direction:column;gap:28px;max-width:1100px;width:100%}
+.screen{display:flex;flex-direction:column;gap:28px}
+.k-h1{font-size:clamp(28px,6cqi,44px);line-height:1.08}
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.sec-h h2{font-size:22px}
+.cols{display:grid;gap:16px}
+@container app (min-width: 900px){
+  .app{grid-template-columns:240px 1fr}
+  .side{display:flex;flex-direction:column;gap:4px;padding:22px 14px;border-right:1px solid var(--line);background:var(--mist);position:sticky;top:0;height:100%;min-height:780px}
+  .side .logo{padding:0 8px 24px}
+  .side nav{display:flex;flex-direction:column;gap:2px}
+  .side nav button{display:flex;align-items:center;gap:12px;border:0;background:none;padding:9px 10px;border-radius:var(--r2);font-size:14.5px;color:var(--ink-2);text-align:left}
+  .side nav button:hover{background:var(--bg)}
+  .side nav button[aria-current="page"]{background:var(--bg);color:var(--ink);font-weight:500;box-shadow:var(--shadow)}
+  .side nav button[aria-current="page"] svg{color:var(--accent)}
+  .side .adv{margin-top:auto;border-top:1px solid var(--line);padding:16px 8px 0;display:flex;gap:10px;align-items:center}
+  .tabbar{display:none}
+  .k-top .logo{visibility:hidden}
+  .k-content{padding:36px 44px 48px}
+  .c-2{grid-template-columns:1fr 1fr} .c-3{grid-template-columns:repeat(3,1fr)} .c-main{grid-template-columns:1.6fr 1fr;align-items:start}
+}
+
+/* Vermögens-Kachel */
+.wealth{padding:22px;display:flex;flex-direction:column;gap:14px}
+.wealth .big-num{font-size:clamp(40px,8cqi,58px)}
+.kv{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid var(--line)}
+.kv > div{padding:12px 12px 0 0;display:flex;flex-direction:column;gap:2px}
+.kv .v{font-size:16px;font-weight:500}
+.sim-flag{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--warn);background:var(--warn-soft);padding:2px 8px;border-radius:var(--r1)}
+
+/* Monatsbrief-Teaser */
+.brief{padding:20px;display:flex;flex-direction:column;gap:10px;background:var(--anthrazit);color:var(--bg);border-radius:var(--r3);text-align:left;border:0}
+.brief h3{color:var(--bg);font-size:22px}
+.brief .label{color:color-mix(in srgb,var(--bg) 65%,transparent)}
+:root[data-theme="dark"] .brief{background:#24302F}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .brief{background:#24302F}}
+
+/* To-dos */
+.todo{display:flex;gap:12px;align-items:flex-start;padding:14px 18px;border-top:1px solid var(--line)}
+.todo:first-child{border-top:0}
+.check{flex:none;width:22px;height:22px;border-radius:6px;border:1.5px solid var(--ink-3);background:var(--bg);display:grid;place-items:center;margin-top:2px}
+.check[aria-checked="true"]{background:var(--ok);border-color:var(--ok);color:#fff}
+.todo.done strong{text-decoration:line-through;color:var(--ink-3)}
+
+/* Säulen */
+.pillar{padding:18px;display:flex;flex-direction:column;gap:8px;text-align:left;border:1px solid var(--line);border-radius:var(--r3);background:var(--bg)}
+.pillar:hover{border-color:var(--ink-3)}
+.pillar h3{font-size:20px}
+.prow{display:flex;justify-content:space-between;gap:8px;font-size:14px;padding:7px 0;border-top:1px solid var(--line);align-items:center}
+
+/* Anlagen-Liste */
+.asset{display:grid;grid-template-columns:1fr auto;gap:4px 16px;padding:16px 18px;border-top:1px solid var(--line);text-align:left;background:none;border-left:0;border-right:0;border-bottom:0;width:100%}
+.asset:first-child{border-top:0}
+.asset:hover{background:var(--mist)}
+.asset .val{font-family:var(--serif);font-size:22px;color:var(--anthrazit);text-align:right}
+
+/* Charts */
+.chart{width:100%;height:auto;display:block;overflow:visible}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--ink-2)}
+.lg{display:inline-flex;align-items:center;gap:8px}
+.lg i{display:inline-block;width:9px;height:9px}
+.lg .sq{background:var(--anthrazit);transform:rotate(45deg);width:8px;height:8px}
+.lg .ci{background:var(--accent);border-radius:50%}
+.lg .band{background:color-mix(in srgb,var(--accent) 22%,transparent);width:16px;height:9px}
+
+.milestone{display:flex;gap:14px;padding:16px 18px;align-items:flex-start}
+.milestone .ico{flex:none;width:36px;height:36px;border-radius:50%;background:var(--accent-soft);display:grid;place-items:center;color:var(--accent)}
+
+/* Crash-Probe */
+.crash{padding:20px;display:flex;flex-direction:column;gap:14px}
+.choices{display:grid;gap:8px}
+.choice{border:1px solid var(--line);border-radius:var(--r2);background:var(--bg);padding:12px 14px;text-align:left}
+.choice:hover{border-color:var(--accent)}
+.choice[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+@container app (min-width: 900px){.choices{grid-template-columns:repeat(3,1fr)}}
+
+/* Kassenbon */
+.bon{font-variant-numeric:tabular-nums;max-width:420px;padding:22px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r2);position:relative}
+.bon::after{content:"";position:absolute;left:0;right:0;bottom:-7px;height:7px;background:linear-gradient(-45deg,transparent 5px,var(--bg) 0) 0 0/10px 10px,linear-gradient(45deg,transparent 5px,var(--bg) 0) 0 0/10px 10px}
+.bon-row{display:grid;grid-template-columns:1fr auto;gap:12px;padding:6px 0;font-size:14px;border-bottom:1px dashed var(--line)}
+.bon-row.sum{font-weight:600;border-bottom:0;border-top:1.5px solid var(--ink);margin-top:6px;padding-top:10px}
+
+/* Warum */
+.facts{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r3);overflow:hidden}
+@container app (min-width: 900px){.facts{grid-template-columns:repeat(4,1fr)}}
+.fact{background:var(--bg);padding:14px 16px;display:flex;flex-direction:column;gap:2px}
+.fact .v{font-family:var(--serif);font-size:24px;color:var(--anthrazit)}
+.alloc{display:flex;height:10px;gap:2px}
+.alloc span{display:block}
+.ev{padding:16px 18px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:4px}
+.ev:first-child{border-top:0}
+.risk-row{display:grid;gap:8px;padding:16px 18px;border-top:1px solid var(--line)}
+.risk-row:first-child{border-top:0}
+@container app (min-width: 900px){.risk-row{grid-template-columns:1fr 1fr;gap:28px}}
+.risk-row .lbl{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+.r .lbl{color:var(--warn)} .l .lbl{color:var(--ok)}
+.flip{display:flex;gap:4px;border:1px solid var(--line);border-radius:var(--r2);padding:3px;align-self:flex-start;flex-wrap:wrap}
+.flip button{border:0;background:none;padding:6px 12px;border-radius:6px;font-size:13.5px;color:var(--ink-2)}
+.flip button[aria-pressed="true"]{background:var(--mist);color:var(--ink);font-weight:500}
+
+/* Monatsbrief */
+.story{display:grid;grid-auto-flow:column;grid-auto-columns:88%;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:6px}
+.story::-webkit-scrollbar{height:6px}
+.card{scroll-snap-align:start;border-radius:var(--r3);padding:22px;min-height:340px;display:flex;flex-direction:column;gap:12px;border:1px solid var(--line);background:var(--bg)}
+.card.dark{background:var(--anthrazit);color:var(--bg);border-color:transparent}
+.card.dark h3,.card.dark .big-num{color:var(--bg)}
+.card.dark .label{color:color-mix(in srgb,var(--bg) 65%,transparent)}
+.card.tint{background:var(--accent-soft);border-color:transparent}
+.card h3{font-size:24px}
+.card .big-num{font-size:52px}
+.card .foot{margin-top:auto}
+@container app (min-width: 900px){.story{grid-auto-columns:calc((100% - 24px)/3)}}
+
+/* Timeline */
+.tl{position:relative;display:flex;flex-direction:column;gap:20px;padding-left:26px}
+.tl::before{content:"";position:absolute;left:6px;top:6px;bottom:6px;width:1.5px;background:var(--line)}
+.tl-item{position:relative;display:flex;flex-direction:column;gap:8px}
+.tl-item::before{content:"";position:absolute;left:-25px;top:6px;width:12px;height:12px;background:var(--bg);border:2px solid var(--accent);border-radius:50%}
+.tl-item.next::before{border-style:dashed;border-color:var(--ink-3)}
+.tl-item h3{font-size:19px}
+.who{font-size:11.5px;font-weight:600;letter-spacing:.06em;color:var(--ink-3);margin-left:4px}
+
+/* Dokumente */
+.doc{display:grid;grid-template-columns:34px 1fr auto;gap:12px;align-items:center;padding:12px 18px;border-top:1px solid var(--line)}
+.doc:first-child{border-top:0}
+.doc-ic{width:34px;height:42px;border:1px solid var(--line);border-radius:3px;display:grid;place-items:end center;padding-bottom:4px;font-size:9px;font-weight:600;color:var(--accent);background:var(--mist)}
+.doc strong{font-weight:500;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.doc > div{min-width:0}
+.dl{border:1px solid var(--line);background:var(--bg);width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:var(--ink-2)}
+
+/* Login */
+.login{min-height:780px;display:grid;place-items:center;padding:24px}
+.device.phone .login{min-height:100%}
+.login-card{width:100%;max-width:380px;display:flex;flex-direction:column;gap:16px}
+.login-card h1{font-size:34px}
+.inp{width:100%;border:1px solid var(--line);border-radius:var(--r2);padding:12px 14px;font:inherit;background:var(--bg);color:var(--ink)}
+.otp{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.otp .inp{text-align:center;font-size:20px;padding:11px 0}
+.or{display:flex;align-items:center;gap:12px;color:var(--ink-3);font-size:12px}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+
+.note{font-size:12px;color:var(--ink-3);text-align:center;max-width:1280px;margin:12px auto 0}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="proto">
+  <div class="stack g4"><span class="label">Klickbarer Prototyp v2 · Beispieldaten</span><strong>marvinallers.de + kunde.marvinallers.de</strong></div>
+  <div class="ctrls">
+    <div class="seg" role="group" aria-label="Ansicht">
+      <button id="v-site" data-view="site" aria-pressed="true">Website</button>
+      <button id="v-kunde" data-view="kunde" aria-pressed="false">Kundenbereich</button>
+      <button id="v-login" data-view="login" aria-pressed="false">Login</button>
+    </div>
+    <div class="seg" role="group" aria-label="Gerät">
+      <button id="d-phone" data-device="phone" aria-pressed="false">Handy</button>
+      <button id="d-desk" data-device="desk" aria-pressed="true">Desktop</button>
+    </div>
+  </div>
+</div>
+
+<div class="stage"><div class="device" id="device">
+
+<!-- ======================================================= WEBSITE -->
+<div class="view" id="view-site">
+  <header class="site-head">
+    <a class="logo" href="#" aria-label="Marvin Allers">{{MARK}}{{WORD}}</a>
+    <nav class="site-nav" aria-label="Website">
+      <button data-sgo="home" data-anchor="tools">Tools</button>
+      <button data-sgo="home" data-anchor="haltung">Haltung</button>
+      <button data-sgo="home" data-anchor="verguetung">Vergütung</button>
+      <button data-sgo="home" data-anchor="ueber">Über mich</button>
+    </nav>
+    <div class="row" style="gap:10px;flex-wrap:nowrap">
+      <button class="link small" data-view-go="login">Login</button>
+      <button class="btn btn-primary" style="padding:9px 14px" data-cta>Termin</button>
+    </div>
+  </header>
+
+  <main class="site-main" id="site-home" data-spage="home">
+    <section class="sec hero">
+      <div class="stack g16">
+        <span class="label">Versicherungs- und Finanzmakler · Stade</span>
+        <h1>Mehr Rendite, <em>weniger Bullshit.</em></h1>
+        <p class="lede">Ich zeige dir, was deine Altersvorsorge wirklich kostet. In Euro, bis zur Rente. Dann entscheidest du.</p>
+        <div class="row"><button class="btn btn-primary" data-cta>Kennenlernen, 30 Minuten</button><button class="btn btn-line" data-sgo="tool-rv">Depot oder Rentenversicherung?</button></div>
+      </div>
+      <div class="panel tm" id="zeitmaschine">
+        <div class="row between"><span class="label">Kosten-Zeitmaschine</span><span class="xs faint">Rechne mit deinen Zahlen</span></div>
+        <div class="tm-grid">
+          <div class="field"><label for="tm-rate">Du sparst im Monat <output id="tm-o-rate"></output></label><input type="range" id="tm-rate" min="50" max="1500" step="25" value="250"></div>
+          <div class="field"><label for="tm-age">Du bist <output id="tm-o-age"></output></label><input type="range" id="tm-age" min="20" max="60" step="1" value="32"></div>
+          <div class="vs">
+            <div class="field mine"><label for="tm-ca">Dein Vertrag <output id="tm-o-ca"></output></label><input type="range" id="tm-ca" min="0.3" max="3.5" step="0.05" value="2.2"><span class="xs faint">Effektivkosten p. a.</span></div>
+            <div class="field"><label for="tm-cb">Günstig <output id="tm-o-cb"></output></label><input type="range" id="tm-cb" min="0.1" max="1.5" step="0.05" value="0.3"><span class="xs faint">z. B. ETF-Sparplan</span></div>
+          </div>
+        </div>
+        <div class="stack g8">
+          <span class="small muted">Was dich die Kosten bis 67 zusätzlich kosten</span>
+          <div class="big-num" id="tm-diff" aria-live="polite">0 €</div>
+          <p class="small muted" id="tm-sent"></p>
+        </div>
+        <svg class="chart" id="tm-chart" viewBox="0 0 560 150" role="img" aria-label="Vermögen mit günstigen und teuren Kosten"></svg>
+        <p class="note-box">Modellrechnung: 6 % Rendite vor Kosten p. a., konstant, monatliche Einzahlung, ohne Steuern und Inflation. Keine Prognose, keine Anlageberatung. Deine Effektivkosten stehen im Basisinformationsblatt deines Vertrags.</p>
+      </div>
+    </section>
+
+    <section class="sec" id="haltung">
+      <span class="label">Haltung</span>
+      <p class="quote">„Ein gutes Portfolio muss nicht erklären, warum es recht hat. Es muss erklären, warum es auch dann funktioniert, wenn niemand recht hat.“</p>
+      <div class="principles">
+        <div class="principle"><h3>Kosten in Euro</h3><p class="muted">Prozente klingen klein. Deshalb steht bei jeder Empfehlung, was sie dich bis zur Rente kostet. Und was ich daran verdiene.</p></div>
+        <div class="principle"><h3>Keine Prognosen</h3><p class="muted">Niemand weiß, welches Land oder welche Branche als Nächstes läuft. Wir bauen dein Depot so, dass es keine richtige Vorhersage braucht.</p></div>
+        <div class="principle"><h3>Jede Empfehlung begründet</h3><p class="muted">Warum dieses Produkt, welche Forschung dahintersteht, was schiefgehen kann und was wir dann tun. Schriftlich, in deinem Kundenbereich.</p></div>
+      </div>
+    </section>
+
+    <section class="sec" id="tools">
+      <div class="row between"><div class="stack g8"><span class="label">Tools</span><h2 style="font-size:clamp(28px,5cqi,40px)">Rechne selbst nach.</h2></div><p class="muted small" style="max-width:40ch">Kostenlos, ohne Anmeldung. Deine Eingaben bleiben in deinem Browser.</p></div>
+      <div class="tools">
+        <button class="tool" data-sgo="tool-rv"><h3>Depot oder Rentenversicherung?</h3><span class="muted small">ETF-Sparplan gegen Fondsrente, nach Kosten und Steuern. Mit dem Jahr, ab dem sich was dreht.</span><span class="arrow">→</span></button>
+        <button class="tool" data-toast="Tool-Seite im Plan beschrieben (Depot-Check)."><h3>Depot-Check</h3><span class="muted small">Depotauszug hochladen: Kosten in Euro, Überschneidungen, Länder, Klumpen.</span><span class="arrow">→</span></button>
+        <button class="tool" data-toast="Tool-Seite im Plan beschrieben (Kaufen oder mieten)."><h3>Kaufen oder mieten?</h3><span class="muted small">Eigenheim gegen Miete plus Depot. Mit Nebenkosten für Niedersachsen.</span><span class="arrow">→</span></button>
+        <button class="tool" data-toast="Tool-Seite im Plan beschrieben (Altersvorsorgedepot)."><h3>Altersvorsorgedepot 2027</h3><span class="muted small">Was dir die neue Förderung an Zulagen bringt. Und was das Standarddepot kostet.</span><span class="arrow">→</span></button>
+        <button class="tool" data-toast="Tool-Seite im Plan beschrieben (Rentenlücke)."><h3>Rentenlücke</h3><span class="muted small">Renteninformation abtippen, Lücke in heutiger Kaufkraft sehen.</span><span class="arrow">→</span></button>
+      </div>
+    </section>
+
+    <section class="sec">
+      <span class="label">So läuft es ab</span>
+      <div class="steps">
+        <div class="step"><h3>Kennenlernen</h3><p class="muted small">30 Minuten per Video. Du erzählst, ich höre zu. Kostet nichts.</p></div>
+        <div class="step"><h3>Bestandsaufnahme</h3><p class="muted small">Alle Verträge auf den Tisch. Du siehst danach in Euro, was sie kosten.</p></div>
+        <div class="step"><h3>Konzept</h3><p class="muted small">Absicherung, Vorsorge, Vermögen. Jede Empfehlung mit Begründung und Alternative.</p></div>
+        <div class="step"><h3>Dranbleiben</h3><p class="muted small">Monatsbrief im Kundenbereich, einmal im Jahr ein Gespräch.</p></div>
+      </div>
+    </section>
+
+    <section class="sec" id="verguetung">
+      <div class="fee">
+        <div class="stack g12"><span class="label">Vergütung</span><h2 style="font-size:clamp(28px,5cqi,40px)">So verdiene ich mein Geld.</h2><p class="muted">Bei Versicherungen bezahlt mich der Versicherer, das steckt im Beitrag. Bei Nettotarifen zahlst du mich direkt und siehst die Summe vorher. Hier stehen echte Beispiele.</p></div>
+        <div>
+          <div class="fee-row"><span>Berufsunfähigkeit, 100 € Beitrag im Monat</span><span class="faint">Beispiel folgt</span></div>
+          <div class="fee-row"><span>Fondsrente als Nettotarif</span><span class="faint">Beispiel folgt</span></div>
+          <div class="fee-row"><span>ETF-Sparplan im Depot</span><span class="faint">Beispiel folgt</span></div>
+          <div class="fee-row"><span>Kennenlerngespräch</span><span>0 €</span></div>
+          <p class="note-box" style="padding-top:10px">Platzhalter: Die Beträge lieferst du. Sie müssen stimmen, sonst ist die Seite angreifbar.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="sec" id="ueber">
+      <div class="about">
+        <div class="ph" style="aspect-ratio:4/5;max-width:100%">Foto von dir<br>in Stade oder im Büro<br>(kein Stockfoto)</div>
+        <div class="stack g12">
+          <span class="label">Über mich</span>
+          <h2 style="font-size:clamp(28px,5cqi,40px)">Marvin Allers</h2>
+          <p class="muted">Vorher Vermögensberater im gehobenen Privatkundengeschäft einer Bank, dort auch verantwortlich für den Robo-Advisor. Seit vier Jahren selbstständig in Stade.</p>
+          <p class="muted">Ich arbeite mit Indexfonds, Kostenvergleichen und der Kapitalmarktforschung. Produktverkauf ohne Begründung mache ich nicht.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="sec">
+      <div class="cta-band">
+        <div class="stack g8"><h2>Lass uns 30 Minuten reden.</h2><p style="opacity:.8">Per Video oder in Stade. Manchmal ist meine Antwort: Lass alles, wie es ist.</p></div>
+        <button class="btn btn-primary" data-cta>Termin aussuchen</button>
+      </div>
+    </section>
+
+    <footer class="site-foot">
+      <div class="row"><button class="link xs">Impressum</button><button class="link xs">Erstinformation</button><button class="link xs">Datenschutz</button><button class="link xs">Beschwerde & Schlichtung</button></div>
+      <p>Marvin Allers · Versicherungsmakler mit Erlaubnis nach §34d Abs. 1 GewO und Finanzanlagenvermittler nach §34f GewO · Registernummer folgt · IHK Stade</p>
+    </footer>
+  </main>
+
+  <!-- Tool: Depot vs Rentenversicherung -->
+  <main class="site-main" data-spage="tool-rv" hidden>
+    <section class="sec" style="padding-bottom:24px">
+      <button class="link small" data-sgo="home" style="align-self:flex-start">← Alle Tools</button>
+      <span class="label">Tool</span>
+      <h1 style="font-size:clamp(32px,7cqi,58px);line-height:1.05">Depot oder Rentenversicherung?</h1>
+      <p class="lede">Beide können sinnvoll sein. Entscheidend sind Kosten, Steuern und wie lange du durchhältst. Schieb die Regler.</p>
+    </section>
+    <section class="sec" style="padding-top:0">
+      <div class="tool-page">
+        <div class="panel tool-inputs">
+          <div class="field"><label for="rv-rate">Sparrate im Monat <output id="rv-o-rate"></output></label><input type="range" id="rv-rate" min="50" max="1000" step="25" value="200"></div>
+          <div class="field"><label for="rv-years">Jahre bis zur Rente <output id="rv-o-years"></output></label><input type="range" id="rv-years" min="12" max="45" step="1" value="35"></div>
+          <div class="field"><label for="rv-ret">Rendite vor Kosten <output id="rv-o-ret"></output></label><input type="range" id="rv-ret" min="2" max="8" step="0.25" value="6"></div>
+          <div class="field"><label for="rv-tax">Dein Steuersatz in der Rente <output id="rv-o-tax"></output></label><input type="range" id="rv-tax" min="0" max="42" step="1" value="25"></div>
+          <hr class="rule">
+          <span class="label">Rentenversicherung</span>
+          <div class="flip" role="group" aria-label="Tarifart"><button id="rv-net" aria-pressed="true">Nettotarif</button><button id="rv-gross" aria-pressed="false">Bruttotarif</button></div>
+          <div class="field"><label for="rv-cost">Laufende Kosten p. a. <output id="rv-o-cost"></output></label><input type="range" id="rv-cost" min="0.2" max="2.5" step="0.05" value="0.6"></div>
+          <div class="field"><label for="rv-etf">ETF-Kosten (TER) <output id="rv-o-etf"></output></label><input type="range" id="rv-etf" min="0.05" max="0.8" step="0.01" value="0.2"></div>
+        </div>
+        <div class="panel tool-out">
+          <span class="label">Nach Steuern, wenn du alles auf einmal auszahlst</span>
+          <div class="versus">
+            <div class="cell" id="rv-c-etf"><span class="small muted">ETF-Depot</span><span class="v" id="rv-v-etf"></span><span class="xs faint" id="rv-s-etf"></span></div>
+            <div class="cell" id="rv-c-rv"><span class="small muted">Rentenversicherung</span><span class="v" id="rv-v-rv"></span><span class="xs faint" id="rv-s-rv"></span></div>
+          </div>
+          <p id="rv-verdict" style="font-size:17px"></p>
+          <div class="panel" style="padding:12px 14px;background:var(--mist);border:0"><span class="small" id="rv-limit"></span></div>
+          <svg class="chart" id="rv-chart" viewBox="0 0 640 220" role="img" aria-label="Vergleich nach Steuern über die Laufzeit"></svg>
+          <div class="legend"><span class="lg"><i class="sq"></i>ETF-Depot nach Steuern</span><span class="lg"><i class="ci"></i>Rentenversicherung nach Steuern</span></div>
+          <details><summary class="small" style="cursor:pointer">Annahmen und Rechenweg</summary>
+            <div class="ass" style="margin-top:10px">
+              <span>Depot: Abgeltungsteuer inkl. Soli auf Gewinne, 30 % Teilfreistellung</span><span>26,375 %</span>
+              <span>Vorabpauschale und Sparerpauschbetrag</span><span>vereinfacht weggelassen</span>
+              <span>Versicherung: 15 % Teilfreistellung, dann Halbeinkünfteverfahren (ab 62, mind. 12 Jahre)</span><span>85 % × 50 % × dein Satz</span>
+              <span>Vor 12 Jahren: Abgeltungsteuer auf 85 % des Gewinns</span><span>26,375 %</span>
+              <span>Bruttotarif: Abschlusskosten 2,5 % der Beitragssumme, über 5 Jahre</span><span>gezillmert</span>
+              <span>Lebenslange Rente statt Auszahlung</span><span>nicht abgebildet</span>
+            </div>
+          </details>
+          <p class="note-box">Vereinfachte Modellrechnung im Prototyp. Die echte Rechenlogik mit Quellen steht in der Tool-Spezifikation. Keine Anlage- und keine Steuerberatung.</p>
+          <div class="row"><button class="btn btn-primary" data-cta>Meinen Vertrag prüfen lassen</button><button class="btn btn-line" data-toast="Im echten Tool: PDF mit Annahmen, ohne Newsletter-Pflicht.">Ergebnis als PDF</button></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ======================================================= KUNDENBEREICH -->
+<div class="view" id="view-kunde" hidden>
+ <div class="app">
+  <aside class="side">
+    <span class="logo">{{MARK}}{{WORD}}</span>
+    <nav aria-label="Kundenbereich">
+      <button data-go="start" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Übersicht</button>
+      <button data-go="vermoegen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-5 4 3 8-8"/><path d="M15 7h5v5"/></svg>Vermögen</button>
+      <button data-go="plan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>Mein Plan</button>
+      <button data-go="gespraeche"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-5A8 8 0 1 1 21 12z"/></svg>Gespräche</button>
+      <button data-go="dokumente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5"/></svg>Dokumente</button>
+    </nav>
+    <div class="adv"><span class="avatar">MA</span><div class="xs"><strong style="font-weight:500;font-size:13.5px">Marvin Allers</strong><br><span class="faint">Dein Berater · Stade</span></div></div>
+  </aside>
+  <div class="k-main">
+    <header class="k-top">
+      <span class="logo">{{MARK}}</span>
+      <div class="row" style="gap:10px;flex-wrap:nowrap"><button class="btn btn-line" style="padding:7px 12px;font-size:13.5px" data-cta>Termin</button><button class="avatar" aria-label="Profil">MM</button></div>
+    </header>
+    <div class="k-content">
+
+      <!-- ÜBERSICHT -->
+      <section class="screen" data-screen="start">
+        <div class="stack g8">
+          <span class="label">Mittwoch, 8. Oktober 2026</span>
+          <h1 class="k-h1">Hi Max. Dein Geld arbeitet.<br><span class="muted" style="font-weight:400">Eine Sache fehlt noch von dir.</span></h1>
+        </div>
+        <div class="cols c-main">
+          <div class="panel wealth">
+            <div class="row between"><span class="label">Dein Vermögen bei mir</span><span class="sim-flag">Nachrechnung</span></div>
+            <div class="big-num num" id="w-total">≈ 18.640 €</div>
+            <div class="kv">
+              <div><span class="xs faint">Eingezahlt</span><span class="v num">16.300 €</span></div>
+              <div><span class="xs faint">Wertzuwachs</span><span class="v num" style="color:var(--ok)">+2.340 €</span></div>
+              <div><span class="xs faint">September</span><span class="v num" style="color:var(--ok)">+286 €</span></div>
+            </div>
+            <svg class="chart" id="w-spark" viewBox="0 0 560 90" aria-hidden="true"></svg>
+            <div class="row between"><span class="xs faint">Geschätzt aus Fondskursen, Stand 30.09.2026. Kein Depotauszug.</span><button class="link small" data-go="vermoegen">Details</button></div>
+          </div>
+          <button class="brief" data-go="brief">
+            <span class="label">Neu · Monatsbrief</span>
+            <h3>Dein September in 30 Sekunden.</h3>
+            <p style="opacity:.8;font-size:14.5px">Wert, Markt, Kosten und eine Sache, die du diesen Monat nicht tun solltest.</p>
+            <span style="margin-top:6px;font-weight:500">Ansehen →</span>
+          </button>
+        </div>
+        <div class="cols c-2">
+          <div class="panel">
+            <div class="row between" style="padding:16px 18px 4px"><h2 style="font-size:19px">Für dich zu tun</h2><span class="xs faint" id="todo-count">1 offen</span></div>
+            <div class="todo" data-todo><button class="check" role="checkbox" aria-checked="false" aria-label="Erledigt"></button><div class="stack g4"><strong style="font-weight:500">Gehaltsabrechnung hochladen</strong><span class="small muted">Für den bAV-Check bei deinem Arbeitgeber. Bis 15.10.</span><button class="link small" data-go="dokumente" style="align-self:flex-start">Hochladen</button></div></div>
+            <div class="todo done" data-todo><button class="check" role="checkbox" aria-checked="true" aria-label="Erledigt"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 12 5 5 9-10"/></svg></button><div class="stack g4"><strong style="font-weight:500">Freistellungsauftrag setzen</strong><span class="small muted">Erledigt am 06.10.</span></div></div>
+          </div>
+          <div class="panel stack g8 pad">
+            <span class="label">Nächstes Gespräch</span>
+            <h2 style="font-size:22px">Jahresgespräch, Herbst 2027</h2>
+            <p class="muted small">Ich melde mich im August. Wenn vorher was passiert (Job, Kind, Haus), buch dir einfach einen Termin.</p>
+            <button class="btn btn-line" style="align-self:flex-start;margin-top:4px" data-cta>Früher sprechen</button>
+          </div>
+        </div>
+        <div class="sec-h"><h2>Dein Plan auf einen Blick</h2><button class="link small" data-go="plan">Alles mit Begründung</button></div>
+        <div class="cols c-3">
+          <button class="pillar" data-go="plan"><span class="label">Absicherung</span><h3>Wenn was passiert</h3><div><div class="prow"><span>Berufsunfähigkeit</span><span class="chip ok">Aktiv</span></div><div class="prow"><span>Privathaftpflicht</span><span class="chip ok">Aktiv</span></div><div class="prow"><span>Hausrat</span><span class="chip neutral">Bewusst nicht</span></div></div></button>
+          <button class="pillar" data-go="police"><span class="label">Vorsorge</span><h3>Geld fürs Alter</h3><div><div class="prow"><span>Fondsrente Nettotarif</span><span class="chip ok">Aktiv</span></div><div class="prow"><span>bAV Arbeitgeber</span><span class="chip warn">In Prüfung</span></div><div class="prow"><span>Altersvorsorgedepot</span><span class="chip plan">Ab 2027</span></div></div></button>
+          <button class="pillar" data-go="depot"><span class="label">Vermögen</span><h3>Dein Depot</h3><div><div class="prow"><span>Weltportfolio</span><span class="chip ok">Aktiv</span></div><div class="prow"><span>Sparrate</span><span class="num">250 € / Monat</span></div><div class="prow"><span>Laufende Kosten</span><span class="num">0,19 % p. a.</span></div></div></button>
+        </div>
+        <div class="panel pad row between"><div class="stack g4"><strong style="font-weight:500">Versicherungsverträge, Policen, Schaden melden</strong><span class="small muted">Läuft über die App simplr meines Abrechnungspools.</span></div><button class="btn btn-line" data-toast="Im echten Portal: Link zu login.simplr.de">Zu simplr ↗</button></div>
+      </section>
+
+      <!-- VERMÖGEN -->
+      <section class="screen" data-screen="vermoegen" hidden>
+        <div class="stack g8"><span class="label">Vermögen</span><h1 class="k-h1">Was dein Geld macht.</h1><p class="muted" style="max-width:62ch">Ich rechne jeden Monat mit den echten Kursen deiner Fonds nach, was deine Anlagen ungefähr wert sind. Das ersetzt nicht den Auszug deiner Bank oder Versicherung, aber du musst dich nirgends einloggen.</p></div>
+        <div class="panel">
+          <button class="asset" data-go="depot"><div class="stack g4"><strong style="font-weight:500">ETF-Depot · Weltportfolio</strong><span class="small muted">Depotbank D · seit 15.10.2024 · 250 € im Monat</span></div><div class="stack g4" style="align-items:flex-end"><span class="val num">≈ 11.920 €</span><span class="xs" style="color:var(--ok)">+1.920 € seit Start</span></div></button>
+          <button class="asset" data-go="police"><div class="stack g4"><strong style="font-weight:500">Fondsrente · Nettotarif</strong><span class="small muted">Versicherer B · seit 01.11.2024 · 150 € im Monat</span></div><div class="stack g4" style="align-items:flex-end"><span class="val num">≈ 6.720 €</span><span class="xs" style="color:var(--ok)">+420 € nach Kosten</span></div></button>
+        </div>
+        <p class="note-box">Nachrechnung aus Fondskursen. Steuern, Ordergebühren und Rundungen der echten Ausführung können abweichen. Einmal im Jahr gleichen wir mit deinem echten Auszug ab.</p>
+      </section>
+
+      <!-- DEPOT DETAIL -->
+      <section class="screen" data-screen="depot" hidden>
+        <button class="link small" data-go="vermoegen" style="align-self:flex-start">← Vermögen</button>
+        <div class="stack g8"><span class="label">ETF-Depot · Weltportfolio</span><h1 class="k-h1"><span class="big-num num" style="font-size:inherit">≈ 11.920 €</span></h1><span class="sim-flag" style="align-self:flex-start">Nachrechnung · Stand 30.09.2026</span></div>
+        <div class="panel pad stack g12">
+          <div class="row between"><h2 style="font-size:19px">Seit Start</h2><div class="legend"><span class="lg"><i class="sq"></i>Eingezahlt</span><span class="lg"><i class="ci"></i>Wert (geschätzt)</span></div></div>
+          <svg class="chart" id="d-hist" viewBox="0 0 640 220" role="img" aria-label="Eingezahlt und geschätzter Wert seit Start"></svg>
+        </div>
+        <div class="panel milestone">
+          <span class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l5 5 9-10"/></svg></span>
+          <div class="stack g4"><strong style="font-weight:500">Nächster Meilenstein: dein Geld verdient mehr als du einzahlst.</strong><p class="small muted" id="cross-txt"></p></div>
+        </div>
+        <div class="panel pad stack g12">
+          <div class="row between"><h2 style="font-size:19px">Bis zur Rente mit 67</h2><button class="btn btn-line" style="padding:7px 12px;font-size:13.5px" id="dice">Würfel einen Börsenverlauf</button></div>
+          <p class="small muted">Niemand kennt die Zukunft. Deshalb kein Strich, sondern ein Fächer aus 500 möglichen Verläufen.</p>
+          <svg class="chart" id="d-fan" viewBox="0 0 640 240" role="img" aria-label="Fächer möglicher Vermögensverläufe"></svg>
+          <div class="legend"><span class="lg"><i class="band"></i>8 von 10 Verläufen</span><span class="lg"><i class="ci"></i>Mittlerer Verlauf</span><span class="lg"><i class="sq"></i>Eingezahlt</span></div>
+          <p class="note-box">Szenario-Rechnung mit offengelegten Annahmen: 6 % erwartete Rendite und 15 % Schwankung p. a. vor Kosten, Sparrate konstant, keine Steuern. Beruht nicht auf vergangenen Kursen. In heutiger Kaufkraft fallen die Werte niedriger aus. Keine Prognose.</p>
+        </div>
+        <div class="panel crash" id="crash">
+          <div class="stack g4"><span class="label">Crash-Probe</span><h2 style="font-size:22px">Angenommen, die Börse fällt um 30 %.</h2></div>
+          <p class="muted" id="crash-q">Dein Depot wäre dann rund <strong class="num" style="color:var(--ink)">3.580 €</strong> weniger wert. Was tust du?</p>
+          <div class="choices">
+            <button class="choice" data-c="sell" aria-pressed="false"><strong style="font-weight:500">Verkaufen</strong><br><span class="small muted">Bevor es noch weiter fällt</span></button>
+            <button class="choice" data-c="hold" aria-pressed="false"><strong style="font-weight:500">Nichts tun</strong><br><span class="small muted">Sparplan läuft weiter</span></button>
+            <button class="choice" data-c="buy" aria-pressed="false"><strong style="font-weight:500">Nachkaufen</strong><br><span class="small muted">Aus dem Notgroschen</span></button>
+          </div>
+          <p id="crash-a" class="small" hidden></p>
+        </div>
+      </section>
+
+      <!-- POLICE DETAIL -->
+      <section class="screen" data-screen="police" hidden>
+        <button class="link small" data-go="vermoegen" style="align-self:flex-start">← Vermögen</button>
+        <div class="stack g8"><span class="label">Fondsrente · Nettotarif · Versicherer B</span><h1 class="k-h1"><span class="big-num num" style="font-size:inherit">≈ 6.720 €</span></h1><span class="sim-flag" style="align-self:flex-start">Nachrechnung nach Kosten · Stand 30.09.2026</span></div>
+        <div class="panel pad stack g12">
+          <div class="row between"><h2 style="font-size:19px">Fonds und Vertrag</h2><div class="legend"><span class="lg"><i class="sq"></i>Eingezahlt</span><span class="lg"><i class="band"></i>Fonds ohne Vertragskosten</span><span class="lg"><i class="ci"></i>Dein Vertragswert</span></div></div>
+          <svg class="chart" id="p-chart" viewBox="0 0 640 220" role="img" aria-label="Fondsentwicklung und Vertragswert nach Kosten"></svg>
+          <p class="small muted">Die Fläche zwischen den Linien sind die Kosten des Vertrags. Wir zeigen sie, weil du sie bezahlst. Dafür bekommst du die Steuervorteile im Alter und eine lebenslange Rente.</p>
+        </div>
+        <div class="cols c-2">
+          <div class="bon" aria-label="Kosten-Kassenbon">
+            <div class="stack g4" style="margin-bottom:10px"><span class="label">Kosten-Kassenbon</span><span class="small muted">Seit Vertragsstart, geschätzt</span></div>
+            <div class="bon-row"><span>Fondskosten (TER)</span><span class="num">18,40 €</span></div>
+            <div class="bon-row"><span>Verwaltung Versicherer</span><span class="num">41,10 €</span></div>
+            <div class="bon-row"><span>Abschlusskosten (Nettotarif)</span><span class="num">0,00 €</span></div>
+            <div class="bon-row"><span>Meine Vergütung (vereinbart)</span><span class="num">laut Vertrag</span></div>
+            <div class="bon-row sum"><span>Summe Produktkosten</span><span class="num">59,50 €</span></div>
+            <p class="xs faint" style="margin-top:12px">Vergleich: Ein Bruttotarif mit 2,5 % Abschlusskosten hätte bei deinem Beitrag in dieser Zeit rund 600 € verrechnet.</p>
+          </div>
+          <div class="panel pad stack g8">
+            <span class="label">Woher die Zahlen kommen</span>
+            <p class="small muted">Fondsguthaben = Beiträge minus Vertragskosten, plus Entwicklung der Fonds. Die Kostensätze stammen aus deinem Vertrag. Einmal im Jahr gleichen wir mit der Standmitteilung des Versicherers ab. Die Abweichung steht dann hier.</p>
+            <div class="row"><span class="chip neutral">Letzter Abgleich: noch keiner</span></div>
+            <button class="btn btn-line" style="align-self:flex-start" data-go="dokumente">Standmitteilung hochladen</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- MONATSBRIEF -->
+      <section class="screen" data-screen="brief" hidden>
+        <button class="link small" data-go="start" style="align-self:flex-start">← Übersicht</button>
+        <div class="stack g8"><span class="label">Monatsbrief · September 2026</span><h1 class="k-h1">Dein Monat in 30 Sekunden.</h1></div>
+        <div class="story" tabindex="0" aria-label="Monatsbrief, seitlich wischen">
+          <div class="card dark"><span class="label">1 / 5 · Wert</span><div class="big-num num">+286 €</div><h3>im September. Ohne dass du was tun musstest.</h3><p class="foot small" style="opacity:.8">Gesamt jetzt ≈ 18.640 €, davon 2.340 € Wertzuwachs.</p></div>
+          <div class="card"><span class="label">2 / 5 · Markt</span><h3>Aktien weltweit: leicht im Plus.</h3><p class="muted">Kein Ereignis, das etwas an deinem Plan ändert. Die meisten Monate sind langweilig. Das ist gut.</p><p class="foot xs faint">Quelle der Kurse: Fondspreise deiner ETFs.</p></div>
+          <div class="card tint"><span class="label">3 / 5 · Kosten</span><div class="big-num num">3,10 €</div><h3>Produktkosten im September.</h3><p class="muted small">Mit deinen alten Fonds wären es etwa 27 € gewesen.</p></div>
+          <div class="card"><span class="label">4 / 5 · Verhalten</span><h3>Was du diesen Monat nicht tun solltest:</h3><p class="muted">Dein Depot öfter anschauen, als es dir guttut. Wer seltener nachsieht, verkauft seltener im falschen Moment.</p></div>
+          <div class="card"><span class="label">5 / 5 · Als Nächstes</span><h3>Eine Sache für dich.</h3><p class="muted">Gehaltsabrechnung hochladen, dann prüfe ich den Zuschuss deines Arbeitgebers.</p><button class="btn btn-primary foot" style="align-self:flex-start" data-go="dokumente">Jetzt hochladen</button></div>
+        </div>
+        <p class="note-box">Nachrechnung aus Fondskursen, kein Depotauszug und kein Ersatz für die Kosteninformation deiner Bank oder Versicherung. Der Brief liegt jeden Monat hier. Per Mail kommt nur der Hinweis, nie Zahlen.</p>
+      </section>
+
+      <!-- PLAN -->
+      <section class="screen" data-screen="plan" hidden>
+        <div class="stack g8"><span class="label">Mein Plan · Stand 03.10.2026</span><h1 class="k-h1">Jede Entscheidung mit Begründung.</h1></div>
+        <div class="panel">
+          <div class="row between" style="padding:16px 18px"><h2 style="font-size:19px">Vermögen</h2></div>
+          <button class="asset" data-go="warum"><div class="stack g4"><strong style="font-weight:500">Weltportfolio · 250 € im Monat</strong><span class="small muted">Warum genau das, was es kostet, was ich daran verdiene</span></div><span class="chip ok">Aktiv</span></button>
+        </div>
+        <div class="panel">
+          <div class="row between" style="padding:16px 18px"><h2 style="font-size:19px">Vorsorge</h2></div>
+          <button class="asset" data-go="police"><div class="stack g4"><strong style="font-weight:500">Fondsrente als Nettotarif · 150 € im Monat</strong><span class="small muted">Versicherer B</span></div><span class="chip ok">Aktiv</span></button>
+          <button class="asset"><div class="stack g4"><strong style="font-weight:500">Betriebliche Altersvorsorge</strong><span class="small muted">Wartet auf deine Gehaltsabrechnung</span></div><span class="chip warn">In Prüfung</span></button>
+        </div>
+        <div class="panel">
+          <div class="row between" style="padding:16px 18px"><h2 style="font-size:19px">Absicherung</h2></div>
+          <button class="asset"><div class="stack g4"><strong style="font-weight:500">Berufsunfähigkeit · 2.000 € Monatsrente</strong><span class="small muted">Versicherer A · bis 67</span></div><span class="chip ok">Aktiv</span></button>
+          <button class="asset"><div class="stack g4"><strong style="font-weight:500">Hausrat</strong><span class="small muted">Einrichtung unter 15.000 €. Lohnt sich bei dir gerade nicht.</span></div><span class="chip neutral">Bewusst nicht</span></button>
+        </div>
+      </section>
+
+      <!-- WARUM -->
+      <section class="screen" data-screen="warum" hidden>
+        <button class="link small" data-go="plan" style="align-self:flex-start">← Mein Plan</button>
+        <div class="stack g12"><span class="label">Vermögen · Weltportfolio</span><h1 class="k-h1">Warum genau das.</h1>
+          <div class="flip" role="group" aria-label="Ansicht"><button data-w="why" aria-pressed="true">Begründung</button><button data-w="alt" aria-pressed="false">Verworfene Alternativen</button><button data-w="fee" aria-pressed="false">Was ich verdiene</button></div>
+        </div>
+        <div data-wp="why" class="stack g24">
+          <p class="muted" style="max-width:64ch;font-size:16.5px">Du willst über 30 Jahre Vermögen aufbauen und keine Wetten eingehen. Also kaufen wir den Weltmarkt, gewichtet nach Börsenwert. Jede Abweichung davon wäre eine Prognose, und Prognosen machen ein Depot fragil.</p>
+          <div class="facts">
+            <div class="fact"><span class="label">Sparrate</span><span class="v num">250 €</span><span class="xs faint">pro Monat</span></div>
+            <div class="fact"><span class="label">Laufende Kosten</span><span class="v num">0,19 %</span><span class="xs faint">gewichtet</span></div>
+            <div class="fact"><span class="label">In Euro</span><span class="v num">19 €</span><span class="xs faint">pro Jahr je 10.000 €</span></div>
+            <div class="fact"><span class="label">Horizont</span><span class="v num">35 J.</span><span class="xs faint">bis 67</span></div>
+          </div>
+          <div class="panel pad stack g8"><div class="row between"><h2 style="font-size:19px">Woraus es besteht</h2><span class="xs faint">Beispielwerte</span></div>
+            <div class="alloc"><span style="flex:88;background:var(--anthrazit)"></span><span style="flex:12;background:var(--accent)"></span></div>
+            <div class="legend"><span class="lg"><i class="sq"></i>88 % Industrieländer</span><span class="lg"><i class="ci"></i>12 % Schwellenländer</span></div>
+          </div>
+          <div class="cols c-2">
+            <div class="panel"><div style="padding:16px 18px 4px"><h2 style="font-size:19px">Was dahintersteht</h2></div>
+              <div class="ev"><div class="row between"><strong style="font-weight:500">Aktive Fonds verlieren meist gegen den Index</strong><span class="chip neutral">SPIVA</span></div><p class="small muted">S&amp;P misst regelmäßig, wie viele aktive Fonds ihren Vergleichsindex verfehlen. Über lange Zeiträume ist es die große Mehrheit.</p></div>
+              <div class="ev"><div class="row between"><strong style="font-weight:500">Kosten sind die einzige sichere Größe</strong><span class="chip neutral">Kapitalmarktforschung</span></div><p class="small muted">Rendite kann niemand steuern. Was du an Kosten sparst, bleibt dir sicher.</p></div>
+              <div class="ev"><div class="row between"><strong style="font-weight:500">Durchhalten schlägt Timing</strong><span class="chip neutral">Behavioral Finance</span></div><p class="small muted">Der teuerste Fehler ist meist der Verkauf im Crash. Deshalb fester Sparplan und eine Regel fürs Rebalancing.</p></div>
+            </div>
+            <div class="panel"><div style="padding:16px 18px 4px"><h2 style="font-size:19px">Was schiefgehen kann</h2></div>
+              <div class="risk-row"><div class="r"><span class="lbl">Risiko</span><p>Ein Crash von 30 bis 50 % kommt vor.</p></div><div class="l"><span class="lbl">Lösung</span><p class="muted">Notgroschen liegt separat. Du musst nie im Tief verkaufen.</p></div></div>
+              <div class="risk-row"><div class="r"><span class="lbl">Risiko</span><p>Du brauchst das Geld früher.</p></div><div class="l"><span class="lbl">Lösung</span><p class="muted">Sparplan jederzeit änderbar, Verkauf an jedem Börsentag.</p></div></div>
+            </div>
+          </div>
+        </div>
+        <div data-wp="alt" class="stack g16" hidden>
+          <p class="muted" style="max-width:64ch">Diese Wege haben wir am 18.09. besprochen und bewusst nicht genommen.</p>
+          <div class="panel">
+            <div class="risk-row"><div><span class="lbl" style="color:var(--ink-3)">Alternative</span><p>Deine zwei aktiven Fonds behalten</p></div><div><span class="lbl" style="color:var(--ink-3)">Warum nicht</span><p class="muted">Rund 1,6 Prozentpunkte mehr Kosten im Jahr, ohne belegbaren Vorteil. Bis 67 wären das in deinem Fall etwa 38.000 € weniger.</p></div></div>
+            <div class="risk-row"><div><span class="lbl" style="color:var(--ink-3)">Alternative</span><p>Zusätzlich Faktor-ETFs (Small Cap Value)</p></div><div><span class="lbl" style="color:var(--ink-3)">Warum nicht</span><p class="muted">Faktoren sind kein Rendite-Trick, sondern ein anderes Risikoprofil mit langen Durststrecken. Für dich gerade nicht nötig. Wir schauen beim Jahresgespräch wieder drauf.</p></div></div>
+            <div class="risk-row"><div><span class="lbl" style="color:var(--ink-3)">Alternative</span><p>Alles in die Fondsrente</p></div><div><span class="lbl" style="color:var(--ink-3)">Warum nicht</span><p class="muted">Du willst flexibel bleiben. Das Depot kannst du jederzeit verkaufen, die Rentenversicherung nur mit Nachteilen.</p></div></div>
+          </div>
+        </div>
+        <div data-wp="fee" class="stack g16" hidden>
+          <div class="bon">
+            <div class="stack g4" style="margin-bottom:10px"><span class="label">Was ich an diesem Baustein verdiene</span><span class="small muted">Beispielwerte, kommen aus deinem Vertrag</span></div>
+            <div class="bon-row"><span>Einmalig bei Abschluss</span><span class="num">0,00 €</span></div>
+            <div class="bon-row"><span>Laufend vom Fondsanbieter</span><span class="num">0,00 €</span></div>
+            <div class="bon-row"><span>Servicepauschale (vereinbart)</span><span class="num">Platzhalter</span></div>
+            <div class="bon-row sum"><span>Summe pro Jahr</span><span class="num">Platzhalter</span></div>
+          </div>
+          <p class="note-box">Bei Finanzanlagen muss ich Zuwendungen ohnehin vorher offenlegen. Hier steht es zusätzlich so, dass man es versteht.</p>
+        </div>
+      </section>
+
+      <!-- GESPRÄCHE -->
+      <section class="screen" data-screen="gespraeche" hidden>
+        <div class="stack g8"><span class="label">Gespräche</span><h1 class="k-h1">Was wir besprochen haben.</h1></div>
+        <div class="tl">
+          <div class="tl-item next"><span class="label">Herbst 2027 · geplant</span><h3 class="muted">Jahresgespräch</h3></div>
+          <div class="tl-item"><span class="label">03.10.2026 · 30 Min. · Video</span><h3>Umsetzung Depot</h3><div class="panel pad cols c-2"><div class="stack g4"><span class="label">Ergebnis</span><p class="small muted">Depot eröffnet, Sparplan auf das Weltportfolio. Erste Ausführung am 15.10.</p></div><div class="stack g4"><span class="label">Nächste Schritte</span><p class="small">Freistellungsauftrag <span class="who">DU ✓</span><br>Gehaltsabrechnung <span class="who">DU</span><br>bAV-Angebot anfragen <span class="who">MARVIN</span></p></div></div></div>
+          <div class="tl-item"><span class="label">18.09.2026 · 75 Min. · Stade</span><h3>Beratung Vermögensaufbau</h3><div class="panel pad cols c-2"><div class="stack g4"><span class="label">Ergebnis</span><p class="small muted">Weltportfolio statt zwei aktiver Fonds. Crash-Szenario gemeinsam durchgespielt.</p></div><div class="stack g4"><span class="label">Dokumente</span><p class="small">Beratungsprotokoll · Geeignetheitserklärung · Kostenvergleich</p></div></div></div>
+        </div>
+      </section>
+
+      <!-- DOKUMENTE -->
+      <section class="screen" data-screen="dokumente" hidden>
+        <div class="stack g8"><span class="label">Dokumente</span><h1 class="k-h1">Alles an einem Ort.</h1></div>
+        <label class="ph" for="file" style="cursor:pointer;padding:28px">Datei hierher ziehen oder antippen<br><span class="xs">PDF, JPG, PNG bis 20 MB</span></label><input id="file" type="file" hidden>
+        <div class="panel">
+          <div class="doc"><span class="doc-ic">PDF</span><div><strong>Beratungsprotokoll Vermögensaufbau</strong><span class="xs faint">03.10.2026</span></div><button class="dl" aria-label="Herunterladen" data-toast="Im echten Portal: Download, 60 s gültiger Link.">↓</button></div>
+          <div class="doc"><span class="doc-ic">PDF</span><div><strong>Geeignetheitserklärung</strong><span class="xs faint">03.10.2026</span></div><button class="dl" aria-label="Herunterladen" data-toast="Im echten Portal: Download, 60 s gültiger Link.">↓</button></div>
+          <div class="doc"><span class="doc-ic">PDF</span><div><strong>Monatsbrief September 2026</strong><span class="xs faint">01.10.2026</span></div><button class="dl" aria-label="Herunterladen" data-toast="Im echten Portal: Download, 60 s gültiger Link.">↓</button></div>
+          <div class="doc"><span class="doc-ic">PDF</span><div><strong>Erstinformation</strong><span class="xs faint">28.08.2026</span></div><button class="dl" aria-label="Herunterladen" data-toast="Im echten Portal: Download, 60 s gültiger Link.">↓</button></div>
+        </div>
+      </section>
+
+    </div>
+    <nav class="tabbar" aria-label="Kundenbereich mobil">
+      <button data-go="start" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Übersicht</button>
+      <button data-go="vermoegen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-5 4 3 8-8"/><path d="M15 7h5v5"/></svg>Vermögen</button>
+      <button data-go="plan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>Plan</button>
+      <button data-go="gespraeche"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-5A8 8 0 1 1 21 12z"/></svg>Gespräche</button>
+      <button data-go="dokumente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5"/></svg>Dokumente</button>
+    </nav>
+  </div>
+ </div>
+</div>
+
+<!-- ======================================================= LOGIN -->
+<div class="view" id="view-login" hidden>
+  <div class="login">
+    <div class="login-card" id="l1">
+      <span class="logo">{{MARK}}{{WORD}}</span>
+      <h1>Dein Kundenbereich</h1>
+      <p class="muted">Anmelden mit Face ID oder Fingerabdruck. Kein Passwort.</p>
+      <button class="btn btn-primary" id="pk">Mit Passkey anmelden</button>
+      <div class="or">oder</div>
+      <label class="small" for="mail" style="font-weight:500">Code per E-Mail</label>
+      <input class="inp" id="mail" type="email" value="max@mustermann.example" autocomplete="email">
+      <button class="btn btn-line" id="send">Code schicken</button>
+      <p class="xs faint">Noch kein Zugang? Den bekommst du nach dem ersten Gespräch von mir.</p>
+    </div>
+    <div class="login-card" id="l2" hidden>
+      <span class="logo">{{MARK}}{{WORD}}</span>
+      <h1>Code eingeben</h1>
+      <p class="muted">Sechs Ziffern an max@mustermann.example. Gilt 10 Minuten.</p>
+      <div class="otp"><input class="inp" id="o1" value="4" maxlength="1" inputmode="numeric" aria-label="Ziffer 1"><input class="inp" id="o2" value="8" maxlength="1" inputmode="numeric" aria-label="Ziffer 2"><input class="inp" id="o3" value="1" maxlength="1" inputmode="numeric" aria-label="Ziffer 3"><input class="inp" id="o4" value="9" maxlength="1" inputmode="numeric" aria-label="Ziffer 4"><input class="inp" id="o5" value="0" maxlength="1" inputmode="numeric" aria-label="Ziffer 5"><input class="inp" id="o6" value="" maxlength="1" inputmode="numeric" aria-label="Ziffer 6"></div>
+      <button class="btn btn-primary" id="verify">Anmelden</button>
+      <p class="xs faint">Danach richten wir einmal deinen Passkey ein. Dann brauchst du nie wieder einen Code.</p>
+    </div>
+  </div>
+</div>
+
+</div></div>
+<p class="note">Prototyp mit erfundenen Beispieldaten (Max Mustermann, Versicherer A/B, Depotbank D). Keine echten Produkte, keine Anlageberatung.</p>
+
+<script>
+(function(){
+  var dev=document.getElementById('device');
+  var eur=new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0});
+  var pct=function(v){return v.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})+' %'};
+  var $=function(id){return document.getElementById(id)};
+  function toast(t){var e=document.createElement('div');e.className='toast';e.textContent=t;dev.appendChild(e);setTimeout(function(){e.remove()},2600)}
+  document.querySelectorAll('[data-toast]').forEach(function(b){b.addEventListener('click',function(){toast(b.dataset.toast)})});
+  document.querySelectorAll('[data-cta]').forEach(function(b){b.addEventListener('click',function(){toast('Im echten System öffnet sich hier deine meetergo-Terminbuchung.')})});
+
+  /* Ansicht + Gerät */
+  function setView(v){
+    document.querySelectorAll('[data-view]').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.view===v))});
+    ['site','kunde','login'].forEach(function(k){$('view-'+k).hidden = k!==v});
+    scrollTopAll(); redrawAll();
+  }
+  document.querySelectorAll('[data-view]').forEach(function(b){b.addEventListener('click',function(){setView(b.dataset.view)})});
+  document.querySelectorAll('[data-view-go]').forEach(function(b){b.addEventListener('click',function(){setView(b.dataset.viewGo)})});
+  function setDevice(d){
+    document.querySelectorAll('[data-device]').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.device===d))});
+    dev.classList.toggle('phone',d==='phone'); try{localStorage.setItem('ma-proto2-dev',d)}catch(e){}
+    redrawAll();
+  }
+  document.querySelectorAll('[data-device]').forEach(function(b){b.addEventListener('click',function(){setDevice(b.dataset.device)})});
+  function scrollTopAll(){document.querySelectorAll('.view').forEach(function(v){v.scrollTop=0}); if(!dev.classList.contains('phone')) dev.scrollIntoView({block:'start'})}
+
+  /* Website-Navigation */
+  function sgo(p,anchor){
+    document.querySelectorAll('[data-spage]').forEach(function(m){m.hidden=m.dataset.spage!==p});
+    if(anchor){var a=$(anchor); if(a) a.scrollIntoView({block:'start'})} else scrollTopAll();
+  }
+  document.querySelectorAll('[data-sgo]').forEach(function(b){b.addEventListener('click',function(){sgo(b.dataset.sgo,b.dataset.anchor)})});
+
+  /* Kundenbereich-Navigation */
+  var navKey={depot:'vermoegen',police:'vermoegen',brief:'start',warum:'plan'};
+  function go(s){
+    document.querySelectorAll('[data-screen]').forEach(function(el){el.hidden=el.dataset.screen!==s});
+    var k=navKey[s]||s;
+    document.querySelectorAll('.side [data-go],.tabbar [data-go]').forEach(function(b){ if(b.dataset.go===k) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current') });
+    scrollTopAll(); redrawAll();
+  }
+  document.querySelectorAll('[data-go]').forEach(function(b){b.addEventListener('click',function(){go(b.dataset.go)})});
+
+  /* To-dos */
+  document.querySelectorAll('[data-todo] .check').forEach(function(c){c.addEventListener('click',function(){
+    var on=c.getAttribute('aria-checked')!=='true'; c.setAttribute('aria-checked',String(on));
+    c.innerHTML=on?'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 12 5 5 9-10"/></svg>':'';
+    c.closest('[data-todo]').classList.toggle('done',on);
+    var n=document.querySelectorAll('[data-todo] .check[aria-checked="false"]').length; $('todo-count').textContent=n?n+' offen':'Alles erledigt';
+  })});
+  $('file').addEventListener('change',function(){toast('Hochgeladen. Marvin ist informiert.')});
+
+  /* Login */
+  $('send').addEventListener('click',function(){$('l1').hidden=true;$('l2').hidden=false});
+  $('verify').addEventListener('click',function(){setView('kunde');go('start')});
+  $('pk').addEventListener('click',function(){setView('kunde');go('start')});
+
+  /* Warum-Umschalter */
+  document.querySelectorAll('[data-w]').forEach(function(b){b.addEventListener('click',function(){
+    document.querySelectorAll('[data-w]').forEach(function(x){x.setAttribute('aria-pressed',String(x===b))});
+    document.querySelectorAll('[data-wp]').forEach(function(p){p.hidden=p.dataset.wp!==b.dataset.w});
+  })});
+
+  /* ---------- Rechenhilfen ---------- */
+  function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;var t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+  function gauss(r){var u=0,v=0;while(!u)u=r();while(!v)v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+  function niceMax(v){var e=Math.pow(10,Math.floor(Math.log10(v||1)));var f=v/e;var n=[1,1.5,2,2.5,3,4,5,6,8,10].find(function(x){return f<=x});return n*e}
+  function short(v){return v>=1e6?(v/1e6).toLocaleString('de-DE',{maximumFractionDigits:1})+' Mio.':v>=1000?Math.round(v/1000)+' T':Math.round(v)+''}
+  // FV mit monatlicher Einzahlung, jährliche Reihe
+  function series(rate,years,rNet,p0){var i=Math.pow(1+rNet,1/12)-1,v=p0||0,out=[v];for(var m=1;m<=years*12;m++){v=v*(1+i)+rate;if(m%12===0)out.push(v)}return out}
+  function axis(W,H,l,r,t,b,max,xs,xlab){
+    var g='',h=H-t-b; for(var k=0;k<=4;k++){var v=max*k/4,y=t+h-h*k/4; g+='<line x1="'+l+'" x2="'+(W-r)+'" y1="'+y+'" y2="'+y+'" stroke="var(--line)"/><text x="'+(l-8)+'" y="'+(y+4)+'" text-anchor="end">'+short(v)+'</text>'}
+    xs.forEach(function(x){g+='<text x="'+x[0]+'" y="'+(H-8)+'" text-anchor="middle">'+x[1]+'</text>'}); return g;
+  }
+  function pathOf(arr,X,Y){return arr.map(function(v,i){return(i?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1)}).join(' ')}
+  function diamond(x,y,s){return '<rect x="'+(x-s/2)+'" y="'+(y-s/2)+'" width="'+s+'" height="'+s+'" transform="rotate(45 '+x+' '+y+')" fill="var(--anthrazit)"/>'}
+
+  /* ---------- Kosten-Zeitmaschine ---------- */
+  var tmShown=0, tmRaf=null;
+  function tm(){
+    var rate=+$('tm-rate').value, age=+$('tm-age').value, ca=+$('tm-ca').value/100, cb=+$('tm-cb').value/100, y=67-age;
+    $('tm-o-rate').textContent=eur.format(rate); $('tm-o-age').textContent=age+' Jahre'; $('tm-o-ca').textContent=pct(ca*100); $('tm-o-cb').textContent=pct(cb*100);
+    var A=series(rate,y,.06-ca), B=series(rate,y,.06-cb), d=Math.max(0,B[y]-A[y]);
+    var yrs=d/(rate*12);
+    $('tm-sent').textContent = d>0 ? 'Das sind '+yrs.toLocaleString('de-DE',{maximumFractionDigits:1})+' Jahre deiner Sparrate. Mit günstigen Kosten hättest du mit 67 '+eur.format(B[y])+' statt '+eur.format(A[y])+'.' : 'Bei diesen Werten gibt es keinen Kostenunterschied.';
+    animateTo(d);
+    var svg=$('tm-chart'),W=560,H=150,l=46,r=8,t=8,b=22,w=W-l-r,h=H-t-b,max=niceMax(B[y]);
+    var X=function(i){return l+w*i/y},Y=function(v){return t+h-h*v/max};
+    var g=axis(W,H,l,r,t,b,max,[[X(0),age],[X(y),'67']]);
+    var area='M'+X(0)+' '+Y(0)+' '+B.map(function(v,i){return 'L'+X(i).toFixed(1)+' '+Y(v).toFixed(1)}).join(' ')+' '+A.slice().reverse().map(function(v,i){return 'L'+X(y-i).toFixed(1)+' '+Y(v).toFixed(1)}).join(' ')+'Z';
+    g+='<path d="'+area+'" fill="var(--accent)" fill-opacity=".14"/><path d="'+pathOf(A,X,Y)+'" fill="none" stroke="var(--anthrazit)" stroke-width="1.5" stroke-dasharray="4 3"/><path d="'+pathOf(B,X,Y)+'" fill="none" stroke="var(--accent)" stroke-width="2.2"/>';
+    g+='<circle cx="'+X(y)+'" cy="'+Y(B[y])+'" r="4" fill="var(--accent)"/>'+diamond(X(y),Y(A[y]),6);
+    svg.innerHTML=g;
+  }
+  function animateTo(target){
+    var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(reduce){tmShown=target;$('tm-diff').textContent=eur.format(target);return}
+    cancelAnimationFrame(tmRaf); var from=tmShown, t0=performance.now();
+    (function step(now){var k=Math.min(1,(now-t0)/450),e=1-Math.pow(1-k,3);tmShown=from+(target-from)*e;$('tm-diff').textContent=eur.format(tmShown);if(k<1)tmRaf=requestAnimationFrame(step)})(t0);
+  }
+  ['tm-rate','tm-age','tm-ca','tm-cb'].forEach(function(id){$(id).addEventListener('input',tm)});
+
+  /* ---------- Depot vs Rentenversicherung ---------- */
+  var gross=false;
+  $('rv-net').addEventListener('click',function(){gross=false;$('rv-net').setAttribute('aria-pressed','true');$('rv-gross').setAttribute('aria-pressed','false');rv()});
+  $('rv-gross').addEventListener('click',function(){gross=true;$('rv-gross').setAttribute('aria-pressed','true');$('rv-net').setAttribute('aria-pressed','false');rv()});
+  function rv(){
+    var s=+$('rv-rate').value,y=+$('rv-years').value,R=+$('rv-ret').value/100,tax=+$('rv-tax').value/100,c=+$('rv-cost').value/100,ter=+$('rv-etf').value/100;
+    $('rv-o-rate').textContent=eur.format(s);$('rv-o-years').textContent=y+' Jahre';$('rv-o-ret').textContent=pct(R*100);$('rv-o-tax').textContent=tax*100+' %';$('rv-o-cost').textContent=pct(c*100);$('rv-o-etf').textContent=pct(ter*100);
+    var etf=[0],pol=[0],vE=0,vP=0,iE=Math.pow(1+R-ter,1/12)-1,iP=Math.pow(1+R-ter-c,1/12)-1;
+    var total=s*12*y, ak=gross?0.025*total:0, akMonthly=ak/60;
+    for(var m=1;m<=y*12;m++){vE=vE*(1+iE)+s; var contrib=s-(m<=60?akMonthly:0); vP=vP*(1+iP)+Math.max(0,contrib);
+      if(m%12===0){var paid=s*m; etf.push(vE-Math.max(0,vE-paid)*0.7*0.26375); var yrs=m/12; var tp = yrs>=12 ? 0.85*0.5*tax : 0.85*0.26375; pol.push(vP-Math.max(0,vP-paid)*tp)}}
+    var E=etf[y],P=pol[y];
+    $('rv-v-etf').textContent=eur.format(E);$('rv-v-rv').textContent=eur.format(P);
+    $('rv-s-etf').textContent='eingezahlt '+eur.format(s*12*y);$('rv-s-rv').textContent=gross?'davon Abschlusskosten '+eur.format(ak):'ohne Abschlusskosten';
+    $('rv-c-etf').classList.toggle('win',E>=P);$('rv-c-rv').classList.toggle('win',P>E);
+    var cross=-1;for(var k=1;k<=y;k++){if(pol[k]>etf[k]){cross=k;break}}
+    $('rv-verdict').textContent = P>E ? 'In diesem Szenario liegt die Versicherung nach '+y+' Jahren vorn, um '+eur.format(P-E)+(cross>0?'. Ab Jahr '+cross+' dreht es sich.':'.') : 'In diesem Szenario liegt das Depot vorn, um '+eur.format(E-P)+'. Die Versicherung holt die Kosten über den Steuervorteil nicht wieder rein.';
+    var svg=$('rv-chart'),W=640,H=220,l=50,r=10,t=10,b=24,w=W-l-r,h=H-t-b,max=niceMax(Math.max(E,P));
+    var X=function(i){return l+w*i/y},Y=function(v){return t+h-h*v/max};
+    var ticks=[];for(var j=0;j<=y;j+=y>30?10:5)ticks.push([X(j),j+' J.']);
+    var g=axis(W,H,l,r,t,b,max,ticks);
+    g+='<path d="'+pathOf(etf,X,Y)+'" fill="none" stroke="var(--anthrazit)" stroke-width="2"/><path d="'+pathOf(pol,X,Y)+'" fill="none" stroke="var(--accent)" stroke-width="2.2"/>';
+    g+=diamond(X(y),Y(E),7)+'<circle cx="'+X(y)+'" cy="'+Y(P)+'" r="4.5" fill="var(--accent)"/>';
+    svg.innerHTML=g;
+  }
+  function rvEnd(s,y,R,tax,c,ter,g){var vE=0,vP=0,iE=Math.pow(1+R-ter,1/12)-1,iP=Math.pow(1+R-ter-c,1/12)-1,ak=g?0.025*s*12*y/60:0;for(var m=1;m<=y*12;m++){vE=vE*(1+iE)+s;vP=vP*(1+iP)+Math.max(0,s-(m<=60?ak:0))}var paid=s*12*y;var tp=y>=12?0.85*0.5*tax:0.85*0.26375;return[vE-Math.max(0,vE-paid)*0.7*0.26375,vP-Math.max(0,vP-paid)*tp]}
+  function rvLimit(){var s=+$('rv-rate').value,y=+$('rv-years').value,R=+$('rv-ret').value/100,tax=+$('rv-tax').value/100,c=+$('rv-cost').value/100,ter=+$('rv-etf').value/100;
+    var lo=0,hi=0.05;var f=function(x){var o=rvEnd(s,y,R,tax,x,ter,gross);return o[1]-o[0]};
+    if(f(0)<0){$('rv-limit').textContent='Selbst ohne Vertragskosten liegt das Depot hier vorn. Der Steuervorteil reicht bei diesen Annahmen nicht.';return}
+    for(var k=0;k<40;k++){var mid=(lo+hi)/2;if(f(mid)>0)lo=mid;else hi=mid}
+    $('rv-limit').innerHTML='<strong>Kostengrenze:</strong> Bis '+pct(lo*100)+' laufende Vertragskosten hält die Versicherung mit. Dein Wert: '+pct(c*100)+'. '+(c<=lo?'Passt.':'Zu teuer für diesen Vorteil.')}
+  ['rv-rate','rv-years','rv-ret','rv-tax','rv-cost','rv-etf'].forEach(function(id){$(id).addEventListener('input',rvLimit)});
+  ['rv-net','rv-gross'].forEach(function(id){$(id).addEventListener('click',rvLimit)});
+  ['rv-rate','rv-years','rv-ret','rv-tax','rv-cost','rv-etf'].forEach(function(id){$(id).addEventListener('input',rv)});
+
+  /* ---------- Kunden-Charts (Beispieldaten) ---------- */
+  var hist=(function(){var r=rng(7),v=0,paid=0,P=[],V=[];for(var m=0;m<=24;m++){if(m>0){v=v*(1+0.0055+gauss(r)*0.035)+250;paid+=250}else{v=10000*0+0;}P.push(paid+0);V.push(v)}
+    // Startkapital 4.000 € am ersten Tag
+    for(var k=0;k<P.length;k++){P[k]+=4000;V[k]+=4000*Math.pow(1.0075,k)}
+    var f=11920/V[24];V=V.map(function(x,i){return i?4000+(x-4000)*f:x});return{P:P,V:V}})();
+  function drawHist(){
+    var svg=$('d-hist');if(!svg||svg.closest('[hidden]'))return;
+    var W=640,H=220,l=50,r=12,t=10,b=24,w=W-l-r,h=H-t-b,n=24,max=niceMax(Math.max.apply(null,hist.V));
+    var X=function(i){return l+w*i/n},Y=function(v){return t+h-h*v/max};
+    var g=axis(W,H,l,r,t,b,max,[[X(0),'10/24'],[X(12),'10/25'],[X(24),'09/26']]);
+    g+='<path d="'+pathOf(hist.P,X,Y)+'" fill="none" stroke="var(--anthrazit)" stroke-width="1.6" stroke-dasharray="4 3"/>';
+    g+='<path d="M'+X(0)+' '+Y(0)+' '+hist.V.map(function(v,i){return 'L'+X(i).toFixed(1)+' '+Y(v).toFixed(1)}).join(' ')+' L'+X(n)+' '+Y(0)+'Z" fill="var(--accent)" fill-opacity=".08"/>';
+    g+='<path d="'+pathOf(hist.V,X,Y)+'" fill="none" stroke="var(--accent)" stroke-width="2.2"/>';
+    g+='<circle cx="'+X(n)+'" cy="'+Y(hist.V[n])+'" r="4.5" fill="var(--accent)"/>'+diamond(X(n),Y(hist.P[n]),7);
+    g+='<text x="'+(X(n)-8)+'" y="'+(Y(hist.V[n])-10)+'" text-anchor="end" style="fill:var(--accent);font-weight:600">'+eur.format(hist.V[n])+'</text>';
+    svg.innerHTML=g;
+    // Meilenstein: Monat, in dem der erwartete Monatsertrag die Sparrate übersteigt
+    var v=hist.V[n],mo=0;while(v*0.0049<250&&mo<600){v=v*1.0049+250;mo++}
+    var d=new Date(2026,8,30);d.setMonth(d.getMonth()+mo);
+    $('cross-txt').textContent='Bei 6 % Rendite p. a. bringt dein Depot ab etwa '+d.toLocaleDateString('de-DE',{month:'long',year:'numeric'})+' pro Monat mehr Ertrag als deine 250 € Sparrate. Ab da arbeitet dein Geld mehr als du.';
+  }
+  function drawSpark(){
+    var svg=$('w-spark');if(!svg||svg.closest('[hidden]'))return;var W=560,H=90,n=24,mx=Math.max.apply(null,hist.V)*1.08;
+    var X=function(i){return 4+(W-8)*i/n},Y=function(v){return H-4-(H-8)*v/mx};
+    svg.innerHTML='<path d="'+pathOf(hist.P,X,Y)+'" fill="none" stroke="var(--anthrazit)" stroke-width="1.4" stroke-dasharray="3 3"/><path d="'+pathOf(hist.V,X,Y)+'" fill="none" stroke="var(--accent)" stroke-width="2"/><circle cx="'+X(n)+'" cy="'+Y(hist.V[n])+'" r="3.5" fill="var(--accent)"/>';
+  }
+  var dicePath=null;
+  function fan(){
+    var svg=$('d-fan');if(!svg||svg.closest('[hidden]'))return;
+    var years=35,r=rng(42),N=500,start=11920,s=250,mu=0.06-0.0019,sig=0.15,paths=[];
+    for(var p=0;p<N;p++){var v=start,arr=[v];for(var yy=1;yy<=years;yy++){for(var m=0;m<12;m++){v=v*Math.exp((mu-sig*sig/2)/12+sig/Math.sqrt(12)*gauss(r))+s}arr.push(v)}paths.push(arr)}
+    function q(yy,k){var c=paths.map(function(a){return a[yy]}).sort(function(a,b){return a-b});return c[Math.floor(k*(N-1))]}
+    var lo=[],md=[],hi=[],paid=[];for(var yy=0;yy<=years;yy++){lo.push(q(yy,.1));md.push(q(yy,.5));hi.push(q(yy,.9));paid.push(start+s*12*yy)}
+    var W=640,H=240,l=54,rr=60,t=10,b=24,w=W-l-rr,h=H-t-b,max=niceMax(hi[years]);
+    var X=function(i){return l+w*i/years},Y=function(v){return t+h-h*Math.min(v,max)/max};
+    var g=axis(W,H,l,rr,t,b,max,[[X(0),'2026'],[X(14),'2040'],[X(years),'2061']]);
+    g+='<path d="M'+hi.map(function(v,i){return X(i).toFixed(1)+' '+Y(v).toFixed(1)}).join(' L')+' L'+lo.slice().reverse().map(function(v,i){return X(years-i).toFixed(1)+' '+Y(v).toFixed(1)}).join(' L')+'Z" fill="var(--accent)" fill-opacity=".16"/>';
+    g+='<path d="'+pathOf(paid,X,Y)+'" fill="none" stroke="var(--anthrazit)" stroke-width="1.5" stroke-dasharray="4 3"/>';
+    g+='<path d="'+pathOf(md,X,Y)+'" fill="none" stroke="var(--accent)" stroke-width="2.2"/>';
+    if(dicePath){g+='<path id="dp" d="'+pathOf(dicePath,X,Y)+'" fill="none" stroke="var(--ink)" stroke-width="1.4"/>'}
+    g+='<text x="'+(X(years)+6)+'" y="'+(Y(hi[years])+4)+'">'+short(hi[years])+'</text><text x="'+(X(years)+6)+'" y="'+(Y(md[years])+4)+'" style="fill:var(--accent);font-weight:600">'+short(md[years])+'</text><text x="'+(X(years)+6)+'" y="'+(Y(lo[years])+4)+'">'+short(lo[years])+'</text>';
+    svg.innerHTML=g;
+    if(dicePath){var el=svg.querySelector('#dp');if(el&&el.getTotalLength){var L=el.getTotalLength();el.style.strokeDasharray=L;el.style.strokeDashoffset=L;el.getBoundingClientRect();el.style.transition='stroke-dashoffset 1.6s ease-out';el.style.strokeDashoffset=0}}
+  }
+  var diceSeed=1;
+  $('dice').addEventListener('click',function(){var r=rng(++diceSeed*97),v=11920,a=[v];for(var yy=1;yy<=35;yy++){for(var m=0;m<12;m++){v=v*Math.exp((0.0581-0.01125)/12+0.15/Math.sqrt(12)*gauss(r))+250}a.push(v)}dicePath=a;fan()});
+  function drawPolice(){
+    var svg=$('p-chart');if(!svg||svg.closest('[hidden]'))return;
+    var r=rng(11),n=23,F=[0],V=[0],P=[0],f=0,v=0;
+    for(var m=1;m<=n;m++){var ret=0.005+gauss(r)*0.032;f=f*(1+ret)+150;v=v*(1+ret-0.0035/12*12/12)+150*0.97;P.push(150*m);F.push(f);V.push(v)}
+    var k=6720/V[n];V=V.map(function(x){return x*k});F=F.map(function(x){return x*k*1.009});
+    var W=640,H=220,l=50,rr=12,t=10,b=24,w=W-l-rr,h=H-t-b,max=niceMax(Math.max.apply(null,F));
+    var X=function(i){return l+w*i/n},Y=function(v){return t+h-h*v/max};
+    var g=axis(W,H,l,rr,t,b,max,[[X(0),'11/24'],[X(12),'11/25'],[X(n),'09/26']]);
+    g+='<path d="M'+F.map(function(x,i){return X(i).toFixed(1)+' '+Y(x).toFixed(1)}).join(' L')+' L'+V.slice().reverse().map(function(x,i){return X(n-i).toFixed(1)+' '+Y(x).toFixed(1)}).join(' L')+'Z" fill="var(--accent)" fill-opacity=".18"/>';
+    g+='<path d="'+pathOf(P,X,Y)+'" fill="none" stroke="var(--anthrazit)" stroke-width="1.5" stroke-dasharray="4 3"/><path d="'+pathOf(V,X,Y)+'" fill="none" stroke="var(--accent)" stroke-width="2.2"/>';
+    g+='<circle cx="'+X(n)+'" cy="'+Y(V[n])+'" r="4.5" fill="var(--accent)"/>';
+    svg.innerHTML=g;
+  }
+  /* Crash-Probe */
+  var answers={sell:'Wer im Crash verkauft, macht den Verlust endgültig. Die Erholung kommt oft schnell und ohne Ankündigung, und dann bist du nicht dabei. Genau dafür liegt dein Notgroschen separat: Du musst nie im Tief verkaufen.',hold:'Genau das ist der Plan. Dein Sparplan kauft im Tief automatisch mehr Anteile. Du musst nichts tun, und das ist das Schwierigste daran.',buy:'Kann sinnvoll sein, wenn der Notgroschen danach noch reicht. Schreib mir vorher kurz, dann rechnen wir es durch. Kein Timing auf Verdacht.'};
+  document.querySelectorAll('.choice').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('.choice').forEach(function(x){x.setAttribute('aria-pressed',String(x===b))});$('crash-a').hidden=false;$('crash-a').textContent=answers[b.dataset.c]})});
+
+  function redrawAll(){drawSpark();drawHist();fan();drawPolice()}
+  try{var sd=localStorage.getItem('ma-proto2-dev');if(sd)setDevice(sd);else if(window.innerWidth<700)setDevice('phone')}catch(e){if(window.innerWidth<700)setDevice('phone')}
+  tm();rv();rvLimit();redrawAll();
+})();
+</script>
