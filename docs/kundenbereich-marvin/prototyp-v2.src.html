@@ -6,34 +6,34 @@
 /* Layout: eine App in einem Container (Handy 390 / Desktop voll), Container-Queries statt Viewport.
    Website: redaktionell, viel Weiß, eine große interaktive Rechnung als Hero.
    Kundenbereich: Seitenleiste (Desktop) bzw. Tab-Leiste (Handy).
-   Farben aus dem Logo des Designers: Bordeaux #7F1C31, Anthrazit #364445 (Petrol-Stich). */
+   Farben aus dem Logo des Designers: Bordeaux #7F1C31, Anthrazit neutral #333333 (Logo-Grau ohne Grünstich). */
 :root{
   --bordeaux:#7F1C31;        /* Logo, Primär-Buttons */
   --accent:#7F1C31;          /* Text-Akzent, Zahlen, Links */
   --accent-soft:#F6ECEE;
-  --anthrazit:#364445;       /* Logo, Überschriften */
+  --anthrazit:#333333;       /* Logo, Überschriften */
   --bg:#FFFFFF;
-  --mist:#F3F5F5;            /* Fläche, Petrol-Neutral */
-  --line:#DCE3E3;
-  --ink:#1B2425;             /* Fließtext */
-  --ink-2:#4B5859;
-  --ink-3:#7A8788;
+  --mist:#F4F4F4;            /* Fläche, Petrol-Neutral */
+  --line:#E2E2E2;
+  --ink:#1A1A1A;             /* Fließtext */
+  --ink-2:#545454;
+  --ink-3:#888888;
   --ok:#2C7651; --ok-soft:#E7F2EC;
   --warn:#975F12; --warn-soft:#FAF0E2;
   --on-accent:#FFFFFF;
   --serif:"Newsreader","Iowan Old Style",Georgia,serif;
   --sans:"Public Sans","Helvetica Neue",Helvetica,Arial,sans-serif;
   --r1:4px; --r2:8px; --r3:12px;
-  --shadow:0 1px 2px rgba(27,36,37,.05),0 6px 20px rgba(27,36,37,.06);
+  --shadow:0 1px 2px rgba(26,26,26,.05),0 6px 20px rgba(26,26,26,.06);
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bordeaux:#9C2A44; --accent:#E38A9D; --accent-soft:#2A1A1F; --anthrazit:#C9D4D4;
-  --bg:#111718; --mist:#182021; --line:#2A3536; --ink:#ECF1F1; --ink-2:#B3C0C0; --ink-3:#7F8D8E;
+  --bordeaux:#9C2A44; --accent:#E38A9D; --accent-soft:#2A1A1F; --anthrazit:#D6D6D6;
+  --bg:#121212; --mist:#1B1B1B; --line:#2E2E2E; --ink:#EFEFEF; --ink-2:#BDBDBD; --ink-3:#8C8C8C;
   --ok:#7CC69F; --ok-soft:#14261D; --warn:#E2B064; --warn-soft:#2A2113;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.35); color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bordeaux:#9C2A44; --accent:#E38A9D; --accent-soft:#2A1A1F; --anthrazit:#C9D4D4;
-  --bg:#111718; --mist:#182021; --line:#2A3536; --ink:#ECF1F1; --ink-2:#B3C0C0; --ink-3:#7F8D8E;
+  --bordeaux:#9C2A44; --accent:#E38A9D; --accent-soft:#2A1A1F; --anthrazit:#D6D6D6;
+  --bg:#121212; --mist:#1B1B1B; --line:#2E2E2E; --ink:#EFEFEF; --ink-2:#BDBDBD; --ink-3:#8C8C8C;
   --ok:#7CC69F; --ok-soft:#14261D; --warn:#E2B064; --warn-soft:#2A2113;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.35); color-scheme:dark}
 
@@ -62,7 +62,7 @@ a{color:var(--accent)}
 /* Gerät */
 .stage{max-width:1280px;margin:0 auto;display:flex;justify-content:center}
 .device{container:app/inline-size;width:100%;background:var(--bg);border:1px solid var(--line);border-radius:var(--r3);overflow:hidden;box-shadow:var(--shadow);position:relative}
-.device.phone{max-width:392px;height:820px;border-radius:36px;border:8px solid #1B2425}
+.device.phone{max-width:392px;height:820px;border-radius:36px;border:8px solid #1A1A1A}
 .view{min-height:780px}
 .device.phone .view{height:100%;overflow:auto;min-height:0}
 .device:not(.phone) .view{min-height:780px}
@@ -216,8 +216,8 @@ svg text{font-family:var(--sans);font-size:11px;fill:var(--ink-3)}
 .brief{padding:20px;display:flex;flex-direction:column;gap:10px;background:var(--anthrazit);color:var(--bg);border-radius:var(--r3);text-align:left;border:0}
 .brief h3{color:var(--bg);font-size:22px}
 .brief .label{color:color-mix(in srgb,var(--bg) 65%,transparent)}
-:root[data-theme="dark"] .brief{background:#24302F}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .brief{background:#24302F}}
+:root[data-theme="dark"] .brief{background:#2A2A2A}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .brief{background:#2A2A2A}}
 
 /* To-dos */
 .todo{display:flex;gap:12px;align-items:flex-start;padding:14px 18px;border-top:1px solid var(--line)}

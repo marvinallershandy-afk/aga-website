@@ -4,20 +4,20 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Public+Sans:wght@400;500;600&display=swap">
 <style>
 /* Layout: Dokument mit fester Inhaltsleiste links (Desktop), eine Spalte am Handy.
-   Gleiche Tokens wie Website/Kundenbereich: Logo-Bordeaux #7F1C31, Logo-Anthrazit #364445. */
+   Gleiche Tokens wie Website/Kundenbereich: Logo-Bordeaux #7F1C31, Anthrazit neutral #333333. */
 :root{
-  --bordeaux:#7F1C31; --accent:#7F1C31; --accent-soft:#F6ECEE; --anthrazit:#364445;
-  --bg:#FFFFFF; --mist:#F3F5F5; --line:#DCE3E3; --ink:#1B2425; --ink-2:#4B5859; --ink-3:#7A8788;
+  --bordeaux:#7F1C31; --accent:#7F1C31; --accent-soft:#F6ECEE; --anthrazit:#333333;
+  --bg:#FFFFFF; --mist:#F4F4F4; --line:#E2E2E2; --ink:#1A1A1A; --ink-2:#545454; --ink-3:#888888;
   --ok:#2C7651; --ok-soft:#E7F2EC; --warn:#975F12; --warn-soft:#FAF0E2; --bad:#A32A2A; --bad-soft:#FBEAEA;
   --serif:"Newsreader","Iowan Old Style",Georgia,serif; --sans:"Public Sans","Helvetica Neue",Helvetica,Arial,sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bordeaux:#9C2A44; --accent:#E38A9D; --accent-soft:#2A1A1F; --anthrazit:#C9D4D4;
-  --bg:#111718; --mist:#182021; --line:#2A3536; --ink:#ECF1F1; --ink-2:#B3C0C0; --ink-3:#7F8D8E;
+  --bordeaux:#9C2A44; --accent:#E38A9D; --accent-soft:#2A1A1F; --anthrazit:#D6D6D6;
+  --bg:#121212; --mist:#1B1B1B; --line:#2E2E2E; --ink:#EFEFEF; --ink-2:#BDBDBD; --ink-3:#8C8C8C;
   --ok:#7CC69F; --ok-soft:#14261D; --warn:#E2B064; --warn-soft:#2A2113; --bad:#F08A8A; --bad-soft:#2C1616; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bordeaux:#9C2A44; --accent:#E38A9D; --accent-soft:#2A1A1F; --anthrazit:#C9D4D4;
-  --bg:#111718; --mist:#182021; --line:#2A3536; --ink:#ECF1F1; --ink-2:#B3C0C0; --ink-3:#7F8D8E;
+  --bordeaux:#9C2A44; --accent:#E38A9D; --accent-soft:#2A1A1F; --anthrazit:#D6D6D6;
+  --bg:#121212; --mist:#1B1B1B; --line:#2E2E2E; --ink:#EFEFEF; --ink-2:#BDBDBD; --ink-3:#8C8C8C;
   --ok:#7CC69F; --ok-soft:#14261D; --warn:#E2B064; --warn-soft:#2A2113; --bad:#F08A8A; --bad-soft:#2C1616; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.62;padding-inline:16px;padding-block:0 64px;font-variant-numeric:tabular-nums}
@@ -112,7 +112,7 @@ ol.todo .rec{font-size:14.5px;color:var(--ok)}
 
 <header class="top">
   <span class="logo">{{MARK}}{{WORD}}</span>
-  <span class="xs faint">Stand 08.10.2026 · zur Freigabe</span>
+  <span class="xs faint">Stand 08.10.2026 · Version 2</span>
 </header>
 
 <div class="hero">
@@ -162,7 +162,10 @@ ol.todo .rec{font-size:14.5px;color:var(--ok)}
   <div class="alert bad">
     <h3>Nicht mehr „unabhängig“ nennen</h3>
     <p>Das OLG Dresden hat am 28.10.2025 (Az. 14 U 1740/24) auf Klage des Verbraucherzentrale Bundesverbands entschieden: Ein Makler, der Provisionen bekommt, darf nicht mit „unabhängiger Versicherungsmakler“ werben. Das gilt laut Urteil als irreführend nach § 5 UWG. Betrifft Website, Google-Profil, Social-Media-Bios, Mail-Signatur und PDF-Vorlagen. Ich habe das in allen Texten schon ersetzt.</p>
-    <p class="src">Quellen: <a href="https://www.vzbv.de/urteile/urteil-versicherungsmakler-auf-provisionsbasis-darf-sich-nicht-als-unabhaengig-bezeichnen" target="_blank" rel="noopener">vzbv</a>, <a href="https://www.beck-aktuell.de/heute-im-recht/rechtsprechung/olg-dresden-14u174024-unabhaengiger-versicherungsmakler-irrefuehrende-werbung-provision-2025-11-13" target="_blank" rel="noopener">beck-aktuell</a>. Volltext nicht gelesen.</p>
+    <p>Das OLG Köln hat laut Fachpresse ebenso entschieden (Az. 6 U 63/25, rechtskräftig). Die Gegenposition des LG Leipzig von 2024 hat das OLG Dresden aufgehoben.</p>
+    <p><strong>Und mit Honorar?</strong> Ändert nichts, solange du auch Courtage vom Versicherer bekommst. Unabhängigkeit dürfen nach der Rechtsprechung praktisch nur Versicherungsberater (§34d Abs. 2 GewO) und Honorar-Finanzanlagenberater (§34h GewO) beanspruchen, die gar keine Provisionen annehmen. Auch „Honorarberater“ würde ich deshalb nicht verwenden.</p>
+    <p><strong>Was du stattdessen sagen kannst:</strong> „Makler, kein Vertreter: Ich bin an keinen Versicherer gebunden.“ Das ist die gesetzliche Definition des Maklers. Dazu: „Du siehst vorher, was ich verdiene, egal ob Courtage oder Honorar.“ Das ist ehrlicher als „unabhängig“ und passt zu dir. Formulierung zum Schluss vom Anwalt absegnen lassen.</p>
+    <p class="src">Quellen: <a href="https://www.vzbv.de/urteile/urteil-versicherungsmakler-auf-provisionsbasis-darf-sich-nicht-als-unabhaengig-bezeichnen" target="_blank" rel="noopener">vzbv</a>, <a href="https://www.beck-aktuell.de/heute-im-recht/rechtsprechung/olg-dresden-14u174024-unabhaengiger-versicherungsmakler-irrefuehrende-werbung-provision-2025-11-13" target="_blank" rel="noopener">beck-aktuell</a>, <a href="https://www.versicherungsbote.de/id/4947054/Versicherungsmakler-duerfen-sich-nicht-unabhaengig-nennen/" target="_blank" rel="noopener">Versicherungsbote (OLG Köln)</a>, <a href="https://www.versicherungsbote.de/id/4941504/Urteil-Makler-sind-keine-Honorar-Anlageberater/" target="_blank" rel="noopener">Versicherungsbote (Honorar-Anlageberater)</a>. Urteilsvolltexte nicht gelesen.</p>
   </div>
   <div class="alert warn">
     <h3>Die Vermögensschadenhaftpflicht nicht als Vorteil herausstellen</h3>
@@ -183,9 +186,17 @@ ol.todo .rec{font-size:14.5px;color:var(--ok)}
       <tr><td><strong>picture-by-nele</strong></td><td>Kundenbereich mit eigenem Passwort-Login, Galerien auf Cloudflare R2, Push-Nachrichten für Admin, Kontaktformular an n8n.</td><td>Muster: signierte Kurzzeit-Links, „erst speichern, dann weiterleiten“, Aufräum-Job. Nicht übernehmen: Passwort-Login, öffentlicher Speicher, n8n-Webhook ohne Geheimschlüssel. Einen Google-Drive-Sync gibt es dort nicht.</td></tr>
       <tr><td><strong>SV-Seite</strong></td><td>Google-Drive-Anbindung (Ordner lesen und anlegen), Backup-Job, Vorrendern für Google.</td><td>Drive-Anbindung, falls nötig. Vorrendern für SEO.</td></tr>
       <tr><td><strong>Google Drive</strong></td><td>Logo vom Designer (SVG, EPS, PDF, PNG, hell und dunkel). Dokument „Portfolioargumentation“.</td><td>Logo überall. Die Portfolioargumentation wird Grundlage für Haltungstext und Evidenz-Bibliothek.</td></tr>
-      <tr><td><strong>Website-Repo</strong></td><td>Nicht gefunden, weder auf GitHub noch in Drive.</td><td>Wir starten neu im Repo <code>marvin-website</code> (musst du anlegen, siehe Punkt 1 unten).</td></tr>
+      <tr><td><strong>Supabase „marvin-tools“</strong></td><td>Deine Depotanalyse: anonymer Fragebogen mit Claim-Link und Mail-Einwilligung, Bewertung in zwei Achsen (Bauweise, Passung) und fünf Dimensionen, Ton „standard“ oder „unverblümt“, 3 Analysen gespeichert. Dazu eine Studien-Bibliothek mit 84 Einträgen in 18 Kategorien.</td><td>Wird der Depot-Check. Bewertungslogik und Studien bleiben, die Oberfläche bekommt das neue Design.</td></tr>
+      <tr><td><strong>Supabase „marvin-website“</strong></td><td>Studien-Chat auf marvin-allers.de (OpenAI). Die Studien-Tabelle in diesem Projekt ist leer.</td><td>Umbauen, siehe Kasten unten.</td></tr>
+      <tr><td><strong>Website-Code und Obsidian Brain</strong></td><td>Liegen nach allem, was ich sehe, nur auf deinem Mac (<code>/Users/marvinallers/code/…</code>). Auf GitHub, in Drive und in Notion ist beides nicht.</td><td>Ich brauche beides auf GitHub, siehe Punkt 1 und 2 unten. Bis dahin plane ich mit dem, was ich sehe.</td></tr>
     </tbody>
   </table></div>
+  <div class="alert warn">
+    <h3>Was mir am bestehenden Bau auffällt</h3>
+    <p><strong>Studien-Chat:</strong> Die Funktion ist für jeden offen erreichbar (Zugriff von jeder Domain, kein Mengenlimit), schickt Fragen ohne Anonymisierung an OpenAI und hat keinen KI-Hinweis, der seit 02.08.2026 Pflicht ist. Der Prompt verbietet Antworten wie „dazu habe ich keine Information“. Damit erfindet das Modell im Zweifel lieber etwas. Und weil die Studien-Tabelle in diesem Projekt leer ist, findet der Chat vermutlich gar keine Studien.</p>
+    <p><strong>Depotanalyse:</strong> Die Bewertungslogik ist sauber und gut wiederverwendbar. Der Text-Generator läuft nie, weil der Anthropic-Schlüssel fehlt. Kunden sehen immer den Ersatztext. In deinen alten Prompts stand noch „unabhängiger Finanzberater“, das ist inzwischen raus. Laut Kommentar wird §34f öffentlich bewusst nicht angezeigt.</p>
+    <p><strong>Domain:</strong> Im Chat steht marvin-allers.de, du hast marvinallers.de als Hauptdomain genannt. Das ziehen wir glatt.</p>
+  </div>
 </section>
 
 <section id="architektur">
@@ -250,7 +261,7 @@ ol.todo .rec{font-size:14.5px;color:var(--ok)}
     <div class="card"><span class="label">1 · Frist Mitte November</span><h3>Altersvorsorgedepot 2027</h3><p class="aha">„Mit einem Kind bekommst du auf 300 € Eigenbeitrag 150 % Förderung.“</p><dl><dt>Daten</dt><dd>Grundzulage aus Gesetzesauszug belegt (50 % bis 360 €, 25 % bis 1.800 €). Kinderzulage und Obergrenze nur sekundär belegt, vor Livegang prüfen.</dd><dt>Risiko</dt><dd>mittel. Bis Jahresende „ab 2027“ kennzeichnen.</dd><dt>Aufwand</dt><dd>klein bis mittel</dd></dl></div>
     <div class="card"><span class="label">2 · Startseite</span><h3>Kosten-Zeitmaschine</h3><p class="aha">„Deine 2,2 % kosten dich bis 67 rund 105.000 €. Das sind 35 Jahre deiner Sparrate.“</p><dl><dt>Daten</dt><dd>keine externen, reine Rechnung</dd><dt>Risiko</dt><dd>niedrig, Annahmen offen zeigen</dd><dt>Aufwand</dt><dd>klein, im Prototyp schon funktionsfähig</dd></dl></div>
     <div class="card"><span class="label">3</span><h3>Depot oder Rentenversicherung?</h3><p class="aha">„Bis 0,9 % Vertragskosten hält die Police mit. Dein Angebot hat 1,4 %.“</p><dl><dt>Daten</dt><dd>Kosten aus Produktinformationsblatt; Steuerregeln belegt (15 % Teilfreistellung, Halbeinkünfte ab 62 und 12 Jahren, Basiszins 2026: 3,20 %)</dd><dt>Risiko</dt><dd>mittel. Steuer nur schematisch per Regler (Steuerberatungsgesetz).</dd><dt>Aufwand</dt><dd>mittel; Kostengrenze im Prototyp schon drin</dd></dl></div>
-    <div class="card"><span class="label">4</span><h3>Depot-Check</h3><p class="aha">„Deine drei Fonds überschneiden sich zu 70 %. Kosten: 412 € im Jahr.“</p><dl><dt>Daten</dt><dd>Fonds-Bestände europäischer ETFs gibt es nicht günstig mit Lizenz. Start mit selbst gepflegter Tabelle (~300 Fonds), Bestände später über Morningstar o. ä. (Preis auf Anfrage).</dd><dt>Risiko</dt><dd>hoch, sobald Ersatz-ISINs genannt werden. Öffentlich nur Analyse, Empfehlung erst im Gespräch.</dd><dt>Aufwand</dt><dd>Lite mittel, Pro groß</dd></dl></div>
+    <div class="card"><span class="label">4 · baut auf deiner Depotanalyse auf</span><h3>Depot-Check</h3><p class="aha">„Deine drei Fonds überschneiden sich zu 70 %. Kosten: 412 € im Jahr.“</p><dl><dt>Daten</dt><dd>Fonds-Bestände europäischer ETFs gibt es nicht günstig mit Lizenz. Start mit selbst gepflegter Tabelle (~300 Fonds), Bestände später über Morningstar o. ä. (Preis auf Anfrage).</dd><dt>Risiko</dt><dd>hoch, sobald Ersatz-ISINs genannt werden. Öffentlich nur Analyse, Empfehlung erst im Gespräch.</dd><dt>Aufwand</dt><dd>Lite mittel, Pro groß</dd></dl></div>
     <div class="card"><span class="label">5</span><h3>Kaufen oder mieten?</h3><p class="aha">„Damit Kaufen gleichzieht, müsste dein Haus jedes Jahr 2,8 % an Wert gewinnen.“</p><dl><dt>Daten</dt><dd>Bauzins live von der Bundesbank; Niedersachsen: Grunderwerbsteuer 5,0 % (Ratgeberquelle), Notar/Grundbuch 1,5–2 %</dd><dt>Risiko</dt><dd>niedrig bis mittel, keine Objekte oder Kredite empfehlen</dd><dt>Aufwand</dt><dd>mittel</dd></dl></div>
     <div class="card"><span class="label">6</span><h3>Rentenlücke</h3><p class="aha">„Dir fehlen 940 € im Monat, in heutiger Kaufkraft.“</p><dl><dt>Daten</dt><dd>Zahlen aus der Renteninformation, Rentenwert 42,52 €</dd><dt>Risiko</dt><dd>niedrig</dd><dt>Aufwand</dt><dd>mittel</dd></dl></div>
   </div>
@@ -284,12 +295,12 @@ ol.todo .rec{font-size:14.5px;color:var(--ok)}
   <div class="sec-head"><span class="label">8</span><h2>Design</h2><p class="muted">Hochwertig wirkt laut Recherche, was wenig macht und das gut: eine Markenfarbe, eine starke Schrift, viel Raum, echte Fotos, Zahlen mit Haltung.</p></div>
   <div class="swatches">
     <div class="sw"><i style="background:#7F1C31"></i><div><strong>Bordeaux #7F1C31</strong>aus dem Logo, nur als Akzent</div></div>
-    <div class="sw"><i style="background:#364445"></i><div><strong>Anthrazit #364445</strong>aus dem Logo, Überschriften</div></div>
+    <div class="sw"><i style="background:#333333"></i><div><strong>Anthrazit #333333</strong>neutral, ohne Grünstich</div></div>
     <div class="sw"><i style="background:#1B2425"></i><div><strong>Tinte #1B2425</strong>Fließtext</div></div>
     <div class="sw"><i style="background:#F3F5F5;border-bottom:1px solid var(--line)"></i><div><strong>Nebel #F3F5F5</strong>Flächen, mit Petrol-Stich</div></div>
     <div class="sw"><i style="background:#FFFFFF;border-bottom:1px solid var(--line)"></i><div><strong>Weiß</strong>Grundfläche</div></div>
   </div>
-  <p class="muted small">Das ersetzt #7D1C36 (deine Angabe) und #7D1F2E (marvin-os). marvin-os und deine PDF-Vorlagen ziehe ich nach.</p>
+  <p class="muted small">Schwarz-grau mit Bordeaux als Akzent, wie du es willst. Das Grau im Logo-Original (#364445) hat einen leichten Grünstich. Auf der Website zeige ich das Logo deshalb in neutralem Grau. Frag am besten deinen Designer nach einer offiziellen Variante in Neutralgrau, damit Print und Web gleich aussehen. Bordeaux #7F1C31 ersetzt #7D1C36 und #7D1F2E, marvin-os und die PDF-Vorlagen ziehe ich nach.</p>
   <div class="type-demo">
     <span class="label">Schrift im Prototyp</span>
     <span class="d1">Mehr Rendite, weniger Bullshit.</span>
@@ -321,7 +332,7 @@ ol.todo .rec{font-size:14.5px;color:var(--ok)}
 <section id="roadmap">
   <div class="sec-head"><span class="label">10</span><h2>Reihenfolge</h2><p class="muted">Jede Phase endet mit etwas, das live gehen kann. Wochenangaben sind meine Schätzung.</p></div>
   <div class="roadmap">
-    <div class="phase"><span class="when">Phase A · Woche 1</span><h3>Fundament</h3><ul><li>Repo, Design-System mit Tokens und Komponenten, Logo-Dateien</li><li>Rechenkern mit Tests (Kosten, Steuern 2026, Zinseszins)</li><li>Zentrale Datei für Impressum und Pflichtangaben, GmbH-Umstellung später in einer Datei</li></ul></div>
+    <div class="phase"><span class="when">Phase A · Woche 1</span><h3>Fundament</h3><ul><li>Deinen bestehenden Website-Code und die Depotanalyse übernehmen, Sicherheitslücken im Studien-Chat schließen</li><li>Design-System mit Tokens und Komponenten, Logo-Dateien</li><li>Rechenkern mit Tests (Kosten, Steuern 2026, Zinseszins)</li><li>Zentrale Datei für Impressum und Pflichtangaben, GmbH-Umstellung später in einer Datei</li></ul></div>
     <div class="phase"><span class="when">Phase B · Woche 2 bis 4 · bis Mitte November</span><h3>Website mit Tools</h3><ul><li>Startseite mit Kosten-Zeitmaschine, Haltung, Ablauf, Vergütung, Über mich, meetergo</li><li>Altersvorsorgedepot-Rechner (Frist), Depot oder Rentenversicherung</li><li>Rechtsseiten, SEO, Lead-Weg nach marvin-os mit Double-Opt-in</li></ul></div>
     <div class="phase"><span class="when">Phase C · Woche 5 bis 8</span><h3>Kundenbereich MVP</h3><ul><li>Zweites Supabase-Projekt, Login mit Passkey, Einladung aus marvin-os</li><li>Übersicht, Plan mit Begründung, Timeline, Dokumente, Upload, To-dos</li><li>Freigabe-Knopf in marvin-os, Mails über n8n</li><li>Pilot mit drei echten Kunden</li></ul></div>
     <div class="phase"><span class="when">Phase D · Woche 9 bis 12</span><h3>Depot-Update und Monatsbrief</h3><ul><li>Modul „Anlagen“ in marvin-os, Kurslizenz, monatlicher Lauf mit Prüfliste</li><li>Vermögensseite, Fächer, Crash-Probe, Meilenstein, Monatsbrief</li><li>Erst ETF-Depots, dann Nettotarife</li></ul></div>
@@ -346,15 +357,15 @@ ol.todo .rec{font-size:14.5px;color:var(--ok)}
 <section id="offen">
   <div class="sec-head"><span class="label">12</span><h2>Was ich von dir brauche</h2><p class="muted">In Abarbeitungsreihenfolge. Meine Empfehlung steht jeweils in Grün, du musst nur Ja oder Nein sagen.</p></div>
   <ol class="todo">
-    <li><span class="q">Leeres privates Repo „marvin-website“ auf GitHub anlegen.</span><span class="r">Anlegen auf github.com, dann unter <a href="https://claude.ai/connect-github" target="_blank" rel="noopener">claude.ai/connect-github</a> der Claude-App Zugriff darauf geben. Ich durfte kein Repo anlegen. Zurückmelden: „ist da“.</span><span class="rec">Empfehlung: Ja, das ist der Startschuss.</span></li>
-    <li><span class="q">Farben aus dem Logo (#7F1C31, #364445) überall verwenden, auch in marvin-os und den PDFs?</span><span class="r">Vergleiche im Prototyp. Zurückmelden: Ja oder Nein.</span><span class="rec">Empfehlung: Ja.</span></li>
+    <li><span class="q">Website-Code auf GitHub schieben.</span><span class="r">Am Mac im Website-Ordner: privates Repo auf github.com anlegen (z. B. „marvin-website“), dann <code>git remote add origin …</code> und <code>git push -u origin main</code>. Danach unter <a href="https://claude.ai/connect-github" target="_blank" rel="noopener">claude.ai/connect-github</a> der Claude-App Zugriff geben. Zurückmelden: Repo-Name.</span><span class="rec">Empfehlung: Ja, dann baue ich auf deinem Stand weiter statt daneben.</span></li>
+    <li><span class="q">Obsidian Brain als privates Repo auf GitHub schieben.</span><span class="r">Genauso wie bei Punkt 1, mit dem Vault-Ordner. Alternativ nur die Notizen zur Website als Ordner in Drive legen. Zurückmelden: Repo-Name oder Ordner.</span><span class="rec">Empfehlung: Ja, als eigenes privates Repo.</span></li>
+    <li><span class="q">Erlaubnis nach §34f bestätigen.</span><span class="r">In deinem Fragebogen vom 22.09. steht nur §34d, in der Depotanalyse ist §34f bewusst ausgeblendet, hier hast du beide genannt. Prüf den Eintrag, der gerade im Vermittlerregister entsteht. Zurückmelden: „§34d und §34f“ oder „nur §34d“.</span><span class="rec">Wichtig: Ohne §34f bleiben Depot-Update, Monatsbrief und Depot-Check reine Bildungsangebote. Das ändert, was wir im Kundenbereich zeigen dürfen.</span></li>
     <li><span class="q">Schriften Newsreader und Public Sans für den Start?</span><span class="r">Sieh dir die Website im Prototyp an, Handy und Desktop. Zurückmelden: Ja, oder „lieber lizenzierte Schrift“.</span><span class="rec">Empfehlung: Ja, kostenlos starten.</span></li>
-    <li><span class="q">Euro-Beispiele für die Vergütungsseite liefern.</span><span class="r">Drei Beispiele: was du an einer BU mit 100 € Beitrag, an einer Fondsrente als Nettotarif und an einem ETF-Sparplan verdienst. Die Zahlen müssen stimmen.</span><span class="rec">Empfehlung: Ja. Das ist dein stärkstes Vertrauenssignal.</span></li>
-    <li><span class="q">Fotos: einen halben Tag Shooting einplanen.</span><span class="r">Du in Stade, im Büro, im Gespräch. Bis dahin bleiben Platzhalter. Zurückmelden: Termin oder vorhandene Fotos.</span><span class="rec">Empfehlung: Ja, keine Stockfotos.</span></li>
+    <li><span class="q">Euro-Beispiele für die Vergütungsseite liefern.</span><span class="r">Drei Beispiele, Courtage und Honorar: BU mit 100 € Beitrag, Fondsrente als Nettotarif, ETF-Sparplan. Die Zahlen müssen stimmen.</span><span class="rec">Empfehlung: Ja. Das ersetzt „unabhängig“ als Vertrauenssignal.</span></li>
+    <li><span class="q">Fotos: einen halben Tag Shooting einplanen.</span><span class="r">Du in Stade, im Büro, im Gespräch. Zurückmelden: Termin oder vorhandene Fotos.</span><span class="rec">Empfehlung: Ja, keine Stockfotos.</span></li>
     <li><span class="q">meetergo-Link für das Kennenlerngespräch schicken.</span><span class="r">Den Buchungslink deiner 30-Minuten-Terminart.</span><span class="rec">Empfehlung: Ja.</span></li>
-    <li><span class="q">Darf ich bei EODHD und Twelve Data eine Preisanfrage für die Kurslizenz stellen?</span><span class="r">Ich teste vorher mit den kostenlosen Zugängen, ob deine Fonds abgedeckt sind. Der Anfragetext ist fertig. Zurückmelden: Ja, und schick mir eine Liste der ISINs, die du am häufigsten nutzt.</span><span class="rec">Empfehlung: Ja, aber erst vor Phase D.</span></li>
     <li><span class="q">Registernummer nachreichen, sobald sie da ist.</span><span class="r">Sie kommt in die zentrale Datei für Impressum und Erstinformation.</span><span class="rec">Empfehlung: einfach schicken, wenn da.</span></li>
-    <li><span class="q">Reihenfolge A bis E freigeben.</span><span class="r">Wenn Ja, starte ich direkt mit Phase A, sobald das Repo da ist.</span><span class="rec">Empfehlung: Ja.</span></li>
+    <li><span class="q">Reihenfolge A bis E freigeben.</span><span class="r">Phase A beginnt mit deinem bestehenden Code statt bei null.</span><span class="rec">Empfehlung: Ja.</span></li>
   </ol>
   <p class="src">Bewusst später: blau direkt und Netfonds zu Depotdaten anfragen (Phase D/E), Anwalt und Datenschutzbeauftragter zum Schluss, mit gesammelter Fragenliste.</p>
 </section>
