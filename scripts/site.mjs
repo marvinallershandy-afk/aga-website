@@ -8,7 +8,7 @@
 //
 // Default = aktuelle Netlify-Adresse (wie in index.html/sitemap/robots).
 
-export const DEFAULT_ORIGIN = 'https://sva-agathenburg-dollern.netlify.app'
+export const DEFAULT_ORIGIN = 'https://aga-erste.de'
 export const SITE_ORIGIN = (process.env.SITE_ORIGIN || DEFAULT_ORIGIN).replace(/\/+$/, '')
 
 // Vereins-/Platz-Stammdaten für strukturierte Daten (Fakten, bereits in

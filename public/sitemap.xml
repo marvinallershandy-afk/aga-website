@@ -2,27 +2,27 @@
 <!-- MARVIN: nach Domain-Kauf auf die echte Domain tauschen (siehe index.html) -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://sva-agathenburg-dollern.netlify.app/</loc>
+    <loc>https://aga-erste.de/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://sva-agathenburg-dollern.netlify.app/live</loc>
+    <loc>https://aga-erste.de/live</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://sva-agathenburg-dollern.netlify.app/partner</loc>
+    <loc>https://aga-erste.de/partner</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://sva-agathenburg-dollern.netlify.app/tippen</loc>
+    <loc>https://aga-erste.de/tippen</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://sva-agathenburg-dollern.netlify.app/galerie</loc>
+    <loc>https://aga-erste.de/galerie</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
