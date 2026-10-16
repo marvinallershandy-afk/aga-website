@@ -87,6 +87,14 @@
   to = "/tippen.html"
   status = 200
 
+# Pitch-Seite für den Partner Prematch: statisch unter public/prematch/, nirgends verlinkt,
+# nicht für Suchmaschinen (noindex per Meta + Header unten). /prematch ohne Slash wird hier
+# umgeschrieben, /prematch/ trifft die Datei direkt. Assets nutzen absolute /prematch/…-Pfade.
+[[redirects]]
+  from = "/prematch"
+  to = "/prematch/index.html"
+  status = 200
+
 # v20-T: Teilnahmebedingungen der Tipp-Liga (statisch wie Impressum/Datenschutz)
 [[redirects]]
   from = "/teilnahmebedingungen"
@@ -298,6 +306,12 @@
   from = "/*"
   to = "/404.html"
   status = 404
+
+# Prematch-Pitch (siehe Redirect oben): nicht indexieren.
+[[headers]]
+  for = "/prematch/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
 
 # ── Sicherheits-Header (v19-K, Audit C §5) ────────────────────
 # Auf ALLE Antworten. Setzt KEIN Cache-Control → kein Konflikt mit den

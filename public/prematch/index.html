@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="de">
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="SVA × Prematch">
+<meta property="og:description" content="Warum der SV Agathenburg-Dollern euer Vorzeige-Club wird. 90 Sekunden Video, Zahlen, Fahrplan.">
+<meta property="og:image" content="https://sva-agathenburg-dollern.netlify.app/prematch/img/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://sva-agathenburg-dollern.netlify.app/prematch/">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SVA × Prematch</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Schriften selbst gehostet (kein Google Fonts: DSGVO + CSP der Vereinsseite erlaubt nur 'self') */
+@font-face{font-family:"Anton";src:url(/prematch/fonts/anton-latin-400.woff2) format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"Archivo";src:url(/prematch/fonts/archivo-latin-wght-normal.woff2) format("woff2-variations"),url(/prematch/fonts/archivo-latin-wght-normal.woff2) format("woff2");font-weight:100 900;font-display:swap}
+@font-face{font-family:"JetBrains Mono";src:url(/prematch/fonts/jetbrains-mono-latin-500.woff2) format("woff2");font-weight:500;font-display:swap}
+@font-face{font-family:"JetBrains Mono";src:url(/prematch/fonts/jetbrains-mono-latin-700.woff2) format("woff2");font-weight:700;font-display:swap}
+/* Layout: Ein Abend am Waldsportplatz. Flutlicht-Bühne, Anzeigetafel, Live-Ticker-Band, Sammelkarten. Bewusst ein dunkler Look. */
+:root{
+  --night:#0b0a0a;
+  --turf:#121010;
+  --panel:#181515;
+  --line:#2b2625;
+  --chalk:#f5f2ef;
+  --mute:#ada59f;
+  --red:#e91d29;
+  --red-deep:#a3121a;
+  --gold:#e8c15a;
+  --ok:#4fd18b;
+  --display:"Anton","Impact","Arial Narrow",sans-serif;
+  --body:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --ease:cubic-bezier(.2,.7,.2,1);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{background:var(--night);color:var(--chalk);font-family:var(--body);font-size:17px;line-height:1.6;overflow-x:hidden}
+a{color:inherit}
+img,video{max-width:100%;display:block}
+:focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:6px}
+.wrap{max-width:1200px;margin:0 auto;padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--display);font-weight:400;text-transform:uppercase;letter-spacing:.005em;line-height:.94;margin:0;text-wrap:balance}
+h2{font-size:clamp(2.5rem,6.4vw,4.8rem)}
+h3{font-size:clamp(1.5rem,2.4vw,1.9rem)}
+p{margin:0}
+.eyebrow{font-family:var(--mono);font-size:.74rem;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);display:flex;align-items:center;gap:10px}
+.eyebrow b{color:var(--red);font-weight:700}
+.lead{font-size:clamp(1.05rem,1.55vw,1.22rem);color:#d4cdc7;max-width:60ch}
+section{padding-block:clamp(72px,10vw,128px)}
+.head{display:grid;gap:18px;margin-bottom:clamp(36px,5vw,60px)}
+.red{color:var(--red)}
+
+/* ── Ticker ───────────────────────────── */
+.ticker{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--red);color:#fff;overflow:hidden;border-bottom:1px solid rgba(0,0,0,.3)}
+.ticker-track{display:flex;width:max-content;animation:run 38s linear infinite}
+.ticker span{font-family:var(--mono);font-weight:700;font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;padding:9px 0;white-space:nowrap}
+.ticker span::after{content:"●";margin:0 18px;opacity:.6}
+.ticker .live::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:#fff;margin-right:8px;vertical-align:1px;animation:blink 1.2s infinite}
+@keyframes run{to{transform:translateX(-50%)}}
+@keyframes blink{50%{opacity:.25}}
+
+/* ── Hero ─────────────────────────────── */
+.hero{position:relative;isolation:isolate;overflow:hidden;padding-block:clamp(48px,8vw,104px) clamp(56px,8vw,96px)}
+.hero-media{position:absolute;inset:0;z-index:-2}
+.hero-media img{width:100%;height:100%;object-fit:cover;object-position:55% 30%;transform:scale(1.06);animation:drift 22s ease-in-out infinite alternate}
+@keyframes drift{to{transform:scale(1.12) translate(-1.5%,1%)}}
+.hero-media::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(11,10,10,.97) 0%,rgba(11,10,10,.88) 42%,rgba(11,10,10,.35) 100%),linear-gradient(0deg,var(--night) 2%,transparent 45%)}
+.crest{display:flex;align-items:center;gap:14px;margin-bottom:clamp(26px,5vw,52px)}
+.crest img{width:46px;height:auto;filter:drop-shadow(0 6px 18px rgba(233,29,41,.35))}
+.crest .x{font-family:var(--display);font-size:1.5rem;color:var(--mute)}
+.crest .pm{font-family:var(--display);font-size:1.5rem;letter-spacing:.06em}
+.hero h1{font-size:clamp(3.3rem,10.5vw,8.4rem);max-width:12ch}
+.hero h1 span{display:block;animation:rise .8s var(--ease) backwards}
+.hero h1 span:nth-child(2){animation-delay:.08s}
+.hero h1 span:nth-child(3){animation-delay:.16s}
+@keyframes rise{from{opacity:0;transform:translateY(22px)}}
+.hero .lead{margin-top:26px}
+.hero .lead strong{color:var(--chalk)}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:34px}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:14px 22px;border-radius:999px;font-weight:700;font-size:.97rem;text-decoration:none;transition:transform .25s var(--ease),background .25s,border-color .25s}
+.btn-red{background:var(--red);color:#fff;box-shadow:0 10px 30px -10px rgba(233,29,41,.7)}
+.btn-red:hover{background:var(--red-deep);transform:translateY(-2px)}
+.btn-line{border:1px solid rgba(245,242,239,.35)}
+.btn-line:hover{border-color:var(--chalk);transform:translateY(-2px)}
+.scorebug{margin-top:clamp(36px,6vw,64px);display:inline-grid;grid-template-columns:auto auto auto;align-items:stretch;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:rgba(20,17,17,.88);backdrop-filter:blur(6px);max-width:100%}
+.scorebug div{padding:12px 18px;display:grid;gap:2px;align-content:center;min-width:0}
+.scorebug .t{font-family:var(--mono);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+.scorebug .v{font-family:var(--display);font-size:1.45rem;line-height:1}
+.scorebug .mid{background:var(--red);color:#fff;text-align:center}
+.scorebug .mid .t{color:rgba(255,255,255,.8)}
+
+/* ── Video ────────────────────────────── */
+.film{position:relative;border-radius:20px;overflow:hidden;border:1px solid var(--line);background:#000;aspect-ratio:16/9;max-width:100%;box-shadow:0 40px 90px -40px rgba(233,29,41,.35)}
+.film video{width:100%;height:100%;object-fit:contain;background:#000}
+.film .ph{position:absolute;inset:0;display:grid;place-items:center;text-align:center;background:linear-gradient(rgba(11,10,10,.62),rgba(11,10,10,.9)),url(/prematch/img/welt.webp) center/cover}
+.ph .play{width:86px;height:86px;border-radius:50%;background:var(--red);display:grid;place-items:center;margin:0 auto 18px;box-shadow:0 0 0 12px rgba(233,29,41,.18);animation:pulse 2.4s infinite}
+.ph .play::after{content:"";border-left:24px solid #fff;border-top:15px solid transparent;border-bottom:15px solid transparent;margin-left:6px}
+@keyframes pulse{50%{box-shadow:0 0 0 22px rgba(233,29,41,.06)}}
+.ph p{font-family:var(--display);font-size:clamp(1.4rem,3vw,2.2rem);text-transform:uppercase}
+.ph small{display:block;color:var(--mute);margin-top:6px}
+
+.film .go{all:unset;position:absolute;inset:0;cursor:pointer;display:flex;align-items:flex-end;justify-content:flex-start;gap:16px;padding:clamp(16px,3vw,32px);background:linear-gradient(0deg,rgba(11,10,10,.7),transparent 45%);transition:opacity .35s}
+.film .go .play{width:clamp(56px,7vw,78px);height:clamp(56px,7vw,78px);border-radius:50%;background:var(--red);display:grid;place-items:center;box-shadow:0 0 0 10px rgba(233,29,41,.18);animation:pulse 2.4s infinite;transition:transform .3s var(--ease)}
+.film .go .play::after{content:"";border-left:20px solid #fff;border-top:12px solid transparent;border-bottom:12px solid transparent;margin-left:5px}
+.film .go:hover .play{transform:scale(1.08)}
+.film .go-t{font-family:var(--display);font-size:clamp(1.3rem,2.6vw,2rem);text-transform:uppercase;line-height:1;display:grid;gap:6px}
+.film .go-t small{font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;color:var(--mute)}
+.film.playing .go{opacity:0;pointer-events:none}
+.alt{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin:18px 0 0}
+.alt .btn{cursor:pointer;background:none;color:var(--chalk);font-family:inherit}
+.alt-n{color:var(--mute);font-size:.9rem}
+.chapters[hidden]{display:none}
+.chapters{list-style:none;margin:18px 0 0;padding:0;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;padding-bottom:4px}
+.chapters::-webkit-scrollbar{display:none}
+.chapters li{flex:0 0 auto;scroll-snap-align:start}
+.chapters button{all:unset;cursor:pointer;display:grid;gap:2px;padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:var(--panel);font-family:var(--mono);font-size:.7rem;font-weight:700;letter-spacing:.06em;color:var(--red);transition:border-color .25s,background .25s,transform .25s var(--ease)}
+.chapters button span{font-family:var(--body);font-size:.88rem;font-weight:600;letter-spacing:0;color:var(--chalk);white-space:nowrap}
+.chapters button:hover{border-color:rgba(233,29,41,.6);transform:translateY(-2px)}
+.chapters button.on{background:var(--red);border-color:var(--red);color:rgba(255,255,255,.85)}
+.chapters button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.rv{opacity:0;transform:translateY(28px);transition:opacity .9s var(--ease),transform .9s var(--ease)}
+.rv.in{opacity:1;transform:none}
+
+/* ── Angebot ──────────────────────────── */
+.offers{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
+.offer{display:grid;grid-template-columns:.8fr 1.2fr;border-radius:20px;overflow:hidden;border:1px solid var(--line);background:var(--panel);transition:border-color .35s,transform .35s var(--ease);min-width:0}
+.offer:hover{border-color:rgba(233,29,41,.55);transform:translateY(-4px)}
+.offer .shot{min-height:100%;background:#0d0b0b}
+.offer:hover .shot img{transform:scale(1.06)}
+.offer:hover .shot::after{transform:translateX(120%)}
+.offer .txt{padding:clamp(22px,2.6vw,32px);display:grid;gap:12px;align-content:start;min-width:0}
+.offer .tag{font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+.offer h3{font-size:clamp(1.45rem,2.2vw,1.8rem)}
+.offer p{color:#cfc8c2;font-size:.96rem}
+.meter{display:grid;gap:8px;margin-top:4px}
+.meter .bar{position:relative;height:10px;border-radius:999px;background:#2a2423;overflow:hidden}
+.meter .bar span{position:absolute;left:0;top:0;bottom:0;border-radius:999px;width:0;transition:width 1.4s var(--ease)}
+.meter .a{background:rgba(233,29,41,.45)}.meter .v{background:var(--red);z-index:1}
+.offer.in .meter .bar span,.no-rv .meter .bar span{width:var(--w)}
+.meter .leg{display:flex;flex-wrap:wrap;gap:6px 14px;font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;color:var(--mute)}
+.meter .leg b{color:var(--chalk);font-size:.85rem}
+.meter .leg .goal{margin-left:auto;color:var(--gold)}.meter .leg .goal b{color:var(--gold)}
+/* ── Zahlen & Galerie ─────────────────── */
+.hero-num{display:grid;grid-template-columns:auto 1fr;gap:clamp(16px,3vw,36px);align-items:center;padding:clamp(26px,4vw,44px) clamp(20px,3vw,40px);border-bottom:1px solid var(--line)}
+.hero-num .num{font-family:var(--display);font-size:clamp(3.4rem,10vw,7.4rem);line-height:.9;font-variant-numeric:tabular-nums}
+.hero-num .lab{color:#d4cdc7;font-size:clamp(1rem,1.6vw,1.2rem);max-width:30ch}
+.hero-num .lab b{color:var(--chalk)}
+.gallery{margin-top:clamp(28px,4vw,44px);display:grid;grid-template-columns:2fr 1fr 1fr;grid-template-rows:repeat(2,minmax(0,clamp(170px,22vw,290px)));gap:14px}
+.gallery figure{position:relative;margin:0;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:#000}
+.gallery img{width:100%;height:100%;object-fit:cover;transition:transform 1s var(--ease),filter .6s}
+.gallery figure:hover img{transform:scale(1.05)}
+.gallery figcaption{position:absolute;left:12px;bottom:12px;font-family:var(--mono);font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;background:rgba(11,10,10,.78);backdrop-filter:blur(6px);padding:7px 11px;border-radius:999px;transform:translateY(6px);opacity:.9;transition:transform .35s var(--ease),opacity .35s,background .35s}
+.gallery figure:hover figcaption{transform:none;opacity:1;background:var(--red)}
+.g1{grid-row:1/3}.g2{grid-row:1/3}.g3 img{object-position:50% 30%}.g2 img{object-position:50% 25%}
+.g3{grid-column:3}.g4{grid-column:3}
+.g4 img{object-position:60% 60%}
+.links{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
+.links a{display:inline-flex;gap:8px;align-items:center;padding:11px 16px;border-radius:999px;border:1px solid var(--line);background:rgba(24,21,21,.85);text-decoration:none;font-weight:600;font-size:.92rem;transition:border-color .25s,transform .25s var(--ease)}
+.links a i{font-style:normal;color:var(--red)}
+.links a:hover{border-color:var(--red);transform:translateY(-2px)}
+
+/* ── Baustellen ───────────────────────── */
+.quote{border-left:3px solid var(--red);padding:6px 0 6px 18px;color:#d4cdc7;max-width:62ch}
+.quote em{font-style:normal;color:var(--chalk);font-weight:600}
+.issues{display:grid;gap:clamp(18px,2.4vw,28px)}
+.issue{display:grid;grid-template-columns:1.05fr 1fr;gap:0;border-radius:20px;overflow:hidden;border:1px solid var(--line);background:var(--panel);transition:border-color .35s,transform .35s var(--ease)}
+.issue:hover{border-color:rgba(233,29,41,.55);transform:translateY(-4px)}
+.issue:nth-child(even){grid-template-columns:1fr 1.05fr}
+.issue:nth-child(even) .shot{order:2}
+.shot{position:relative;overflow:hidden;min-height:260px;background:#000}
+.shot img,.shot video{width:100%;height:100%;object-fit:cover;transition:transform .9s var(--ease)}
+.issue:hover .shot img{transform:scale(1.05)}
+.shot::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.14) 48%,rgba(232,193,90,.12) 52%,transparent 65%);transform:translateX(-120%);transition:transform 1.1s var(--ease);pointer-events:none}
+.issue:hover .shot::after{transform:translateX(120%)}
+.issue .txt{padding:clamp(24px,3.4vw,44px);display:grid;gap:16px;align-content:center;min-width:0}
+.pain{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+.pain .n{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;border:1px solid var(--red);color:var(--red);font-weight:700}
+.issue h3 .strike{color:var(--mute);text-decoration:line-through;text-decoration-color:var(--red);text-decoration-thickness:3px}
+.issue p{color:#cfc8c2}
+.facts{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.fact{font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;padding:6px 11px;border-radius:999px;background:rgba(233,29,41,.12);border:1px solid rgba(233,29,41,.32);color:#ffd9db}
+
+/* ── Partner-Club-Check ───────────────── */
+.check{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.crit{position:relative;padding:28px 24px 26px;border-radius:18px;border:1px solid var(--line);background:linear-gradient(180deg,#1b1717,#141111);display:grid;gap:14px;align-content:start;min-width:0;overflow:hidden}
+.crit .src{font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+.crit h3{font-size:1.5rem}
+.crit p{color:#cfc8c2;font-size:.96rem}
+.chip{justify-self:start;display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:7px 12px;border-radius:999px}
+.chip.ok{background:rgba(79,209,139,.12);color:var(--ok);border:1px solid rgba(79,209,139,.35)}
+.chip.go{background:rgba(232,193,90,.12);color:var(--gold);border:1px solid rgba(232,193,90,.35)}
+.crit .big{font-family:var(--display);font-size:3.2rem;line-height:1;color:var(--chalk)}
+.crit .big small{font-family:var(--body);font-size:.9rem;color:var(--mute);margin-left:6px}
+
+/* ── Anzeigetafel ─────────────────────── */
+.board{border-radius:22px;overflow:hidden;border:1px solid var(--line);background:#0f0d0d;box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
+.board-top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 22px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+.board-top .on{color:var(--red)}
+.vs{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:clamp(12px,3vw,40px);padding:clamp(28px,4vw,48px) clamp(20px,3vw,40px);border-bottom:1px solid var(--line)}
+.vs .side{display:grid;gap:8px;min-width:0}
+.vs .side.r{text-align:right}
+.vs .lab{font-family:var(--mono);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
+.vs .num{font-family:var(--display);font-size:clamp(2.4rem,8vw,6.2rem);line-height:.9;font-variant-numeric:tabular-nums}
+.vs .num.dim{color:#5d5552}
+.vs .x{font-family:var(--display);font-size:clamp(1.4rem,3vw,2.2rem);color:var(--red)}
+.cells{display:grid;grid-template-columns:repeat(4,1fr)}
+.cell{padding:24px 22px;border-right:1px solid var(--line);display:grid;gap:6px;align-content:start;min-width:0}
+.cell:last-child{border-right:0}
+.cell .num{font-family:var(--display);font-size:clamp(2rem,3.6vw,2.9rem);line-height:1;font-variant-numeric:tabular-nums}
+.cell .lab{font-weight:600;font-size:.95rem}
+.cell .sub{color:var(--mute);font-size:.86rem}
+.source{margin-top:14px;font-family:var(--mono);font-size:.7rem;color:var(--mute);letter-spacing:.04em}
+
+/* ── Obendrauf ────────────────────────── */
+.extra{display:grid;grid-template-columns:1.15fr 1fr;gap:20px;align-items:stretch}
+.stack{display:grid;gap:20px}
+.tile{position:relative;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:var(--panel);display:grid;grid-template-rows:auto 1fr;transition:transform .35s var(--ease),border-color .35s}
+.tile:hover{transform:translateY(-4px);border-color:rgba(232,193,90,.5)}
+.tile .shot{min-height:0;aspect-ratio:16/9}
+.tile .shot.tall{aspect-ratio:auto;height:100%}
+.tile .txt{padding:22px 22px 24px;display:grid;gap:10px;align-content:start;min-width:0}
+.tile .tag{font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+.tile p{color:#cfc8c2;font-size:.96rem}
+.feature{grid-template-rows:auto 1fr;background:radial-gradient(120% 90% at 20% 50%,rgba(232,193,90,.14),transparent 60%),var(--panel)}
+.feature .shot{background:transparent;display:grid;place-items:center;padding:28px 24px 0;min-height:0}
+.feature .shot video{width:auto;max-width:100%;height:auto;max-height:430px;object-fit:contain;border-radius:14px}
+.feature .txt{align-content:start;padding:24px 28px 30px}
+
+/* ── Fahrplan ─────────────────────────── */
+.road{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;position:relative}
+.stop{padding:26px 24px;border-radius:18px;border:1px solid var(--line);background:var(--panel);display:grid;gap:12px;align-content:start;min-width:0;position:relative}
+.stop .when{font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--red);font-weight:700}
+.stop .n{font-family:var(--display);font-size:3.6rem;line-height:1;color:transparent;-webkit-text-stroke:1.5px var(--red)}
+.stop p{color:#cfc8c2;font-size:.96rem}
+.stop ul{margin:0;padding-left:18px;color:#cfc8c2;font-size:.95rem;display:grid;gap:6px}
+
+/* ── Demos ────────────────────────────── */
+.demos{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.demo{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;padding:16px 18px;border-radius:16px;border:1px solid var(--line);background:var(--panel);text-decoration:none;transition:border-color .25s,transform .25s var(--ease);min-width:0}
+.demo:hover{border-color:var(--red);transform:translateX(4px)}
+.demo img{width:88px;height:56px;object-fit:cover;border-radius:8px}
+.demo b{display:block;font-size:1.02rem}
+.demo small{font-family:var(--mono);font-size:.7rem;color:var(--mute);overflow-wrap:anywhere}
+.demo i{font-style:normal;font-family:var(--display);font-size:1.6rem;color:var(--red)}
+
+/* ── Abschluss ────────────────────────── */
+.closer{position:relative;isolation:isolate;overflow:hidden;border-top:1px solid var(--line)}
+.closer::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(rgba(11,10,10,.86),rgba(11,10,10,.97)),url(/prematch/img/kurve.webp) center 30%/cover}
+.closer-grid{display:grid;grid-template-columns:1.25fr 1fr;gap:40px;align-items:end}
+.closer h2{font-size:clamp(2.8rem,7.4vw,5.8rem)}
+.person{padding:26px;border-radius:18px;background:rgba(24,21,21,.9);border:1px solid var(--line);display:grid;gap:6px;min-width:0}
+.person .name{font-family:var(--display);font-size:1.9rem;text-transform:uppercase}
+.person .role{color:var(--mute)}
+.person .hi{margin-top:10px;color:#d4cdc7;font-size:.95rem}
+footer{padding-block:24px;border-top:1px solid var(--line);font-family:var(--mono);font-size:.7rem;color:var(--mute)}
+footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px}
+
+@media (max-width:920px){
+  .offers{grid-template-columns:1fr}
+  .gallery{grid-template-columns:1fr 1fr;grid-template-rows:none;grid-auto-rows:clamp(160px,42vw,260px)}
+  .g1{grid-column:1/-1;grid-row:auto}.g2{grid-row:span 2;grid-column:1}.g3,.g4{grid-column:2}
+  .issue,.issue:nth-child(even){grid-template-columns:1fr}
+  .issue:nth-child(even) .shot{order:0}
+  .shot{min-height:0;aspect-ratio:16/9}
+  .check,.road{grid-template-columns:1fr}
+  .cells{grid-template-columns:1fr 1fr}
+  .cell:nth-child(2){border-right:0}
+  .cell:nth-child(-n+2){border-bottom:1px solid var(--line)}
+  .extra,.feature,.closer-grid{grid-template-columns:1fr}
+  .feature .shot{padding:22px 22px 0;min-height:0}
+  .tile .shot.tall{aspect-ratio:16/9;height:auto}
+}
+@media (max-width:620px){
+  .offer{grid-template-columns:1fr}
+  .offer .shot{aspect-ratio:16/10;min-height:0}
+  .hero-num{grid-template-columns:1fr}
+  body{font-size:16px}
+  .demos{grid-template-columns:1fr}
+  .vs{grid-template-columns:1fr;text-align:left}
+  .vs .side.r{text-align:left}
+  .vs .x{justify-self:start}
+  .scorebug{grid-template-columns:1fr 1fr}
+  .scorebug .mid{grid-column:1/-1;order:-1}
+  .demo img{width:64px;height:44px}
+  .film .go{justify-content:flex-end;align-items:flex-end;background:none;padding:12px}
+  .film .go .play{width:48px;height:48px;box-shadow:0 0 0 6px rgba(233,29,41,.2)}
+  .film .go .play::after{border-left-width:15px;border-top-width:9px;border-bottom-width:9px;margin-left:4px}
+  .film .go-t{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  html{scroll-behavior:auto}
+}
+</style>
+
+<div class="ticker" aria-hidden="true">
+  <div class="ticker-track">
+    <span class="live">Live vom Waldsportplatz</span><span>102.361 Instagram-Aufrufe im Juli</span><span>Meister 1. Kreisklasse 2026</span><span>4 Teams im Verein</span><span>69,4 % Nicht-Follower erreicht</span><span>Tipp-Liga · Sammelalbum · Check-in am Platz</span>
+    <span class="live">Live vom Waldsportplatz</span><span>102.361 Instagram-Aufrufe im Juli</span><span>Meister 1. Kreisklasse 2026</span><span>4 Teams im Verein</span><span>69,4 % Nicht-Follower erreicht</span><span>Tipp-Liga · Sammelalbum · Check-in am Platz</span>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="hero-media"><img src="/prematch/img/p_jubel.webp" alt="Torjubel vor der Fankurve am Waldsportplatz"></div>
+  <div class="wrap">
+    <div class="crest"><img src="/prematch/img/wappen.webp" alt="Wappen SV Agathenburg-Dollern" width="46" height="54"><span class="x">×</span><span class="pm">PREMATCH</span></div>
+    <h1><span>Euer nächster</span><span class="red">Vorzeige-Club</span><span>kommt aus Stade.</span></h1>
+    <p class="lead">SV Agathenburg-Dollern, Kreisliga Stade. Vier Teams, <strong>102.361 Instagram-Aufrufe in einem Monat</strong> und eine eigene Fanwelt, die diese Saison gestartet ist. Wir wollen der Partner Club sein, an dem ihr zeigt, wie das Programm wirkt.</p>
+    <div class="cta">
+      <a class="btn btn-red" href="#rundgang">Video ansehen · 1:32</a>
+      <a class="btn btn-line" href="#angebot">Was ihr bekommt</a>
+    </div>
+    <div class="scorebug" aria-label="Eckdaten">
+      <div><span class="t">Heim</span><span class="v">SVA</span></div>
+      <div class="mid"><span class="t">Partner Club</span><span class="v">Saison 26/27</span></div>
+      <div><span class="t">Gast</span><span class="v">Prematch</span></div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section id="rundgang" style="padding-top:clamp(40px,6vw,72px)">
+    <div class="wrap">
+      <div class="head">
+        <p class="eyebrow"><b>01</b> In 90 Sekunden · mit Ton</p>
+        <h2>Kurz gezeigt,<br><span class="red">warum wir das können</span></h2>
+        <p class="lead">Fanwelt, Reichweite, Sammelalbum, Check-in am Platz, Tipp-Liga und was davon für euch drin ist. Wer mehr sehen will: Der komplette Rundgang mit Kapiteln steht direkt darunter.</p>
+      </div>
+      <div class="film" id="film">
+        <video id="rv" src="/prematch/prematch90.mp4" poster="/prematch/img/poster90.webp" playsinline preload="metadata"></video>
+        <button class="go" id="go" aria-label="Video abspielen"><span class="play" aria-hidden="true"></span><span class="go-t">Abspielen<small id="go-s">1:32 · Ton an</small></span></button>
+      </div>
+      <div class="alt"><button class="btn btn-line" id="lang" type="button"><span id="lang-t">Kompletter Rundgang · 4:50</span></button><span class="alt-n" id="alt-n">Mit Kapiteln, vom 3D-Platz bis zum Sammelalbum.</span></div>
+      <ol class="chapters" id="chapters" hidden>
+        <li><button data-t="5">0:05<span>Die Vereinswelt</span></button></li>
+        <li><button data-t="34.5">0:34<span>Die Mannschaft</span></button></li>
+        <li><button data-t="42.8">0:42<span>Drei Ziele</span></button></li>
+        <li><button data-t="59.3">0:59<span>Nachwuchs</span></button></li>
+        <li><button data-t="72.4">1:12<span>Partner &amp; Bande</span></button></li>
+        <li><button data-t="93.1">1:33<span>Die Kurve</span></button></li>
+        <li><button data-t="101.2">1:41<span>Spieltag &amp; Check-in</span></button></li>
+        <li><button data-t="127.0">2:07<span>Tipp-Liga</span></button></li>
+        <li><button data-t="166.4">2:46<span>Partner-Aktion</span></button></li>
+        <li><button data-t="185.6">3:05<span>Sammelalbum</span></button></li>
+        <li><button data-t="238.3">3:58<span>Warum das alles</span></button></li>
+        <li><button data-t="276.9">4:36<span>Was das für euch heißt</span></button></li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="angebot" style="padding-top:0">
+    <div class="wrap">
+      <div class="head">
+        <p class="eyebrow"><b>02</b> Was ihr von uns bekommt</p>
+        <h2>Vier Dinge,<br><span class="red">die euch helfen</span></h2>
+        <p class="lead">Stand heute: 11 Spieler bei Prematch angemeldet, 6 verifiziert. Im Call habt ihr gesagt, was ein perfekter Partner Club mitbringt: Kontakt in drei Teams, zehn aktive Spieler pro Team, Aktionen mitmachen, Grafiken posten. Das hier legen wir obendrauf.</p>
+      </div>
+      <div class="offers">
+        <article class="offer">
+          <div class="shot"><img src="/prematch/img/gold.webp" alt="Limitierte Sammelkarte eines Spielers" loading="lazy" style="object-position:50% 22%"></div>
+          <div class="txt">
+            <span class="tag">Euer Ziel: aktive App-Nutzer</span>
+            <h3>Spieler in eure App</h3>
+            <p>Unser Hebel: Wer sein Prematch-Profil anlegt, bekommt ein Bonus-Pack im Sammelalbum. Der Check-in am Platz erinnert jedes Heimspiel daran.</p>
+            <div class="meter" aria-label="Stand heute 11 Spieler angemeldet, 6 verifiziert, Ziel 40">
+              <div class="bar"><span class="v" style="--w:15%"></span><span class="a" style="--w:27.5%"></span></div>
+              <div class="leg"><span><b>6</b> verifiziert</span><span><b>11</b> angemeldet</span><span class="goal"><b>40</b> Ziel in 4 Wochen</span></div>
+            </div>
+          </div>
+        </article>
+        <article class="offer">
+          <div class="shot"><img src="/prematch/img/partnerkarte.webp" alt="Partnerkarte eines Sponsors im Sammelalbum" loading="lazy"></div>
+          <div class="txt">
+            <span class="tag">Eure Markenpartner</span>
+            <h3>Aktionen, die schon laufen</h3>
+            <p>Alle zwei Wochen verlosen wir zum Spieler des Spiels einen Frühstücksgutschein vom Altstadtcafé Stade. Abgestimmt wird auf Instagram. Dasselbe Format funktioniert mit Lieferando, Krombacher oder adidas.</p>
+            <span class="chip ok">✓ Läuft seit dieser Saison</span>
+          </div>
+        </article>
+        <article class="offer">
+          <div class="shot"><img src="/prematch/img/p_bank.webp" alt="Bank und Spieler jubeln nach einem Tor" loading="lazy"></div>
+          <div class="txt">
+            <span class="tag">Content &amp; Media Day</span>
+            <h3>Echte Bilder für eure Kanäle</h3>
+            <p>Unsere Vereinsfotografin ist am Platz, dazu vier feste Instagram-Formate pro Woche. Unsere Bilder und Clips dürft ihr für eure Kanäle nutzen: echter Kreisliga-Fußball statt Stockfoto. Und euer nächster Media Day ist bei uns willkommen.</p>
+            <span class="chip ok">✓ Jede Woche</span>
+          </div>
+        </article>
+        <article class="offer">
+          <div class="shot"><img src="/prematch/img/bande.webp" alt="Sponsorenlogo auf der 3D-Bande" loading="lazy"></div>
+          <div class="txt">
+            <span class="tag">Modul 3 · Sponsoring</span>
+            <h3>Testclub für euer Modul</h3>
+            <p>Partnerseite mit Live-Bande, Mediakit und Monatsreport setzen wir für unsere Sponsoren schon ein. Wenn ihr euer Sponsoring-Modul testet, bringen wir die Vorlagen und echte Partner mit.</p>
+            <span class="chip go">● Gern als Erste</span>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="zahlen" style="padding-top:0">
+    <div class="wrap">
+      <div class="head">
+        <p class="eyebrow"><b>03</b> Sonntags am Waldsportplatz</p>
+        <h2>Reichweite<br><span class="red">ohne Werbebudget</span></h2>
+      </div>
+      <div class="board">
+        <div class="board-top"><span><span class="on">●</span> Instagram @svagathenburg · Juli 2026</span><span>komplett organisch</span></div>
+        <div class="hero-num">
+          <span class="num red" data-count="102361">102.361</span>
+          <span class="lab">Aufrufe in einem Monat, davon <b>69,4 %</b> bei Menschen, die uns noch nicht folgen</span>
+        </div>
+        <div class="cells">
+          <div class="cell"><span class="num" data-count="15617">15.617</span><span class="lab">erreichte Menschen</span><span class="sub">doppelt so viele wie im Juni</span></div>
+          <div class="cell"><span class="num" data-count="18.6" data-dec="1" data-suf=" %">18,6 %</span><span class="lab">Interaktionsrate</span><span class="sub">2.900 Interaktionen</span></div>
+          <div class="cell"><span class="num" data-count="58.9" data-dec="1" data-suf=" %">58,9 %</span><span class="lab">18 bis 34 Jahre</span><span class="sub">genau eure Zielgruppe</span></div>
+          <div class="cell"><span class="num" data-count="4">4</span><span class="lab">Formate pro Woche</span><span class="sub">Steckbrief, Frage, Meme, Highlights</span></div>
+        </div>
+      </div>
+      <p class="source">Quelle: Instagram-Insights @svagathenburg, 8. bis 30. Juli 2026.</p>
+      <div class="gallery">
+        <figure class="g1"><img src="/prematch/img/p_jubel.webp" alt="Torjubel vor der Fankurve" loading="lazy"><figcaption>Heimspiel am Waldsportplatz</figcaption></figure>
+        <figure class="g2"><img src="/prematch/img/p_meister1.webp" alt="Spieler im Meister-Shirt 2026" loading="lazy"><figcaption>Meister 1. Kreisklasse 2026</figcaption></figure>
+        <figure class="g3"><img src="/prematch/img/p_meister2.webp" alt="Spieler zeigt stolz das Meister-Shirt" loading="lazy"><figcaption>Aufstieg in die Kreisliga</figcaption></figure>
+        <figure class="g4"><img src="/prematch/img/p_chill.webp" alt="Zwei Spieler entspannen auf dem Rasen" loading="lazy"><figcaption>Vor dem Training</figcaption></figure>
+      </div>
+      <p class="source">Fotos: picture by nele</p>
+    </div>
+  </section>
+
+  <section id="fahrplan" style="padding-top:0">
+    <div class="wrap">
+      <div class="head">
+        <p class="eyebrow"><b>04</b> Unser Vorschlag</p>
+        <h2>Vier Wochen.<br><span class="red">Dann echte Zahlen.</span></h2>
+        <p class="lead">Die Fanwelt ist diese Saison gestartet. Wie gut Album, Tipp-Liga und Check-in angenommen werden, messen wir gerade. Deshalb versprechen wir keine Zahlen, sondern liefern sie nach vier Wochen.</p>
+      </div>
+      <div class="road">
+        <div class="stop"><span class="when">Diese Woche</span><span class="n">1</span><h3>Offiziell starten</h3><ul><li>Start-To-dos erledigt</li><li>Partnerschafts-Post auf @svagathenburg</li><li>Alle vier Teams in eurer Gruppe</li></ul></div>
+        <div class="stop"><span class="when">Woche 1 bis 4</span><span class="n">2</span><h3>Spieler in die App</h3><ul><li>Bonus-Pack für jedes Prematch-Profil</li><li>Erinnerung bei jedem Check-in am Platz</li><li>Eine Aktion mit einem eurer Markenpartner</li></ul></div>
+        <div class="stop"><span class="when">Nach 4 Wochen</span><span class="n">3</span><h3>Bilanz und nächster Schritt</h3><ul><li>Report: von 11 auf 40 Profile, Check-ins, Tipps</li><li>Media Day bei uns am Waldsportplatz</li><li>Modul 3 gemeinsam testen</li></ul></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="closer" id="kontakt">
+    <div class="wrap closer-grid">
+      <div>
+        <p class="eyebrow" style="margin-bottom:18px"><b>05</b> Anstoß</p>
+        <h2>Wir haben Bock.<br><span class="red">Ihr auch?</span></h2>
+        <p class="lead" style="margin-top:20px">20 Minuten, und wir zeigen euch die Fanwelt live. Oder klickt euch selbst durch, alles läuft mit Beispieldaten.</p>
+        <div class="links">
+          <a href="https://sva-agathenburg-dollern.netlify.app" target="_blank" rel="noopener">3D-Vereinswelt <i>↗</i></a>
+          <a href="https://sva-agathenburg-dollern.netlify.app/tippen?vorfuehrung=1" target="_blank" rel="noopener">Tipp-Liga live <i>↗</i></a>
+          <a href="https://sva-agathenburg-dollern.netlify.app/album?vorfuehrung=1" target="_blank" rel="noopener">Sammelalbum <i>↗</i></a>
+          <a href="https://sva-agathenburg-dollern.netlify.app/partner" target="_blank" rel="noopener">Partnerseite <i>↗</i></a>
+        </div>
+      </div>
+      <div class="person">
+        <span class="name">Marvin Allers</span>
+        <span class="role">Social Media &amp; Digital · SV Agathenburg-Dollern</span>
+        <span class="role">Instagram @svagathenburg</span>
+        <a class="btn btn-red" style="margin-top:16px;justify-self:start" href="https://wa.me/4915566393033" target="_blank" rel="noopener">Per WhatsApp schreiben</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer><div class="wrap"><span>SV Agathenburg-Dollern von 1949 e.V.</span><span>Stand Oktober 2026</span></div></footer>
+
+<script>
+(()=>{
+  const v=document.getElementById('rv'),bs=[...document.querySelectorAll('#chapters button')];
+  const f=document.getElementById('film'),go=document.getElementById('go');
+  const start=()=>{f.classList.add('playing');v.controls=true;try{const p=v.play();p&&p.catch(()=>{})}catch(e){}};
+  go.addEventListener('click',start);
+  // 90-Sekunden-Fassung vorne, kompletter Rundgang (4:50) mit Kapiteln auf Knopfdruck
+  const FASS={kurz:{src:'/prematch/prematch90.mp4',poster:'/prematch/img/poster90.webp',go:'1:32 · Ton an',btn:'Kompletter Rundgang · 4:50',n:'Mit Kapiteln, vom 3D-Platz bis zum Sammelalbum.'},
+              lang:{src:'/prematch/rundgang.mp4',poster:'/prematch/img/poster.webp',go:'4:50 · Ton an',btn:'Zurück zur 90-Sekunden-Fassung',n:'Springt direkt in das Kapitel, das euch interessiert.'}};
+  const ch=document.getElementById('chapters'),lb=document.getElementById('lang');
+  let mode='kurz';
+  const setMode=(m,t)=>{if(m!==mode){mode=m;const c=FASS[m];v.pause();v.src=c.src;v.poster=c.poster;
+      document.getElementById('go-s').textContent=c.go;document.getElementById('lang-t').textContent=c.btn;document.getElementById('alt-n').textContent=c.n;ch.hidden=m!=='lang';}
+    if(t!=null){const seek=()=>{try{v.currentTime=t}catch(e){}};v.readyState>=1?seek():v.addEventListener('loadedmetadata',seek,{once:true})}};
+  lb.addEventListener('click',()=>{setMode(mode==='kurz'?'lang':'kurz',0);start();f.scrollIntoView({behavior:'smooth',block:'center'})});
+  bs.forEach(b=>b.addEventListener('click',()=>{setMode('lang',+b.dataset.t);start();f.scrollIntoView({behavior:'smooth',block:'center'})}));
+  const mark=()=>{let k=-1;if(mode==='lang')bs.forEach((b,i)=>{if(v.currentTime>=+b.dataset.t-.2)k=i});bs.forEach((b,i)=>b.classList.toggle('on',i===k&&v.currentTime>0));};
+  v&&v.addEventListener('timeupdate',mark);
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const els=document.querySelectorAll('.head,.offer,.board,.stop,.person,.chapters,.film,.gallery figure,.links');
+  if(reduce||!('IntersectionObserver' in window))document.body.classList.add('no-rv');
+  if(!reduce&&'IntersectionObserver' in window){
+    els.forEach(e=>e.classList.add('rv'));
+    const io=new IntersectionObserver(es=>es.forEach(en=>{if(en.isIntersecting){const s=[...en.target.parentElement.children].indexOf(en.target);en.target.style.transitionDelay=Math.min(s,4)*70+'ms';en.target.classList.add('in');io.unobserve(en.target)}}),{rootMargin:'0px 0px -8% 0px'});
+    els.forEach(e=>io.observe(e));
+  }
+  const fmt=(n,d)=>n.toLocaleString('de-DE',{minimumFractionDigits:d,maximumFractionDigits:d});
+  document.querySelectorAll('[data-count]').forEach(el=>{
+    const to=parseFloat(el.dataset.count),d=+(el.dataset.dec||0),pre=el.dataset.pre||'',suf=el.dataset.suf||'';
+    if(reduce||!('IntersectionObserver' in window))return;
+    el.textContent=pre+fmt(0,d)+suf;
+    const io=new IntersectionObserver(es=>{if(!es[0].isIntersecting)return;io.disconnect();const t0=performance.now();
+      const step=t=>{const p=Math.min(1,(t-t0)/1600),e=1-Math.pow(1-p,4);el.textContent=pre+fmt(to*e,d)+suf;if(p<1)requestAnimationFrame(step)};requestAnimationFrame(step)},{threshold:.4});
+    io.observe(el);
+  });
+})();
+</script>
