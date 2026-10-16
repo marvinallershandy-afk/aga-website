@@ -4,7 +4,7 @@
 <meta name="robots" content="noindex, nofollow">
 <meta property="og:type" content="website">
 <meta property="og:title" content="SVA × Prematch">
-<meta property="og:description" content="Warum der SV Agathenburg-Dollern euer Vorzeige-Club wird. 90 Sekunden Video, Zahlen, Fahrplan.">
+<meta property="og:description" content="49 Spieler in eurer App, vier Teams, ein Ziel: 10 aktive pro Team. Dazu Reichweite für eure Marken.">
 <meta property="og:image" content="https://sva-agathenburg-dollern.netlify.app/prematch/img/og.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -295,12 +295,44 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px}
   *,*::before,*::after{animation:none!important;transition:none!important}
   html{scroll-behavior:auto}
 }
+/* ── Stand pro Team ───────────────────── */
+.teams{border-radius:22px;border:1px solid var(--line);background:#0f0d0d;overflow:hidden}
+.teams-top{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 22px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+.teams-top .k{display:inline-flex;align-items:center;gap:8px}
+.teams-top .k i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.team{display:grid;grid-template-columns:minmax(110px,1fr) 3fr minmax(150px,1.2fr);align-items:center;gap:18px;padding:18px 22px;border-bottom:1px solid var(--line)}
+.team:last-child{border-bottom:0}
+.team .nm{font-family:var(--display);font-size:clamp(1.3rem,2.2vw,1.7rem);text-transform:uppercase;line-height:1}
+.team .tb{position:relative;height:14px;border-radius:999px;background:#2a2423}
+.team .tb span{position:absolute;left:0;top:0;bottom:0;border-radius:999px;width:0;transition:width 1.4s var(--ease)}
+.team .tb .a{background:rgba(233,29,41,.42)}.team .tb .v{background:var(--red);z-index:1}
+.team .tb .ten{position:absolute;left:50%;top:-8px;bottom:-8px;width:2px;background:var(--gold);z-index:2}
+.teams.in .team .tb span,.no-rv .team .tb span{width:var(--w)}
+.team .nb{font-family:var(--mono);font-size:.78rem;color:var(--mute);display:grid;gap:2px}
+.team .nb b{color:var(--chalk);font-size:1rem}
+.team.sum{background:rgba(233,29,41,.07)}
+.team.sum .nm{color:var(--red)}
+.ten-lab{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold)}
+.stop .big{font-family:var(--display);font-size:clamp(1.25rem,1.9vw,1.5rem);line-height:1.15;text-transform:uppercase}
+/* ── Selbst ausprobieren ──────────────── */
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.tile{display:grid;gap:14px;align-content:start;min-width:0}
+.phone{position:relative;aspect-ratio:600/1298;border-radius:28px;overflow:hidden;border:6px solid #1d1919;background:#000;box-shadow:0 30px 70px -35px rgba(233,29,41,.45)}
+.phone video{width:100%;height:100%;object-fit:cover;display:block}
+.tile h3{font-size:clamp(1.25rem,1.8vw,1.5rem)}
+.tile p{color:#cfc8c2;font-size:.94rem}
+.tile .btn{justify-self:start;padding:11px 18px;font-size:.9rem}
+.wish{margin:22px 0 0;padding:0;list-style:none;display:grid;gap:10px}
+.wish li{display:flex;gap:12px;align-items:baseline;font-size:1.05rem}
+.wish li b{font-family:var(--display);color:var(--red);font-size:1.3rem;min-width:1.4em}
+@media (max-width:920px){.tiles{grid-template-columns:repeat(2,1fr)}.team{grid-template-columns:1fr auto;gap:10px 14px}.team .tb,.team.sum .ten-lab{grid-column:1/-1;order:3}.team .nb{display:flex;gap:12px;align-items:baseline}}
+@media (max-width:620px){.tiles{gap:14px}.phone{border-width:4px;border-radius:20px}.tile h3{font-size:1.15rem}.tile p{font-size:.84rem}.tile .btn{padding:9px 14px;font-size:.82rem}.team{padding:14px 16px}.teams-top{padding:12px 16px;gap:8px 14px}}
 </style>
 
 <div class="ticker" aria-hidden="true">
   <div class="ticker-track">
-    <span class="live">Live vom Waldsportplatz</span><span>102.361 Instagram-Aufrufe im Juli</span><span>Meister 1. Kreisklasse 2026</span><span>4 Teams im Verein</span><span>69,4 % Nicht-Follower erreicht</span><span>Tipp-Liga · Sammelalbum · Check-in am Platz</span>
-    <span class="live">Live vom Waldsportplatz</span><span>102.361 Instagram-Aufrufe im Juli</span><span>Meister 1. Kreisklasse 2026</span><span>4 Teams im Verein</span><span>69,4 % Nicht-Follower erreicht</span><span>Tipp-Liga · Sammelalbum · Check-in am Platz</span>
+    <span class="live">Live vom Waldsportplatz</span><span>49 Spieler bei Prematch angemeldet</span><span>3 von 4 Teams über 10</span><span>102.361 Instagram-Aufrufe im Juli</span><span>69,4 % Nicht-Follower erreicht</span><span>Meister 1. Kreisklasse 2026</span>
+    <span class="live">Live vom Waldsportplatz</span><span>49 Spieler bei Prematch angemeldet</span><span>3 von 4 Teams über 10</span><span>102.361 Instagram-Aufrufe im Juli</span><span>69,4 % Nicht-Follower erreicht</span><span>Meister 1. Kreisklasse 2026</span>
   </div>
 </div>
 
@@ -309,10 +341,10 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px}
   <div class="wrap">
     <div class="crest"><img src="/prematch/img/wappen.webp" alt="Wappen SV Agathenburg-Dollern" width="46" height="54"><span class="x">×</span><span class="pm">PREMATCH</span></div>
     <h1><span>Euer nächster</span><span class="red">Vorzeige-Club</span><span>kommt aus Stade.</span></h1>
-    <p class="lead">SV Agathenburg-Dollern, Kreisliga Stade. Vier Teams, <strong>102.361 Instagram-Aufrufe in einem Monat</strong> und eine eigene Fanwelt, die diese Saison gestartet ist. Wir wollen der Partner Club sein, an dem ihr zeigt, wie das Programm wirkt.</p>
+    <p class="lead">Ihr wollt 10 aktive Spieler pro Team. Bei uns sind schon <strong>49 Spieler in eurer App</strong>, verteilt auf vier Teams. In vier Wochen machen wir daraus aktive Nutzer und zeigen euch, wie das geht.</p>
     <div class="cta">
-      <a class="btn btn-red" href="#rundgang">Video ansehen · 1:32</a>
-      <a class="btn btn-line" href="#angebot">Was ihr bekommt</a>
+      <a class="btn btn-red" href="#stand">Unser Stand</a>
+      <a class="btn btn-line" href="#ausprobieren">Selbst ausprobieren</a>
     </div>
     <div class="scorebug" aria-label="Eckdaten">
       <div><span class="t">Heim</span><span class="v">SVA</span></div>
@@ -323,82 +355,35 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px}
 </header>
 
 <main>
-  <section id="rundgang" style="padding-top:clamp(40px,6vw,72px)">
+  <section id="stand" style="padding-top:clamp(40px,6vw,72px)">
     <div class="wrap">
       <div class="head">
-        <p class="eyebrow"><b>01</b> In 90 Sekunden · mit Ton</p>
-        <h2>Kurz gezeigt,<br><span class="red">warum wir das können</span></h2>
-        <p class="lead">Fanwelt, Reichweite, Sammelalbum, Check-in am Platz, Tipp-Liga und was davon für euch drin ist. Wer mehr sehen will: Der komplette Rundgang mit Kapiteln steht direkt darunter.</p>
+        <p class="eyebrow"><b>01</b> Stand 16. Oktober 2026</p>
+        <h2>49 Spieler.<br><span class="red">Vier Teams.</span></h2>
+        <p class="lead">Im Call habt ihr gesagt: mindestens 10 aktive Spieler pro Team. Angemeldet sind wir in drei Teams schon drüber. Verifiziert noch nicht, und genau da setzen wir in den nächsten vier Wochen an.</p>
       </div>
-      <div class="film" id="film">
-        <video id="rv" src="/prematch/prematch90.mp4" poster="/prematch/img/poster90.webp" playsinline preload="metadata"></video>
-        <button class="go" id="go" aria-label="Video abspielen"><span class="play" aria-hidden="true"></span><span class="go-t">Abspielen<small id="go-s">1:32 · Ton an</small></span></button>
+      <div class="teams">
+        <div class="teams-top"><span class="k"><i style="background:var(--red)"></i>verifiziert</span><span class="k"><i style="background:rgba(233,29,41,.42)"></i>angemeldet</span><span class="k ten-lab"><i style="background:var(--gold);width:3px"></i>eure Marke: 10 pro Team</span></div>
+        <div class="team"><span class="nm">1. Herren</span><div class="tb" aria-label="1. Herren: 11 angemeldet, 6 verifiziert"><span class="a" style="--w:55.0%"></span><span class="v" style="--w:30.0%"></span><span class="ten" aria-hidden="true"></span></div><span class="nb"><span><b>11</b> angemeldet</span><span><b>6</b> verifiziert</span></span></div>
+        <div class="team"><span class="nm">2. Herren</span><div class="tb" aria-label="2. Herren: 16 angemeldet, 4 verifiziert"><span class="a" style="--w:80.0%"></span><span class="v" style="--w:20.0%"></span><span class="ten" aria-hidden="true"></span></div><span class="nb"><span><b>16</b> angemeldet</span><span><b>4</b> verifiziert</span></span></div>
+        <div class="team"><span class="nm">U18</span><div class="tb" aria-label="U18: 19 angemeldet, 3 verifiziert"><span class="a" style="--w:95.0%"></span><span class="v" style="--w:15.0%"></span><span class="ten" aria-hidden="true"></span></div><span class="nb"><span><b>19</b> angemeldet</span><span><b>3</b> verifiziert</span></span></div>
+        <div class="team"><span class="nm">U17</span><div class="tb" aria-label="U17: 3 angemeldet, 0 verifiziert"><span class="a" style="--w:15.0%"></span><span class="v" style="--w:0.0%"></span><span class="ten" aria-hidden="true"></span></div><span class="nb"><span><b>3</b> angemeldet</span><span><b>0</b> verifiziert</span></span></div>
+        <div class="team sum"><span class="nm">Zusammen</span><span class="ten-lab">3 von 4 Teams über 10 angemeldet</span><span class="nb"><span><b>49</b> angemeldet</span><span><b>13</b> verifiziert</span></span></div>
       </div>
-      <div class="alt"><button class="btn btn-line" id="lang" type="button"><span id="lang-t">Kompletter Rundgang · 4:50</span></button><span class="alt-n" id="alt-n">Mit Kapiteln, vom 3D-Platz bis zum Sammelalbum.</span></div>
-      <ol class="chapters" id="chapters" hidden>
-        <li><button data-t="5">0:05<span>Die Vereinswelt</span></button></li>
-        <li><button data-t="34.5">0:34<span>Die Mannschaft</span></button></li>
-        <li><button data-t="42.8">0:42<span>Drei Ziele</span></button></li>
-        <li><button data-t="59.3">0:59<span>Nachwuchs</span></button></li>
-        <li><button data-t="72.4">1:12<span>Partner &amp; Bande</span></button></li>
-        <li><button data-t="93.1">1:33<span>Die Kurve</span></button></li>
-        <li><button data-t="101.2">1:41<span>Spieltag &amp; Check-in</span></button></li>
-        <li><button data-t="127.0">2:07<span>Tipp-Liga</span></button></li>
-        <li><button data-t="166.4">2:46<span>Partner-Aktion</span></button></li>
-        <li><button data-t="185.6">3:05<span>Sammelalbum</span></button></li>
-        <li><button data-t="238.3">3:58<span>Warum das alles</span></button></li>
-        <li><button data-t="276.9">4:36<span>Was das für euch heißt</span></button></li>
-      </ol>
+      <p class="source">Quelle: Prematch-App, Stand 16.10.2026. Fans in der App sind nicht mitgezählt.</p>
     </div>
   </section>
 
-  <section id="angebot" style="padding-top:0">
+  <section id="ziel" style="padding-top:0">
     <div class="wrap">
       <div class="head">
-        <p class="eyebrow"><b>02</b> Was ihr von uns bekommt</p>
-        <h2>Vier Dinge,<br><span class="red">die euch helfen</span></h2>
-        <p class="lead">Stand heute: 11 Spieler bei Prematch angemeldet, 6 verifiziert. Im Call habt ihr gesagt, was ein perfekter Partner Club mitbringt: Kontakt in drei Teams, zehn aktive Spieler pro Team, Aktionen mitmachen, Grafiken posten. Das hier legen wir obendrauf.</p>
+        <p class="eyebrow"><b>02</b> Unser Ziel in vier Wochen</p>
+        <h2>Euer Kriterium.<br><span class="red">Unser Job.</span></h2>
       </div>
-      <div class="offers">
-        <article class="offer">
-          <div class="shot"><img src="/prematch/img/gold.webp" alt="Limitierte Sammelkarte eines Spielers" loading="lazy" style="object-position:50% 22%"></div>
-          <div class="txt">
-            <span class="tag">Euer Ziel: aktive App-Nutzer</span>
-            <h3>Spieler in eure App</h3>
-            <p>Unser Hebel: Wer sein Prematch-Profil anlegt, bekommt ein Bonus-Pack im Sammelalbum. Der Check-in am Platz erinnert jedes Heimspiel daran.</p>
-            <div class="meter" aria-label="Stand heute 11 Spieler angemeldet, 6 verifiziert, Ziel 40">
-              <div class="bar"><span class="v" style="--w:15%"></span><span class="a" style="--w:27.5%"></span></div>
-              <div class="leg"><span><b>6</b> verifiziert</span><span><b>11</b> angemeldet</span><span class="goal"><b>40</b> Ziel in 4 Wochen</span></div>
-            </div>
-          </div>
-        </article>
-        <article class="offer">
-          <div class="shot"><img src="/prematch/img/partnerkarte.webp" alt="Partnerkarte eines Sponsors im Sammelalbum" loading="lazy"></div>
-          <div class="txt">
-            <span class="tag">Eure Markenpartner</span>
-            <h3>Aktionen, die schon laufen</h3>
-            <p>Alle zwei Wochen verlosen wir zum Spieler des Spiels einen Frühstücksgutschein vom Altstadtcafé Stade. Abgestimmt wird auf Instagram. Dasselbe Format funktioniert mit Lieferando, Krombacher oder adidas.</p>
-            <span class="chip ok">✓ Läuft seit dieser Saison</span>
-          </div>
-        </article>
-        <article class="offer">
-          <div class="shot"><img src="/prematch/img/p_bank.webp" alt="Bank und Spieler jubeln nach einem Tor" loading="lazy"></div>
-          <div class="txt">
-            <span class="tag">Content &amp; Media Day</span>
-            <h3>Echte Bilder für eure Kanäle</h3>
-            <p>Unsere Vereinsfotografin ist am Platz, dazu vier feste Instagram-Formate pro Woche. Unsere Bilder und Clips dürft ihr für eure Kanäle nutzen: echter Kreisliga-Fußball statt Stockfoto. Und euer nächster Media Day ist bei uns willkommen.</p>
-            <span class="chip ok">✓ Jede Woche</span>
-          </div>
-        </article>
-        <article class="offer">
-          <div class="shot"><img src="/prematch/img/bande.webp" alt="Sponsorenlogo auf der 3D-Bande" loading="lazy"></div>
-          <div class="txt">
-            <span class="tag">Modul 3 · Sponsoring</span>
-            <h3>Testclub für euer Modul</h3>
-            <p>Partnerseite mit Live-Bande, Mediakit und Monatsreport setzen wir für unsere Sponsoren schon ein. Wenn ihr euer Sponsoring-Modul testet, bringen wir die Vorlagen und echte Partner mit.</p>
-            <span class="chip go">● Gern als Erste</span>
-          </div>
-        </article>
+      <div class="road">
+        <div class="stop"><span class="when">Das Ziel</span><span class="n">1</span><p class="big">1. Herren, 2. Herren und U18: je 10 verifiziert.</p><ul><li>Heute 6, 4 und 3</li><li>U17: von 3 auf 10 angemeldet</li></ul></div>
+        <div class="stop"><span class="when">So schaffen wir das</span><span class="n">2</span><p class="big">Unsere Fanwelt schiebt eure App.</p><ul><li>Wer sein Prematch-Profil verifiziert, bekommt ein Bonus-Pack im Sammelalbum</li><li>Bei jedem Heimspiel erinnert der Check-in am Platz an Prematch</li></ul></div>
+        <div class="stop"><span class="when">Nach vier Wochen</span><span class="n">3</span><p class="big">Ihr bekommt die Zahlen.</p><ul><li>Bericht mit dem Stand pro Team</li><li>Eure Grafiken nutzen wir, wo sie passen</li></ul></div>
       </div>
     </div>
   </section>
@@ -406,8 +391,9 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px}
   <section id="zahlen" style="padding-top:0">
     <div class="wrap">
       <div class="head">
-        <p class="eyebrow"><b>03</b> Sonntags am Waldsportplatz</p>
+        <p class="eyebrow"><b>03</b> Reichweite für eure Marken</p>
         <h2>Reichweite<br><span class="red">ohne Werbebudget</span></h2>
+        <p class="lead">Ihr habt euer Budget von Instagram- und TikTok-Anzeigen in Vereine verschoben. Das hier erreicht ihr bei uns, komplett organisch.</p>
       </div>
       <div class="board">
         <div class="board-top"><span><span class="on">●</span> Instagram @svagathenburg · Juli 2026</span><span>komplett organisch</span></div>
@@ -423,27 +409,21 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px}
         </div>
       </div>
       <p class="source">Quelle: Instagram-Insights @svagathenburg, 8. bis 30. Juli 2026.</p>
-      <div class="gallery">
-        <figure class="g1"><img src="/prematch/img/p_jubel.webp" alt="Torjubel vor der Fankurve" loading="lazy"><figcaption>Heimspiel am Waldsportplatz</figcaption></figure>
-        <figure class="g2"><img src="/prematch/img/p_meister1.webp" alt="Spieler im Meister-Shirt 2026" loading="lazy"><figcaption>Meister 1. Kreisklasse 2026</figcaption></figure>
-        <figure class="g3"><img src="/prematch/img/p_meister2.webp" alt="Spieler zeigt stolz das Meister-Shirt" loading="lazy"><figcaption>Aufstieg in die Kreisliga</figcaption></figure>
-        <figure class="g4"><img src="/prematch/img/p_chill.webp" alt="Zwei Spieler entspannen auf dem Rasen" loading="lazy"><figcaption>Vor dem Training</figcaption></figure>
-      </div>
-      <p class="source">Fotos: picture by nele</p>
     </div>
   </section>
 
-  <section id="fahrplan" style="padding-top:0">
+  <section id="ausprobieren" style="padding-top:0">
     <div class="wrap">
       <div class="head">
-        <p class="eyebrow"><b>04</b> Unser Vorschlag</p>
-        <h2>Vier Wochen.<br><span class="red">Dann echte Zahlen.</span></h2>
-        <p class="lead">Die Fanwelt ist diese Saison gestartet. Wie gut Album, Tipp-Liga und Check-in angenommen werden, messen wir gerade. Deshalb versprechen wir keine Zahlen, sondern liefern sie nach vier Wochen.</p>
+        <p class="eyebrow"><b>04</b> Selbst ausprobieren</p>
+        <h2>Nicht glauben.<br><span class="red">Durchklicken.</span></h2>
+        <p class="lead">Unsere Fanwelt auf dem Handy, so wie die Fans sie nutzen. Alles läuft mit Beispieldaten, nichts wird gespeichert.</p>
       </div>
-      <div class="road">
-        <div class="stop"><span class="when">Diese Woche</span><span class="n">1</span><h3>Offiziell starten</h3><ul><li>Start-To-dos erledigt</li><li>Partnerschafts-Post auf @svagathenburg</li><li>Alle vier Teams in eurer Gruppe</li></ul></div>
-        <div class="stop"><span class="when">Woche 1 bis 4</span><span class="n">2</span><h3>Spieler in die App</h3><ul><li>Bonus-Pack für jedes Prematch-Profil</li><li>Erinnerung bei jedem Check-in am Platz</li><li>Eine Aktion mit einem eurer Markenpartner</li></ul></div>
-        <div class="stop"><span class="when">Nach 4 Wochen</span><span class="n">3</span><h3>Bilanz und nächster Schritt</h3><ul><li>Report: von 11 auf 40 Profile, Check-ins, Tipps</li><li>Media Day bei uns am Waldsportplatz</li><li>Modul 3 gemeinsam testen</li></ul></div>
+      <div class="tiles">
+        <div class="tile"><div class="phone"><video src="/prematch/loops/album.mp4" poster="/prematch/loops/album.jpg" muted loop playsinline autoplay preload="metadata" aria-label="Sammelalbum: Pack aufreißen"></video></div><h3>Sammelalbum</h3><p>Pack aufreißen, Karten sammeln. Hier hängt das Bonus-Pack für euer Profil dran.</p><a class="btn btn-line" href="https://sva-agathenburg-dollern.netlify.app/album?vorfuehrung=1" target="_blank" rel="noopener">Ausprobieren ↗</a></div>
+        <div class="tile"><div class="phone"><video src="/prematch/loops/tippen.mp4" poster="/prematch/loops/tippen.jpg" muted loop playsinline autoplay preload="metadata" aria-label="Tipp-Liga: Einführung"></video></div><h3>Tipp-Liga</h3><p>Tippen vor Anpfiff, Punkte live, Rangliste und oben Preise. Fans gegen Kabine.</p><a class="btn btn-line" href="https://sva-agathenburg-dollern.netlify.app/tippen?vorfuehrung=1" target="_blank" rel="noopener">Ausprobieren ↗</a></div>
+        <div class="tile"><div class="phone"><video src="/prematch/loops/partner.mp4" poster="/prematch/loops/partner.jpg" muted loop playsinline autoplay preload="metadata" aria-label="Partnerseite: eigene Bande testen"></video></div><h3>Eure Bande</h3><p>Namen eintippen, Bande ansehen. So läuft Sponsoring bei uns.</p><a class="btn btn-line" href="https://sva-agathenburg-dollern.netlify.app/partner" target="_blank" rel="noopener">Ausprobieren ↗</a></div>
+        <div class="tile"><div class="phone"><video src="/prematch/loops/welt.mp4" poster="/prematch/loops/welt.jpg" muted loop playsinline autoplay preload="metadata" aria-label="3D-Waldsportplatz: Mannschaft öffnen"></video></div><h3>3D-Waldsportplatz</h3><p>Der echte Platz als Startseite. Von hier geht es zu Team, Live-Ticker und Album.</p><a class="btn btn-line" href="https://sva-agathenburg-dollern.netlify.app" target="_blank" rel="noopener">Ausprobieren ↗</a></div>
       </div>
     </div>
   </section>
@@ -451,15 +431,14 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px}
   <section class="closer" id="kontakt">
     <div class="wrap closer-grid">
       <div>
-        <p class="eyebrow" style="margin-bottom:18px"><b>05</b> Anstoß</p>
+        <p class="eyebrow" style="margin-bottom:18px"><b>05</b> Unser Wunsch</p>
         <h2>Wir haben Bock.<br><span class="red">Ihr auch?</span></h2>
-        <p class="lead" style="margin-top:20px">20 Minuten, und wir zeigen euch die Fanwelt live. Oder klickt euch selbst durch, alles läuft mit Beispieldaten.</p>
-        <div class="links">
-          <a href="https://sva-agathenburg-dollern.netlify.app" target="_blank" rel="noopener">3D-Vereinswelt <i>↗</i></a>
-          <a href="https://sva-agathenburg-dollern.netlify.app/tippen?vorfuehrung=1" target="_blank" rel="noopener">Tipp-Liga live <i>↗</i></a>
-          <a href="https://sva-agathenburg-dollern.netlify.app/album?vorfuehrung=1" target="_blank" rel="noopener">Sammelalbum <i>↗</i></a>
-          <a href="https://sva-agathenburg-dollern.netlify.app/partner" target="_blank" rel="noopener">Partnerseite <i>↗</i></a>
-        </div>
+        <p class="lead" style="margin-top:20px">Wenn die Zahlen stehen, macht uns zu eurem Referenz-Club:</p>
+        <ul class="wish">
+          <li><b>1</b>Case Study in eurem Webinar</li>
+          <li><b>2</b>Media Day bei uns am Waldsportplatz</li>
+          <li><b>3</b>Testclub für euer Sponsoring-Modul. Partnerseite mit Bande, Mediakit und Monatsreport haben wir schon.</li>
+        </ul>
       </div>
       <div class="person">
         <span class="name">Marvin Allers</span>
@@ -471,28 +450,16 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px}
   </section>
 </main>
 
-<footer><div class="wrap"><span>SV Agathenburg-Dollern von 1949 e.V.</span><span>Stand Oktober 2026</span></div></footer>
+<footer><div class="wrap"><span>SV Agathenburg-Dollern von 1949 e.V. · Foto: picture by nele</span><span>Stand Oktober 2026</span></div></footer>
 
 <script>
 (()=>{
-  const v=document.getElementById('rv'),bs=[...document.querySelectorAll('#chapters button')];
-  const f=document.getElementById('film'),go=document.getElementById('go');
-  const start=()=>{f.classList.add('playing');v.controls=true;try{const p=v.play();p&&p.catch(()=>{})}catch(e){}};
-  go.addEventListener('click',start);
-  // 90-Sekunden-Fassung vorne, kompletter Rundgang (4:50) mit Kapiteln auf Knopfdruck
-  const FASS={kurz:{src:'/prematch/prematch90.mp4',poster:'/prematch/img/poster90.webp',go:'1:32 · Ton an',btn:'Kompletter Rundgang · 4:50',n:'Mit Kapiteln, vom 3D-Platz bis zum Sammelalbum.'},
-              lang:{src:'/prematch/rundgang.mp4',poster:'/prematch/img/poster.webp',go:'4:50 · Ton an',btn:'Zurück zur 90-Sekunden-Fassung',n:'Springt direkt in das Kapitel, das euch interessiert.'}};
-  const ch=document.getElementById('chapters'),lb=document.getElementById('lang');
-  let mode='kurz';
-  const setMode=(m,t)=>{if(m!==mode){mode=m;const c=FASS[m];v.pause();v.src=c.src;v.poster=c.poster;
-      document.getElementById('go-s').textContent=c.go;document.getElementById('lang-t').textContent=c.btn;document.getElementById('alt-n').textContent=c.n;ch.hidden=m!=='lang';}
-    if(t!=null){const seek=()=>{try{v.currentTime=t}catch(e){}};v.readyState>=1?seek():v.addEventListener('loadedmetadata',seek,{once:true})}};
-  lb.addEventListener('click',()=>{setMode(mode==='kurz'?'lang':'kurz',0);start();f.scrollIntoView({behavior:'smooth',block:'center'})});
-  bs.forEach(b=>b.addEventListener('click',()=>{setMode('lang',+b.dataset.t);start();f.scrollIntoView({behavior:'smooth',block:'center'})}));
-  const mark=()=>{let k=-1;if(mode==='lang')bs.forEach((b,i)=>{if(v.currentTime>=+b.dataset.t-.2)k=i});bs.forEach((b,i)=>b.classList.toggle('on',i===k&&v.currentTime>0));};
-  v&&v.addEventListener('timeupdate',mark);
   const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const els=document.querySelectorAll('.head,.offer,.board,.stop,.person,.chapters,.film,.gallery figure,.links');
+  // Loops nur abspielen, solange sie sichtbar sind (spart Akku und Daten)
+  const vids=[...document.querySelectorAll('.phone video')];
+  if(reduce)vids.forEach(v=>{v.removeAttribute('autoplay');v.pause()});
+  else if('IntersectionObserver' in window){const vo=new IntersectionObserver(es=>es.forEach(e=>{const v=e.target;if(e.isIntersecting){const p=v.play();p&&p.catch(()=>{})}else v.pause()}),{threshold:.25});vids.forEach(v=>vo.observe(v))}
+  const els=document.querySelectorAll('.head,.teams,.board,.stop,.tile,.person,.wish');
   if(reduce||!('IntersectionObserver' in window))document.body.classList.add('no-rv');
   if(!reduce&&'IntersectionObserver' in window){
     els.forEach(e=>e.classList.add('rv'));
